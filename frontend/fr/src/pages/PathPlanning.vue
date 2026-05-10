@@ -5,7 +5,6 @@
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, onUnmounted } from 'vue'
-import Navbar from '../components/Navbar.vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Flag, Sparkles, Info, Award, ExternalLink, MousePointer2 } from 'lucide-vue-next'
@@ -443,7 +442,6 @@ onUnmounted(() => {
 
 <template>
   <div class="plan-page clay-page">
-    <Navbar />
 
     <!-- 加载进度提示 -->
     <div v-if="loadingState.isLoading" class="loading-overlay">

@@ -4,8 +4,7 @@
         左侧展示历史版本列表，右侧展示选中版本的概要、差距块和分阶段行动计划。
 -->
 <template>
-  <div class="reports-page clay-page">
-    <Navbar />
+  <div class="reports-page">
     <div class="page-container" v-loading="loadingList">
       <div class="header mb-6">
         <div class="title-row">
@@ -163,7 +162,6 @@ import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { FileText, Clock, ArrowRight } from 'lucide-vue-next'
-import Navbar from '../components/Navbar.vue'
 import { getReportArchiveDetailApi, listReportArchivesApi, type ReportArchiveRecord } from '@/api/report'
 
 interface ArchiveListItem {

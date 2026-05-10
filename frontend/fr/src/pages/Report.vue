@@ -5,7 +5,6 @@
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import Navbar from '../components/Navbar.vue'
 import { useRouter } from 'vue-router'
 import {
   loadCapabilityProfileDraft,
@@ -304,7 +303,6 @@ const goBack = () => {
 
 <template>
   <div class="report-page clay-page">
-    <Navbar />
     <div class="page-container" v-loading="loading">
       <div class="header mb-6">
         <div class="title-row">

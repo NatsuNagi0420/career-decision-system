@@ -5,7 +5,6 @@
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import Navbar from '../components/Navbar.vue'
 import { useRoute, useRouter } from 'vue-router'
 import * as echarts from 'echarts'
 import {
@@ -22,6 +21,7 @@ import { ElMessage } from 'element-plus'
 import { getJobDetailApi, getJobFacetsApi, listJobsApi, recommendJobsByAiApi, type JobInfo } from '@/api/jobs'
 import { loadCapabilityProfileDraft, loadEntryDraft, loadTargetJob, saveTargetJob } from '@/utils/storage'
 import { activityMonitor } from '@/utils/activityMonitor'
+import ProfilePromptBanner from '@/components/ProfilePromptBanner.vue'
 
 type JobListItem = Pick<
   JobInfo,
@@ -38,10 +38,16 @@ const filterCompanySize = ref<string[]>([])
 const filterCompanyType = ref<string[]>([])
 const salaryRange = ref<[number, number]>([0, 60])
 
-const activeTab = ref('recommended')
+const activeTab = ref('all')
 const selectedIds = ref<string[]>([])
 const targetId = ref<string | null>(null)
 const activeJobId = ref<string | null>(null)
+
+const userProfile = ref({
+  hasEntry: false,
+  hasCapability: false,
+  isComplete: false
+})
 
 const jobs = ref<JobListItem[]>([])
 const recommendedJobs = ref<JobListItem[]>([])
@@ -361,17 +367,24 @@ watch(
 )
 
 onMounted(async () => {
-  // 没有信息录入草稿时不允许直接进入岗位探索，避免后续步骤误触发
+  // 检测用户状态
   const draft = loadEntryDraft()
-  if (!draft) {
-    ElMessage.warning('还没有完成信息录入，请先在“综合信息录入”页面提交核心信息')
-    router.push('/entry/comprehensive')
-    return
+  const capability = loadCapabilityProfileDraft()
+
+  userProfile.value = {
+    hasEntry: !!draft,
+    hasCapability: !!capability,
+    isComplete: !!draft && !!capability
   }
 
+  // 无论状态如何，都加载岗位数据
   await fetchFacets()
-  fetchRecommendedJobs()
   await fetchJobs()
+
+  // 只有完整画像才加载推荐
+  if (userProfile.value.isComplete) {
+    fetchRecommendedJobs()
+  }
 
   // 仅使用本地目标岗位
   const local = loadTargetJob()
@@ -393,11 +406,23 @@ const overviewSkills = computed(() => {
 })
 
 const isCompareMode = computed(() => selectedIds.value.length >= 2)
+
+// 根据用户状态设置默认标签页
+watch(
+  () => userProfile.value.isComplete,
+  isComplete => {
+    if (isComplete) {
+      activeTab.value = 'recommended'
+    } else {
+      activeTab.value = 'all'
+    }
+  },
+  { immediate: true }
+)
 </script>
 
 <template>
   <div class="job-page clay-page">
-    <Navbar />
     <div class="page-container">
       <div class="header mb-6">
         <div class="title-row">
@@ -407,6 +432,27 @@ const isCompareMode = computed(() => selectedIds.value.length >= 2)
         </div>
         <p class="text-sub">筛选岗位、对比差异，并确认你的目标岗位</p>
       </div>
+
+      <!-- 状态提示横幅 -->
+      <ProfilePromptBanner
+        v-if="!userProfile.hasEntry"
+        level="info"
+        icon="💡"
+        title="完善信息，获得个性化推荐"
+        message="当前显示的是通用岗位列表。完善你的能力画像后，我们将为你推荐最匹配的岗位。"
+        action-text="去完善信息"
+        action-path="/assessment/mbti"
+      />
+
+      <ProfilePromptBanner
+        v-else-if="!userProfile.hasCapability"
+        level="info"
+        icon="🎯"
+        title="生成能力画像，解锁推荐功能"
+        message="你已完成信息录入。生成能力画像后，即可查看为你量身定制的岗位推荐。"
+        action-text="生成能力画像"
+        action-path="/capability-profile"
+      />
 
       <div class="layout">
         <aside class="sidebar">
@@ -567,7 +613,11 @@ const isCompareMode = computed(() => selectedIds.value.length >= 2)
 
         <main class="list">
           <el-tabs v-model="activeTab" class="job-tabs">
-            <el-tab-pane label="推荐岗位" name="recommended">
+            <el-tab-pane
+              v-if="userProfile.isComplete"
+              label="推荐岗位"
+              name="recommended"
+            >
               <section class="zone">
                 <div class="zone-head">
                   <div>
@@ -735,7 +785,7 @@ const isCompareMode = computed(() => selectedIds.value.length >= 2)
                     v-model:current-page="page"
                     :page-size="pageSize"
                     :total="total"
-                    layout="prev, pager, next"
+                    layout="total, prev, pager, next, jumper"
                     background
                   />
                 </div>

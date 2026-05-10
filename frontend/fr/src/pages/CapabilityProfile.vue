@@ -5,7 +5,6 @@
 -->
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue'
-import Navbar from '../components/Navbar.vue'
 import * as echarts from 'echarts'
 import { Trophy, Target, TrendingUp, Briefcase } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
@@ -401,7 +400,6 @@ const initBarChart = () => {
 
 <template>
   <div class="profile-page clay-page">
-    <Navbar />
 
     <!-- 加载进度提示 -->
     <div v-if="loadingState.isLoading" class="loading-overlay">

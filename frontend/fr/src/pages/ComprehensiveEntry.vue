@@ -5,7 +5,6 @@
 -->
 <template>
   <div class="comprehensive-entry-page clay-page">
-    <Navbar />
     <div class="page-container">
       <el-row :gutter="24">
         <el-col :xs="24" :md="16">
@@ -502,7 +501,6 @@ import { ElMessage, ElMessageBox, type UploadFile } from 'element-plus'
 import { UploadFilled, Delete, ArrowRight, ArrowLeft, Loading, InfoFilled } from '@element-plus/icons-vue'
 import request from '../utils/request'
 import Cookies from 'js-cookie'
-import Navbar from '../components/Navbar.vue'
 import { loadDeepAssessmentDraft, loadEntryDraft, saveDeepAssessmentDraft, saveEntryDraft } from '@/utils/storage'
 import DeepAssessmentQuestionnaire, { type DeepQuestionnaireAnswers } from '@/components/DeepAssessmentQuestionnaire.vue'
 import { parseResumeApi, type ResumeParseResult } from '@/api/resume'

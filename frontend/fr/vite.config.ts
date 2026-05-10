@@ -17,9 +17,9 @@ export default defineConfig(({ mode }) => {
       host: '0.0.0.0', // 允许通过 IP 访问
       port: 5173,      // 前端监听端口
       allowedHosts: ['frp-end.com', '.natfrp.cloud', 'localhost', '127.0.0.1'],
-      hmr: {
-        clientPort: 443, // 如果使用 HTTPS 穿透
-      },
+      // hmr: {
+      //   clientPort: 443, // 如果使用 HTTPS 穿透时启用
+      // },
       proxy: {
         '/api': {
           target: backendOrigin,

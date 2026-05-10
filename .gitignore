@@ -36,3 +36,8 @@ server/
 # 系统文件
 .DS_Store
 Thumbs.db
+
+# 后端环境变量
+backend/ba/.env
+backend/ba/.env.local
+backend/ba/.env.*.local

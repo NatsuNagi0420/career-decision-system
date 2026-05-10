@@ -7,6 +7,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Home from '../pages/Home.vue'
 import Login from '../pages/Login.vue'
+import MbtiAssessment from '../pages/MbtiAssessment.vue'
 import ComprehensiveEntry from '../pages/ComprehensiveEntry.vue'
 import CapabilityProfile from '../pages/CapabilityProfile.vue'
 import JobExploration from '../pages/JobExploration.vue'
@@ -29,6 +30,12 @@ const router = createRouter({
       path: '/login',
       name: 'login',
       component: Login
+    },
+    // 测评模块路由
+    {
+      path: '/assessment/mbti',
+      name: 'mbti-assessment',
+      component: MbtiAssessment
     },
     // 信息录入模块路由（直接进入综合信息录入页）
     {
@@ -68,6 +75,7 @@ const router = createRouter({
 router.beforeEach((to) => {
   const needAuth =
     to.path.startsWith('/entry') ||
+    to.path.startsWith('/assessment') ||
     to.path === '/capability-profile' ||
     to.path === '/job-exploration' ||
     to.path === '/path-planning' ||

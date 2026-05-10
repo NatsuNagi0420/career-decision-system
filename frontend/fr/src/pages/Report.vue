@@ -22,6 +22,7 @@ import {
 import { ElMessage } from 'element-plus'
 import { FileText, Download, Save, ArrowLeft } from 'lucide-vue-next'
 import { generateReportApi, saveReportArchiveApi, type ReportGenerateResponse } from '@/api/report'
+import { activityMonitor } from '@/utils/activityMonitor'
 
 defineOptions({
   name: 'CareerReportPage'
@@ -63,6 +64,7 @@ onMounted(async () => {
         pathGraph: loadPathGraph() ?? undefined
       })
       aiContent.value = content ?? null
+      activityMonitor.recordAction('报告生成完成', { reportGenerated: true })
     } catch {
       // AI 生成失败时保持本地兜底内容
     }

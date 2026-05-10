@@ -3,6 +3,7 @@
  * 职责：定义能力画像请求/响应结构，并封装生成能力画像的 HTTP 请求。
  */
 import request from '@/utils/request'
+import Cookies from 'js-cookie'
 
 export type EntryBasic = {
   name?: string
@@ -79,5 +80,24 @@ export const generateCapabilityProfileDraftApi = (payload: CapabilityProfileRequ
     method: 'post',
     data: payload,
     timeout: 60000
+  })
+}
+
+/**
+ * 流式生成能力画像（SSE）
+ */
+export const generateCapabilityProfileStreamApi = async (
+  payload: CapabilityProfileRequest
+): Promise<Response> => {
+  const token = Cookies.get('token')
+  const baseURL = import.meta.env.VITE_API_BASE_URL || '/api'
+
+  return fetch(`${baseURL}/capability/profile/stream`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': token ? `Bearer ${token}` : ''
+    },
+    body: JSON.stringify(payload)
   })
 }

@@ -7,10 +7,10 @@
 import { computed, onMounted, ref, onUnmounted } from 'vue'
 import Navbar from '../components/Navbar.vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { Flag, Sparkles, Info, Award, ExternalLink, MousePointer2 } from 'lucide-vue-next'
 import * as echarts from 'echarts'
-import { generatePathPlanApi } from '@/api/persistence'
+import { generatePathPlanApi, generatePathPlanStreamApi } from '@/api/persistence'
 import {
   loadDeepAssessmentDraft,
   loadEntryDraft,
@@ -18,6 +18,53 @@ import {
   savePathGraph,
   savePathPlan
 } from '@/utils/storage'
+import { activityMonitor } from '@/utils/activityMonitor'
+import { consumeSseStream, type SseEventHandlers } from '@/utils/sseParser'
+
+// 进度持久化相关
+const PROGRESS_KEY = 'path_generation_progress'
+const PROGRESS_EXPIRY = 5 * 60 * 1000 // 5分钟
+
+interface GenerationProgress {
+  step: number
+  total: number
+  summary: string
+  timestamp: number
+  payload: any
+}
+
+const saveProgress = (progress: GenerationProgress) => {
+  try {
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress))
+  } catch (e) {
+    console.warn('Failed to save progress:', e)
+  }
+}
+
+const loadProgress = (): GenerationProgress | null => {
+  try {
+    const saved = localStorage.getItem(PROGRESS_KEY)
+    if (!saved) return null
+    const progress = JSON.parse(saved) as GenerationProgress
+    // 检查是否过期
+    if (Date.now() - progress.timestamp > PROGRESS_EXPIRY) {
+      localStorage.removeItem(PROGRESS_KEY)
+      return null
+    }
+    return progress
+  } catch (e) {
+    console.warn('Failed to load progress:', e)
+    return null
+  }
+}
+
+const clearProgress = () => {
+  try {
+    localStorage.removeItem(PROGRESS_KEY)
+  } catch (e) {
+    console.warn('Failed to clear progress:', e)
+  }
+}
 
 const router = useRouter()
 const targetJob = ref<any>(null)
@@ -28,6 +75,12 @@ const graphData = ref<any>(null)
 const selectedNode = ref<any>(null)
 const loading = ref(false)
 const errorMessage = ref<string | null>(null)
+const loadingState = ref({
+  isLoading: false,
+  step: 0,
+  total: 5,
+  summary: ''
+})
 
 const fetchPathData = async () => {
   loading.value = true
@@ -35,11 +88,39 @@ const fetchPathData = async () => {
     const draft = loadEntryDraft()
     const deep = loadDeepAssessmentDraft()
 
-    // 没有信息录入草稿时，不触发路径规划生成，避免给大模型传空数据
     if (!draft) {
-      ElMessage.warning('还没有完成信息录入，请先在“综合信息录入”页面提交核心信息')
+      ElMessage.warning('还没有完成信息录入，请先在”综合信息录入”页面提交核心信息')
       router.push('/entry/comprehensive')
       return
+    }
+
+    // 检查是否有未完成的生成任务
+    const savedProgress = loadProgress()
+    if (savedProgress) {
+      try {
+        await ElMessageBox.confirm(
+          `检测到上次生成任务未完成（进度：${savedProgress.step}/${savedProgress.total}），是否继续？`,
+          '恢复生成',
+          {
+            confirmButtonText: '继续生成',
+            cancelButtonText: '重新开始',
+            type: 'info'
+          }
+        )
+        // 用户选择继续，恢复进度状态
+        loadingState.value = {
+          isLoading: true,
+          step: savedProgress.step,
+          total: savedProgress.total,
+          summary: savedProgress.summary || '恢复生成中...'
+        }
+        activityMonitor.updatePageState({ pathPlanGenerating: true })
+        await startGeneration(savedProgress.payload)
+        return
+      } catch (e) {
+        // 用户选择重新开始或关闭对话框
+        clearProgress()
+      }
     }
 
     const job = loadTargetJob()
@@ -59,19 +140,125 @@ const fetchPathData = async () => {
       }
     }
 
-    const res = await generatePathPlanApi(payload)
-    graphData.value = res
-    if (res?.nodes && res.nodes.length > 0) {
-      selectedNode.value = res.nodes[0]
-    }
-    if (res) {
-      savePathGraph(res)
-    }
-    initGraph()
+    loadingState.value = { isLoading: true, step: 0, total: 5, summary: '准备生成职业路径规划...' }
+    activityMonitor.updatePageState({ pathPlanGenerating: true })
+
+    await startGeneration(payload)
   } catch (e) {
     ElMessage.error('获取路径规划失败')
+    activityMonitor.updatePageState({ pathPlanGenerating: false })
   } finally {
     loading.value = false
+  }
+}
+
+// 开始生成路径规划
+const startGeneration = async (payload: any) => {
+  try {
+    const response = await generatePathPlanStreamApi(payload)
+
+    if (!response.ok || !response.body) {
+      throw new Error('Stream not supported')
+    }
+
+    // 使用统一的SSE解析工具
+    const handlers: SseEventHandlers = {
+      onStep: (data) => {
+        const newState = {
+          isLoading: true,
+          step: data.step || 0,
+          total: data.total || 5,
+          summary: data.summary || ''
+        }
+        loadingState.value = newState
+
+        // 保存进度到localStorage
+        saveProgress({
+          step: newState.step,
+          total: newState.total,
+          summary: newState.summary,
+          timestamp: Date.now(),
+          payload
+        })
+      },
+      onProgress: (data) => {
+        console.log('Step progress:', data)
+      },
+      onComplete: (data) => {
+        // data可能直接包含图谱数据，或在result字段中
+        const graphResult = (data as any).nodes ? data : (data as any).result
+        graphData.value = graphResult
+        if (graphResult?.nodes && graphResult.nodes.length > 0) {
+          selectedNode.value = graphResult.nodes[0]
+        }
+        if (graphResult) {
+          savePathGraph(graphResult)
+        }
+        initGraph()
+        loadingState.value.isLoading = false
+        activityMonitor.recordAction('路径规划生成完成')
+        activityMonitor.updatePageState({ pathPlanGenerated: true, pathPlanGenerating: false })
+        clearProgress() // 生成完成，清除进度
+      },
+      onError: (data) => {
+        // 显示详细的错误信息
+        const errorType = data.errorType || 'UNKNOWN'
+        const step = data.step ? `步骤${data.step}/${data.total}` : ''
+        const suggestion = data.suggestion || '请稍后重试'
+
+        let errorTitle = '生成失败'
+        if (errorType === 'NETWORK') {
+          errorTitle = '网络连接失败'
+        } else if (errorType === 'TIMEOUT') {
+          errorTitle = '请求超时'
+        } else if (errorType === 'AI_ERROR') {
+          errorTitle = 'AI服务异常'
+        } else if (errorType === 'EMPTY_RESPONSE' || errorType === 'INVALID_JSON') {
+          errorTitle = '数据格式异常'
+        }
+
+        const errorMessage = step
+          ? `${errorTitle}（${step}）：${suggestion}`
+          : `${errorTitle}：${suggestion}`
+
+        ElMessage.error({
+          message: errorMessage,
+          duration: 5000,
+          showClose: true
+        })
+
+        // 如果是非致命错误（单步失败），不关闭loading，让流程继续
+        if (!data.step) {
+          loadingState.value.isLoading = false
+          activityMonitor.updatePageState({ pathPlanGenerating: false })
+          clearProgress() // 出错，清除进度
+        }
+      }
+    }
+
+    await consumeSseStream(response, handlers, 120000)
+  } catch (error) {
+    console.warn('Streaming failed, fallback to non-streaming:', error)
+    loadingState.value = { isLoading: true, step: 0, total: 1, summary: '使用备用方案生成中...' }
+    clearProgress() // 降级，清除进度
+    try {
+      const res = await generatePathPlanApi(payload)
+      graphData.value = res
+      if (res?.nodes && res.nodes.length > 0) {
+        selectedNode.value = res.nodes[0]
+      }
+      if (res) {
+        savePathGraph(res)
+      }
+      initGraph()
+      activityMonitor.recordAction('路径规划生成完成')
+      activityMonitor.updatePageState({ pathPlanGenerated: true, pathPlanGenerating: false })
+    } catch (fallbackError) {
+      ElMessage.error('获取路径规划失败')
+      activityMonitor.updatePageState({ pathPlanGenerating: false })
+    } finally {
+      loadingState.value.isLoading = false
+    }
   }
 }
 
@@ -257,6 +444,22 @@ onUnmounted(() => {
 <template>
   <div class="plan-page clay-page">
     <Navbar />
+
+    <!-- 加载进度提示 -->
+    <div v-if="loadingState.isLoading" class="loading-overlay">
+      <div class="loading-content">
+        <el-progress
+          :percentage="Math.round((loadingState.step / loadingState.total) * 100)"
+          :stroke-width="8"
+          status="success"
+        />
+        <p class="loading-text">
+          步骤 {{ loadingState.step }}/{{ loadingState.total }}: {{ loadingState.summary }}
+        </p>
+        <p class="loading-hint">正在为您规划职业发展路径，请稍候...</p>
+      </div>
+    </div>
+
     <div class="page-container">
       <div class="header mb-6">
         <div class="title-row">
@@ -601,5 +804,41 @@ onUnmounted(() => {
   .main-layout {
     grid-template-columns: 1fr;
   }
+}
+
+/* 加载进度样式 */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.loading-content {
+  width: 400px;
+  padding: 40px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.loading-text {
+  margin-top: 20px;
+  font-size: 16px;
+  color: #1f2937;
+  font-weight: 500;
+}
+
+.loading-hint {
+  margin-top: 8px;
+  font-size: 14px;
+  color: #6b7280;
 }
 </style>

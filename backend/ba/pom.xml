@@ -88,6 +88,11 @@
 			<artifactId>tika-parsers-standard-package</artifactId>
 			<version>2.9.2</version>
 		</dependency>
+		<!-- Jakarta Annotation API for @PostConstruct and @PreDestroy -->
+		<dependency>
+			<groupId>jakarta.annotation</groupId>
+			<artifactId>jakarta.annotation-api</artifactId>
+		</dependency>
 	</dependencies>
 
 	<build>

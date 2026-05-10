@@ -15,6 +15,7 @@ import Report from '../pages/Report.vue'
 import ReportsList from '../pages/ReportsList.vue'
 
 import { isLoggedIn } from '../utils/auth'
+import { activityMonitor } from '../utils/activityMonitor'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -78,5 +79,13 @@ router.beforeEach((to) => {
   if (isLoggedIn()) return true
   return { path: '/login', query: { redirect: to.fullPath } }
 })
+
+router.afterEach((to) => {
+  // 页面切换时通知 activityMonitor
+  activityMonitor.onPageChange(to.path)
+})
+
+// 初始化 activityMonitor
+activityMonitor.init()
 
 export default router

@@ -329,7 +329,7 @@ const handleSelect = async (item: ArchiveListItem) => {
             done: false
           }
         })
-        .filter((t) => t.title)
+        .filter((t: any) => t.title)
 
       return {
         id: String(s?.id ?? `stage-${idx}`),

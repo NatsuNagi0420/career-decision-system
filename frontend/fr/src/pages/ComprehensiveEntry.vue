@@ -506,6 +506,7 @@ import Navbar from '../components/Navbar.vue'
 import { loadDeepAssessmentDraft, loadEntryDraft, saveDeepAssessmentDraft, saveEntryDraft } from '@/utils/storage'
 import DeepAssessmentQuestionnaire, { type DeepQuestionnaireAnswers } from '@/components/DeepAssessmentQuestionnaire.vue'
 import { parseResumeApi, type ResumeParseResult } from '@/api/resume'
+import { activityMonitor } from '@/utils/activityMonitor'
 
 type MbtiOption = {
   id: number
@@ -589,6 +590,7 @@ const openMbti = () => {
 
 const startMbti = () => {
   mbtiStarted.value = true
+  activityMonitor.recordAction('深度测评开始', { deepAssessmentStarted: true })
 }
 
 const applyManualMbti = () => {
@@ -664,6 +666,7 @@ const finishMbti = async () => {
 
     mbtiProgress.value = 100
     form.mbtiResult = mbtiType // 保存 MBTI 类型结果
+    activityMonitor.recordAction('深度测评完成', { deepAssessmentCompleted: true })
     ElMessage.success(`MBTI 测评完成！您的类型是: ${mbtiType}`)
   } catch (error: unknown) {
     if (error !== 'cancel') {
@@ -977,6 +980,7 @@ const submitAll = async () => {
       questionnaireAnswers: { ...form.questionnaireAnswers }
     })
     saveDeepAssessmentDraft({ ...form.questionnaireAnswers })
+    activityMonitor.recordAction('信息录入提交', { entryCompleted: true })
     ElMessage.success('综合分析提交成功！')
     router.push('/capability-profile')
   } finally {

@@ -5,11 +5,14 @@
 package com.example.ba.service;
 
 import com.example.ba.dto.CapabilityProfileRequestDTO;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.Map;
 
 public interface CapabilityService {
     Map<String, Object> generateProfile(CapabilityProfileRequestDTO req);
     Map<String, Object> generateCareerPath(CapabilityProfileRequestDTO req);
+    Map<String, Object> generateProfileWithChain(CapabilityProfileRequestDTO req, SseEmitter emitter);
+    Map<String, Object> generateCareerPathWithChain(CapabilityProfileRequestDTO req, SseEmitter emitter);
 }
 

@@ -21,6 +21,7 @@ import {
 import { ElMessage } from 'element-plus'
 import { getJobDetailApi, getJobFacetsApi, listJobsApi, recommendJobsByAiApi, type JobInfo } from '@/api/jobs'
 import { loadCapabilityProfileDraft, loadEntryDraft, loadTargetJob, saveTargetJob } from '@/utils/storage'
+import { activityMonitor } from '@/utils/activityMonitor'
 
 type JobListItem = Pick<
   JobInfo,
@@ -187,6 +188,7 @@ const setTarget = async (job: JobListItem) => {
   }
   // 本地缓存
   saveTargetJob(payload)
+  activityMonitor.recordAction('选定目标岗位', { targetJobSelected: true })
   ElMessage.success('已设为目标岗位')
 }
 
@@ -353,6 +355,8 @@ watch(
       return
     }
     activeJobDetail.value = await getJobDetailApi(Number(id))
+    activityMonitor.recordAction('浏览岗位详情')
+    activityMonitor.updatePageState({ browsedJobCount: selectedIds.value.length })
   }
 )
 

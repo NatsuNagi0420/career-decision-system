@@ -3,8 +3,9 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getUserInfo } from '@/utils/auth'
 import { ElMessage } from 'element-plus'
-import { assistantChatApi } from '@/api/assistant'
+import { assistantChatApi, assistantChatStreamApi } from '@/api/assistant'
 import { loadPathPlan, loadTargetJob } from '@/utils/storage'
+import { consumeSseStream, type SseEventHandlers } from '@/utils/sseParser'
 
 type AssistantAction = {
   label: string
@@ -258,15 +259,40 @@ const onResize = () => {
   setFabPos(fabPos.value)
 }
 
+const handleProactiveMessage = (event: Event) => {
+  const customEvent = event as CustomEvent<{ message: string; buttons: any[] }>
+  if (!customEvent.detail?.message) return
+
+  const msgId = `m-proactive-${Date.now()}`
+  const parsed = parseReply(customEvent.detail.message)
+
+  pushMessage({
+    id: msgId,
+    role: 'assistant',
+    content: parsed.text,
+    actions: parsed.actions
+  })
+
+  // 如果助手面板未打开，可以选择自动打开或显示提示
+  if (!isOpen.value) {
+    // 可选：自动打开面板
+    // isOpen.value = true
+    // 或者显示一个提示
+    ElMessage.info('AI 助手有新消息')
+  }
+}
+
 onMounted(() => {
   viewportW.value = window.innerWidth
   viewportH.value = window.innerHeight
   initFabPos()
   window.addEventListener('resize', onResize, { passive: true })
+  window.addEventListener('proactive-message', handleProactiveMessage)
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', onResize)
+  window.removeEventListener('proactive-message', handleProactiveMessage)
 })
 
 const pushMessage = (msg: ChatMessage) => {
@@ -354,27 +380,80 @@ const send = async (preset?: string) => {
   pushMessage({
     id: thinkingId,
     role: 'assistant',
-    content: '星途正在思考中ingOvO',
+    content: '',
     pending: true
   })
 
+  const payload = {
+    page: route.path,
+    message: text,
+    context: contextSummary.value as unknown as Record<string, unknown>
+  }
+
   try {
-    const res = await assistantChatApi({
-      page: route.path,
-      message: text,
-      context: contextSummary.value as unknown as Record<string, unknown>
-    })
-    const parsed = parseReply(res.reply)
-    const content = parsed.text || '我正在思考，你也可以换个问法试试。'
-    const actions = parsed.actions.length ? parsed.actions : text.includes('下一步') ? buildNextActions() : []
-    upsertAssistantMessage(thinkingId, { content, actions, pending: false })
-  } catch {
-    ElMessage.error('星途暂时不可用，请稍后重试')
-    upsertAssistantMessage(thinkingId, {
-      content:
-        '我这边连接有点问题，稍后再试试。你也可以先继续当前步骤，我会在你需要时提供建议。',
-      pending: false
-    })
+    const response = await assistantChatStreamApi(payload)
+
+    if (!response.ok || !response.body) {
+      throw new Error('Stream not supported')
+    }
+
+    let fullContent = ''
+
+    const handlers: SseEventHandlers = {
+      onToken: (data) => {
+        fullContent += data.text || ''
+        upsertAssistantMessage(thinkingId, { content: fullContent, pending: true })
+      },
+      onButtons: (data) => {
+        const actions: AssistantAction[] = (data.buttons || [])
+          .map((b: { label: string; action: string }) => {
+            const actionMap: Record<string, string> = {
+              'go:capability-profile': '/capability-profile',
+              'go:job-exploration': '/job-exploration',
+              'go:path-planning': '/path-planning',
+              'go:report': '/report'
+            }
+            const to = actionMap[b.action]
+            if (!to) return null
+            return { label: b.label, kind: 'navigate' as const, to }
+          })
+          .filter(Boolean) as AssistantAction[]
+
+        // 从文本中移除 JSON 部分
+        const jsonMatch = fullContent.match(/\s*\{["']buttons["']:\s*\[.*?\]\s*\}\s*$/s)
+        if (jsonMatch) {
+          fullContent = fullContent.substring(0, jsonMatch.index).trim()
+        }
+
+        upsertAssistantMessage(thinkingId, { content: fullContent, actions, pending: false })
+      },
+      onComplete: () => {
+        upsertAssistantMessage(thinkingId, { pending: false })
+      },
+      onError: (data) => {
+        upsertAssistantMessage(thinkingId, {
+          content: '抱歉，我遇到了一些问题，请稍后再试。',
+          pending: false
+        })
+      }
+    }
+
+    await consumeSseStream(response, handlers, 120000)
+  } catch (error) {
+    console.warn('Streaming failed, fallback to non-streaming:', error)
+    try {
+      const res = await assistantChatApi(payload)
+      const parsed = parseReply(res.reply)
+      const content = parsed.text || '我正在思考，你也可以换个问法试试。'
+      const actions = parsed.actions.length ? parsed.actions : text.includes('下一步') ? buildNextActions() : []
+      upsertAssistantMessage(thinkingId, { content, actions, pending: false })
+    } catch (fallbackError) {
+      ElMessage.error('星途暂时不可用，请稍后重试')
+      upsertAssistantMessage(thinkingId, {
+        content: '我这边连接有点问题，稍后再试试。你也可以先继续当前步骤，我会在你需要时提供建议。',
+        pending: false
+      })
+    }
   } finally {
     isSending.value = false
     if (pendingReplyId.value === thinkingId) pendingReplyId.value = null

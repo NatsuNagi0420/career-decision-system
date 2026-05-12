@@ -29,7 +29,7 @@ public class ResumeController {
     public Result<ResumeParseResultDTO> parse(@RequestParam("file") MultipartFile file) {
         Long userId = AuthContext.getUserId();
         if (userId == null) {
-            return Result.error("未登录");
+            return Result.error("请先登录后再上传简历");
         }
         if (file == null || file.isEmpty()) {
             return Result.error("上传文件为空");
@@ -40,7 +40,7 @@ public class ResumeController {
             return Result.success(dto);
         } catch (Throwable e) {
             e.printStackTrace();
-            return Result.error("简历解析失败:" + e.getMessage());
+            return Result.error("简历解析失败: " + e.getMessage());
         }
     }
 

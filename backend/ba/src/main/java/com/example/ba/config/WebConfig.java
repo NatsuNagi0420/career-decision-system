@@ -22,11 +22,17 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // 映射逻辑：请求 /images/** -> 映射到 d:\Project\服创\server\images\ 目录
-        // 为了项目的可移植性，这里使用相对路径映射 (相对于后端项目根目录 d:\Project\服创\backend\ba)
-        // ../../server/images/ 即可指向 d:\Project\服创\server\images\
-        registry.addResourceHandler("/images/**")
-                .addResourceLocations("file:../../server/images/");
+        // 1. 映射内置静态资源（系统默认头像、图标等）
+        //    这些资源打包在JAR中，通过classpath访问
+        registry.addResourceHandler("/profile/**")
+                .addResourceLocations("classpath:/static/profile/");
+
+        // 2. 映射用户上传资源（用户头像、简历等）
+        //    这些资源存储在外部目录
+        //    开发环境：相对路径 file:uploads/images/
+        //    生产环境：通过环境变量指定绝对路径（Task 4会实现）
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations("file:uploads/images/");
     }
 
     @Override

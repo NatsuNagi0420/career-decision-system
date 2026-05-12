@@ -71,11 +71,15 @@ public class UserServiceImpl implements UserService {
 
         // 3. 处理动态资源路径
         // 如果数据库中没有头像，则使用默认头像常量
-        String avatarPath = (user.getAvatar() == null || user.getAvatar().isEmpty()) 
-                            ? UserService.DEFAULT_AVATAR 
+        String avatarPath = (user.getAvatar() == null || user.getAvatar().isEmpty())
+                            ? UserService.DEFAULT_AVATAR
                             : user.getAvatar();
-        
-        user.setAvatar(BaseUrlUtils.getAbsoluteUrl("/images" + avatarPath));
+
+        // 如果是默认头像，使用内置资源路径；如果是用户上传头像，使用上传资源路径
+        String fullAvatarPath = avatarPath.equals(UserService.DEFAULT_AVATAR)
+            ? avatarPath  // 默认头像：/profile/defaultIcon.png
+            : "/uploads" + avatarPath;  // 用户上传：/uploads/xxx.png
+        user.setAvatar(BaseUrlUtils.getAbsoluteUrl(fullAvatarPath));
 
         return user;
     }

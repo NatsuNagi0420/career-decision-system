@@ -12,7 +12,7 @@ public interface UserService {
     /**
      * 默认用户头像路径
      */
-    String DEFAULT_AVATAR = "/avatar/avatar.png";
+    String DEFAULT_AVATAR = "/profile/defaultIcon.png";
 
     void register(UserRegisterDTO userRegisterDTO);
     User login(UserLoginDTO userLoginDTO);

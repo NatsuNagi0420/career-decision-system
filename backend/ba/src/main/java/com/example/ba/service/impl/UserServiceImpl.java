@@ -10,6 +10,8 @@ import com.example.ba.pojo.User;
 import com.example.ba.mapper.UserMapper;
 import com.example.ba.service.UserService;
 import com.example.ba.utils.BaseUrlUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
@@ -17,20 +19,26 @@ import java.time.LocalDateTime;
 @Service
 public class UserServiceImpl implements UserService {
 
+    private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
+
     @Autowired
     private UserMapper userMapper;
 
     @Override
     public void register(UserRegisterDTO dto) {
+        log.info("用户注册: username={}, phone={}", dto.getUsername(), dto.getPhone());
+
         // 1. 检查用户名是否已存在
         User existUser = userMapper.getByUsername(dto.getUsername());
         if (existUser != null) {
+            log.warn("用户注册失败: 用户名已存在, username={}", dto.getUsername());
             throw new RuntimeException("用户名已存在");
         }
 
         // 2. 检查手机号是否已存在
         User existPhone = userMapper.getByPhone(dto.getPhone());
         if (existPhone != null) {
+            log.warn("用户注册失败: 手机号已注册, phone={}", dto.getPhone());
             throw new RuntimeException("该手机号已注册");
         }
 
@@ -49,23 +57,29 @@ public class UserServiceImpl implements UserService {
 
         // 4. 保存到数据库
         userMapper.insert(user);
+        log.info("用户注册成功: userId={}, username={}", user.getId(), user.getUsername());
     }
 
     @Override
     public User login(UserLoginDTO dto) {
+        log.info("用户登录: username={}", dto.getUsername());
+
         // 1. 根据用户名查询用户
         User user = userMapper.getByUsername(dto.getUsername());
 
         // 2. 校验
         if (user == null) {
+            log.warn("用户登录失败: 用户不存在, username={}", dto.getUsername());
             throw new RuntimeException("用户不存在");
         }
 
         if (!user.getPassword().equals(dto.getPassword())) {
+            log.warn("用户登录失败: 密码错误, username={}", dto.getUsername());
             throw new RuntimeException("密码错误");
         }
 
         if (user.getStatus() == 0) {
+            log.warn("用户登录失败: 账号已被禁用, username={}", dto.getUsername());
             throw new RuntimeException("账号已被禁用");
         }
 
@@ -81,6 +95,7 @@ public class UserServiceImpl implements UserService {
             : "/uploads" + avatarPath;  // 用户上传：/uploads/xxx.png
         user.setAvatar(BaseUrlUtils.getAbsoluteUrl(fullAvatarPath));
 
+        log.info("用户登录成功: userId={}, username={}", user.getId(), user.getUsername());
         return user;
     }
 }

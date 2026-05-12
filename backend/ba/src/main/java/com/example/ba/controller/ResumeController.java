@@ -9,6 +9,8 @@ import com.example.ba.dto.ResumeParseResultDTO;
 import com.example.ba.exception.BusinessException;
 import com.example.ba.service.ResumeParseService;
 import com.example.ba.utils.AuthContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,6 +24,8 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/api/resume")
 @CrossOrigin
 public class ResumeController {
+
+    private static final Logger log = LoggerFactory.getLogger(ResumeController.class);
 
     @Autowired
     private ResumeParseService resumeParseService;
@@ -40,7 +44,7 @@ public class ResumeController {
             ResumeParseResultDTO dto = resumeParseService.parse(file);
             return Result.success(dto);
         } catch (Throwable e) {
-            e.printStackTrace();
+            log.error("简历解析失败: userId={}, fileName={}", userId, file.getOriginalFilename(), e);
             throw new BusinessException("简历解析失败: " + e.getMessage(), e);
         }
     }

@@ -4,6 +4,7 @@
  */
 package com.example.ba.config;
 
+import com.example.ba.interceptor.LoggingInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
@@ -17,6 +18,9 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  */
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
+
+    @Autowired
+    private LoggingInterceptor loggingInterceptor;
 
     @Autowired
     private AuthInterceptor authInterceptor;
@@ -44,6 +48,11 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
+        // 日志拦截器（拦截所有请求，记录请求信息和性能数据）
+        registry.addInterceptor(loggingInterceptor)
+                .addPathPatterns("/**");
+
+        // 认证拦截器（仅拦截需要认证的接口）
         registry.addInterceptor(authInterceptor)
                 .addPathPatterns("/api/path-plan/**", "/api/capability/**", "/api/user/info", "/api/resume/**", "/api/report/**");
     }

@@ -471,7 +471,9 @@ public class AiUtils {
             Consumer<Throwable> onError
     ) {
         try {
-            System.out.println("=== streamOpenAiChatCompletions 开始 ===");
+            log.info("开始流式调用AI接口: systemPromptLength={}, messagesCount={}",
+                    systemPrompt != null ? systemPrompt.length() : 0,
+                    messages != null ? messages.size() : 0);
             String key = resolveApiKey();
             ObjectNode requestBody = objectMapper.createObjectNode();
             requestBody.put("model", resolveModel());

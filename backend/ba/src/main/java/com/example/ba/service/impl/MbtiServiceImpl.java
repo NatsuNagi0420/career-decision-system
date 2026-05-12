@@ -11,6 +11,8 @@ import com.example.ba.pojo.MbtiQuestion;
 import com.example.ba.pojo.MbtiUserAnswer;
 import com.example.ba.service.MbtiService;
 import com.example.ba.vo.MbtiQuestionVO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -24,32 +26,41 @@ import java.util.stream.Collectors;
 @Service
 public class MbtiServiceImpl implements MbtiService {
 
+    private static final Logger log = LoggerFactory.getLogger(MbtiServiceImpl.class);
+
     @Autowired
     private MbtiMapper mbtiMapper;
 
     @Override
     public List<MbtiQuestionVO> getAllQuestionsWithOptions() {
+        log.info("获取MBTI题目列表");
         List<MbtiQuestion> questions = mbtiMapper.findAllQuestions();
         List<MbtiOption> allOptions = mbtiMapper.findAllOptions();
-        
+
         // Group options by question id
         Map<Integer, List<MbtiOption>> optionMap = allOptions.stream()
                 .collect(Collectors.groupingBy(MbtiOption::getQId));
-        
-        return questions.stream().map(q -> {
+
+        List<MbtiQuestionVO> result = questions.stream().map(q -> {
             MbtiQuestionVO vo = new MbtiQuestionVO();
             BeanUtils.copyProperties(q, vo);
             vo.setOptions(optionMap.get(q.getId()));
             return vo;
         }).collect(Collectors.toList());
+
+        log.info("获取MBTI题目列表成功: questionCount={}", result.size());
+        return result;
     }
 
     @Override
     @Transactional
     public String submitTest(MbtiSubmitDTO submitDTO) {
+        log.info("提交MBTI测评: userId={}, answerCount={}", submitDTO.getUserId(), submitDTO.getAnswers().size());
+        long startTime = System.currentTimeMillis();
+
         String testNo = UUID.randomUUID().toString().replace("-", "");
         Map<String, Integer> scoreMap = new HashMap<>();
-        
+
         // 初始化维度评分
         String[] dimensions = {"E", "I", "S", "N", "T", "F", "J", "P"};
         for (String d : dimensions) scoreMap.put(d, 0);
@@ -66,7 +77,7 @@ public class MbtiServiceImpl implements MbtiService {
                 answer.setOptCode(optCode);
                 answer.setScoreCode(option.getScoreCode());
                 mbtiMapper.insertAnswer(answer);
-                
+
                 // 累计评分
                 scoreMap.put(option.getScoreCode(), scoreMap.get(option.getScoreCode()) + option.getScore());
             }
@@ -78,6 +89,10 @@ public class MbtiServiceImpl implements MbtiService {
         mbtiType.append(scoreMap.get("S") >= scoreMap.get("N") ? "S" : "N");
         mbtiType.append(scoreMap.get("T") >= scoreMap.get("F") ? "T" : "F");
         mbtiType.append(scoreMap.get("J") >= scoreMap.get("P") ? "J" : "P");
+
+        long duration = System.currentTimeMillis() - startTime;
+        log.info("MBTI测评提交成功: userId={}, testNo={}, mbtiType={}, duration={}ms",
+                submitDTO.getUserId(), testNo, mbtiType.toString(), duration);
 
         return mbtiType.toString();
     }

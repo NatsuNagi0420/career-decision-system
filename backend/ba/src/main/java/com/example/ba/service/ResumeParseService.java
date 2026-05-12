@@ -11,6 +11,8 @@ import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.sax.BodyContentHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -24,6 +26,7 @@ import java.util.regex.Pattern;
 @Service
 public class ResumeParseService {
 
+    private static final Logger log = LoggerFactory.getLogger(ResumeParseService.class);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
 
@@ -40,9 +43,12 @@ public class ResumeParseService {
 
 
     public ResumeParseResultDTO parse(MultipartFile file) {
+        log.info("开始解析简历: fileName={}, fileSize={}", file.getOriginalFilename(), file.getSize());
+        long startTime = System.currentTimeMillis();
+
         String text = extractText(file);
         if (text == null || text.isBlank()) {
-            System.out.println("[ResumeParse] 提取文本为空，返回空结果");
+            log.warn("简历文本提取为空: fileName={}", file.getOriginalFilename());
             return new ResumeParseResultDTO();
         }
 
@@ -50,9 +56,7 @@ public class ResumeParseService {
 
         // 调试输出：打印简历文本前几百个字符，方便观察原始结构
         String preview = normalized.length() > 800 ? normalized.substring(0, 800) : normalized;
-        System.out.println("===== Resume raw text preview (first 800 chars) =====");
-        System.out.println(preview);
-        System.out.println("====================================================");
+        log.debug("简历文本预览 (前800字符): {}", preview);
 
         // 调试输出：打印关键基础字段的正则匹配结果
         String labelName = matchFirstGroup(normalized, NAME_PATTERN);
@@ -61,8 +65,8 @@ public class ResumeParseService {
         String email = matchSecondGroup(normalized, EMAIL_PATTERN);
         String gender = matchSecondGroup(normalized, GENDER_PATTERN);
         String ageStr = matchSecondGroup(normalized, AGE_PATTERN);
-        System.out.println("[ResumeParse] 匹配结果 -> labelName=" + labelName + ", finalName=" + name + ", phone=" + phone + ", email=" + email
-                + ", gender=" + gender + ", ageStr=" + ageStr);
+        log.debug("简历字段匹配结果: labelName={}, finalName={}, phone={}, email={}, gender={}, ageStr={}",
+                labelName, name, phone, email, gender, ageStr);
 
         ResumeParseResultDTO dto = new ResumeParseResultDTO();
 
@@ -122,6 +126,10 @@ public class ResumeParseService {
         dto.setSelfEvaluation(extractSelfEvaluation(normalized));
 
         printPackagedResult(dto);
+
+        long duration = System.currentTimeMillis() - startTime;
+        log.info("简历解析完成: fileName={}, duration={}ms", file.getOriginalFilename(), duration);
+
         return dto;
 
     }
@@ -274,11 +282,9 @@ public class ResumeParseService {
 
     private void printPackagedResult(ResumeParseResultDTO dto) {
         try {
-            System.out.println("===== Resume packaged result =====");
-            System.out.println(OBJECT_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(dto));
-            System.out.println("==================================");
+            log.debug("简历解析结果: {}", OBJECT_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(dto));
         } catch (Exception e) {
-            System.out.println("[ResumeParse] 封装结果日志输出失败: " + e.getMessage());
+            log.warn("简历解析结果日志输出失败: {}", e.getMessage());
         }
     }
 

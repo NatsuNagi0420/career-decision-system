@@ -7,6 +7,7 @@ package com.example.ba.controller;
 
 import com.example.ba.common.Result;
 import com.example.ba.dto.JobRecommendRequestDTO;
+import com.example.ba.exception.BusinessException;
 import com.example.ba.mapper.JobMapper;
 import com.example.ba.pojo.JobInfo;
 import com.example.ba.service.JobService;
@@ -52,11 +53,7 @@ public class JobController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "12") int pageSize
     ) {
-        try {
-            return Result.success(jobService.searchJobs(keyword, location, locations, industry, companySize, companyType, salary, page, pageSize));
-        } catch (Exception e) {
-            return Result.error("获取岗位列表失败: " + e.getMessage());
-        }
+        return Result.success(jobService.searchJobs(keyword, location, locations, industry, companySize, companyType, salary, page, pageSize));
     }
 
     @GetMapping("/recommend")
@@ -68,99 +65,83 @@ public class JobController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "12") int pageSize
     ) {
-        try {
-            return Result.success(jobService.searchJobs(keyword, location, locations, industry, null, null, null, page, pageSize));
-        } catch (Exception e) {
-            return Result.error("获取推荐岗位失败: " + e.getMessage());
-        }
+        return Result.success(jobService.searchJobs(keyword, location, locations, industry, null, null, null, page, pageSize));
     }
 
     @PostMapping("/recommend/ai")
     public Result<Map<String, Object>> recommendByAi(@RequestBody JobRecommendRequestDTO req) {
-        try {
-            int limit = normalizeLimit(req == null ? null : req.getLimit());
-            List<JobInfo> result = new ArrayList<>();
-            Set<Integer> seen = new HashSet<>();
+        int limit = normalizeLimit(req == null ? null : req.getLimit());
+        List<JobInfo> result = new ArrayList<>();
+        Set<Integer> seen = new HashSet<>();
 
-            // 1) 先加入能力画像阶段的优先岗位（保证在推荐列表中）
-            List<Integer> preferredIds = req == null ? null : req.getPreferredJobIds();
-            if (preferredIds != null && !preferredIds.isEmpty()) {
-                Map<Integer, JobInfo> byId = new HashMap<>();
-                for (JobInfo ji : jobMapper.selectByIds(preferredIds)) {
-                    if (ji != null && ji.getId() != null) {
-                        byId.put(ji.getId(), ji);
-                    }
+        // 1) 先加入能力画像阶段的优先岗位（保证在推荐列表中）
+        List<Integer> preferredIds = req == null ? null : req.getPreferredJobIds();
+        if (preferredIds != null && !preferredIds.isEmpty()) {
+            Map<Integer, JobInfo> byId = new HashMap<>();
+            for (JobInfo ji : jobMapper.selectByIds(preferredIds)) {
+                if (ji != null && ji.getId() != null) {
+                    byId.put(ji.getId(), ji);
                 }
-                for (Integer id : preferredIds) {
-                    JobInfo ji = byId.get(id);
-                    if (ji != null && ji.getId() != null && !seen.contains(ji.getId())) {
-                        seen.add(ji.getId());
-                        result.add(ji);
-                        if (result.size() >= limit) {
-                            return Result.success(buildRecommendPayload(result, resolveKeywords(req)));
-                        }
+            }
+            for (Integer id : preferredIds) {
+                JobInfo ji = byId.get(id);
+                if (ji != null && ji.getId() != null && !seen.contains(ji.getId())) {
+                    seen.add(ji.getId());
+                    result.add(ji);
+                    if (result.size() >= limit) {
+                        return Result.success(buildRecommendPayload(result, resolveKeywords(req)));
                     }
                 }
             }
-
-            // 2) 使用关键词补齐推荐岗位
-            List<String> keywords = resolveKeywords(req);
-            for (String kw : keywords) {
-                if (kw == null || kw.trim().isEmpty()) continue;
-                try {
-                    Map<String, Object> jobs = jobService.searchJobs(
-                            kw.trim(),
-                            null,
-                            req == null ? null : req.getLocations(),
-                            null,
-                            null,
-                            null,
-                            null,
-                            1,
-                            Math.max(6, limit)
-                    );
-                    Object list = jobs.get("list");
-                    if (!(list instanceof List<?> items)) continue;
-                    for (Object it : items) {
-                        if (!(it instanceof JobInfo ji)) continue;
-                        if (ji.getId() == null) continue;
-                        if (seen.contains(ji.getId())) continue;
-                        seen.add(ji.getId());
-                        result.add(ji);
-                        if (result.size() >= limit) {
-                            return Result.success(buildRecommendPayload(result, keywords));
-                        }
-                    }
-                } catch (Exception ignore) {
-                }
-            }
-
-            return Result.success(buildRecommendPayload(result, keywords));
-        } catch (Exception e) {
-            return Result.error("AI 推荐岗位失败: " + e.getMessage());
         }
+
+        // 2) 使用关键词补齐推荐岗位
+        List<String> keywords = resolveKeywords(req);
+        for (String kw : keywords) {
+            if (kw == null || kw.trim().isEmpty()) continue;
+            try {
+                Map<String, Object> jobs = jobService.searchJobs(
+                        kw.trim(),
+                        null,
+                        req == null ? null : req.getLocations(),
+                        null,
+                        null,
+                        null,
+                        null,
+                        1,
+                        Math.max(6, limit)
+                );
+                Object list = jobs.get("list");
+                if (!(list instanceof List<?> items)) continue;
+                for (Object it : items) {
+                    if (!(it instanceof JobInfo ji)) continue;
+                    if (ji.getId() == null) continue;
+                    if (seen.contains(ji.getId())) continue;
+                    seen.add(ji.getId());
+                    result.add(ji);
+                    if (result.size() >= limit) {
+                        return Result.success(buildRecommendPayload(result, keywords));
+                    }
+                }
+            } catch (Exception ignore) {
+            }
+        }
+
+        return Result.success(buildRecommendPayload(result, keywords));
     }
 
     @GetMapping("/{id}")
     public Result<JobInfo> detail(@PathVariable int id) {
-        try {
-            JobInfo job = jobService.getJobDetail(id);
-            if (job == null) {
-                return Result.error(404, "岗位不存在");
-            }
-            return Result.success(job);
-        } catch (Exception e) {
-            return Result.error("获取岗位详情失败: " + e.getMessage());
+        JobInfo job = jobService.getJobDetail(id);
+        if (job == null) {
+            throw new BusinessException(404, "岗位不存在");
         }
+        return Result.success(job);
     }
 
     @GetMapping("/facets")
     public Result<Map<String, Object>> facets() {
-        try {
-            return Result.success(jobService.getFacets());
-        } catch (Exception e) {
-            return Result.error("获取筛选项失败: " + e.getMessage());
-        }
+        return Result.success(jobService.getFacets());
     }
 
     private int normalizeLimit(Integer raw) {

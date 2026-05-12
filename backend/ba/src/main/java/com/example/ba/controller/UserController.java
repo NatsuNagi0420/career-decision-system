@@ -8,6 +8,7 @@ package com.example.ba.controller;
 import com.example.ba.common.Result;
 import com.example.ba.dto.UserLoginDTO;
 import com.example.ba.dto.UserRegisterDTO;
+import com.example.ba.exception.BusinessException;
 import com.example.ba.mapper.UserMapper;
 import com.example.ba.mapper.UserTokenMapper;
 import com.example.ba.pojo.User;
@@ -37,32 +38,24 @@ public class UserController {
 
     @PostMapping("/register")
     public Result<String> register(@RequestBody UserRegisterDTO userRegisterDTO) {
-        try {
-            userService.register(userRegisterDTO);
-            return Result.success("注册成功");
-        } catch (RuntimeException e) {
-            return Result.error(e.getMessage());
-        }
+        userService.register(userRegisterDTO);
+        return Result.success("注册成功");
     }
 
     @PostMapping("/login")
     public Result<LoginVO> login(@RequestBody UserLoginDTO userLoginDTO) {
-        try {
-            User user = userService.login(userLoginDTO);
-            // 登录成功，不返回密码
-            user.setPassword("******");
+        User user = userService.login(userLoginDTO);
+        // 登录成功，不返回密码
+        user.setPassword("******");
 
-            String token = UUID.randomUUID().toString().replace("-", "");
-            userTokenMapper.insert(com.example.ba.pojo.UserToken.builder()
-                    .token(token)
-                    .userId(user.getId())
-                    .expireTime(LocalDateTime.now().plusDays(7))
-                    .build());
+        String token = UUID.randomUUID().toString().replace("-", "");
+        userTokenMapper.insert(com.example.ba.pojo.UserToken.builder()
+                .token(token)
+                .userId(user.getId())
+                .expireTime(LocalDateTime.now().plusDays(7))
+                .build());
 
-            return Result.success(new LoginVO(user, token));
-        } catch (RuntimeException e) {
-            return Result.error(e.getMessage());
-        }
+        return Result.success(new LoginVO(user, token));
     }
 
     @GetMapping("/info")
@@ -70,7 +63,7 @@ public class UserController {
         Long userId = AuthContext.getUserId();
         User user = userMapper.getById(userId);
         if (user == null) {
-            return Result.error(401, "未登录");
+            throw new BusinessException(401, "未登录");
         }
         user.setPassword("******");
         String avatarPath = (user.getAvatar() == null || user.getAvatar().isEmpty())

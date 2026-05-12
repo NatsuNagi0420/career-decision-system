@@ -6,6 +6,7 @@ package com.example.ba.controller;
 
 import com.example.ba.common.Result;
 import com.example.ba.dto.ResumeParseResultDTO;
+import com.example.ba.exception.BusinessException;
 import com.example.ba.service.ResumeParseService;
 import com.example.ba.utils.AuthContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,10 +30,10 @@ public class ResumeController {
     public Result<ResumeParseResultDTO> parse(@RequestParam("file") MultipartFile file) {
         Long userId = AuthContext.getUserId();
         if (userId == null) {
-            return Result.error("请先登录后再上传简历");
+            throw new BusinessException("请先登录后再上传简历");
         }
         if (file == null || file.isEmpty()) {
-            return Result.error("上传文件为空");
+            throw new BusinessException("上传文件为空");
         }
 
         try {
@@ -40,7 +41,7 @@ public class ResumeController {
             return Result.success(dto);
         } catch (Throwable e) {
             e.printStackTrace();
-            return Result.error("简历解析失败: " + e.getMessage());
+            throw new BusinessException("简历解析失败: " + e.getMessage(), e);
         }
     }
 

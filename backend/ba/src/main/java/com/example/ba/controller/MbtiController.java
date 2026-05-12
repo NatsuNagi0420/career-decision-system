@@ -6,6 +6,7 @@ package com.example.ba.controller;
 
 import com.example.ba.common.Result;
 import com.example.ba.dto.MbtiSubmitDTO;
+import com.example.ba.exception.BusinessException;
 import com.example.ba.service.MbtiService;
 import com.example.ba.vo.MbtiQuestionVO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,21 +23,13 @@ public class MbtiController {
 
     @GetMapping("/questions")
     public Result<List<MbtiQuestionVO>> getQuestions() {
-        try {
-            List<MbtiQuestionVO> questions = mbtiService.getAllQuestionsWithOptions();
-            return Result.success(questions);
-        } catch (Exception e) {
-            return Result.error("获取题目失败: " + e.getMessage());
-        }
+        List<MbtiQuestionVO> questions = mbtiService.getAllQuestionsWithOptions();
+        return Result.success(questions);
     }
 
     @PostMapping("/submit")
     public Result<String> submit(@RequestBody MbtiSubmitDTO submitDTO) {
-        try {
-            String mbtiType = mbtiService.submitTest(submitDTO);
-            return Result.success(mbtiType);
-        } catch (Exception e) {
-            return Result.error("提交测评失败: " + e.getMessage());
-        }
+        String mbtiType = mbtiService.submitTest(submitDTO);
+        return Result.success(mbtiType);
     }
 }

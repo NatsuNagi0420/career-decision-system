@@ -12,6 +12,7 @@ package com.example.ba.controller;
 import com.example.ba.common.Result;
 import com.example.ba.dto.ReportArchiveRequestDTO;
 import com.example.ba.dto.ReportGenerateRequestDTO;
+import com.example.ba.exception.BusinessException;
 import com.example.ba.mapper.UserReportArchiveMapper;
 import com.example.ba.pojo.UserReportArchive;
 import com.example.ba.utils.AiUtils;
@@ -47,10 +48,10 @@ public class ReportArchiveController {
     public Result<Void> saveArchive(@RequestBody ReportArchiveRequestDTO dto) {
         Long userId = AuthContext.getUserId();
         if (userId == null) {
-            return Result.error("未登录");
+            throw new BusinessException("未登录");
         }
         if (dto == null || dto.getReportJson() == null) {
-            return Result.error("归档内容为空");
+            throw new BusinessException("归档内容为空");
         }
         String title = dto.getTitle() == null ? "职业规划报告" : dto.getTitle();
         Long sortIndex = dto.getSortIndex() == null ? System.currentTimeMillis() : dto.getSortIndex();
@@ -71,7 +72,7 @@ public class ReportArchiveController {
     public Result<List<UserReportArchive>> listMyArchives() {
         Long userId = AuthContext.getUserId();
         if (userId == null) {
-            return Result.error("未登录");
+            throw new BusinessException("未登录");
         }
         List<UserReportArchive> list = userReportArchiveMapper.listByUserId(userId);
         return Result.success(list);
@@ -81,49 +82,48 @@ public class ReportArchiveController {
     public Result<UserReportArchive> getArchiveDetail(@PathVariable("id") Long id) {
         Long userId = AuthContext.getUserId();
         if (userId == null) {
-            return Result.error("未登录");
+            throw new BusinessException("未登录");
         }
         UserReportArchive archive = userReportArchiveMapper.findByIdAndUserId(id, userId);
         if (archive == null) {
-            return Result.error("记录不存在");
+            throw new BusinessException("记录不存在");
         }
         return Result.success(archive);
     }
 
     @PostMapping("/generate")
     public Result<Map<String, Object>> generateReport(@RequestBody ReportGenerateRequestDTO dto) {
+        if (dto == null) {
+            throw new BusinessException("报告生成入参为空");
+        }
+
+        String systemPrompt = "你是职业规划平台的报告生成引擎。" +
+                "请基于用户信息、能力画像、目标岗位与路径规划，输出严格 JSON。" +
+                "只输出 JSON，不要输出任何解释或 Markdown。" +
+                "JSON 结构必须包含：" +
+                "summary(string)," +
+                "gaps(Array<{label:string, items:string[]}>)," +
+                "planStages(Array<{name:string, tasks:string[]}>)," +
+                "matchAnalysis(string)," +
+                "evidenceHighlights(string[])," +
+                "skillPath(string[])," +
+                "action90Days(string[])," +
+                "risksAndAlternatives(string[])," +
+                "resumeInterviewStrategies(string[]).";
+
+
+        String userPrompt = "用户信息：" + safeJson(dto.getEntryDraft()) +
+                "\n能力画像：" + safeJson(dto.getCapabilityProfile()) +
+                "\n目标岗位：" + safeJson(dto.getTargetJob()) +
+                "\n路径规划：" + safeJson(dto.getPathPlan()) +
+                "\n路径图谱：" + safeJson(dto.getPathGraph());
+
         try {
-            if (dto == null) {
-                return Result.error("报告生成入参为空");
-            }
-
-            String systemPrompt = "你是职业规划平台的报告生成引擎。" +
-                    "请基于用户信息、能力画像、目标岗位与路径规划，输出严格 JSON。" +
-                    "只输出 JSON，不要输出任何解释或 Markdown。" +
-                    "JSON 结构必须包含：" +
-                    "summary(string)," +
-                    "gaps(Array<{label:string, items:string[]}>)," +
-                    "planStages(Array<{name:string, tasks:string[]}>)," +
-                    "matchAnalysis(string)," +
-                    "evidenceHighlights(string[])," +
-                    "skillPath(string[])," +
-                    "action90Days(string[])," +
-                    "risksAndAlternatives(string[])," +
-                    "resumeInterviewStrategies(string[]).";
-
-
-            String userPrompt = "用户信息：" + safeJson(dto.getEntryDraft()) +
-                    "\n能力画像：" + safeJson(dto.getCapabilityProfile()) +
-                    "\n目标岗位：" + safeJson(dto.getTargetJob()) +
-                    "\n路径规划：" + safeJson(dto.getPathPlan()) +
-                    "\n路径图谱：" + safeJson(dto.getPathGraph());
-
             String reply = aiUtils.getChatResponse(systemPrompt, userPrompt);
             Map<String, Object> parsed = parseJson(reply);
             return Result.success(normalizeReportJson(parsed, dto));
-
         } catch (Exception e) {
-            return Result.error("报告生成失败: " + e.getMessage());
+            throw new BusinessException("报告生成失败: " + e.getMessage(), e);
         }
     }
 

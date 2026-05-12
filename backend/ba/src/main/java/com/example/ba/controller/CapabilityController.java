@@ -6,6 +6,7 @@ package com.example.ba.controller;
 
 import com.example.ba.common.Result;
 import com.example.ba.dto.CapabilityProfileRequestDTO;
+import com.example.ba.exception.BusinessException;
 import com.example.ba.service.CapabilityService;
 import com.example.ba.utils.AiUtils;
 import com.example.ba.utils.AuthContext;
@@ -29,16 +30,12 @@ public class CapabilityController {
 
     @PostMapping("/profile/draft")
     public Result<Map<String, Object>> profileDraft(@RequestBody CapabilityProfileRequestDTO req) {
-        try {
-            Long userId = AuthContext.getUserId();
-            if (req != null && userId != null) {
-                req.setUserId(userId);
-            }
-            Map<String, Object> out = capabilityService.generateProfile(req);
-            return Result.success(out);
-        } catch (Exception e) {
-            return Result.error("生成能力画像失败: " + e.getMessage());
+        Long userId = AuthContext.getUserId();
+        if (req != null && userId != null) {
+            req.setUserId(userId);
         }
+        Map<String, Object> out = capabilityService.generateProfile(req);
+        return Result.success(out);
     }
 
     @PostMapping(value = "/profile/stream", produces = "text/event-stream;charset=UTF-8")

@@ -10,6 +10,7 @@ import com.example.ba.exception.BusinessException;
 import com.example.ba.service.CapabilityService;
 import com.example.ba.utils.AiUtils;
 import com.example.ba.utils.AuthContext;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +36,7 @@ public class CapabilityController {
     private ExecutorService executorService;
 
     @PostMapping("/profile/draft")
-    public Result<Map<String, Object>> profileDraft(@RequestBody CapabilityProfileRequestDTO req) {
+    public Result<Map<String, Object>> profileDraft(@Valid @RequestBody CapabilityProfileRequestDTO req) {
         Long userId = AuthContext.getUserId();
         if (req != null && userId != null) {
             req.setUserId(userId);
@@ -45,7 +46,7 @@ public class CapabilityController {
     }
 
     @PostMapping(value = "/profile/stream", produces = "text/event-stream;charset=UTF-8")
-    public SseEmitter profileStream(@RequestBody CapabilityProfileRequestDTO req) {
+    public SseEmitter profileStream(@Valid @RequestBody CapabilityProfileRequestDTO req) {
         // 创建 SseEmitter（5分钟超时）
         SseEmitter emitter = new SseEmitter(5 * 60 * 1000L);
 

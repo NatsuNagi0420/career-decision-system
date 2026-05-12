@@ -14,6 +14,7 @@ import com.example.ba.service.JobService;
 import com.example.ba.utils.AiUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -69,7 +70,7 @@ public class JobController {
     }
 
     @PostMapping("/recommend/ai")
-    public Result<Map<String, Object>> recommendByAi(@RequestBody JobRecommendRequestDTO req) {
+    public Result<Map<String, Object>> recommendByAi(@Valid @RequestBody JobRecommendRequestDTO req) {
         int limit = normalizeLimit(req == null ? null : req.getLimit());
         List<JobInfo> result = new ArrayList<>();
         Set<Integer> seen = new HashSet<>();

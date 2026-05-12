@@ -4,6 +4,7 @@
  */
 package com.example.ba.dto;
 
+import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
 
 import java.util.Map;
@@ -11,6 +12,9 @@ import java.util.Map;
 @Data
 public class ReportArchiveRequestDTO {
     private String title;
+
+    @NotEmpty(message = "报告内容不能为空")
     private Map<String, Object> reportJson;
+
     private Long sortIndex;
 }

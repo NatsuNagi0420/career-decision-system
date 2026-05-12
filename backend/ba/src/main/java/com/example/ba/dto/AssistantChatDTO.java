@@ -4,14 +4,19 @@
  */
 package com.example.ba.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 import java.util.Map;
 
 @Data
 public class AssistantChatDTO {
+    @NotBlank(message = "页面标识不能为空")
     private String page;
+
+    @NotBlank(message = "消息内容不能为空")
     private String message;
+
     private Map<String, Object> context;
 }
 

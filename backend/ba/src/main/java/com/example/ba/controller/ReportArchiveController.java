@@ -20,6 +20,7 @@ import com.example.ba.utils.AuthContext;
 import com.example.ba.utils.JsonUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -45,7 +46,7 @@ public class ReportArchiveController {
 
 
     @PostMapping("/archive")
-    public Result<Void> saveArchive(@RequestBody ReportArchiveRequestDTO dto) {
+    public Result<Void> saveArchive(@Valid @RequestBody ReportArchiveRequestDTO dto) {
         Long userId = AuthContext.getUserId();
         if (userId == null) {
             throw new BusinessException("未登录");
@@ -92,7 +93,7 @@ public class ReportArchiveController {
     }
 
     @PostMapping("/generate")
-    public Result<Map<String, Object>> generateReport(@RequestBody ReportGenerateRequestDTO dto) {
+    public Result<Map<String, Object>> generateReport(@Valid @RequestBody ReportGenerateRequestDTO dto) {
         if (dto == null) {
             throw new BusinessException("报告生成入参为空");
         }

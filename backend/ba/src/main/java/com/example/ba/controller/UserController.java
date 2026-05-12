@@ -16,6 +16,7 @@ import com.example.ba.service.UserService;
 import com.example.ba.utils.AuthContext;
 import com.example.ba.utils.BaseUrlUtils;
 import com.example.ba.vo.LoginVO;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,13 +38,13 @@ public class UserController {
     private UserMapper userMapper;
 
     @PostMapping("/register")
-    public Result<String> register(@RequestBody UserRegisterDTO userRegisterDTO) {
+    public Result<String> register(@Valid @RequestBody UserRegisterDTO userRegisterDTO) {
         userService.register(userRegisterDTO);
         return Result.success("注册成功");
     }
 
     @PostMapping("/login")
-    public Result<LoginVO> login(@RequestBody UserLoginDTO userLoginDTO) {
+    public Result<LoginVO> login(@Valid @RequestBody UserLoginDTO userLoginDTO) {
         User user = userService.login(userLoginDTO);
         // 登录成功，不返回密码
         user.setPassword("******");

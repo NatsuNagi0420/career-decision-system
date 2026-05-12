@@ -9,6 +9,7 @@ import com.example.ba.dto.MbtiSubmitDTO;
 import com.example.ba.exception.BusinessException;
 import com.example.ba.service.MbtiService;
 import com.example.ba.vo.MbtiQuestionVO;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -28,7 +29,7 @@ public class MbtiController {
     }
 
     @PostMapping("/submit")
-    public Result<String> submit(@RequestBody MbtiSubmitDTO submitDTO) {
+    public Result<String> submit(@Valid @RequestBody MbtiSubmitDTO submitDTO) {
         String mbtiType = mbtiService.submitTest(submitDTO);
         return Result.success(mbtiType);
     }

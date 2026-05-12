@@ -11,6 +11,7 @@ import com.example.ba.exception.BusinessException;
 import com.example.ba.utils.AiUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +43,7 @@ public class AssistantController {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @PostMapping("/chat")
-    public Result<Map<String, Object>> chat(@RequestBody AssistantChatDTO dto) {
+    public Result<Map<String, Object>> chat(@Valid @RequestBody AssistantChatDTO dto) {
         String page = dto.getPage() == null ? "" : dto.getPage();
         String userMessage = dto.getMessage() == null ? "" : dto.getMessage();
         Map<String, Object> context = dto.getContext();
@@ -74,7 +75,7 @@ public class AssistantController {
     }
 
     @PostMapping(value = "/chat/stream", produces = "text/event-stream;charset=UTF-8")
-    public SseEmitter chatStream(@RequestBody AssistantChatDTO dto) {
+    public SseEmitter chatStream(@Valid @RequestBody AssistantChatDTO dto) {
         log.info("Stream chat request - page: {}, message: {}", dto.getPage(), dto.getMessage());
 
         // 创建 SseEmitter（3分钟超时，助手对话通常较快）

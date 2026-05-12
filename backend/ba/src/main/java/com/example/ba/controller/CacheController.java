@@ -1,5 +1,6 @@
 package com.example.ba.controller;
 
+import com.example.ba.common.Result;
 import com.example.ba.service.impl.CapabilityServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -23,8 +24,8 @@ public class CacheController {
      * GET /api/cache/stats
      */
     @GetMapping("/stats")
-    public Map<String, Object> getCacheStats() {
-        return capabilityService.getCacheStatistics();
+    public Result<Map<String, Object>> getCacheStats() {
+        return Result.success(capabilityService.getCacheStatistics());
     }
 
     /**
@@ -32,8 +33,8 @@ public class CacheController {
      * DELETE /api/cache/all
      */
     @DeleteMapping("/all")
-    public Map<String, Object> clearAllCache() {
-        return capabilityService.clearCache();
+    public Result<Map<String, Object>> clearAllCache() {
+        return Result.success(capabilityService.clearCache());
     }
 
     /**
@@ -41,7 +42,7 @@ public class CacheController {
      * DELETE /api/cache/user/{userId}
      */
     @DeleteMapping("/user/{userId}")
-    public Map<String, Object> clearUserCache(@PathVariable Long userId) {
-        return capabilityService.clearUserCache(userId);
+    public Result<Map<String, Object>> clearUserCache(@PathVariable Long userId) {
+        return Result.success(capabilityService.clearUserCache(userId));
     }
 }

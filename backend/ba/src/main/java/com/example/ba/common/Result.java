@@ -15,9 +15,10 @@ public class Result<T> {
     private Integer code;
     private String msg;
     private T data;
+    private Long timestamp;
 
     public static <T> Result<T> success(T data) {
-        return new Result<>(200, "success", data);
+        return new Result<>(200, "success", data, System.currentTimeMillis());
     }
 
     public static <T> Result<T> success() {
@@ -25,10 +26,10 @@ public class Result<T> {
     }
 
     public static <T> Result<T> error(String msg) {
-        return new Result<>(500, msg, null);
+        return new Result<>(500, msg, null, System.currentTimeMillis());
     }
 
     public static <T> Result<T> error(Integer code, String msg) {
-        return new Result<>(code, msg, null);
+        return new Result<>(code, msg, null, System.currentTimeMillis());
     }
 }

@@ -5,6 +5,7 @@
 package com.example.ba.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
@@ -20,6 +21,12 @@ public class WebConfig implements WebMvcConfigurer {
     @Autowired
     private AuthInterceptor authInterceptor;
 
+    /**
+     * 用户上传资源路径（从配置文件读取，支持环境变量覆盖）
+     */
+    @Value("${static.uploads.path:file:./uploads/images/}")
+    private String uploadsPath;
+
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         // 1. 映射内置静态资源（系统默认头像、图标等）
@@ -28,11 +35,11 @@ public class WebConfig implements WebMvcConfigurer {
                 .addResourceLocations("classpath:/static/profile/");
 
         // 2. 映射用户上传资源（用户头像、简历等）
-        //    这些资源存储在外部目录
-        //    开发环境：相对路径 file:uploads/images/
-        //    生产环境：通过环境变量指定绝对路径（Task 4会实现）
+        //    这些资源存储在外部目录，路径可通过配置文件或环境变量指定
+        //    开发环境：file:./uploads/images/
+        //    生产环境：通过环境变量 STATIC_UPLOADS_PATH 指定绝对路径
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:uploads/images/");
+                .addResourceLocations(uploadsPath);
     }
 
     @Override

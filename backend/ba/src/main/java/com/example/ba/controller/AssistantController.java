@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -34,7 +35,10 @@ public class AssistantController {
     @Autowired
     private AiUtils aiUtils;
 
-    private final ExecutorService executorService = Executors.newCachedThreadPool();
+    @Autowired
+    @Qualifier("sseExecutor")
+    private ExecutorService executorService;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @PostMapping("/chat")
@@ -73,7 +77,8 @@ public class AssistantController {
     public SseEmitter chatStream(@RequestBody AssistantChatDTO dto) {
         log.info("Stream chat request - page: {}, message: {}", dto.getPage(), dto.getMessage());
 
-        SseEmitter emitter = new SseEmitter(60_000L);
+        // 创建 SseEmitter（3分钟超时，助手对话通常较快）
+        SseEmitter emitter = new SseEmitter(3 * 60 * 1000L);
 
         String page = dto.getPage() == null ? "" : dto.getPage();
         String userMessage = dto.getMessage() == null ? "" : dto.getMessage();
@@ -93,6 +98,32 @@ public class AssistantController {
         List<Map<String, String>> messages = new ArrayList<>();
         messages.add(Map.of("role", "user", "content", prompt));
 
+        // 设置超时回调
+        emitter.onTimeout(() -> {
+            log.warn("助手对话SSE连接超时: page={}", page);
+            try {
+                emitter.complete();
+            } catch (Exception e) {
+                log.debug("完成超时连接时出错: {}", e.getMessage());
+            }
+        });
+
+        // 设置错误回调
+        emitter.onError((ex) -> {
+            log.error("助手对话SSE连接异常: page={}", page, ex);
+            try {
+                emitter.complete();
+            } catch (Exception e) {
+                log.debug("完成异常连接时出错: {}", e.getMessage());
+            }
+        });
+
+        // 设置完成回调
+        emitter.onCompletion(() -> {
+            log.info("助手对话SSE连接关闭: page={}", page);
+        });
+
+        // 异步执行业务逻辑
         executorService.execute(() -> {
             try {
                 log.debug("Starting async AI call");
@@ -107,8 +138,7 @@ public class AssistantController {
                         },
                         error -> {
                             log.error("AI call error: {}", error.getMessage(), error);
-                            AiUtils.sendSseEvent(emitter, "error", Map.of("message", error.getMessage()));
-                            emitter.complete();
+                            AiUtils.sendSseError(emitter, "AI服务调用失败: " + error.getMessage());
                         }
                 );
 
@@ -123,10 +153,14 @@ public class AssistantController {
                 AiUtils.sendSseEvent(emitter, "done", Map.of());
                 emitter.complete();
                 log.info("Stream chat request completed");
+
+            } catch (BusinessException e) {
+                log.warn("助手对话业务异常: message={}", e.getMessage());
+                AiUtils.sendSseError(emitter, e.getMessage());
+
             } catch (Exception e) {
                 log.error("Async execution error: {}", e.getMessage(), e);
-                AiUtils.sendSseEvent(emitter, "error", Map.of("message", e.getMessage()));
-                emitter.complete();
+                AiUtils.sendSseError(emitter, "系统错误，请稍后重试");
             }
         });
 

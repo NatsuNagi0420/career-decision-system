@@ -624,7 +624,35 @@ public class AiUtils {
                     .name(eventName)
                     .data(data, MediaType.APPLICATION_JSON));
         } catch (IOException e) {
-            log.debug("SSE client disconnected: {}", e.getMessage());
+            log.error("发送SSE事件失败: eventName={}", eventName, e);
+            // 发送失败时完成连接，避免资源泄漏
+            try {
+                emitter.completeWithError(e);
+            } catch (Exception ex) {
+                log.debug("完成SSE连接时出错: {}", ex.getMessage());
+            }
+        }
+    }
+
+    /**
+     * 发送 SSE 错误事件并关闭连接
+     * @param emitter SSE 发射器
+     * @param errorMessage 错误消息
+     */
+    public static void sendSseError(SseEmitter emitter, String errorMessage) {
+        if (emitter == null) return;
+        try {
+            emitter.send(SseEmitter.event()
+                    .name("error")
+                    .data(Map.of("message", errorMessage), MediaType.APPLICATION_JSON));
+            emitter.completeWithError(new RuntimeException(errorMessage));
+        } catch (IOException e) {
+            log.error("发送SSE错误事件失败", e);
+            try {
+                emitter.completeWithError(e);
+            } catch (Exception ex) {
+                log.debug("完成SSE连接时出错: {}", ex.getMessage());
+            }
         }
     }
 }

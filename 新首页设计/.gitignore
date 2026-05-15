@@ -1,0 +1,43 @@
+# 依赖
+node_modules/
+frontend/fr/node_modules/
+
+# 编译产物
+target/
+backend/ba/target/
+dist/
+frontend/fr/dist/
+frontend/fr/dist-ssr/
+
+# 环境变量（含敏感信息）
+.env
+frontend/fr/.env
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# 日志
+*.log
+
+# Claude Code 本地配置
+.claude/
+
+# 第三方工具
+codex-academic-paper-skills-main/
+
+# 文档（不入库）
+docs/
+
+# 静态资源（含大文件，不入库）
+server/
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 后端环境变量
+backend/ba/.env
+backend/ba/.env.local
+backend/ba/.env.*.local

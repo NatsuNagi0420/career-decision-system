@@ -8,7 +8,7 @@ defineOptions({
   name: 'DashboardLayout'
 })
 
-const props = defineProps<{
+defineProps<{
   title: string // 页面标题
   subtitle?: string // 副标题
   showDateRange?: boolean // 是否显示日期范围选择

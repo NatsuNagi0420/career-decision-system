@@ -6,6 +6,7 @@ package com.example.ba.service.impl;
 
 import com.example.ba.dto.UserLoginDTO;
 import com.example.ba.dto.UserRegisterDTO;
+import com.example.ba.exception.BusinessException;
 import com.example.ba.pojo.User;
 import com.example.ba.mapper.UserMapper;
 import com.example.ba.service.UserService;
@@ -32,14 +33,14 @@ public class UserServiceImpl implements UserService {
         User existUser = userMapper.getByUsername(dto.getUsername());
         if (existUser != null) {
             log.warn("用户注册失败: 用户名已存在, username={}", dto.getUsername());
-            throw new RuntimeException("用户名已存在");
+            throw new BusinessException("用户名已存在");
         }
 
         // 2. 检查手机号是否已存在
         User existPhone = userMapper.getByPhone(dto.getPhone());
         if (existPhone != null) {
             log.warn("用户注册失败: 手机号已注册, phone={}", dto.getPhone());
-            throw new RuntimeException("该手机号已注册");
+            throw new BusinessException("该手机号已注册");
         }
 
         // 3. 构建用户实体 (实际项目中应对密码进行加密，如 BCrypt)
@@ -70,17 +71,17 @@ public class UserServiceImpl implements UserService {
         // 2. 校验
         if (user == null) {
             log.warn("用户登录失败: 用户不存在, username={}", dto.getUsername());
-            throw new RuntimeException("用户不存在");
+            throw new BusinessException("用户不存在");
         }
 
         if (!user.getPassword().equals(dto.getPassword())) {
             log.warn("用户登录失败: 密码错误, username={}", dto.getUsername());
-            throw new RuntimeException("密码错误");
+            throw new BusinessException("密码错误");
         }
 
         if (user.getStatus() == 0) {
             log.warn("用户登录失败: 账号已被禁用, username={}", dto.getUsername());
-            throw new RuntimeException("账号已被禁用");
+            throw new BusinessException("账号已被禁用");
         }
 
         // 3. 处理动态资源路径

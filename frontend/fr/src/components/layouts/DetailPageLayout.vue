@@ -8,7 +8,7 @@ defineOptions({
   name: 'DetailPageLayout'
 })
 
-const props = defineProps<{
+defineProps<{
   title: string // 页面标题
   subtitle?: string // 副标题
   tags?: string[] // 标签列表

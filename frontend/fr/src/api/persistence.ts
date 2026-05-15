@@ -5,8 +5,8 @@
 import request from '@/utils/request'
 import Cookies from 'js-cookie'
 
-export const generatePathPlanApi = (req: any = {}) => {
-  return request<any>({
+export const generatePathPlanApi = (req: Record<string, unknown> = {}) => {
+  return request<Record<string, unknown>>({
     url: '/path-plan/generate',
     method: 'post',
     data: req
@@ -16,7 +16,7 @@ export const generatePathPlanApi = (req: any = {}) => {
 /**
  * 流式生成职业路径规划（SSE）
  */
-export const generatePathPlanStreamApi = async (payload: any = {}): Promise<Response> => {
+export const generatePathPlanStreamApi = async (payload: Record<string, unknown> = {}): Promise<Response> => {
   const token = Cookies.get('token')
   const baseURL = import.meta.env.VITE_API_BASE_URL || '/api'
 

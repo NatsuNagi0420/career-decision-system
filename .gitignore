@@ -12,6 +12,8 @@ frontend/fr/dist-ssr/
 # 环境变量（含敏感信息）
 .env
 frontend/fr/.env
+backend/ba/src/main/resources/application-dev.properties
+backend/ba/src/main/resources/application-prod.properties
 
 # IDE
 .idea/
@@ -32,6 +34,13 @@ docs/
 
 # 静态资源（含大文件，不入库）
 server/
+
+# 字体文件（体积过大，不入库）
+video_anime/src/assets/fonts/*.zip
+video_anime/src/assets/fonts/*.ttf
+video_anime/src/assets/fonts/*.otf
+video_anime/src/assets/fonts/*.woff
+video_anime/src/assets/fonts/*.woff2
 
 # 系统文件
 .DS_Store

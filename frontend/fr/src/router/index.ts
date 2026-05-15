@@ -3,18 +3,10 @@
  * 职责：定义职业规划平台的所有前端路由（首页、登录注册、信息录入、能力画像、
  *       岗位探索、路径规划、当前报告页以及历史报告列表页等），
  *       并在全局前置守卫中控制登录访问权限。
+ *
+ * 性能优化：所有路由组件使用懒加载，减少初始包体积
  */
 import { createRouter, createWebHistory } from 'vue-router'
-import Home from '../pages/Home.vue'
-import Login from '../pages/Login.vue'
-import MbtiAssessment from '../pages/MbtiAssessment.vue'
-import ComprehensiveEntry from '../pages/ComprehensiveEntry.vue'
-import CapabilityProfile from '../pages/CapabilityProfile.vue'
-import JobExploration from '../pages/JobExploration.vue'
-import PathPlanning from '../pages/PathPlanning.vue'
-import Report from '../pages/Report.vue'
-import ReportsList from '../pages/ReportsList.vue'
-
 import { isLoggedIn } from '../utils/auth'
 import { activityMonitor } from '../utils/activityMonitor'
 
@@ -24,52 +16,52 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: Home
+      component: () => import('../pages/Home.vue')
     },
     {
       path: '/login',
       name: 'login',
-      component: Login
+      component: () => import('../pages/Login.vue')
     },
     // 测评模块路由
     {
       path: '/assessment/mbti',
       name: 'mbti-assessment',
-      component: MbtiAssessment
+      component: () => import('../pages/MbtiAssessment.vue')
     },
     // 信息录入模块路由（直接进入综合信息录入页）
     {
       path: '/entry/comprehensive',
       name: 'comprehensive-entry',
-      component: ComprehensiveEntry
+      component: () => import('../pages/ComprehensiveEntry.vue')
     },
     // 能力画像
     {
       path: '/capability-profile',
       name: 'capability-profile',
-      component: CapabilityProfile
+      component: () => import('../pages/CapabilityProfile.vue')
     },
     {
       path: '/job-exploration',
       name: 'job-exploration',
-      component: JobExploration
+      component: () => import('../pages/JobExploration.vue')
     },
     {
       path: '/path-planning',
       name: 'path-planning',
-      component: PathPlanning
+      component: () => import('../pages/PathPlanning.vue')
     },
     {
       path: '/report',
       name: 'report',
-      component: Report
+      component: () => import('../pages/Report.vue')
     },
     {
       path: '/reports',
       name: 'reports',
-      component: ReportsList,
-    },
-  ],
+      component: () => import('../pages/ReportsList.vue')
+    }
+  ]
 })
 
 router.beforeEach((to) => {

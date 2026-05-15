@@ -2,6 +2,9 @@ import { fileURLToPath, URL } from 'node:url'
 
 import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import AutoImport from 'unplugin-auto-import/vite'
+import Components from 'unplugin-vue-components/vite'
+import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
@@ -12,6 +15,12 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       vue(),
+      AutoImport({
+        resolvers: [ElementPlusResolver()],
+      }),
+      Components({
+        resolvers: [ElementPlusResolver()],
+      }),
     ],
     server: {
       host: '0.0.0.0', // 允许通过 IP 访问
@@ -36,5 +45,23 @@ export default defineConfig(({ mode }) => {
         '@': fileURLToPath(new URL('./src', import.meta.url))
       },
     },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'vue-vendor': ['vue', 'vue-router', 'pinia'],
+            'element-plus': ['element-plus'],
+            'echarts': ['echarts'],
+            'utils': [
+              './src/utils/request',
+              './src/utils/storage',
+              './src/utils/sseParser'
+            ]
+          }
+        }
+      },
+      chunkSizeWarningLimit: 1000,
+      cssCodeSplit: true
+    }
   }
 })

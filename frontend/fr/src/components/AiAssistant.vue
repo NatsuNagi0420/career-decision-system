@@ -260,7 +260,7 @@ const onResize = () => {
 }
 
 const handleProactiveMessage = (event: Event) => {
-  const customEvent = event as CustomEvent<{ message: string; buttons: any[] }>
+  const customEvent = event as CustomEvent<{ message: string; buttons: unknown[] }>
   if (!customEvent.detail?.message) return
 
   const msgId = `m-proactive-${Date.now()}`
@@ -430,7 +430,7 @@ const send = async (preset?: string) => {
       onComplete: () => {
         upsertAssistantMessage(thinkingId, { pending: false })
       },
-      onError: (data) => {
+      onError: () => {
         upsertAssistantMessage(thinkingId, {
           content: '抱歉，我遇到了一些问题，请稍后再试。',
           pending: false
@@ -447,7 +447,7 @@ const send = async (preset?: string) => {
       const content = parsed.text || '我正在思考，你也可以换个问法试试。'
       const actions = parsed.actions.length ? parsed.actions : text.includes('下一步') ? buildNextActions() : []
       upsertAssistantMessage(thinkingId, { content, actions, pending: false })
-    } catch (fallbackError) {
+    } catch {
       ElMessage.error('星途暂时不可用，请稍后重试')
       upsertAssistantMessage(thinkingId, {
         content: '我这边连接有点问题，稍后再试试。你也可以先继续当前步骤，我会在你需要时提供建议。',

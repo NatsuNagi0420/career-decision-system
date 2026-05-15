@@ -8,7 +8,7 @@ defineOptions({
   name: 'FormPageLayout'
 })
 
-const props = defineProps<{
+defineProps<{
   title: string // 页面标题
   subtitle?: string // 副标题
   showProgress?: boolean // 是否显示进度条
@@ -35,7 +35,7 @@ const emit = defineEmits<{
       </div>
 
       <!-- 进度指示器 -->
-      <div v-if="showProgress && totalSteps" class="progress-section">
+      <div v-if="showProgress && currentStep && totalSteps" class="progress-section">
         <div class="progress-text">
           第 {{ currentStep }} / {{ totalSteps }} 步
         </div>

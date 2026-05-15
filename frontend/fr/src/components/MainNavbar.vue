@@ -165,7 +165,7 @@ const handleNavClick = (navId: string, path: string) => {
         <template v-else>
           <div class="user-profile-wrapper">
             <div class="user-profile" @click.stop="toggleDropdown">
-              <img :src="user?.avatar" alt="Avatar" class="user-avatar" />
+              <img :src="user?.avatar || '/profile/defaultIcon.png'" alt="Avatar" class="user-avatar" />
               <span class="user-name desktop-only">{{ user?.username }}</span>
               <div class="arrow-icon" :class="{ rotate: isDropdownOpen }"></div>
             </div>

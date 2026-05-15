@@ -245,7 +245,7 @@ class ActivityMonitor {
   /**
    * 处理主动消息推送
    */
-  private handleProactiveMessage(data: { shouldPush: boolean; message: string; buttons: any[] }) {
+  private handleProactiveMessage(data: { shouldPush: boolean; message: string; buttons: unknown[] }) {
     // 检查本地冷却期
     const cooldownKey = this.currentPage
     const cooldown = this.cooldownMap.get(cooldownKey)

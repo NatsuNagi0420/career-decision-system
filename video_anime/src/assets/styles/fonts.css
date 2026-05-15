@@ -1,0 +1,164 @@
+/**
+ * 字体配置说明
+ *
+ * 本项目使用本地字体文件：
+ * - Noto Serif CJK SC（思源宋体）：中文字体 - 专业、优雅、学术风格
+ * - Roboto：英文和数字字体 - 现代、清晰
+ *
+ * 授权：SIL Open Font License - 完全免费商用
+ *
+ * 字体文件位置：src/assets/fonts/
+ * - NotoSerifCJKsc-Regular.otf (24MB)
+ * - NotoSerifCJKsc-Bold.otf (25MB)
+ * - Roboto-Regular.ttf (342KB)
+ * - Roboto-Bold.ttf (343KB)
+ */
+
+/* ========== 字体文件加载 ========== */
+
+/* 思源宋体 - 常规 */
+@font-face {
+  font-family: 'Noto Serif SC';
+  src: url('@/assets/fonts/NotoSerifCJKsc-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* 思源宋体 - 粗体 */
+@font-face {
+  font-family: 'Noto Serif SC';
+  src: url('@/assets/fonts/NotoSerifCJKsc-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Roboto - 常规 */
+@font-face {
+  font-family: 'Roboto';
+  src: url('@/assets/fonts/Roboto-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Roboto - 粗体 */
+@font-face {
+  font-family: 'Roboto';
+  src: url('@/assets/fonts/Roboto-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* ========== 字体定义 ========== */
+
+  /* 中文字体栈 - 宋体风格，带降级方案 */
+  --font-serif:
+    'Noto Serif SC',         /* 本地字体 - 思源宋体 */
+    'SimSun',                /* Windows 宋体 */
+    '宋体',
+    'STSong',                /* macOS 华文宋体 */
+    'Songti SC',             /* macOS 宋体 */
+    serif;
+
+  /* 英文/数字字体栈 */
+  --font-number:
+    'Roboto',                /* 本地字体 */
+    -apple-system,           /* macOS/iOS 系统字体 */
+    BlinkMacSystemFont,      /* macOS Chrome */
+    'Segoe UI',              /* Windows 10/11 */
+    'Helvetica Neue',        /* macOS 旧版 */
+    Arial,                   /* 通用降级 */
+    sans-serif;
+
+  /* 代码字体栈 */
+  --font-mono:
+    'Consolas',              /* Windows */
+    'Monaco',                /* macOS */
+    'Courier New',           /* 通用降级 */
+    monospace;
+
+  /* ========== 字体大小 ========== */
+
+  /* 标题 */
+  --font-size-h1: 72px;
+  --font-size-h2: 48px;
+  --font-size-h3: 36px;
+  --font-size-h4: 28px;
+
+  /* 正文 */
+  --font-size-body: 24px;
+  --font-size-small: 18px;
+  --font-size-tiny: 14px;
+
+  /* ========== 字重 ========== */
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-bold: 700;
+
+  /* ========== 行高 ========== */
+
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+  --line-height-loose: 1.8;
+}
+
+/* ========== 全局字体应用 ========== */
+
+body {
+  font-family: var(--font-serif);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--line-height-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 标题 */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+}
+
+h1 { font-size: var(--font-size-h1); }
+h2 { font-size: var(--font-size-h2); }
+h3 { font-size: var(--font-size-h3); }
+h4 { font-size: var(--font-size-h4); }
+
+/* 数字使用专用字体 */
+.number,
+.stat-value,
+.counter {
+  font-family: var(--font-number);
+  font-variant-numeric: tabular-nums; /* 等宽数字 */
+}
+
+/* 代码 */
+code,
+pre,
+.code {
+  font-family: var(--font-mono);
+}
+
+/* ========== 字体优化 ========== */
+
+/* 优化字体渲染 */
+* {
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 防止字体闪烁 */
+.font-loading {
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.font-loaded {
+  opacity: 1;
+}

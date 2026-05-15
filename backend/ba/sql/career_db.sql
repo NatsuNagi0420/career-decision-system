@@ -1,17 +1,17 @@
 /*
- Navicat Premium Data Transfer
+ Navicat Premium Dump SQL
 
  Source Server         : 本地数据库
  Source Server Type    : MySQL
- Source Server Version : 80012
+ Source Server Version : 80012 (8.0.12)
  Source Host           : localhost:3306
  Source Schema         : career_db
 
  Target Server Type    : MySQL
- Target Server Version : 80012
+ Target Server Version : 80012 (8.0.12)
  File Encoding         : 65001
 
- Date: 25/03/2026 19:01:01
+ Date: 13/05/2026 21:53:13
 */
 
 SET NAMES utf8mb4;
@@ -31,7 +31,7 @@ CREATE TABLE `mbti_dimension`  (
   `name_b` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '偏好B名称',
   `tie_rule` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '同分规则',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = 'MBTI维度配置表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = 'MBTI维度配置表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of mbti_dimension
@@ -53,8 +53,8 @@ CREATE TABLE `mbti_option`  (
   `score_code` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '计分维度',
   `score` tinyint(4) NOT NULL DEFAULT 1,
   PRIMARY KEY (`id`) USING BTREE,
-  INDEX `idx_q_id`(`q_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 186 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = 'MBTI题目选项表' ROW_FORMAT = Dynamic;
+  INDEX `idx_q_id`(`q_id` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 187 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = 'MBTI题目选项表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of mbti_option
@@ -256,7 +256,7 @@ CREATE TABLE `mbti_personality`  (
   `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '完整描述',
   `careers` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '适配职业',
   PRIMARY KEY (`type_code`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = 'MBTI16型人格详情表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = 'MBTI16型人格详情表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of mbti_personality
@@ -289,7 +289,7 @@ CREATE TABLE `mbti_question`  (
   `content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '题干',
   `sort` smallint(6) NOT NULL COMMENT '显示顺序',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = 'MBTI测试题目表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = 'MBTI测试题目表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of mbti_question
@@ -401,10 +401,10 @@ CREATE TABLE `mbti_user_answer`  (
   `score_code` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '得分维度 E/I/S/N/T/F/J/P',
   `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '答题时间',
   PRIMARY KEY (`id`) USING BTREE,
-  INDEX `idx_user_id`(`user_id`) USING BTREE,
-  INDEX `idx_test_no`(`test_no`) USING BTREE,
-  INDEX `idx_q_id`(`q_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'MBTI用户答题记录表' ROW_FORMAT = Dynamic;
+  INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
+  INDEX `idx_test_no`(`test_no` ASC) USING BTREE,
+  INDEX `idx_q_id`(`q_id` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 99 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'MBTI用户答题记录表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of mbti_user_answer
@@ -502,13 +502,134 @@ INSERT INTO `mbti_user_answer` VALUES (90, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd'
 INSERT INTO `mbti_user_answer` VALUES (91, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 91, 'B', 'T', '2026-03-25 15:17:32');
 INSERT INTO `mbti_user_answer` VALUES (92, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 92, 'B', 'F', '2026-03-25 15:17:32');
 INSERT INTO `mbti_user_answer` VALUES (93, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 93, 'B', 'N', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer` VALUES (94, 15, 'dd0b8ec34ce547b791bb078696f69a09', 1, 'A', 'J', '2026-05-13 01:22:46');
+INSERT INTO `mbti_user_answer` VALUES (95, 15, 'dd0b8ec34ce547b791bb078696f69a09', 2, 'B', 'J', '2026-05-13 01:22:46');
+INSERT INTO `mbti_user_answer` VALUES (96, 15, 'dd0b8ec34ce547b791bb078696f69a09', 3, 'A', 'S', '2026-05-13 01:22:46');
+INSERT INTO `mbti_user_answer` VALUES (97, 15, 'dd0b8ec34ce547b791bb078696f69a09', 4, 'A', 'E', '2026-05-13 01:22:46');
+INSERT INTO `mbti_user_answer` VALUES (98, 15, 'dd0b8ec34ce547b791bb078696f69a09', 5, 'B', 'S', '2026-05-13 01:22:46');
 
 -- ----------------------------
--- Table structure for sys_user
+-- Table structure for mbti_user_answer_backup_20260325
 -- ----------------------------
-DROP TABLE IF EXISTS `sys_user`;
-CREATE TABLE `sys_user`  (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+DROP TABLE IF EXISTS `mbti_user_answer_backup_20260325`;
+CREATE TABLE `mbti_user_answer_backup_20260325`  (
+  `id` bigint(20) NOT NULL DEFAULT 0 COMMENT '答题记录ID',
+  `user_id` bigint(20) NOT NULL COMMENT '关联用户ID（对应 sys_user.id）',
+  `test_no` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '测试唯一编号（一次测试一个编号）',
+  `q_id` smallint(6) NOT NULL COMMENT '题目ID',
+  `opt_code` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '选项 A/B',
+  `score_code` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '得分维度 E/I/S/N/T/F/J/P',
+  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '答题时间'
+) ENGINE = MyISAM AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of mbti_user_answer_backup_20260325
+-- ----------------------------
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (1, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 1, 'A', 'J', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (2, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 2, 'A', 'P', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (3, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 3, 'A', 'S', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (4, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 4, 'B', 'I', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (5, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 5, 'B', 'S', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (6, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 6, 'A', 'F', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (7, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 7, 'A', 'P', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (8, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 8, 'A', 'E', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (9, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 9, 'B', 'P', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (10, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 10, 'B', 'P', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (11, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 11, 'B', 'J', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (12, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 12, 'B', 'E', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (13, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 13, 'B', 'N', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (14, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 14, 'B', 'I', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (15, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 15, 'B', 'S', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (16, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 16, 'B', 'T', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (17, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 17, 'B', 'J', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (18, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 18, 'B', 'E', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (19, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 19, 'B', 'I', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (20, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 20, 'B', 'P', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (21, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 21, 'B', 'J', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (22, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 22, 'B', 'E', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (23, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 23, 'B', 'I', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (24, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 24, 'B', 'S', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (25, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 25, 'B', 'J', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (26, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 26, 'B', 'E', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (27, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 27, 'B', 'E', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (28, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 28, 'B', 'P', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (29, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 29, 'B', 'S', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (30, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 30, 'B', 'T', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (31, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 31, 'A', 'T', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (32, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 32, 'A', 'S', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (33, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 33, 'A', 'P', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (34, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 34, 'A', 'E', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (35, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 35, 'A', 'I', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (36, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 36, 'B', 'P', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (37, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 37, 'B', 'S', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (38, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 38, 'B', 'T', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (39, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 39, 'B', 'F', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (40, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 40, 'B', 'N', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (41, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 41, 'A', 'P', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (42, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 42, 'B', 'E', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (43, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 43, 'B', 'P', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (44, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 44, 'B', 'S', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (45, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 45, 'A', 'F', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (46, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 46, 'A', 'T', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (47, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 47, 'A', 'S', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (48, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 48, 'A', 'I', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (49, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 49, 'B', 'P', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (50, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 50, 'B', 'S', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (51, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 51, 'B', 'T', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (52, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 52, 'B', 'F', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (53, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 53, 'B', 'N', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (54, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 54, 'B', 'E', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (55, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 55, 'B', 'S', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (56, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 56, 'B', 'T', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (57, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 57, 'B', 'F', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (58, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 58, 'B', 'N', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (59, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 59, 'B', 'P', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (60, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 60, 'A', 'I', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (61, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 61, 'A', 'S', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (62, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 62, 'A', 'E', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (63, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 63, 'B', 'S', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (64, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 64, 'B', 'T', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (65, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 65, 'B', 'J', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (66, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 66, 'B', 'E', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (67, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 67, 'B', 'I', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (68, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 68, 'B', 'P', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (69, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 69, 'B', 'F', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (70, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 70, 'B', 'P', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (71, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 71, 'B', 'J', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (72, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 72, 'B', 'E', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (73, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 73, 'B', 'N', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (74, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 74, 'B', 'S', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (75, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 75, 'B', 'T', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (76, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 76, 'B', 'J', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (77, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 77, 'B', 'I', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (78, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 78, 'B', 'F', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (79, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 79, 'B', 'S', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (80, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 80, 'B', 'T', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (81, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 81, 'B', 'F', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (82, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 82, 'B', 'N', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (83, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 83, 'B', 'S', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (84, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 84, 'B', 'T', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (85, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 85, 'B', 'F', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (86, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 86, 'B', 'N', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (87, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 87, 'B', 'S', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (88, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 88, 'B', 'T', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (89, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 89, 'B', 'F', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (90, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 90, 'B', 'N', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (91, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 91, 'B', 'T', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (92, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 92, 'B', 'F', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (93, 8, 'ea2cc3290e7447c0a8d7e6cfa3aa90fd', 93, 'B', 'N', '2026-03-25 15:17:32');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (94, 15, 'dd0b8ec34ce547b791bb078696f69a09', 1, 'A', 'J', '2026-05-13 01:22:46');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (95, 15, 'dd0b8ec34ce547b791bb078696f69a09', 2, 'B', 'J', '2026-05-13 01:22:46');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (96, 15, 'dd0b8ec34ce547b791bb078696f69a09', 3, 'A', 'S', '2026-05-13 01:22:46');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (97, 15, 'dd0b8ec34ce547b791bb078696f69a09', 4, 'A', 'E', '2026-05-13 01:22:46');
+INSERT INTO `mbti_user_answer_backup_20260325` VALUES (98, 15, 'dd0b8ec34ce547b791bb078696f69a09', 5, 'B', 'S', '2026-05-13 01:22:46');
+
+-- ----------------------------
+-- Table structure for sys_user_backup_20260325
+-- ----------------------------
+DROP TABLE IF EXISTS `sys_user_backup_20260325`;
+CREATE TABLE `sys_user_backup_20260325`  (
+  `id` bigint(20) NOT NULL DEFAULT 0 COMMENT '主键ID',
   `username` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '用户名',
   `phone` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '手机号',
   `password` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '加密后的密码',
@@ -517,56 +638,27 @@ CREATE TABLE `sys_user`  (
   `status` tinyint(4) NULL DEFAULT 1 COMMENT '账号状态 (1:正常, 0:禁用)',
   `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  `is_deleted` tinyint(4) NULL DEFAULT 0 COMMENT '是否删除 (0:未删除, 1:已删除)',
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE INDEX `uk_username`(`username`) USING BTREE,
-  UNIQUE INDEX `uk_phone`(`phone`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '用户信息表' ROW_FORMAT = Dynamic;
+  `is_deleted` tinyint(4) NULL DEFAULT 0 COMMENT '是否删除 (0:未删除, 1:已删除)'
+) ENGINE = MyISAM AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
--- Records of sys_user
+-- Records of sys_user_backup_20260325
 -- ----------------------------
-INSERT INTO `sys_user` VALUES (1, '初音未来', '13924742850', 'hatsunemiku', 'yunzheng584173063@gmail.com', '/avatar/avatar.png', 1, '2026-03-22 17:02:23', '2026-03-22 17:02:23', 0);
-INSERT INTO `sys_user` VALUES (2, 'u357344440', '13570788592', 'pass123', '', '/avatar/avatar.png', 1, '2026-03-25 14:54:34', '2026-03-25 14:54:34', 0);
-INSERT INTO `sys_user` VALUES (3, 'u963236355', '13899794748', 'pass123', '', '/avatar/avatar.png', 1, '2026-03-25 14:54:55', '2026-03-25 14:54:55', 0);
-INSERT INTO `sys_user` VALUES (4, 'u1227261938', '13697772632', 'pass123', '', '/avatar/avatar.png', 1, '2026-03-25 14:55:16', '2026-03-25 14:55:16', 0);
-INSERT INTO `sys_user` VALUES (5, 'u1168486312', '13720178575', 'pass123', '', '/avatar/avatar.png', 1, '2026-03-25 14:55:32', '2026-03-25 14:55:32', 0);
-INSERT INTO `sys_user` VALUES (6, 'u992899589', '13699929190', 'pass123', '', '/avatar/avatar.png', 1, '2026-03-25 14:56:48', '2026-03-25 14:56:48', 0);
-INSERT INTO `sys_user` VALUES (7, '李婷婷', '15295367157', '812115', '', '/avatar/avatar.png', 1, '2026-03-25 15:03:53', '2026-03-25 15:03:53', 0);
-INSERT INTO `sys_user` VALUES (8, '小禾', '13770701385', '123456', '3034206204@qq.com', '/avatar/avatar.png', 1, '2026-03-25 15:06:30', '2026-03-25 15:06:30', 0);
-INSERT INTO `sys_user` VALUES (9, 'test_profile_337181012', '', 'Passw0rd!', 'test_profile_337181012@example.com', '/avatar/avatar.png', 1, '2026-03-25 15:59:40', '2026-03-25 15:59:40', 0);
-INSERT INTO `sys_user` VALUES (10, 'test_quick_1450517796', '11110641212', 'Passw0rd!', 'test_quick_1450517796@example.com', '/avatar/avatar.png', 1, '2026-03-25 16:36:04', '2026-03-25 16:36:04', 0);
-INSERT INTO `sys_user` VALUES (11, 'test_quick2_1833141055', '11769057855', 'Passw0rd!', 'test_quick2_1833141055@example.com', '/avatar/avatar.png', 1, '2026-03-25 16:36:44', '2026-03-25 16:36:44', 0);
-INSERT INTO `sys_user` VALUES (12, 'test_quick_237774661', '11375425784', 'Passw0rd!', 'test_quick_237774661@example.com', '/avatar/avatar.png', 1, '2026-03-25 16:37:55', '2026-03-25 16:37:55', 0);
-INSERT INTO `sys_user` VALUES (13, 'test_stable_1374491699', '11368999678', 'Passw0rd!', 'test_stable_1374491699@example.com', '/avatar/avatar.png', 1, '2026-03-25 17:35:45', '2026-03-25 17:35:45', 0);
-INSERT INTO `sys_user` VALUES (14, '聿皇', '18800213654', '123456', '', '/avatar/avatar.png', 1, '2026-03-25 17:59:50', '2026-03-25 17:59:50', 0);
 
 -- ----------------------------
--- Table structure for sys_user_token
+-- Table structure for sys_user_token_backup_20260325
 -- ----------------------------
-DROP TABLE IF EXISTS `sys_user_token`;
-CREATE TABLE `sys_user_token`  (
+DROP TABLE IF EXISTS `sys_user_token_backup_20260325`;
+CREATE TABLE `sys_user_token_backup_20260325`  (
   `token` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   `user_id` bigint(20) NOT NULL,
   `expire_time` datetime NOT NULL,
-  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`token`) USING BTREE,
-  INDEX `idx_user_id`(`user_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE = MyISAM AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
--- Records of sys_user_token
+-- Records of sys_user_token_backup_20260325
 -- ----------------------------
-INSERT INTO `sys_user_token` VALUES ('134c2f38778b468e80ef204d962459c6', 10, '2026-04-01 16:36:04', '2026-03-25 16:36:04');
-INSERT INTO `sys_user_token` VALUES ('15e705cb931b491cbb517bb845abef5c', 11, '2026-04-01 16:36:44', '2026-03-25 16:36:44');
-INSERT INTO `sys_user_token` VALUES ('3d6fff07f7364962825ffa42be8e33f5', 8, '2026-04-01 15:06:50', '2026-03-25 15:06:49');
-INSERT INTO `sys_user_token` VALUES ('4297bbaffb9c458aa4c1885108090970', 14, '2026-04-01 18:00:10', '2026-03-25 18:00:09');
-INSERT INTO `sys_user_token` VALUES ('44ce81d59ca54d0a98f57759807e7dd9', 1, '2026-04-01 14:59:29', '2026-03-25 14:59:28');
-INSERT INTO `sys_user_token` VALUES ('53d8718d03694e9e8075b46b2101e7c0', 13, '2026-04-01 17:35:45', '2026-03-25 17:35:44');
-INSERT INTO `sys_user_token` VALUES ('bb1b963e74ab4a939ac51b8b290b4548', 12, '2026-04-01 16:37:55', '2026-03-25 16:37:55');
-INSERT INTO `sys_user_token` VALUES ('bd9c74c57c7f4845a91eeaee4505e253', 9, '2026-04-01 15:59:40', '2026-03-25 15:59:40');
-INSERT INTO `sys_user_token` VALUES ('f75e1a3a9b13476f9d5db4a9b265fd75', 6, '2026-04-01 14:56:48', '2026-03-25 14:56:47');
-INSERT INTO `sys_user_token` VALUES ('fd387fd522474fc2bbf7922739665ac2', 7, '2026-04-01 15:04:12', '2026-03-25 15:04:12');
 
 -- ----------------------------
 -- Table structure for t_2025_multi_area_job_info
@@ -587,8 +679,8 @@ CREATE TABLE `t_2025_multi_area_job_info`  (
   `company_details` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '公司详情',
   `job_source_url` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '岗位来源URL',
   PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE INDEX `idx_job_unique`(`company_name`, `job_name`, `update_date`, `salary_range`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '岗位信息表（优化后的结构）' ROW_FORMAT = Dynamic;
+  UNIQUE INDEX `idx_job_unique`(`company_name` ASC, `job_name` ASC, `update_date` ASC, `salary_range` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 9908 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '岗位信息表（优化后的结构）' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of t_2025_multi_area_job_info
@@ -1395,140 +1487,84 @@ INSERT INTO `t_2025_multi_area_job_info` VALUES (8999, '储备经理人', '深�
 INSERT INTO `t_2025_multi_area_job_info` VALUES (9000, '统计员', '广州市建设工程拆迁有限公司', '7月2日', '80-100元/天', '广州-海珠区', '工程施工,工程施工', '100-299人', '未融资', 'CC840989520J40790629213', '岗位职责：<br>1.协助处理综合部门事务，如人资、行政、文秘、宣传等交办工作<br>2.辅助进行档案整理工作；<br>3.其他交办的工作。<br>任职资格：<br>1.大学本科学历或在读学生，专业不限，实习期至少连续3个月及以上；<br>2.有良好的政治素质，组织纪律性强，有较强的责任意识和服务意识；<br>3.熟悉掌握和使用办公软件，工作细致严谨，有耐心；<br>5.工作时间:周一至周五，上午8:30-12:00；下午2:00-5:30。<br>职位福利：员工食堂（工作日提供早、午餐）', '广州市建设工程拆迁有限公司（简称“广州拆迁”）成立于2001年，是广州地区征收补偿、管线迁改市政前期领域的头部企业。公司2020年5月由住建系统划转到国资系统，股权、人事、资产等全部移交至广州珠江实业集团有限公司进行统一监管。广州拆迁经营业务涉及征收补偿、管线迁改、城市更新、绿色拆卸、前期摸查、土地收储、绿化迁移、建（构）筑物拆除、建筑施工及招投标代理等，具有甲级拆迁、市政公用工程施工总承包二级、房屋建筑工程施工总承包二级等资质，通过ISO9001,ISO14001,OHSA18001质量、环境、职业健康安全管理认证体系。自成立以来，公司立足主营主业，积极承接市政征收补偿、管线迁改及工程代建、建筑拆除、施工任务。在征收补偿和管线迁改方面，承接在建白云机场三期扩建、广交会展四期扩建、广州北站至白云机场快速通道、国际金融城东区建设、如意坊放射线、棠下琶洲及海珠湿地公园高压架空线下地迁改、车陂路北延线、康王路下穿流花湖隧道、广花一级公路地下综合管廊等省市级重点项目；圆满完成洲头咀隧道、金沙洲大桥及广州大桥拓宽、新电视塔南广场、西江引水、临江大道东延线、凤凰山隧道、广州南站地下空间以及广州多条轨道交通的征收补偿管线迁改等多项重点工程。在建筑拆除方面，实施了如广州花城玻璃厂、黄金围货运站、东圃粮库金融城东区路位景观带房屋等地上建（构）筑物拆除工作。在城市更新方面，承接了环市东商圈更新改造区意愿表决咨询、京溪广智片区改造意愿征询以及五羊新城改造前期摸查等旧改项目。在绿色拆卸方面，完成沥滘污水处理厂提标改造工程绿色拆卸试点项目以及法政路湛家大街地段公共绿地工程，在车陂路隧道、金融城地块、广建人才公寓等项目大力推广使用再生石粉、机制砂等绿色拆卸产品。二十年来，广州拆迁坚持“客户至上、多方满意、专业高效、持续改进”的管理方针，秉承“为客户创造价值，实现共赢”的经营宗旨，不断开拓进取，取得了良好的经济效益与社会效益。目前已形成“市政前期＋城市更新”双轮驱动的发展格局，创建管线迁改、动迁管理、城市更新咨询服务等三大优势品牌，拥有动迁、代建、咨询、施工等四大业务板块，在土地一级开发领域基本形成完整产业链。公司将继续秉承“为客户创造价值，让城市更新更美好”的企业使命，致力于打造成为“广州城建前期与城市更新综合服务平台领军者”。', 'https://www.zhaopin.com/jobdetail/CC840989520J40790629213.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77');
 
 -- ----------------------------
--- Table structure for user_capability_profile
+-- Table structure for user
 -- ----------------------------
-DROP TABLE IF EXISTS `user_capability_profile`;
-CREATE TABLE `user_capability_profile`  (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `user_id` bigint(20) NOT NULL,
-  `profile_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL,
-  `recommended_job_ids_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL,
-  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP,
-  `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `is_deleted` tinyint(4) NULL DEFAULT 0,
+DROP TABLE IF EXISTS `user`;
+CREATE TABLE `user`  (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `username` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '用户名',
+  `phone` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '手机号',
+  `password` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '加密后的密码',
+  `email` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '邮箱 (选填)',
+  `avatar` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '头像相对路径',
+  `status` tinyint(4) NULL DEFAULT 1 COMMENT '账号状态 (1:正常, 0:禁用)',
+  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `is_deleted` tinyint(4) NULL DEFAULT 0 COMMENT '是否删除 (0:未删除, 1:已删除)',
   PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE INDEX `uk_user_id`(`user_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+  UNIQUE INDEX `uk_username`(`username` ASC) USING BTREE,
+  UNIQUE INDEX `uk_phone`(`phone` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 16 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '用户信息表' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Records of user
+-- ----------------------------
 
 -- ----------------------------
 -- Table structure for user_report_archive
 -- ----------------------------
 DROP TABLE IF EXISTS `user_report_archive`;
 CREATE TABLE `user_report_archive`  (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `user_id` bigint(20) NOT NULL,
-  `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL,
-  `report_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL,
-  `sort_index` bigint(20) NULL,
-  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP,
-  `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `is_deleted` tinyint(4) NULL DEFAULT 0,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `user_id` bigint(20) NOT NULL COMMENT '用户ID',
+  `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '报告标题',
+  `report_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '归档报告完整JSON',
+  `sort_index` bigint(20) NULL DEFAULT NULL COMMENT '排序字段（时间戳或自定义排序）',
+  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `is_deleted` tinyint(4) NULL DEFAULT 0 COMMENT '逻辑删除标记：0正常，1删除',
   PRIMARY KEY (`id`) USING BTREE,
-  KEY `idx_user_id` (`user_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+  INDEX `idx_user_id`(`user_id` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '用户报告归档表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
--- Records of user_capability_profile
+-- Records of user_report_archive
+-- ----------------------------
 
 -- ----------------------------
-INSERT INTO `user_capability_profile` VALUES (1, 9, '{\"radar\":{\"values\":[94,93,95,79,95,80,95],\"indicators\":[{\"max\":100,\"name\":\"专业技能\"},{\"max\":100,\"name\":\"创新能力\"},{\"max\":100,\"name\":\"沟通表达\"},{\"max\":100,\"name\":\"学习能力\"},{\"max\":100,\"name\":\"执行力\"},{\"max\":100,\"name\":\"团队协作\"},{\"max\":100,\"name\":\"抗压能力\"}]},\"completenessScore\":89,\"recommendedKeywords\":[\"前端\",\"Java\"],\"suggestions\":{\"longTerm\":\"围绕目标岗位形成可持续学习路线，逐步累积可量化成果。\",\"shortTerm\":\"补全项目经历与技能证明材料，并准备可展示作品。\"},\"recommendedJobs\":[{\"id\":4358,\"jobName\":\"前端开发\",\"companyName\":\"上海扬丝信息科技有限公司\",\"updateDate\":\"7月26日\",\"salaryRange\":\"3000-6000元\",\"location\":\"上海-嘉定区\",\"industry\":\"计算机软件,互联网,专业技术服务\",\"companySize\":\"20-99人\",\"companyType\":\"天使轮\",\"jobCode\":\"CC424126880J40702490814\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CC424126880J40702490814.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":4344,\"jobName\":\"前端开发\",\"companyName\":\"杭州速客网络服务有限公司\",\"updateDate\":\"7月28日\",\"salaryRange\":\"1.3-1.4万\",\"location\":\"宁波-鄞州区\",\"industry\":\"IT服务\",\"companySize\":\"20-99人\",\"companyType\":null,\"jobCode\":\"CC635221330J40797770505\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CC635221330J40797770505.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":4338,\"jobName\":\"前端开发\",\"companyName\":\"陕西慧云联达企业管理咨询有限公司\",\"updateDate\":\"5月8日\",\"salaryRange\":\"1.5-3万·14薪\",\"location\":\"东莞-None\",\"industry\":\"人力资源服务\",\"companySize\":\"20-99人\",\"companyType\":\"不需要融资\",\"jobCode\":\"CCL1445845820J40769910605\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CCL1445845820J40769910605.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":595,\"jobName\":\"前端开发\",\"companyName\":\"信雅达\",\"updateDate\":\"7月23日\",\"salaryRange\":\"8000-15000元\",\"location\":\"合肥-包河区\",\"industry\":\"计算机软件,IT服务\",\"companySize\":\"1000-9999人\",\"companyType\":\"已上市\",\"jobCode\":\"CC146032650J40730527716\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CC146032650J40730527716.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":594,\"jobName\":\"前端开发\",\"companyName\":\"海南新珠江人力资源开发管理有限公司\",\"updateDate\":\"7月23日\",\"salaryRange\":\"6000-11000元\",\"location\":\"海口-龙华区\",\"industry\":\"专业技术服务\",\"companySize\":\"20-99人\",\"companyType\":null,\"jobCode\":\"CC384412210J40760137912\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CC384412210J40760137912.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":571,\"jobName\":\"前端开发\",\"companyName\":\"武汉清达环保科技有限公司\",\"updateDate\":\"7月9日\",\"salaryRange\":\"8000-16000元\",\"location\":\"武汉-江夏区\",\"industry\":\"环保\",\"companySize\":\"100-299人\",\"companyType\":\"不需要融资\",\"jobCode\":\"CC186107820J40747887211\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CC186107820J40747887211.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":4366,\"jobName\":\"Java\",\"companyName\":\"大连高新园区仁源计算机软件开发有限公司\",\"updateDate\":\"5月20日\",\"salaryRange\":\"4000-7000元\",\"location\":\"大连-甘井子区\",\"industry\":\"计算机软件,电子商务\",\"companySize\":\"100-299人\",\"companyType\":\"未融资\",\"jobCode\":\"CCL1468857000J40599587809\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CCL1468857000J40599587809.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":4364,\"jobName\":\"Java\",\"companyName\":\"众阳健康科技集团有限公司\",\"updateDate\":\"10月9日\",\"salaryRange\":\"1-1.5万\",\"location\":\"济南-历下区\",\"industry\":\"计算机软件,互联网,IT服务,人工智能\",\"companySize\":\"1000-9999人\",\"companyType\":\"未融资\",\"jobCode\":\"CC227606010J40595914606\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CC227606010J40595914606.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":4357,\"jobName\":\"Java\",\"companyName\":\"外企德科数字技术有限公司\",\"updateDate\":\"2025-07-27 00:25:49\",\"salaryRange\":\"1.5-3万\",\"location\":\"东莞-None\",\"industry\":\"专业技术服务\",\"companySize\":\"10000人以上\",\"companyType\":null,\"jobCode\":\"CCL1480117890J40791078505\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CCL1480117890J40791078505.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":4333,\"jobName\":\"Java\",\"companyName\":\"软通动力信息技术(集团)股份有限公司\",\"updateDate\":\"4月18日\",\"salaryRange\":\"6000-10000元·13薪\",\"location\":\"西安-雁塔区\",\"industry\":\"互联网,IT服务,计算机软件\",\"companySize\":\"10000人以上\",\"companyType\":\"D轮及以上\",\"jobCode\":\"CC000544460J40704060016\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CC000544460J40704060016.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":4327,\"jobName\":\"Java\",\"companyName\":\"中软国际\",\"updateDate\":\"7月25日\",\"salaryRange\":\"面议\",\"location\":\"成都-郫都区\",\"industry\":\"计算机软件,运营商/增值服务\",\"companySize\":\"10000人以上\",\"companyType\":\"已上市\",\"jobCode\":\"CC508620120J40800831312\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CC508620120J40800831312.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":4321,\"jobName\":\"Java\",\"companyName\":\"大连同方软银科技股份有限公司\",\"updateDate\":\"11月21日\",\"salaryRange\":\"6000-8000元\",\"location\":\"大连-沙河口区\",\"industry\":\"计算机软件,IT服务\",\"companySize\":\"500-999人\",\"companyType\":\"已上市\",\"jobCode\":\"CC189336910J40669681108\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CC189336910J40669681108.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"}],\"competitivenessStars\":4,\"tags\":[\"逻辑清晰\",\"学习能力强\",\"执行力\"],\"recommendedJobTitles\":[\"前端开发工程师\",\"Java开发工程师\",\"产品助理\"],\"recommendKeyword\":\"前端开发工程师\"}', '[4358,4344,4338,595,594,571,4366,4364,4357,4333,4327,4321]', '2026-03-25 15:59:40', '2026-03-25 15:59:40', 0);
-INSERT INTO `user_capability_profile` VALUES (2, 1, '{\"radar\":{\"indicators\":[{\"name\":\"专业技能\",\"max\":100},{\"name\":\"实践经验\",\"max\":100},{\"name\":\"职场软实力\",\"max\":100},{\"name\":\"学历背景\",\"max\":100},{\"name\":\"职业规划清晰度\",\"max\":100}],\"values\":[10,5,55,65,15]},\"completenessScore\":25,\"recommendedKeywords\":[\"管培生\",\"行政助理\",\"人事助理\",\"客户服务\",\"初级运营\"],\"suggestions\":{\"shortTerm\":\"立即补充专业背景、实习经历及核心技能，以提升简历通过率；针对ISFJ性格特征，可先从行政、助理类通用岗位切入。\",\"longTerm\":\"通过1-2份实习明确行业偏好，利用ISFJ细致耐心的优势，深耕人力资源、行政管理或客户成功领域，逐步建立职业护城河。\"},\"recommendedJobs\":[{\"id\":8962,\"jobName\":\"管培生/储备干部\",\"companyName\":\"郑州新捞派餐饮管理有限公司郑州第一分公司\",\"updateDate\":\"7月26日\",\"salaryRange\":\"7000-8000元\",\"location\":\"蚌埠-蚌山区\",\"industry\":\"餐饮服务\",\"companySize\":\"10000人以上\",\"companyType\":\"已上市\",\"jobCode\":\"CCL1360672810J40714373316\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CCL1360672810J40714373316.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":8924,\"jobName\":\"管培生/储备干部\",\"companyName\":\"北京链家置地房地产经纪有限公司\",\"updateDate\":\"7月28日\",\"salaryRange\":\"6000-12000元\",\"location\":\"北京-海淀区\",\"industry\":\"房地产中介,电子商务\",\"companySize\":\"10000人以上\",\"companyType\":\"未融资\",\"jobCode\":\"CC252944430J40292261216\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CC252944430J40292261216.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":5014,\"jobName\":\"管培生/储备干部\",\"companyName\":\"江苏沃得集团\",\"updateDate\":\"7月25日\",\"salaryRange\":\"7000-12000元\",\"location\":\"镇江-丹阳市\",\"industry\":\"专用设备制造,通用设备制造\",\"companySize\":\"10000人以上\",\"companyType\":\"未融资\",\"jobCode\":\"CC212856610J40521430508\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CC212856610J40521430508.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":4991,\"jobName\":\"管培生/储备干部\",\"companyName\":\"福建省一苇投资咨询有限公司\",\"updateDate\":\"7月28日\",\"salaryRange\":\"4000-5000元\",\"location\":\"泉州-丰泽区\",\"industry\":\"新媒体\",\"companySize\":\"20-99人\",\"companyType\":null,\"jobCode\":\"CCL1449878430J40689789806\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CCL1449878430J40689789806.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":4969,\"jobName\":\"管培生/储备干部\",\"companyName\":\"焦作汉河电缆有限公司\",\"updateDate\":\"7月22日\",\"salaryRange\":\"5000-8000元\",\"location\":\"焦作-修武县\",\"industry\":\"电气机械/电力设备\",\"companySize\":\"300-499人\",\"companyType\":\"不需要融资\",\"jobCode\":\"CC479265620J40757874601\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CC479265620J40757874601.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":4967,\"jobName\":\"管培生/储备干部\",\"companyName\":\"深圳市乐有家控股集团有限公司\",\"updateDate\":\"7月25日\",\"salaryRange\":\"9000-11000元\",\"location\":\"深圳-宝安区\",\"industry\":\"房地产中介,房地产中介,咨询服务\",\"companySize\":\"10000人以上\",\"companyType\":\"未融资\",\"jobCode\":\"CC381381910J40797130205\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CC381381910J40797130205.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":8974,\"jobName\":\"电话客服\",\"companyName\":\"新疆乐学无忧正岳教育咨询服务有限公司\",\"updateDate\":\"5月26日\",\"salaryRange\":\"7000-14000元\",\"location\":\"乌鲁木齐-新市区\",\"industry\":\"培训/辅导服务\",\"companySize\":\"20-99人\",\"companyType\":null,\"jobCode\":\"CCL1463417280J40567390409\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CCL1463417280J40567390409.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":8966,\"jobName\":\"销售助理\",\"companyName\":\"无锡鑫巨宏智能科技股份有限公司\",\"updateDate\":\"6月7日\",\"salaryRange\":\"5000-8000元\",\"location\":\"无锡-新吴区\",\"industry\":\"金属制品业,金属制品业\",\"companySize\":\"1000-9999人\",\"companyType\":\"C轮\",\"jobCode\":\"CC519645230J40786155213\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CC519645230J40786155213.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":8960,\"jobName\":\"售后客服\",\"companyName\":\"英才无忧(山东)网络科技有限公司\",\"updateDate\":\"7月23日\",\"salaryRange\":\"8000-15000元\",\"location\":\"南京-建邺区\",\"industry\":\"人力资源服务\",\"companySize\":\"20-99人\",\"companyType\":null,\"jobCode\":\"CCL1504310520J40697448206\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CCL1504310520J40697448206.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":4987,\"jobName\":\"档案管理\",\"companyName\":\"英才无忧(山东)网络科技有限公司\",\"updateDate\":\"7月23日\",\"salaryRange\":\"7000-8000元\",\"location\":\"北京-朝阳区\",\"industry\":\"人力资源服务\",\"companySize\":\"20-99人\",\"companyType\":null,\"jobCode\":\"CCL1504310520J40697442506\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CCL1504310520J40697442506.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":4915,\"jobName\":\"售后客服\",\"companyName\":\"速聘无忧(山东)网络科技有限公司\",\"updateDate\":\"7月23日\",\"salaryRange\":\"1.3-2万·13薪\",\"location\":\"北京-朝阳区\",\"industry\":\"企业服务\",\"companySize\":\"100-299人\",\"companyType\":null,\"jobCode\":\"CCL1504310400J40697205306\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CCL1504310400J40697205306.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":4573,\"jobName\":\"游戏推广\",\"companyName\":\"无锡余音缭绕文化有限公司\",\"updateDate\":\"7月25日\",\"salaryRange\":\"1-1.3万\",\"location\":\"咸宁-崇阳县\",\"industry\":\"文化艺术/娱乐\",\"companySize\":\"10000人以上\",\"companyType\":null,\"jobCode\":\"CCL1385391730J40867150315\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CCL1385391730J40867150315.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"}],\"matchScores\":[92,85,78,71,64,60,60,60,60,60,60,60],\"recommendedJobCards\":[{\"title\":\"行政专员\",\"matchScore\":88},{\"title\":\"人事助理\",\"matchScore\":82},{\"title\":\"综合管培生\",\"matchScore\":75},{\"title\":\"客户成功专员\",\"matchScore\":70}],\"competitivenessStars\":1,\"tags\":[\"应届毕业生\",\"ISFJ-守护者\",\"求职起步期\",\"高执行力\",\"待完善简历\"],\"recommendedJobTitles\":[\"行政专员\",\"人事助理\",\"综合管培生\",\"客户成功专员\",\"新媒体运营助理\",\"课程顾问\"],\"recommendKeyword\":\"行政专员\"}', '[8962,8924,5014,4991,4969,4967,8974,8966,8960,4987,4915,4573]', '2026-03-25 16:00:53', '2026-03-25 17:09:09', 0);
-INSERT INTO `user_capability_profile` VALUES (23, 12, '{\"radar\":{\"values\":[40,40,40,40,40,40,40],\"indicators\":[{\"max\":100,\"name\":\"专业技能\"},{\"max\":100,\"name\":\"创新能力\"},{\"max\":100,\"name\":\"沟通表达\"},{\"max\":100,\"name\":\"学习能力\"},{\"max\":100,\"name\":\"执行力\"},{\"max\":100,\"name\":\"团队协作\"},{\"max\":100,\"name\":\"抗压能力\"}]},\"completenessScore\":22,\"recommendedKeywords\":[\"前端\",\"Java\"],\"suggestions\":{\"longTerm\":\"围绕目标岗位形成可持续学习路线，逐步累积可量化成果。\",\"shortTerm\":\"补全项目经历与技能证明材料，并准备可展示作品。\"},\"recommendedJobs\":[{\"id\":4358,\"jobName\":\"前端开发\",\"companyName\":\"上海扬丝信息科技有限公司\",\"updateDate\":\"7月26日\",\"salaryRange\":\"3000-6000元\",\"location\":\"上海-嘉定区\",\"industry\":\"计算机软件,互联网,专业技术服务\",\"companySize\":\"20-99人\",\"companyType\":\"天使轮\",\"jobCode\":\"CC424126880J40702490814\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CC424126880J40702490814.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":4344,\"jobName\":\"前端开发\",\"companyName\":\"杭州速客网络服务有限公司\",\"updateDate\":\"7月28日\",\"salaryRange\":\"1.3-1.4万\",\"location\":\"宁波-鄞州区\",\"industry\":\"IT服务\",\"companySize\":\"20-99人\",\"companyType\":null,\"jobCode\":\"CC635221330J40797770505\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CC635221330J40797770505.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":4338,\"jobName\":\"前端开发\",\"companyName\":\"陕西慧云联达企业管理咨询有限公司\",\"updateDate\":\"5月8日\",\"salaryRange\":\"1.5-3万·14薪\",\"location\":\"东莞-None\",\"industry\":\"人力资源服务\",\"companySize\":\"20-99人\",\"companyType\":\"不需要融资\",\"jobCode\":\"CCL1445845820J40769910605\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CCL1445845820J40769910605.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":595,\"jobName\":\"前端开发\",\"companyName\":\"信雅达\",\"updateDate\":\"7月23日\",\"salaryRange\":\"8000-15000元\",\"location\":\"合肥-包河区\",\"industry\":\"计算机软件,IT服务\",\"companySize\":\"1000-9999人\",\"companyType\":\"已上市\",\"jobCode\":\"CC146032650J40730527716\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CC146032650J40730527716.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":594,\"jobName\":\"前端开发\",\"companyName\":\"海南新珠江人力资源开发管理有限公司\",\"updateDate\":\"7月23日\",\"salaryRange\":\"6000-11000元\",\"location\":\"海口-龙华区\",\"industry\":\"专业技术服务\",\"companySize\":\"20-99人\",\"companyType\":null,\"jobCode\":\"CC384412210J40760137912\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CC384412210J40760137912.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":571,\"jobName\":\"前端开发\",\"companyName\":\"武汉清达环保科技有限公司\",\"updateDate\":\"7月9日\",\"salaryRange\":\"8000-16000元\",\"location\":\"武汉-江夏区\",\"industry\":\"环保\",\"companySize\":\"100-299人\",\"companyType\":\"不需要融资\",\"jobCode\":\"CC186107820J40747887211\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CC186107820J40747887211.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":4366,\"jobName\":\"Java\",\"companyName\":\"大连高新园区仁源计算机软件开发有限公司\",\"updateDate\":\"5月20日\",\"salaryRange\":\"4000-7000元\",\"location\":\"大连-甘井子区\",\"industry\":\"计算机软件,电子商务\",\"companySize\":\"100-299人\",\"companyType\":\"未融资\",\"jobCode\":\"CCL1468857000J40599587809\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CCL1468857000J40599587809.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":4364,\"jobName\":\"Java\",\"companyName\":\"众阳健康科技集团有限公司\",\"updateDate\":\"10月9日\",\"salaryRange\":\"1-1.5万\",\"location\":\"济南-历下区\",\"industry\":\"计算机软件,互联网,IT服务,人工智能\",\"companySize\":\"1000-9999人\",\"companyType\":\"未融资\",\"jobCode\":\"CC227606010J40595914606\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CC227606010J40595914606.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":4357,\"jobName\":\"Java\",\"companyName\":\"外企德科数字技术有限公司\",\"updateDate\":\"2025-07-27 00:25:49\",\"salaryRange\":\"1.5-3万\",\"location\":\"东莞-None\",\"industry\":\"专业技术服务\",\"companySize\":\"10000人以上\",\"companyType\":null,\"jobCode\":\"CCL1480117890J40791078505\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CCL1480117890J40791078505.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":4333,\"jobName\":\"Java\",\"companyName\":\"软通动力信息技术(集团)股份有限公司\",\"updateDate\":\"4月18日\",\"salaryRange\":\"6000-10000元·13薪\",\"location\":\"西安-雁塔区\",\"industry\":\"互联网,IT服务,计算机软件\",\"companySize\":\"10000人以上\",\"companyType\":\"D轮及以上\",\"jobCode\":\"CC000544460J40704060016\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CC000544460J40704060016.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":4327,\"jobName\":\"Java\",\"companyName\":\"中软国际\",\"updateDate\":\"7月25日\",\"salaryRange\":\"面议\",\"location\":\"成都-郫都区\",\"industry\":\"计算机软件,运营商/增值服务\",\"companySize\":\"10000人以上\",\"companyType\":\"已上市\",\"jobCode\":\"CC508620120J40800831312\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CC508620120J40800831312.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":4321,\"jobName\":\"Java\",\"companyName\":\"大连同方软银科技股份有限公司\",\"updateDate\":\"11月21日\",\"salaryRange\":\"6000-8000元\",\"location\":\"大连-沙河口区\",\"industry\":\"计算机软件,IT服务\",\"companySize\":\"500-999人\",\"companyType\":\"已上市\",\"jobCode\":\"CC189336910J40669681108\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CC189336910J40669681108.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"}],\"matchScores\":[92,92,92,92,92,92,85,85,85,85,85,85],\"recommendedJobCards\":[{\"title\":\"前端开发工程师\",\"matchScore\":92},{\"title\":\"Java开发工程师\",\"matchScore\":85},{\"title\":\"产品助理\",\"matchScore\":78}],\"competitivenessStars\":1,\"tags\":[\"逻辑清晰\",\"学习能力强\",\"执行力\"],\"recommendedJobTitles\":[\"前端开发工程师\",\"Java开发工程师\",\"产品助理\"],\"recommendKeyword\":\"前端开发工程师\"}', '[4358,4344,4338,595,594,571,4366,4364,4357,4333,4327,4321]', '2026-03-25 16:37:55', '2026-03-25 16:37:55', 0);
-INSERT INTO `user_capability_profile` VALUES (36, 13, '{\"radar\":{\"values\":[45,40,40,54,40,52,44],\"indicators\":[{\"max\":100,\"name\":\"专业技能\"},{\"max\":100,\"name\":\"创新能力\"},{\"max\":100,\"name\":\"沟通表达\"},{\"max\":100,\"name\":\"学习能力\"},{\"max\":100,\"name\":\"执行力\"},{\"max\":100,\"name\":\"团队协作\"},{\"max\":100,\"name\":\"抗压能力\"}]},\"completenessScore\":44,\"recommendedKeywords\":[\"前端\",\"Java\"],\"suggestions\":{\"longTerm\":\"围绕目标岗位形成可持续学习路线，逐步累积可量化成果。\",\"shortTerm\":\"补全项目经历与技能证明材料，并准备可展示作品。\"},\"recommendedJobs\":[{\"id\":4358,\"jobName\":\"前端开发\",\"companyName\":\"上海扬丝信息科技有限公司\",\"updateDate\":\"7月26日\",\"salaryRange\":\"3000-6000元\",\"location\":\"上海-嘉定区\",\"industry\":\"计算机软件,互联网,专业技术服务\",\"companySize\":\"20-99人\",\"companyType\":\"天使轮\",\"jobCode\":\"CC424126880J40702490814\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CC424126880J40702490814.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":4344,\"jobName\":\"前端开发\",\"companyName\":\"杭州速客网络服务有限公司\",\"updateDate\":\"7月28日\",\"salaryRange\":\"1.3-1.4万\",\"location\":\"宁波-鄞州区\",\"industry\":\"IT服务\",\"companySize\":\"20-99人\",\"companyType\":null,\"jobCode\":\"CC635221330J40797770505\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CC635221330J40797770505.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":4338,\"jobName\":\"前端开发\",\"companyName\":\"陕西慧云联达企业管理咨询有限公司\",\"updateDate\":\"5月8日\",\"salaryRange\":\"1.5-3万·14薪\",\"location\":\"东莞-None\",\"industry\":\"人力资源服务\",\"companySize\":\"20-99人\",\"companyType\":\"不需要融资\",\"jobCode\":\"CCL1445845820J40769910605\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CCL1445845820J40769910605.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":595,\"jobName\":\"前端开发\",\"companyName\":\"信雅达\",\"updateDate\":\"7月23日\",\"salaryRange\":\"8000-15000元\",\"location\":\"合肥-包河区\",\"industry\":\"计算机软件,IT服务\",\"companySize\":\"1000-9999人\",\"companyType\":\"已上市\",\"jobCode\":\"CC146032650J40730527716\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CC146032650J40730527716.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":594,\"jobName\":\"前端开发\",\"companyName\":\"海南新珠江人力资源开发管理有限公司\",\"updateDate\":\"7月23日\",\"salaryRange\":\"6000-11000元\",\"location\":\"海口-龙华区\",\"industry\":\"专业技术服务\",\"companySize\":\"20-99人\",\"companyType\":null,\"jobCode\":\"CC384412210J40760137912\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CC384412210J40760137912.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":571,\"jobName\":\"前端开发\",\"companyName\":\"武汉清达环保科技有限公司\",\"updateDate\":\"7月9日\",\"salaryRange\":\"8000-16000元\",\"location\":\"武汉-江夏区\",\"industry\":\"环保\",\"companySize\":\"100-299人\",\"companyType\":\"不需要融资\",\"jobCode\":\"CC186107820J40747887211\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CC186107820J40747887211.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":4366,\"jobName\":\"Java\",\"companyName\":\"大连高新园区仁源计算机软件开发有限公司\",\"updateDate\":\"5月20日\",\"salaryRange\":\"4000-7000元\",\"location\":\"大连-甘井子区\",\"industry\":\"计算机软件,电子商务\",\"companySize\":\"100-299人\",\"companyType\":\"未融资\",\"jobCode\":\"CCL1468857000J40599587809\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CCL1468857000J40599587809.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":4364,\"jobName\":\"Java\",\"companyName\":\"众阳健康科技集团有限公司\",\"updateDate\":\"10月9日\",\"salaryRange\":\"1-1.5万\",\"location\":\"济南-历下区\",\"industry\":\"计算机软件,互联网,IT服务,人工智能\",\"companySize\":\"1000-9999人\",\"companyType\":\"未融资\",\"jobCode\":\"CC227606010J40595914606\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CC227606010J40595914606.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":4357,\"jobName\":\"Java\",\"companyName\":\"外企德科数字技术有限公司\",\"updateDate\":\"2025-07-27 00:25:49\",\"salaryRange\":\"1.5-3万\",\"location\":\"东莞-None\",\"industry\":\"专业技术服务\",\"companySize\":\"10000人以上\",\"companyType\":null,\"jobCode\":\"CCL1480117890J40791078505\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CCL1480117890J40791078505.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":4333,\"jobName\":\"Java\",\"companyName\":\"软通动力信息技术(集团)股份有限公司\",\"updateDate\":\"4月18日\",\"salaryRange\":\"6000-10000元·13薪\",\"location\":\"西安-雁塔区\",\"industry\":\"互联网,IT服务,计算机软件\",\"companySize\":\"10000人以上\",\"companyType\":\"D轮及以上\",\"jobCode\":\"CC000544460J40704060016\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CC000544460J40704060016.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":4327,\"jobName\":\"Java\",\"companyName\":\"中软国际\",\"updateDate\":\"7月25日\",\"salaryRange\":\"面议\",\"location\":\"成都-郫都区\",\"industry\":\"计算机软件,运营商/增值服务\",\"companySize\":\"10000人以上\",\"companyType\":\"已上市\",\"jobCode\":\"CC508620120J40800831312\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CC508620120J40800831312.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":4321,\"jobName\":\"Java\",\"companyName\":\"大连同方软银科技股份有限公司\",\"updateDate\":\"11月21日\",\"salaryRange\":\"6000-8000元\",\"location\":\"大连-沙河口区\",\"industry\":\"计算机软件,IT服务\",\"companySize\":\"500-999人\",\"companyType\":\"已上市\",\"jobCode\":\"CC189336910J40669681108\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CC189336910J40669681108.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"}],\"matchScores\":[92,92,92,92,92,92,85,85,85,85,85,85],\"recommendedJobCards\":[{\"title\":\"前端开发工程师\",\"matchScore\":92},{\"title\":\"Java开发工程师\",\"matchScore\":85},{\"title\":\"产品助理\",\"matchScore\":78}],\"competitivenessStars\":2,\"tags\":[\"逻辑清晰\",\"学习能力强\",\"执行力\"],\"recommendedJobTitles\":[\"前端开发工程师\",\"Java开发工程师\",\"产品助理\"],\"recommendKeyword\":\"前端开发工程师\"}', '[4358,4344,4338,595,594,571,4366,4364,4357,4333,4327,4321]', '2026-03-25 17:35:45', '2026-03-25 17:35:45', 0);
-INSERT INTO `user_capability_profile` VALUES (37, 14, '{\"radar\":{\"indicators\":[{\"name\":\"专业背景\",\"max\":100},{\"name\":\"实践经验\",\"max\":100},{\"name\":\"技能储备\",\"max\":100},{\"name\":\"简历完整度\",\"max\":100},{\"name\":\"行业匹配度\",\"max\":100}],\"values\":[60,5,5,20,35]},\"completenessScore\":25,\"recommendedKeywords\":[\"C语言\",\"STM32\",\"单片机\",\"嵌入式软件\",\"电路设计\",\"RTOS\"],\"suggestions\":{\"shortTerm\":\"立即补全专业技能栈，重点学习C语言、单片机原理（如STM32）及基础电路知识；利用大三下学期完成至少一个实战项目（如智能小车、环境监测系统）。\",\"longTerm\":\"针对南京本地的电子信息产业，寻找嵌入式开发相关的实习机会；积累RTOS或Linux驱动开发经验，提升在校招中的核心竞争力。\"},\"recommendedJobs\":[{\"id\":4339,\"jobName\":\"技术支持工程师\",\"companyName\":\"上海耀唐科技有限公司\",\"updateDate\":\"3月26日\",\"salaryRange\":\"1.2-2.4万\",\"location\":\"北京-海淀区\",\"industry\":\"计算机软件\",\"companySize\":\"20-99人\",\"companyType\":null,\"jobCode\":\"CCL1270864680J40356840916\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CCL1270864680J40356840916.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":4332,\"jobName\":\"技术支持工程师\",\"companyName\":\"青岛安然物联网科技有限公司\",\"updateDate\":\"7月15日\",\"salaryRange\":\"8000-14000元\",\"location\":\"白银-白银区\",\"industry\":\"物联网,物联网\",\"companySize\":\"20-99人\",\"companyType\":\"未融资\",\"jobCode\":\"CC559764920J40823511404\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CC559764920J40823511404.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":4331,\"jobName\":\"技术支持工程师\",\"companyName\":\"大益同心(北京)科技发展有限公司\",\"updateDate\":\"7月2日\",\"salaryRange\":\"7000-10000元\",\"location\":\"北京-朝阳区\",\"industry\":\"医疗设备/器械,医疗设备/器械\",\"companySize\":\"20-99人\",\"companyType\":\"未融资\",\"jobCode\":\"CC245943481J00170463311\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CC245943481J00170463311.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":4328,\"jobName\":\"技术支持工程师\",\"companyName\":\"上海东证期货有限公司\",\"updateDate\":\"4月14日\",\"salaryRange\":\"1-2万\",\"location\":\"上海-黄浦区\",\"industry\":\"证券/期货\",\"companySize\":\"500-999人\",\"companyType\":\"未融资\",\"jobCode\":\"CC218538310J40649362410\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CC218538310J40649362410.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":4322,\"jobName\":\"技术支持工程师\",\"companyName\":\"位来小猎(宁波)信息技术有限公司\",\"updateDate\":\"6月30日\",\"salaryRange\":\"6000-9000元\",\"location\":\"西安-莲湖区\",\"industry\":\"计算机软件,专业技术服务\",\"companySize\":\"100-299人\",\"companyType\":\"A轮\",\"jobCode\":\"CCL1320375780J40766930407\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CCL1320375780J40766930407.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"},{\"id\":4315,\"jobName\":\"技术支持工程师\",\"companyName\":\"湖南精循科技有限责任公司\",\"updateDate\":\"7月29日\",\"salaryRange\":\"8000-12000元\",\"location\":\"长沙-岳麓区\",\"industry\":\"通信/网络设备\",\"companySize\":\"20-99人\",\"companyType\":null,\"jobCode\":\"CCL1497255050J40777257607\",\"jobDetails\":null,\"companyDetails\":null,\"jobSourceUrl\":\"https://www.zhaopin.com/jobdetail/CCL1497255050J40777257607.htm?refcode=4019&srccode=401901&preactionid=a7c1140f-c46c-45e5-b867-ab342d8bdc77\"}],\"matchScores\":[55,55,55,55,55,55],\"recommendedJobCards\":[{\"title\":\"嵌入式软件开发实习生\",\"matchScore\":45},{\"title\":\"硬件测试助理\",\"matchScore\":40},{\"title\":\"技术支持工程师\",\"matchScore\":55}],\"competitivenessStars\":1,\"tags\":[\"大三在校生\",\"计算机专业\",\"嵌入式意向\",\"零项目经验\",\"南京求职\"],\"recommendedJobTitles\":[\"嵌入式开发实习生\",\"单片机开发助理\",\"硬件测试实习生\",\"C语言初级开发\",\"技术支持工程师\",\"固件开发助理\"],\"recommendKeyword\":\"嵌入式开发实习生\"}', '[4339,4332,4331,4328,4322,4315]', '2026-03-25 18:05:03', '2026-03-25 18:05:03', 0);
+-- Table structure for user_report_archive_backup_20260325
+-- ----------------------------
+DROP TABLE IF EXISTS `user_report_archive_backup_20260325`;
+CREATE TABLE `user_report_archive_backup_20260325`  (
+  `id` bigint(20) NOT NULL DEFAULT 0 COMMENT '主键ID',
+  `user_id` bigint(20) NOT NULL COMMENT '用户ID',
+  `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '报告标题',
+  `report_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '归档报告完整JSON',
+  `sort_index` bigint(20) NULL DEFAULT NULL COMMENT '排序字段（时间戳或自定义排序）',
+  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `is_deleted` tinyint(4) NULL DEFAULT 0 COMMENT '逻辑删除标记：0正常，1删除'
+) ENGINE = MyISAM AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
--- Table structure for user_deep_assessment
+-- Records of user_report_archive_backup_20260325
 -- ----------------------------
-DROP TABLE IF EXISTS `user_deep_assessment`;
-CREATE TABLE `user_deep_assessment`  (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+
+-- ----------------------------
+-- Table structure for user_token
+-- ----------------------------
+DROP TABLE IF EXISTS `user_token`;
+CREATE TABLE `user_token`  (
+  `token` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   `user_id` bigint(20) NOT NULL,
-  `answers_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL,
+  `expire_time` datetime NOT NULL,
   `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP,
-  `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `is_deleted` tinyint(4) NULL DEFAULT 0,
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE INDEX `uk_user_id`(`user_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+  PRIMARY KEY (`token`) USING BTREE,
+  INDEX `idx_user_id`(`user_id` ASC) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
--- Records of user_deep_assessment
+-- Records of user_token
 -- ----------------------------
-INSERT INTO `user_deep_assessment` VALUES (1, 6, '{\"q28\":[\"A\",\"B\",\"C\"],\"q1\":\"A\"}', '2026-03-25 14:56:47', '2026-03-25 14:56:47', 0);
-INSERT INTO `user_deep_assessment` VALUES (2, 8, '{\"q1\":\"A\",\"q2\":\"A\",\"q3\":\"A\",\"q4\":\"A\",\"q5\":\"A\",\"q6\":\"A\",\"q7\":\"A\",\"q8\":\"A\",\"q9\":\"A\",\"q10\":\"A\",\"q14\":\"D\",\"q11\":\"C\",\"q12\":\"B\",\"q13\":\"C\",\"q15\":\"D\",\"q16\":\"C\",\"q17\":\"C\",\"q18\":\"C\",\"q22\":\"D\",\"q21\":\"C\",\"q20\":\"C\",\"q19\":\"B\",\"q23\":\"B\",\"q24\":\"B\",\"q25\":\"A\",\"q26\":\"A\",\"q27\":\"B\",\"q29\":\"A\",\"q28\":[\"B\",\"F\",\"E\"]}', '2026-03-25 15:19:42', '2026-03-25 15:19:42', 0);
-INSERT INTO `user_deep_assessment` VALUES (3, 7, '{}', '2026-03-25 15:24:59', '2026-03-25 15:24:59', 0);
-INSERT INTO `user_deep_assessment` VALUES (4, 14, '{\"q1\":\"A\",\"q2\":\"A\",\"q3\":\"A\",\"q4\":\"A\",\"q5\":\"A\",\"q6\":\"B\",\"q7\":\"A\",\"q8\":\"A\",\"q9\":\"A\",\"q10\":\"B\",\"q11\":\"B\",\"q12\":\"C\",\"q13\":\"B\",\"q14\":\"D\",\"q15\":\"B\",\"q16\":\"B\",\"q17\":\"C\",\"q18\":\"C\",\"q19\":\"B\",\"q20\":\"C\",\"q21\":\"B\",\"q22\":\"C\",\"q23\":\"A\",\"q24\":\"B\",\"q25\":\"A\",\"q26\":\"A\",\"q27\":\"B\",\"q28\":[\"A\",\"B\",\"C\"],\"q29\":\"A\",\"q30\":\"有钱就行\"}', '2026-03-25 18:04:50', '2026-03-25 18:04:50', 0);
-
--- ----------------------------
--- Table structure for user_path_plan
--- ----------------------------
-DROP TABLE IF EXISTS `user_path_plan`;
-CREATE TABLE `user_path_plan`  (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `user_id` bigint(20) NOT NULL,
-  `plan_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL,
-  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP,
-  `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `is_deleted` tinyint(4) NULL DEFAULT 0,
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE INDEX `uk_user_id`(`user_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Records of user_path_plan
--- ----------------------------
-INSERT INTO `user_path_plan` VALUES (1, 6, '{\"updatedAt\":\"2026-03-25T14:56:47.9633033+08:00\",\"stages\":[{\"tasks\":[{\"title\":\"task\",\"done\":false,\"id\":\"t-1\"}],\"name\":\"0-1?\",\"id\":\"s-1\"}],\"id\":\"plan-1\",\"targetJobId\":\"1\"}', '2026-03-25 14:56:47', '2026-03-25 14:56:47', 0);
-INSERT INTO `user_path_plan` VALUES (2, 7, '{\"id\":\"plan-1\",\"targetJobId\":\"4528\",\"stages\":[{\"id\":\"s-1\",\"name\":\"0-1月：补齐基础与作品集\",\"tasks\":[{\"id\":\"t-1\",\"title\":\"整理简历与项目经历，形成STAR描述\",\"done\":false},{\"id\":\"t-2\",\"title\":\"完成 1 个可展示的项目并上线预览\",\"done\":false},{\"id\":\"t-3\",\"title\":\"梳理目标岗位核心技能清单\",\"done\":false}]},{\"id\":\"s-2\",\"name\":\"1-3月：强化核心技能与面试准备\",\"tasks\":[{\"id\":\"t-4\",\"title\":\"针对薄弱点做 20 题专项练习并总结\",\"done\":false},{\"id\":\"t-5\",\"title\":\"准备 10 个高频面试题回答模板\",\"done\":false}]},{\"id\":\"s-3\",\"name\":\"3-6月：拓展能力边界与投递迭代\",\"tasks\":[{\"id\":\"t-6\",\"title\":\"完成 2 次模拟面试并复盘\",\"done\":false},{\"id\":\"t-7\",\"title\":\"每周投递 10 家并记录反馈\",\"done\":false}]},{\"id\":\"s-4\",\"name\":\"6-12月：能力沉淀与长期发展\",\"tasks\":[{\"id\":\"t-8\",\"title\":\"建立持续学习机制（每周固定学习时间）\",\"done\":false},{\"id\":\"t-9\",\"title\":\"规划 1 个长期项目/开源贡献\",\"done\":false}]}],\"updatedAt\":\"2026-03-25T07:06:33.016Z\"}', '2026-03-25 15:06:19', '2026-03-25 15:06:33', 0);
-INSERT INTO `user_path_plan` VALUES (4, 8, '{\"id\":\"plan-1\",\"targetJobId\":\"4580\",\"stages\":[{\"id\":\"s-1\",\"name\":\"0-1月：补齐基础与作品集\",\"tasks\":[{\"id\":\"t-1\",\"title\":\"整理简历与项目经历，形成STAR描述\",\"done\":false},{\"id\":\"t-2\",\"title\":\"完成 1 个可展示的项目并上线预览\",\"done\":false},{\"id\":\"t-3\",\"title\":\"梳理目标岗位核心技能清单\",\"done\":false}]},{\"id\":\"s-2\",\"name\":\"1-3月：强化核心技能与面试准备\",\"tasks\":[{\"id\":\"t-4\",\"title\":\"针对薄弱点做 20 题专项练习并总结\",\"done\":false},{\"id\":\"t-5\",\"title\":\"准备 10 个高频面试题回答模板\",\"done\":false}]},{\"id\":\"s-3\",\"name\":\"3-6月：拓展能力边界与投递迭代\",\"tasks\":[{\"id\":\"t-6\",\"title\":\"完成 2 次模拟面试并复盘\",\"done\":false},{\"id\":\"t-7\",\"title\":\"每周投递 10 家并记录反馈\",\"done\":false}]},{\"id\":\"s-4\",\"name\":\"6-12月：能力沉淀与长期发展\",\"tasks\":[{\"id\":\"t-8\",\"title\":\"建立持续学习机制（每周固定学习时间）\",\"done\":false},{\"id\":\"t-9\",\"title\":\"规划 1 个长期项目/开源贡献\",\"done\":false}]}],\"updatedAt\":\"2026-03-25T07:12:54.448Z\"}', '2026-03-25 15:12:47', '2026-03-25 15:12:54', 0);
-
--- ----------------------------
--- Table structure for user_profile
--- ----------------------------
-DROP TABLE IF EXISTS `user_profile`;
-CREATE TABLE `user_profile`  (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `user_id` bigint(20) NOT NULL,
-  `draft_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL,
-  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP,
-  `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `is_deleted` tinyint(4) NULL DEFAULT 0,
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE INDEX `uk_user_id`(`user_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Records of user_profile
--- ----------------------------
-INSERT INTO `user_profile` VALUES (1, 6, '{\"target\":{\"role\":\"??\"},\"basic\":{\"email\":\"a@b.com\",\"name\":\"??\"}}', '2026-03-25 14:56:47', '2026-03-25 14:56:47', 0);
-INSERT INTO `user_profile` VALUES (2, 7, '{\"basic\":{\"name\":\"李婷婷\",\"email\":\"15295367157@qq.com\",\"school\":\"三江学院\",\"major\":\"计算机科学与技术\",\"grade\":\"大二\",\"city\":\"\"},\"target\":{\"role\":\"产品经理\",\"jobType\":\"灵活\",\"cities\":[],\"salary\":\"\",\"availableAt\":\"\",\"avoid\":\"\"},\"skills\":[\"产品经理\"],\"certificates\":[],\"experiences\":[],\"values\":[10,5,10],\"mbtiResult\":null,\"links\":{\"github\":\"\",\"portfolio\":\"\"},\"questionnaireAnswers\":{}}', '2026-03-25 15:05:10', '2026-03-25 15:24:59', 0);
-INSERT INTO `user_profile` VALUES (3, 8, '{\"basic\":{\"name\":\"也恶意一\",\"email\":\"也要有也\",\"school\":\"而特花园\",\"major\":\"的会让很多人\",\"grade\":\"研二\",\"city\":\"让很多人人员\"},\"target\":{\"role\":\"前端开发\",\"jobType\":\"灵活\",\"cities\":[\"武汉\"],\"salary\":\"189902\",\"availableAt\":\"1232341\",\"avoid\":\"123124\"},\"skills\":[\"前端开发\"],\"certificates\":[],\"experiences\":[],\"values\":[5,3,5],\"mbtiResult\":\"ESTP\",\"links\":{\"github\":\"gsdgsgr\",\"portfolio\":\"是各个\"},\"questionnaireAnswers\":{\"q1\":\"A\",\"q2\":\"A\",\"q3\":\"A\",\"q4\":\"A\",\"q5\":\"A\",\"q6\":\"A\",\"q7\":\"A\",\"q8\":\"A\",\"q9\":\"A\",\"q10\":\"A\",\"q14\":\"D\",\"q11\":\"C\",\"q12\":\"B\",\"q13\":\"C\",\"q15\":\"D\",\"q16\":\"C\",\"q17\":\"C\",\"q18\":\"C\",\"q22\":\"D\",\"q21\":\"C\",\"q20\":\"C\",\"q19\":\"B\",\"q23\":\"B\",\"q24\":\"B\",\"q25\":\"A\",\"q26\":\"A\",\"q27\":\"B\",\"q29\":\"A\",\"q28\":[\"B\",\"F\",\"E\"]}}', '2026-03-25 15:07:50', '2026-03-25 15:19:42', 0);
-INSERT INTO `user_profile` VALUES (6, 9, '{\"basic\":{\"city\":\"??\",\"name\":\"??\",\"major\":\"???\",\"email\":\"test_profile_337181012@example.com\",\"school\":\"XX??\",\"grade\":\"??\"},\"experiences\":[{\"desc\":\"??Vue??\",\"title\":\"??\"}],\"skills\":[\"Vue\",\"TypeScript\"],\"mbtiResult\":\"INTJ\",\"certificates\":[],\"target\":{\"availableAt\":\"??\",\"salary\":\"20k\",\"avoid\":\"\",\"role\":\"????\",\"cities\":[\"??\"],\"jobType\":\"??\"},\"values\":[5,5,5],\"links\":{\"portfolio\":\"\",\"github\":\"\"},\"questionnaireAnswers\":{\"q30\":\"?????????\",\"q1\":\"A\",\"q28\":[\"A\",\"B\",\"C\"],\"q2\":\"B\"}}', '2026-03-25 15:59:40', '2026-03-25 15:59:40', 0);
-INSERT INTO `user_profile` VALUES (7, 1, '{\"basic\":{\"name\":\"\",\"email\":\"\"},\"target\":{\"role\":\"无\",\"jobType\":\"灵活\",\"cities\":[],\"salary\":\"\",\"availableAt\":\"\",\"avoid\":\"\"},\"skills\":[\"无\"],\"certificates\":[],\"experiences\":[],\"values\":[],\"mbtiResult\":null,\"age\":22,\"education\":\"bachelor\",\"tendencyAnswers\":[4,3,5,2,4],\"mbtiAnswers\":[1,0,0,1,1,1,0,0],\"questionnaireAnswers\":{\"quickAge\":\"22\",\"quickEducation\":\"bachelor\",\"quickTargetDirection\":\"无\",\"quickTendencyQ1\":\"4\",\"quickTendencyQ2\":\"3\",\"quickTendencyQ3\":\"5\",\"quickTendencyQ4\":\"2\",\"quickTendencyQ5\":\"4\",\"quickMbtiQ1\":\"1\",\"quickMbtiQ2\":\"0\",\"quickMbtiQ3\":\"0\",\"quickMbtiQ4\":\"1\",\"quickMbtiQ5\":\"1\",\"quickMbtiQ6\":\"1\",\"quickMbtiQ7\":\"0\",\"quickMbtiQ8\":\"0\"}}', '2026-03-25 16:06:18', '2026-03-25 17:56:08', 0);
-INSERT INTO `user_profile` VALUES (10, 14, '{\"basic\":{\"name\":\"森小川\",\"email\":\"123\",\"school\":\"三江学院\",\"major\":\"计算机科学与技术\",\"grade\":\"大三\",\"city\":\"南京\"},\"target\":{\"role\":\"嵌入式开发\",\"jobType\":\"全职\",\"cities\":[\"南京\"],\"salary\":\"8k\",\"availableAt\":\"1\",\"avoid\":\"啥也不做\"},\"skills\":[\"没钱\"],\"certificates\":[\"没有\"],\"experiences\":[],\"values\":[10,10,10],\"mbtiResult\":null,\"links\":{\"github\":\"没有\",\"portfolio\":\"没有\"},\"questionnaireAnswers\":{\"q1\":\"A\",\"q2\":\"A\",\"q3\":\"A\",\"q4\":\"A\",\"q5\":\"A\",\"q6\":\"B\",\"q7\":\"A\",\"q8\":\"A\",\"q9\":\"A\",\"q10\":\"B\",\"q11\":\"B\",\"q12\":\"C\",\"q13\":\"B\",\"q14\":\"D\",\"q15\":\"B\",\"q16\":\"B\",\"q17\":\"C\",\"q18\":\"C\",\"q19\":\"B\",\"q20\":\"C\",\"q21\":\"B\",\"q22\":\"C\",\"q23\":\"A\",\"q24\":\"B\",\"q25\":\"A\",\"q26\":\"A\",\"q27\":\"B\",\"q28\":[\"A\",\"B\",\"C\"],\"q29\":\"A\",\"q30\":\"有钱就行\"}}', '2026-03-25 18:04:50', '2026-03-25 18:04:50', 0);
-
--- ----------------------------
--- Table structure for user_target_job
--- ----------------------------
-DROP TABLE IF EXISTS `user_target_job`;
-CREATE TABLE `user_target_job`  (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `user_id` bigint(20) NOT NULL,
-  `job_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL,
-  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP,
-  `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `is_deleted` tinyint(4) NULL DEFAULT 0,
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE INDEX `uk_user_id`(`user_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Records of user_target_job
--- ----------------------------
-INSERT INTO `user_target_job` VALUES (1, 6, '{\"id\":\"1\",\"jobName\":\"???\",\"keyRequirements\":[\"Vue\",\"TS\"],\"salary\":\"10k-20k\",\"description\":\"desc\",\"companyName\":\"????\",\"matchRate\":88,\"city\":\"??\"}', '2026-03-25 14:56:47', '2026-03-25 14:56:47', 0);
-INSERT INTO `user_target_job` VALUES (2, 7, '{\"id\":\"4528\",\"jobName\":\"总助/CEO助理/董事长助理\",\"companyName\":\"上海幸业货架有限公司\",\"city\":\"上海-嘉定区\",\"salary\":\"7000-14000元\",\"matchRate\":90,\"keyRequirements\":[\"岗位职责与职内要求：\"],\"description\":\"总助/CEO助理/董事长助理/董事长秘书<br>  岗位职责与职内要求：\"}', '2026-03-25 15:06:08', '2026-03-25 15:06:08', 0);
-INSERT INTO `user_target_job` VALUES (3, 8, '{\"id\":\"4580\",\"jobName\":\"项目经理/主管\",\"companyName\":\"宣城托新精密科技有限公司\",\"city\":\"上海-嘉定区\",\"salary\":\"1-1.5万\",\"matchRate\":90,\"keyRequirements\":[\"海外留学经历<br>\",\"主导前期可行性分析\",\"开发过程中的问题点汇总和改善\",\"与客户和供应商保持联络\",\"及时获取信息\",\"确保项目按时通过客户认可程序\",\"致力于客户满意\",\"<br>\",\"负责制定项目整体进度规划\",\"并及时更新、调整工作计划\"],\"description\":\"海外留学经历<br>1、负责海外项目从启动到投产整个过程的总协调，主导前期可行性分析，开发过程中的问题点汇总和改善，与客户和供应商保持联络，及时获取信息，确保项目按时通过客户认可程序，致力于客户满意 <br>2、负责制定项目整体进度规划，主导项目组各项工作并协调公司内各方面资源，确保项目严格按照APQP流程开发并按要求做好相关开发记录<br>3、根据项目实施的实际情况和进度要求，及时与客户、供应商和公司内各有关部门沟通、协调，并及时更新、调整工作计划 <br>4、产品投产后，负责总结项目组工作的经验和教训，并将工作移交至负责日常生产的相关部门<br>5、认真执行公司和部门的决议和部署，努力完成领导下达的各项任务和指标；\"}', '2026-03-25 15:08:34', '2026-03-25 15:08:34', 0);
-INSERT INTO `user_target_job` VALUES (4, 1, '{\"id\":\"4358\",\"jobName\":\"前端开发\",\"companyName\":\"上海扬丝信息科技有限公司\",\"city\":\"上海-嘉定区\",\"salary\":\"3000-6000元\",\"matchRate\":90,\"keyRequirements\":[\"此岗位是招储备型新人的\",\"培养需要在公司待满三年\",\"但是需要长期稳定踏实肯干的人\",\"熟练使用vue\",\"了解uniapp\",\"<br>2\",\"对组件的做法有深刻理解\",\"会自行拆分组件\",\"<br>3\",\"熟练掌握HTML\"],\"description\":\"此岗位是招储备型新人的，培养需要在公司待满三年，三年之间的工资也会是每年正常固定递增的，但是需要长期稳定踏实肯干的人。 <br>以下是必须掌握的初级技术需求：<br>1.熟练使用vue，了解uniapp，有两个以上vue实际开发的项目 <br>2.对组件的做法有深刻理解，会自行拆分组件 <br>3.熟练掌握HTML5、javascript、CSS、JQuery、AJAX，至少熟练使用一种前端框架，包括但不限于：<br>岗位职责： <br>1.负责前端页面开发和维护，并根据需求优化产品性能、用户体验、交互效果及各种主流浏览器的兼容适配工作 <br>2.独立承担分析业务系统前端的设计、开发与实现 <br>3.与后端工程师合作，为客户提供更好的体验和更丰富的功能 <br>4. 具备扎实的编程基础，良好的代码风格，注重代码品质<br>5. 擅长和团队合作，具备很好的沟通和协调能力<br>6. 有一定基础模块审美能力，会PS的优先考虑\"}', '2026-03-25 15:10:47', '2026-03-25 15:10:47', 0);
-INSERT INTO `user_target_job` VALUES (5, 14, '{\"id\":\"4332\",\"jobName\":\"技术支持工程师\",\"companyName\":\"青岛安然物联网科技有限公司\",\"city\":\"白银-白银区\",\"salary\":\"8000-14000元\",\"matchRate\":90,\"keyRequirements\":[\"不要纯软件人才\",\"会有充实、高效的成长\",\"会有高人一等的收入\",\"高效沟通和落实客户需求吗？\",\"<br>安然以客户为中心\",\"以强者为本\",\"抬头乐干\",\"愿意与同道中人联合、链接\",\"一起干\",\"让优秀企业更安全\"],\"description\":\"需要弱电技术、自动化、安防系统、工业互联网+危化安全生产、物联网人才，不要纯软件人才。  你能经常到全国各地出差吗？你能到工业生产现场生产现场做技术支持吗？  <br>真正的奋斗者在安然会有让人值得为之奋斗的事业，会有充实、高效的成长，会有高人一等的收入。  <br>你能做好售前技术支持、根据客户需求，高效制作方案吗？你能做好售中技术支持、指导他人正确安装、部署、调试系统向用户保质保量快速交付吗？你能做好售后维护，高效沟通和落实客户需求吗？  <br>迄今已服务中石化、中石油、延长石油、国能、兖矿、京能、索普、新安、奇美、昊源、潞安、旭阳、垦利、逸盛、海科、酒钢、金发等几百家石化、化工、选煤、钢铁、电厂企业。\\n  <br>安然以客户为中心，以强者为本，抬头乐干，愿意与同道中人联合、链接，携手共建、共用、共享生产安全命运共同体，一起干，一起干，让优秀企业更安全，让优秀企业更高效！\"}', '2026-03-25 18:07:47', '2026-03-25 18:07:48', 0);
 
 SET FOREIGN_KEY_CHECKS = 1;

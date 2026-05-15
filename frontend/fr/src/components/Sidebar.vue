@@ -4,11 +4,11 @@
         支持折叠/展开，移动端为抽屉式
 -->
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 defineOptions({
-  name: 'Sidebar'
+  name: 'AppSidebar'
 })
 
 const props = defineProps<{

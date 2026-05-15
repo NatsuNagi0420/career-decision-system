@@ -1,0 +1,67 @@
+:root {
+  /* ========== 颜色系统 ========== */
+
+  /* 主色 - 米白色优雅主题 */
+  --primary: #2C3E50;      /* 深蓝灰 - 主要文字 */
+  --secondary: #34495E;    /* 中蓝灰 */
+  --accent: #E74C3C;       /* 红色强调 */
+
+  /* 背景色 */
+  --bg-primary: #FAF0E6;   /* 米白色主背景（亚麻色-暖色调） */
+  --bg-secondary: #FFFFFF; /* 纯白卡片背景 */
+  --bg-accent: #FFF8DC;    /* 玉米丝色背景 */
+
+  /* 背景 */
+  --bg-dark: #2C3E50;      /* 深色背景 */
+  --bg-light: #FAF0E6;     /* 米白色背景 */
+  --bg-card: #FFFFFF;      /* 卡片背景 */
+
+  /* 文字 */
+  --text-primary: #2C3E50;
+  --text-secondary: #7F8C8D;
+  --text-white: #FFFFFF;
+  --text-dark: #2C3E50;
+
+  /* 状态颜色 */
+  --success: #10B981;      /* 成功/已实现 */
+  --warning: #F59E0B;      /* 警告 */
+  --info: #3B82F6;         /* 信息/规划中 */
+  --error: #EF4444;        /* 错误 */
+
+  /* 渐变 */
+  --gradient-primary: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
+  --gradient-success: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  --gradient-accent: linear-gradient(135deg, #E74C3C 0%, #C0392B 100%);
+
+  /* ========== 间距系统 ========== */
+  --spacing-xs: 8px;
+  --spacing-sm: 16px;
+  --spacing-md: 24px;
+  --spacing-lg: 32px;
+  --spacing-xl: 48px;
+  --spacing-2xl: 64px;
+
+  /* ========== 圆角 ========== */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* ========== 阴影 ========== */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+
+  /* ========== 动画时长 ========== */
+  --duration-fast: 0.2s;
+  --duration-normal: 0.3s;
+  --duration-slow: 0.5s;
+
+  /* ========== 缓动函数 ========== */
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}

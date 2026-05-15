@@ -40,7 +40,7 @@ export interface SseStepData {
  */
 export interface SseProgressData {
   /** 部分结果数据（具体结构由业务定义） */
-  partial?: any
+  partial?: unknown
   /** 进度百分比（0-100，可选） */
   percentage?: number
 }
@@ -71,7 +71,7 @@ export interface SseButtonsData {
  */
 export interface SseCompleteData {
   /** 最终结果数据（具体结构由业务定义） */
-  result?: any
+  result?: unknown
 }
 
 /**
@@ -195,71 +195,79 @@ export async function consumeSseStream(
   let buffer = ''
   let pendingEventLine: string | null = null  // 跨数据块保存未配对的 event 行
 
-  // 设置超时
-  const timeoutId = setTimeout(() => {
-    reader.cancel()
-    console.warn('SSE stream timeout, cancelling reader')
-    throw new Error('Stream timeout')
-  }, timeout)
+  // 创建超时 Promise
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    setTimeout(() => {
+      reader.cancel()
+      console.warn('SSE stream timeout, cancelling reader')
+      reject(new Error('Stream timeout'))
+    }, timeout)
+  })
 
-  try {
-    let chunkCount = 0
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) {
-        break
-      }
+  // 创建读取流的 Promise
+  const streamPromise = (async () => {
+    try {
+      let _chunkCount = 0
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) {
+          break
+        }
 
-      chunkCount++
-      buffer += decoder.decode(value, { stream: true })
-      const lines = buffer.split('\n')
-      buffer = lines.pop() || ''
+        _chunkCount++
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() || ''
 
-      // 处理每一行
-      for (const line of lines) {
-        if (line.startsWith('event:')) {
-          // 保存 event 行，等待下一个 data 行
-          pendingEventLine = line
-        } else if (line.startsWith('data:') && pendingEventLine) {
-          // 找到配对的 data 行，解析事件
-          const event = parseSseEvent(pendingEventLine, line)
-          pendingEventLine = null  // 清空待配对状态
+        // 处理每一行
+        for (const line of lines) {
+          if (line.startsWith('event:')) {
+            // 保存 event 行，等待下一个 data 行
+            pendingEventLine = line
+          } else if (line.startsWith('data:') && pendingEventLine) {
+            // 找到配对的 data 行，解析事件
+            const event = parseSseEvent(pendingEventLine, line)
+            pendingEventLine = null  // 清空待配对状态
 
-          if (!event) {
-            console.warn('事件解析失败')
-            continue
-          }
+            if (!event) {
+              console.warn('事件解析失败')
+              continue
+            }
 
-          // 分发到对应的处理器
-          switch (event.event) {
-            case SseEventType.STEP:
-              handlers.onStep?.(event.data as SseStepData)
-              break
-            case SseEventType.PROGRESS:
-              handlers.onProgress?.(event.data as SseProgressData)
-              break
-            case SseEventType.TOKEN:
-              handlers.onToken?.(event.data as SseTokenData)
-              break
-            case SseEventType.BUTTONS:
-              handlers.onButtons?.(event.data as SseButtonsData)
-              break
-            case SseEventType.COMPLETE:
-            case SseEventType.DONE:
-              handlers.onComplete?.(event.data as SseCompleteData)
-              break
-            case SseEventType.ERROR:
-              handlers.onError?.(event.data as SseErrorData)
-              break
-            default:
-              console.warn('Unknown SSE event type:', event.event)
+            // 分发到对应的处理器
+            switch (event.event) {
+              case SseEventType.STEP:
+                handlers.onStep?.(event.data as SseStepData)
+                break
+              case SseEventType.PROGRESS:
+                handlers.onProgress?.(event.data as SseProgressData)
+                break
+              case SseEventType.TOKEN:
+                handlers.onToken?.(event.data as SseTokenData)
+                break
+              case SseEventType.BUTTONS:
+                handlers.onButtons?.(event.data as SseButtonsData)
+                break
+              case SseEventType.COMPLETE:
+              case SseEventType.DONE:
+                handlers.onComplete?.(event.data as SseCompleteData)
+                break
+              case SseEventType.ERROR:
+                handlers.onError?.(event.data as SseErrorData)
+                break
+              default:
+                console.warn('Unknown SSE event type:', event.event)
+            }
           }
         }
       }
+    } finally {
+      reader.releaseLock()
     }
-  } finally {
-    clearTimeout(timeoutId)
-  }
+  })()
+
+  // 使用 Promise.race 来处理超时
+  await Promise.race([streamPromise, timeoutPromise])
 }
 
 /**

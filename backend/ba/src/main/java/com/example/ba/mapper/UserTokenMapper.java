@@ -11,10 +11,10 @@ import org.apache.ibatis.annotations.Select;
 
 @Mapper
 public interface UserTokenMapper {
-    @Insert("insert into sys_user_token(token, user_id, expire_time) values(#{token}, #{userId}, #{expireTime})")
+    @Insert("insert into user_token(token, user_id, expire_time) values(#{token}, #{userId}, #{expireTime})")
     void insert(UserToken token);
 
-    @Select("select token, user_id as userId, expire_time as expireTime, create_time as createTime from sys_user_token where token = #{token}")
+    @Select("select token, user_id as userId, expire_time as expireTime, create_time as createTime from user_token where token = #{token}")
     UserToken getByToken(String token);
 }
 

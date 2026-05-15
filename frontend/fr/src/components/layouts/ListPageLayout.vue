@@ -4,13 +4,11 @@
   适用场景：岗位库、专业库、企业库、课程资源、面试题库等
 -->
 <script setup lang="ts">
-import { computed } from 'vue'
-
 defineOptions({
   name: 'ListPageLayout'
 })
 
-const props = defineProps<{
+defineProps<{
   title: string // 页面标题
   subtitle?: string // 副标题
   showSearch?: boolean // 是否显示搜索框

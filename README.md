@@ -1,123 +1,113 @@
 # Career Decision System
 
-AI驱动的大学生职业规划智能助手系统
+AI-driven career planning system with four product/runtime layers:
 
-## 项目简介
+- `web/`: Vue 3 web client.
+- `android/`: Kotlin Jetpack Compose mobile client.
+- `backend/`: Spring Boot business backend.
+- `agent_server/`: Python FastAPI AI agent service.
+- `docs/`: product, architecture, API, and development documentation.
 
-本项目是一个基于AI的职业规划系统，帮助大学生通过MBTI性格测评、技能自评等方式，生成个性化的职业规划建议。
+The current implementation starts from a clean architecture and borrows feature ideas from the previous experimental project at `D:\Project\career-decision-system-web`.
 
-## 技术栈
+## First Run Order
 
-### 前端
-- Vue 3 + TypeScript
-- Element Plus
-- ECharts
-- Vite
+1. Start `agent_server` in its Python virtual environment.
+2. Start `backend` and verify it can call `agent_server`.
+3. Start `web` and connect it to `backend`.
+4. Open `android/` in Android Studio or build it with `android/gradlew.bat`.
 
-### 后端
-- Spring Boot 3.x
-- MyBatis
-- MySQL 8.0
-- Redis
+Deployment files are intentionally not included yet.
 
-### AI服务
-- 通义千问 / DeepSeek
-- SSE流式输出
+## Full Verification
 
-## 快速开始
+Run the full local quality gate from the repository root:
 
-### 环境要求
-- JDK 17+
-- Node.js 18+
-- MySQL 8.0+
-- Redis 6.0+
-
-### 配置文件
-
-#### 后端配置
-1. 复制配置模板：
-```bash
-cd backend/ba/src/main/resources
-cp application-dev.properties.example application-dev.properties
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\verify-all.ps1
 ```
 
-2. 修改 `application-dev.properties`，填入你的配置：
-```properties
-# 数据库配置
-spring.datasource.password=your_database_password
+The script runs backend tests, Agent Server tests and Ruff, Web type/tests/build, Android unit tests/build, and client communication scans for the request-wrapper rules.
 
-# AI API配置
-ai.api.key=your_ai_api_key_here
+When local `agent_server` and `backend` are already running, include the write-path API smoke in the same gate:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\verify-all.ps1 -IncludeApiSmoke
 ```
 
-#### 前端配置
-1. 复制配置模板：
-```bash
-cd frontend/fr
-cp .env.example .env
+To include the full runtime smoke, which starts or reuses Agent Server and backend, then runs API and Web browser smoke:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\verify-all.ps1 -IncludeRuntimeSmoke
 ```
 
-2. 修改 `.env`，填入后端地址：
-```
-VITE_API_BASE_URL=http://localhost:8080/api
-```
+When local `agent_server` and `backend` are running, run the API smoke check:
 
-### 数据库初始化
-```bash
-mysql -u root -p < backend/ba/sql/career_db.sql
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke-api.ps1
 ```
 
-### 启动项目
+The smoke script checks agent health/readiness, backend health, real job data, MBTI data, auth, refresh-token rotation/revocation, profile persistence, target/favorite jobs, backend -> Agent report/resume/path generation, archive persistence, path task updates, and logout. It creates a unique `smoke_*` user in the configured database.
 
-#### 启动后端
-```bash
-cd backend/ba
-mvn spring-boot:run
+To run the runtime smoke without the full test/build gate:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke-runtime.ps1
 ```
 
-#### 启动前端
-```bash
-cd frontend/fr
-npm install
-npm run dev
+It starts missing local Agent Server/backend processes, reuses already-running ones, and cleans up only processes it started.
+
+Run the Web browser smoke when backend is running and Chrome or Edge is installed:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke-web.ps1
 ```
 
-## 功能模块
+It starts Vite when needed and verifies registration, profile save, target job selection, report generation, and rendered archive feedback with a unique `websmoke_*` user.
 
-- 👤 用户系统：注册、登录、权限管理
-- 📝 MBTI性格测评：93题专业测评
-- ⭐ 技能自评：多维度技能评估
-- 🎨 能力画像：AI生成能力分析
-- 💼 岗位探索：职位信息浏览
-- 🗺️ 职业路径规划：AI生成职业规划
-- 📊 综合报告：完整分析报告
-- 🤖 AI智能助手：实时对话咨询
+Run the Android device smoke when an emulator or USB-debuggable device is connected:
 
-## 项目结构
-
-```
-career-decision-system/
-├── backend/ba/              # 后端服务
-│   ├── src/
-│   ├── sql/                 # 数据库脚本
-│   └── data/                # 测评数据
-├── frontend/fr/             # 前端应用
-│   ├── src/
-│   └── public/
-└── video_anime/             # 演示动画（可选）
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke-android.ps1
 ```
 
-## 注意事项
+It installs the debug APK, launches `com.careerdecision.mobile/.MainActivity`, checks that the app is visible, and fails if launch-time AndroidRuntime crashes appear in logcat. The script reports the resolved `adb` path, emulator path, and available AVDs when no device is ready.
 
-⚠️ **敏感信息保护**
-- 不要提交 `.env` 文件
-- 不要提交 `application-dev.properties` 和 `application-prod.properties`
-- 使用 `.example` 模板文件作为参考
+After creating an AVD in Android Studio Device Manager, the script can start it for you:
 
-## 开发文档
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke-android.ps1 -StartEmulator -EmulatorBootWaitSeconds 240
+```
 
-详细开发文档请参考项目 Wiki。
+The same option is available through the full gate:
 
-## License
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\verify-all.ps1 -IncludeAndroidDeviceSmoke -StartAndroidEmulator
+```
 
-MIT License
+When more than one device is visible in `adb devices`, pass the target serial:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\verify-all.ps1 -IncludeAndroidDeviceSmoke -AndroidDeviceSerial emulator-5554
+```
+
+Optional local HTTPS debugging is available through mkcert:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\setup-local-https.ps1
+```
+
+See `docs/LOCAL_HTTPS.md` for backend, Web, and Android HTTPS startup commands.
+
+## Useful Docs
+
+- `docs/TECH_STACK.md`: selected technology stack.
+- `docs/ARCHITECTURE.md`: four-layer responsibility split.
+- `docs/MVP.md`: first milestone scope.
+- `docs/FULL_CHAIN_MVP.md`: current end-to-end Web, backend, agent, and Android MVP status.
+- `docs/CODE_STANDARDS.md`: cross-layer coding and communication rules.
+- `docs/PRODUCTION_READINESS.md`: 95%+ production readiness definition and roadmap.
+- `docs/DATABASE_JOB_SCHEMA_REVIEW.md`: real job data schema review and import plan.
+- `docs/DEVELOPMENT_GUIDE.md`: coding conventions.
+- `docs/LOCAL_DEVELOPMENT.md`: local run, smoke test, and parallel workflow.
+- `docs/LOCAL_HTTPS.md`: optional mkcert-based HTTPS debugging.

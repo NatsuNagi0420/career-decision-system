@@ -1,52 +1,35 @@
-# 依赖
-node_modules/
-frontend/fr/node_modules/
-
-# 编译产物
-target/
-backend/ba/target/
-dist/
-frontend/fr/dist/
-frontend/fr/dist-ssr/
-
-# 环境变量（含敏感信息）
-.env
-frontend/fr/.env
-backend/ba/src/main/resources/application-dev.properties
-backend/ba/src/main/resources/application-prod.properties
-
-# IDE
 .idea/
-*.iml
 .vscode/
-
-# 日志
-*.log
-
-# Claude Code 本地配置
-.claude/
-
-# 第三方工具
-codex-academic-paper-skills-main/
-
-# 文档（不入库）
-docs/
-
-# 静态资源（含大文件，不入库）
-server/
-
-# 字体文件（体积过大，不入库）
-video_anime/src/assets/fonts/*.zip
-video_anime/src/assets/fonts/*.ttf
-video_anime/src/assets/fonts/*.otf
-video_anime/src/assets/fonts/*.woff
-video_anime/src/assets/fonts/*.woff2
-
-# 系统文件
 .DS_Store
 Thumbs.db
 
-# 后端环境变量
-backend/ba/.env
-backend/ba/.env.local
-backend/ba/.env.*.local
+# Python
+agent_server/.venv/
+agent_server/__pycache__/
+agent_server/**/__pycache__/
+agent_server/**/*.pyc
+agent_server/.pytest_cache/
+agent_server/.ruff_cache/
+agent_server/.env
+
+# Java
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+
+# Node
+web/node_modules/
+web/dist/
+web/.env
+web/.vite/
+
+# Android
+android/.gradle/
+android/build/
+android/**/build/
+android/local.properties
+
+# Local uploads and generated files
+logs/
+uploads/
+.local-https/
+*.log

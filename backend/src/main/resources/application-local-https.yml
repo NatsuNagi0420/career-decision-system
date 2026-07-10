@@ -1,0 +1,12 @@
+server:
+  address: ${SERVER_ADDRESS:0.0.0.0}
+  port: ${SERVER_PORT:${HTTPS_SERVER_PORT:8443}}
+  ssl:
+    enabled: true
+    key-store: ${SERVER_SSL_KEY_STORE:${HTTPS_KEY_STORE:file:../.local-https/backend-local.p12}}
+    key-store-password: ${SERVER_SSL_KEY_STORE_PASSWORD:${HTTPS_KEY_STORE_PASSWORD:changeit}}
+    key-store-type: ${SERVER_SSL_KEY_STORE_TYPE:PKCS12}
+
+career:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:https://localhost:5173,https://127.0.0.1:5173,https://web.career.local.test:5173}

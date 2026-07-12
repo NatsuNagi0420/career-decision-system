@@ -84,6 +84,16 @@ public interface MbtiMapper {
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void insertSession(MbtiSessionRecord session);
 
+    @Select("""
+            SELECT id, user_id, assessment_code, test_no, status, result_code,
+                   score_json, result_json, submitted_at
+            FROM assessment_sessions
+            WHERE user_id = #{userId} AND assessment_code = 'MBTI' AND status = 'submitted'
+            ORDER BY submitted_at DESC, id DESC
+            LIMIT 20
+            """)
+    List<MbtiSessionRecord> findHistory(@Param("userId") long userId);
+
     @Insert("""
             INSERT INTO assessment_answers
               (session_id, question_id, option_code, score_dimension, score_value)

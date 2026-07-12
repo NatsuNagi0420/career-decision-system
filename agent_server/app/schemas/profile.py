@@ -29,6 +29,7 @@ class CapabilityProfileRequest(BaseModel):
     user_id: str | None = None
     profile: UserProfile = Field(default_factory=UserProfile)
     assessment: AssessmentSnapshot = Field(default_factory=AssessmentSnapshot)
+    allow_external_model: bool = False
 
 
 class RadarPoint(BaseModel):

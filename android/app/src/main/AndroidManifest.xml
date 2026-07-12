@@ -3,9 +3,10 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
+        android:name=".CareerApplication"
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
-        android:label="Career Decision"
+        android:label="职途"
         android:theme="@style/Theme.CareerDecision"
         android:usesCleartextTraffic="${usesCleartextTraffic}">
         <activity

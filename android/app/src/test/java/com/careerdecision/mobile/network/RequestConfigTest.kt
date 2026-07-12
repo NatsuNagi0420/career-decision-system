@@ -27,8 +27,8 @@ class RequestConfigTest {
 
     @Test
     fun backendBaseUrlIsConfigured() {
-        if (BuildConfig.DEBUG) {
-            assertTrue(RequestConfig.BACKEND_BASE_URL.isNotBlank())
-        }
+        assertTrue(RequestConfig.BACKEND_BASE_URL.isNotBlank())
+        assertTrue(RequestConfig.BACKEND_BASE_URL.startsWith("https://"))
+        assertTrue(RequestConfig.WEB_BASE_URL.startsWith("https://"))
     }
 }

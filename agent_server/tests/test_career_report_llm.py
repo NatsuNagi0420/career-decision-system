@@ -11,6 +11,7 @@ def request_payload() -> CareerReportRequest:
         {
             "request_id": "llm-career-report",
             "user_id": "user-001",
+            "allow_external_model": True,
             "profile": {
                 "name": "Alex",
                 "major": "Computer Science",

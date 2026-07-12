@@ -2,6 +2,7 @@
  * 模块：用户行为信号采集与主动消息触发
  * 职责：采集当前页面行为信号，定时发送到后端，接收主动消息推送
  */
+import { sendActivitySignalApi } from '@/api/activity'
 
 /**
  * 页面状态接口
@@ -224,19 +225,9 @@ class ActivityMonitor {
     }
 
     try {
-      const response = await fetch('/api/activity/signal', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(signal)
-      })
-
-      if (response.ok) {
-        const result = await response.json()
-        if (result.data && result.data.shouldPush) {
-          this.handleProactiveMessage(result.data)
-        }
+      const result = await sendActivitySignalApi(signal)
+      if (result?.shouldPush) {
+        this.handleProactiveMessage(result)
       }
     } catch (error) {
       console.warn('Failed to send activity signal:', error)

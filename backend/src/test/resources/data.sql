@@ -6,6 +6,19 @@ VALUES
 INSERT INTO user_tokens (user_id, token_hash, token_prefix, token_type, expires_at)
 VALUES (1, '4c5dc9b7708905f77f5e5d16316b5dfb425e68cb326dcd55a860e90a7707031e', 'test-token', 'access', DATEADD('DAY', 1, CURRENT_TIMESTAMP));
 
+INSERT INTO career_directions (
+  id, code, name, category, summary, typical_work_json, common_skills_json,
+  growth_path_json, misconceptions_json, major_tags_json, industry_tags_json,
+  work_types_json, sort_order
+)
+VALUES
+  (1, 'backend', '后端开发', '技术研发', '设计和实现服务端业务、接口与数据能力。',
+   '["开发业务接口","设计数据模型"]', '["Java","数据库"]', '["后端工程师","高级工程师"]',
+   '["只会框架就足够"]', '["计算机"]', '["互联网"]', '["工程"]', 10),
+  (2, 'data-analysis', '数据分析', '数据与算法', '用数据支持业务判断与改进。',
+   '["定义指标","分析问题"]', '["SQL","统计基础"]', '["数据分析师","高级分析师"]',
+   '["会做图表就是分析"]', '["统计","经管"]', '["互联网","零售"]', '["分析"]', 20);
+
 INSERT INTO assessment_definitions (code, name, version, description)
 VALUES ('MBTI', 'MBTI职业性格测评', '1.0', 'test');
 

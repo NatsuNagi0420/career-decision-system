@@ -5,7 +5,8 @@ param(
     [string] $InternalToken = "",
     [string] $BrowserExecutablePath = "",
     [int] $TimeoutSeconds = 120,
-    [switch] $SkipWebSmoke
+    [switch] $SkipWebSmoke,
+    [switch] $RequireRealModel
 )
 
 $ErrorActionPreference = "Stop"
@@ -14,11 +15,14 @@ $Root = Split-Path -Parent $PSScriptRoot
 $AgentRoot = Join-Path $Root "agent_server"
 $BackendRoot = Join-Path $Root "backend"
 $LogDir = Join-Path $Root "logs"
+$HttpsDir = Join-Path $Root ".local-https"
+$BackendKeyStore = Join-Path $HttpsDir "backend-local.p12"
+$BackendKeyStoreUri = "file:" + ($BackendKeyStore -replace "\\", "/")
 $AgentPython = Join-Path $AgentRoot ".venv\Scripts\python.exe"
 
 if ([string]::IsNullOrWhiteSpace($BackendBaseUrl)) {
     $BackendBaseUrl = if ([string]::IsNullOrWhiteSpace($env:BACKEND_BASE_URL)) {
-        "http://127.0.0.1:8080"
+        "https://192.168.1.159:8443"
     } else {
         $env:BACKEND_BASE_URL
     }
@@ -34,7 +38,7 @@ if ([string]::IsNullOrWhiteSpace($AgentBaseUrl)) {
 
 if ([string]::IsNullOrWhiteSpace($WebBaseUrl)) {
     $WebBaseUrl = if ([string]::IsNullOrWhiteSpace($env:WEB_BASE_URL)) {
-        "http://127.0.0.1:5173"
+        "https://192.168.1.159:5173"
     } else {
         $env:WEB_BASE_URL
     }
@@ -93,9 +97,30 @@ function Test-HttpOk {
         [string] $Url
     )
 
+    $Curl = Get-Command "curl.exe" -ErrorAction SilentlyContinue
+    if ($Curl) {
+        $PreviousErrorActionPreference = $ErrorActionPreference
+        $ErrorActionPreference = "SilentlyContinue"
+        try {
+            $StatusCode = & $Curl.Source --silent --insecure --output NUL --write-out "%{http_code}" --connect-timeout 2 --max-time 3 $Url 2>$null
+        } catch {
+            return $false
+        } finally {
+            $ErrorActionPreference = $PreviousErrorActionPreference
+        }
+        if ($LASTEXITCODE -eq 0) {
+            $StatusText = ($StatusCode | Select-Object -Last 1).ToString().Trim()
+            $ParsedStatus = 0
+            if ([int]::TryParse($StatusText, [ref] $ParsedStatus)) {
+                return $ParsedStatus -ge 200 -and $ParsedStatus -lt 300
+            }
+        }
+        return $false
+    }
+
     try {
         $Response = Invoke-WebRequest -UseBasicParsing -Uri $Url -TimeoutSec 3
-        return $Response.StatusCode -eq 200
+        return $Response.StatusCode -ge 200 -and $Response.StatusCode -lt 300
     } catch {
         return $false
     }
@@ -195,17 +220,21 @@ function Start-AgentIfNeeded {
 
     New-Item -ItemType Directory -Force -Path $LogDir | Out-Null
     Write-Host "Starting Agent Server at $AgentBaseUrl" -ForegroundColor Cyan
+    $AgentEnvironment = @{
+        INTERNAL_API_TOKEN = $InternalToken
+        BACKEND_BASE_URL = $BackendBaseUrl
+    }
+    if (-not $RequireRealModel) {
+        $AgentEnvironment.LLM_PROVIDER = "mock"
+    }
+
     $Process = Start-ProcessWithEnvironment `
         -FilePath $AgentPython `
         -ArgumentList @("-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", [string] $Port) `
         -WorkingDirectory $AgentRoot `
         -StandardOutputPath (Join-Path $LogDir "agent-runtime.out.log") `
         -StandardErrorPath (Join-Path $LogDir "agent-runtime.err.log") `
-        -Environment @{
-            INTERNAL_API_TOKEN = $InternalToken
-            BACKEND_BASE_URL = $BackendBaseUrl
-            LLM_PROVIDER = if ([string]::IsNullOrWhiteSpace($env:LLM_PROVIDER)) { "mock" } else { $env:LLM_PROVIDER }
-        }
+        -Environment $AgentEnvironment
 
     if (-not (Wait-HttpOk $HealthUrl $TimeoutSeconds)) {
         Stop-StartedService @{ LauncherProcess = $Process; PortProcessId = $null }
@@ -232,22 +261,30 @@ function Start-BackendIfNeeded {
         throw "Port $Port is already occupied but backend health is not reachable at $HealthUrl."
     }
 
+    if (-not (Test-Path $BackendKeyStore)) {
+        throw "Local HTTPS keystore not found. Run scripts\setup-local-https.ps1 first: $BackendKeyStore"
+    }
+
     New-Item -ItemType Directory -Force -Path $LogDir | Out-Null
     Write-Host "Starting backend at $BackendBaseUrl" -ForegroundColor Cyan
     $WebOrigin = ([System.Uri]::new($WebBaseUrl)).GetLeftPart([System.UriPartial]::Authority)
     $Process = Start-ProcessWithEnvironment `
         -FilePath "mvn.cmd" `
-        -ArgumentList @("spring-boot:run") `
+        -ArgumentList @("spring-boot:run", "-Dspring-boot.run.profiles=local-https") `
         -WorkingDirectory $BackendRoot `
         -StandardOutputPath (Join-Path $LogDir "backend-runtime.out.log") `
         -StandardErrorPath (Join-Path $LogDir "backend-runtime.err.log") `
         -Environment @{
             SERVER_PORT = $Port
+            SERVER_ADDRESS = "0.0.0.0"
+            SERVER_SSL_KEY_STORE = $BackendKeyStoreUri
+            SERVER_SSL_KEY_STORE_PASSWORD = "changeit"
+            SERVER_SSL_KEY_STORE_TYPE = "PKCS12"
             AGENT_SERVER_BASE_URL = $AgentBaseUrl
             AGENT_INTERNAL_TOKEN = $InternalToken
             INTERNAL_API_TOKEN = $InternalToken
             DATA_SERVER_ROOT = (Join-Path $BackendRoot "data_server")
-            CORS_ALLOWED_ORIGINS = "http://localhost:5173,http://127.0.0.1:5173,$WebOrigin"
+            CORS_ALLOWED_ORIGINS = "https://localhost:5173,https://127.0.0.1:5173,$WebOrigin"
         }
 
     if (-not (Wait-HttpOk $ReadyUrl $TimeoutSeconds)) {
@@ -265,6 +302,10 @@ Write-Host "Runtime smoke target agent:   $AgentBaseUrl" -ForegroundColor Cyan
 Write-Host "Runtime smoke target backend: $BackendBaseUrl" -ForegroundColor Cyan
 Write-Host "Runtime smoke target web:     $WebBaseUrl" -ForegroundColor Cyan
 
+if ($BackendBaseUrl -notmatch '^https://' -or $WebBaseUrl -notmatch '^https://') {
+    throw "Runtime smoke requires HTTPS for backend and Web. backend=$BackendBaseUrl web=$WebBaseUrl"
+}
+
 $StartedAgent = $null
 $StartedBackend = $null
 
@@ -272,10 +313,15 @@ try {
     $StartedAgent = Start-AgentIfNeeded
     $StartedBackend = Start-BackendIfNeeded
 
-    & (Join-Path $PSScriptRoot "smoke-api.ps1") `
-        -BackendBaseUrl $BackendBaseUrl `
-        -AgentBaseUrl $AgentBaseUrl `
-        -TimeoutSeconds 30
+    $ApiSmokeArguments = @{
+        BackendBaseUrl = $BackendBaseUrl
+        AgentBaseUrl = $AgentBaseUrl
+        TimeoutSeconds = 30
+    }
+    if ($RequireRealModel) {
+        $ApiSmokeArguments["RequireRealModel"] = $true
+    }
+    & (Join-Path $PSScriptRoot "smoke-api.ps1") @ApiSmokeArguments
 
     if (-not $SkipWebSmoke) {
         & (Join-Path $PSScriptRoot "smoke-web.ps1") `

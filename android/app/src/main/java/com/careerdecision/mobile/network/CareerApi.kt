@@ -3,6 +3,7 @@ package com.careerdecision.mobile.network
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
 import okhttp3.OkHttpClient
+import okhttp3.Request
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -14,6 +15,7 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.PUT
 import retrofit2.http.Query
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 data class ApiEnvelope<T>(
@@ -331,6 +333,52 @@ interface CareerApi {
     @POST("auth/logout")
     suspend fun logout(): ApiEnvelope<Any>
 
+    @GET("dashboard")
+    suspend fun dashboard(): ApiEnvelope<DashboardResponse>
+
+    @GET("action-plans")
+    suspend fun actionPlans(): ApiEnvelope<List<ActionPlanSummary>>
+
+    @GET("action-plans/current/today")
+    suspend fun today(): ApiEnvelope<TodayResponse>
+
+    @PATCH("action-plans/{planId}/tasks/{taskId}/status")
+    suspend fun updateActionTaskStatus(
+        @Path("planId") planId: Long,
+        @Path("taskId") taskId: Long,
+        @Body request: ActionTaskStatusRequest
+    ): ApiEnvelope<ActionPlanDetail>
+
+    @POST("action-plans/{planId}/tasks/{taskId}/results")
+    suspend fun addActionTaskResult(
+        @Path("planId") planId: Long,
+        @Path("taskId") taskId: Long,
+        @Body request: ActionTaskResultRequest
+    ): ApiEnvelope<ActionPlanDetail>
+
+    @POST("action-plans/{planId}/coach")
+    suspend fun coachActionPlan(
+        @Path("planId") planId: Long,
+        @Body request: CoachingRequest
+    ): ApiEnvelope<ActionCoachResponse>
+
+    @POST("decision-projects/{projectId}/targets/{targetId}/confidence-feedback")
+    suspend fun submitConfidenceFeedback(
+        @Path("projectId") projectId: Long,
+        @Path("targetId") targetId: Long,
+        @Body request: ConfidenceFeedbackRequest
+    ): ApiEnvelope<ConfidenceFeedbackResponse>
+
+    @PUT("weekly-reviews")
+    suspend fun saveWeeklyReview(
+        @Body request: WeeklyReviewRequest
+    ): ApiEnvelope<WeeklyReviewResponse>
+
+    @POST("weekly-reviews/{reviewId}/submit")
+    suspend fun submitWeeklyReview(
+        @Path("reviewId") reviewId: Long
+    ): ApiEnvelope<WeeklyReviewResponse>
+
     @GET("users/me/profile")
     suspend fun profile(): ApiEnvelope<UserProfile>
 
@@ -445,7 +493,21 @@ fun <T> ApiEnvelope<T>.requireSuccess() {
 }
 
 object CareerApiFactory {
+    internal const val REQUEST_ID_HEADER = "X-Request-ID"
     val gson: Gson = Gson()
+
+    internal fun withClientHeaders(
+        original: Request,
+        token: String?,
+        generatedRequestId: String = "android-${UUID.randomUUID()}"
+    ): Request = original.newBuilder().apply {
+        if (original.header(REQUEST_ID_HEADER).isNullOrBlank()) {
+            header(REQUEST_ID_HEADER, generatedRequestId)
+        }
+        if (!token.isNullOrBlank()) {
+            header("Authorization", "Bearer $token")
+        }
+    }.build()
 
     fun create(tokenProvider: () -> String?): CareerApi {
         val clientBuilder = OkHttpClient.Builder()
@@ -453,12 +515,7 @@ object CareerApiFactory {
             .readTimeout(RequestConfig.READ_TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .writeTimeout(RequestConfig.WRITE_TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .addInterceptor { chain ->
-                val token = tokenProvider()
-                val request = chain.request().newBuilder().apply {
-                    if (!token.isNullOrBlank()) {
-                        header("Authorization", "Bearer $token")
-                    }
-                }.build()
+                val request = withClientHeaders(chain.request(), tokenProvider())
                 chain.proceed(request)
             }
 

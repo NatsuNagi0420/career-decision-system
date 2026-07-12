@@ -87,7 +87,7 @@ public class JobService {
 
     private JobSearchCriteria normalizeCriteria(JobSearchCriteria criteria) {
         if (criteria == null) {
-            return new JobSearchCriteria(null, null, null, null, null, null, 0, 10);
+            return new JobSearchCriteria(null, null, null, null, null, null, null, 0, 10);
         }
         return new JobSearchCriteria(
                 trimToNull(criteria.keyword()),
@@ -96,6 +96,7 @@ public class JobService {
                 trimToNull(criteria.tag()),
                 criteria.salaryMin(),
                 criteria.salaryMax(),
+                trimToNull(criteria.experienceLevel()),
                 criteria.page(),
                 criteria.size()
         );

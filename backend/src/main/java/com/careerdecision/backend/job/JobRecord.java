@@ -1,5 +1,7 @@
 package com.careerdecision.backend.job;
 
+import java.time.LocalDateTime;
+
 public class JobRecord {
     private Long id;
     private String title;
@@ -20,7 +22,10 @@ public class JobRecord {
     private String education;
     private String description;
     private String companyDescription;
+    private String sourcePlatform;
     private String sourceUrl;
+    private String sourceUpdatedText;
+    private LocalDateTime sourceUpdatedAt;
     private Double qualityScore;
 
     public Long getId() {
@@ -181,6 +186,30 @@ public class JobRecord {
 
     public void setSourceUrl(String sourceUrl) {
         this.sourceUrl = sourceUrl;
+    }
+
+    public String getSourcePlatform() {
+        return sourcePlatform;
+    }
+
+    public void setSourcePlatform(String sourcePlatform) {
+        this.sourcePlatform = sourcePlatform;
+    }
+
+    public String getSourceUpdatedText() {
+        return sourceUpdatedText;
+    }
+
+    public void setSourceUpdatedText(String sourceUpdatedText) {
+        this.sourceUpdatedText = sourceUpdatedText;
+    }
+
+    public LocalDateTime getSourceUpdatedAt() {
+        return sourceUpdatedAt;
+    }
+
+    public void setSourceUpdatedAt(LocalDateTime sourceUpdatedAt) {
+        this.sourceUpdatedAt = sourceUpdatedAt;
     }
 
     public Double getQualityScore() {

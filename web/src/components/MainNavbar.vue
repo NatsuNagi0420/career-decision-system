@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { computed, nextTick, onMounted, onUnmounted, ref, type ComponentPublicInstance } from 'vue'
+import { useRouter } from 'vue-router'
+import { ChevronDown, History, LogOut, Moon, Settings, Sun, UserRound } from 'lucide-vue-next'
 import { logoutApi } from '@/api/user'
+import { M3IconButton, M3MenuItem } from '@/design-system/components'
+import { m3Confirm } from '@/design-system/services/feedback'
 import { useThemeStore } from '@/stores/theme'
-import { getActivePrimaryNav, primaryNavItems } from '@/config/navigation'
 import {
   clearSession,
   getStoredUser,
@@ -14,70 +16,48 @@ import {
 
 defineOptions({ name: 'MainNavbar' })
 
-const emit = defineEmits<{
-  'nav-change': [navId: string]
-}>()
-
 const router = useRouter()
-const route = useRoute()
 const themeStore = useThemeStore()
-
-const isDark = computed(() => themeStore.isDark)
 const user = ref<SessionUser | null>(null)
 const isDropdownOpen = ref(false)
-const isMobileMenuOpen = ref(false)
+const userMenuTrigger = ref<ComponentPublicInstance | null>(null)
+const isDark = computed(() => themeStore.isDark)
+const isLoggedIn = computed(() => Boolean(user.value?.id))
 
-const activeNav = computed(() => {
-  return getActivePrimaryNav(route.path)
-})
+const syncSession = () => { user.value = getStoredUser() }
 
-const isLoggedIn = computed(() => !!user.value?.id)
-
-const syncSession = () => {
-  user.value = getStoredUser()
-}
-
-const toggleTheme = () => themeStore.toggleTheme()
-
-const handleNav = (path: string) => {
-  router.push(path)
-  isMobileMenuOpen.value = false
-}
-
-const handleNavClick = (navId: string, path: string) => {
-  emit('nav-change', navId)
-  handleNav(path)
-}
-
-const toggleDropdown = () => {
-  isDropdownOpen.value = !isDropdownOpen.value
-}
-
-const toggleMobileMenu = () => {
-  isMobileMenuOpen.value = !isMobileMenuOpen.value
+const handleNav = async (path: string) => {
+  isDropdownOpen.value = false
+  await router.push(path)
 }
 
 const handleLogout = async () => {
+  await m3Confirm('退出后需要重新登录才能继续使用，确认退出吗？', '退出登录', {
+    confirmButtonText: '退出登录',
+    cancelButtonText: '取消',
+    type: 'warning'
+  })
   isDropdownOpen.value = false
   try {
     await logoutApi()
   } catch {
-    // Local logout should still complete if the remote session is already invalid.
+    // 即使远端会话已失效，也必须完成本地退出。
   } finally {
     clearSession()
     syncSession()
-    router.push('/login')
+    await router.push('/login')
   }
 }
 
 const handleGlobalClick = (event: MouseEvent) => {
-  const target = event.target as HTMLElement
-  if (!target.closest('.user-profile-wrapper')) {
-    isDropdownOpen.value = false
-  }
-  if (!target.closest('.mobile-menu-wrapper') && !target.closest('.mobile-menu-btn')) {
-    isMobileMenuOpen.value = false
-  }
+  if (!(event.target as HTMLElement).closest('.user-profile-wrapper')) isDropdownOpen.value = false
+}
+
+const closeAccountMenu = async (restoreFocus: boolean) => {
+  isDropdownOpen.value = false
+  if (!restoreFocus) return
+  await nextTick()
+  ;(userMenuTrigger.value?.$el as HTMLElement | undefined)?.focus()
 }
 
 onMounted(() => {
@@ -95,270 +75,120 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <nav class="main-navbar">
-    <div class="nav-content">
-      <button class="logo" type="button" @click="handleNav('/')">
-        <img src="/favicon.png" alt="" class="logo-icon-img" />
-        <span class="logo-text-wrap">
-          <span class="logo-text-main">职业决策系统</span>
-          <span class="logo-text-sub">AI Career Decision</span>
-        </span>
-      </button>
+  <M3TopAppBar class="top-app-bar" aria-label="应用栏">
+    <M3Button class="brand" variant="text" aria-label="返回工作台" @click="handleNav('/')">
+      <span class="brand-mark"><img src="/favicon.png" alt="" /></span>
+      <span class="brand-copy"><strong>职途</strong><small>职业决策与行动</small></span>
+    </M3Button>
 
-      <div class="primary-nav desktop-only">
-        <button
-          v-for="nav in primaryNavItems"
-          :key="nav.id"
-          class="nav-item"
-          :class="{ active: activeNav === nav.id }"
-          type="button"
-          @click="handleNavClick(nav.id, nav.path)"
-        >
-          {{ nav.label }}
-        </button>
-      </div>
+    <div class="top-actions">
+      <M3IconButton :label="isDark ? '切换浅色模式' : '切换深色模式'" @click="themeStore.toggleTheme">
+        <Sun v-if="isDark" />
+        <Moon v-else />
+      </M3IconButton>
 
-      <div class="nav-actions">
-        <button class="theme-toggle" type="button" @click="toggleTheme">
-          {{ isDark ? '浅色' : '深色' }}
-        </button>
+      <M3Button v-if="!isLoggedIn" class="login-action" @click="handleNav('/login')">登录 / 注册</M3Button>
 
-        <button v-if="!isLoggedIn" class="btn btn-primary" type="button" @click="handleNav('/login')">
-          登录 / 注册
-        </button>
+      <div v-else class="user-profile-wrapper">
+        <M3Button ref="userMenuTrigger" class="user-profile" variant="text" :aria-label="user?.username || '账户菜单'" :aria-expanded="isDropdownOpen" aria-haspopup="menu" @click.stop="isDropdownOpen = !isDropdownOpen">
+          <img :src="user?.avatar || '/profile/defaultIcon.png'" alt="" />
+          <span class="user-profile-name">{{ user?.username }}</span>
+          <ChevronDown class="user-profile-chevron" :size="18" aria-hidden="true" />
+        </M3Button>
 
-        <div v-else class="user-profile-wrapper">
-          <button class="user-profile" type="button" @click.stop="toggleDropdown">
-            <img :src="user?.avatar || '/profile/defaultIcon.png'" alt="" class="user-avatar" />
-            <span class="user-name desktop-only">{{ user?.username }}</span>
-          </button>
-          <div v-if="isDropdownOpen" class="dropdown-menu">
-            <button class="dropdown-item" type="button" @click="handleNav('/reports')">我的报告</button>
-            <button class="dropdown-item logout" type="button" @click="handleLogout">退出登录</button>
-          </div>
-        </div>
-
-        <button class="mobile-menu-btn mobile-only" type="button" @click.stop="toggleMobileMenu">
-          <span></span>
-          <span></span>
-          <span></span>
-        </button>
+        <M3Menu v-if="isDropdownOpen" class="account-menu" label="账户菜单" @close="closeAccountMenu">
+          <M3MenuItem class="menu-action" @click="handleNav('/profile')"><template #icon><UserRound :size="19" /></template>个人档案</M3MenuItem>
+          <M3MenuItem class="menu-action" @click="handleNav('/history')"><template #icon><History :size="19" /></template>历史记录</M3MenuItem>
+          <M3MenuItem class="menu-action" @click="handleNav('/settings')"><template #icon><Settings :size="19" /></template>设置</M3MenuItem>
+          <div class="menu-divider" role="separator"></div>
+          <M3MenuItem class="menu-action logout-action" @click="handleLogout"><template #icon><LogOut :size="19" /></template>退出登录</M3MenuItem>
+        </M3Menu>
       </div>
     </div>
-
-    <div v-if="isMobileMenuOpen" class="mobile-menu mobile-only">
-      <button
-        v-for="nav in primaryNavItems"
-        :key="nav.id"
-        class="mobile-nav-item"
-        :class="{ active: activeNav === nav.id }"
-        type="button"
-        @click="handleNavClick(nav.id, nav.path)"
-      >
-        {{ nav.label }}
-      </button>
-    </div>
-  </nav>
+  </M3TopAppBar>
 </template>
 
 <style scoped>
-.main-navbar {
+.top-app-bar {
   position: fixed;
-  inset: 0 0 auto;
-  z-index: 1000;
-  background: var(--clay-bg);
-  border-bottom: 1px solid var(--clay-border);
-  box-shadow: var(--clay-shadow);
-}
-
-.nav-content {
-  max-width: 1400px;
-  height: 64px;
-  margin: 0 auto;
-  padding: 0 24px;
+  z-index: 110;
+  top: 0;
+  right: 0;
+  left: 0;
   display: flex;
+  height: 64px;
   align-items: center;
   justify-content: space-between;
   gap: 24px;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  padding: 0 20px;
+  background: color-mix(in srgb, var(--md-sys-color-surface) 92%, transparent);
+  backdrop-filter: blur(16px);
 }
 
-.logo {
-  display: flex;
+.brand {
+  --m3-button-label-gap: var(--career-spacing-3);
+  display: inline-flex;
+  min-width: 0;
   align-items: center;
   gap: 12px;
   border: 0;
+  border-radius: var(--md-sys-shape-corner-small);
+  padding: 4px 8px 4px 4px;
   background: transparent;
+  color: var(--md-sys-color-on-surface);
   cursor: pointer;
-  color: var(--clay-text);
 }
+.brand:hover { background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent); }
+.brand-mark { display: grid; width: 40px; height: 40px; place-items: center; border-radius: var(--md-sys-shape-corner-medium); background: var(--md-sys-color-primary-container); }
+.brand-mark img { width: 28px; height: 28px; object-fit: contain; }
+.brand-copy { display: grid; min-width: 0; text-align: left; }
+.brand-copy strong { font-size: var(--md-sys-typescale-title-medium-size); font-weight: 500; line-height: var(--md-sys-typescale-title-medium-line-height); }
+.brand-copy small { color: var(--md-sys-color-on-surface-variant); font-size: var(--md-sys-typescale-label-small-size); line-height: var(--md-sys-typescale-label-small-line-height); }
 
-.logo-icon-img {
-  width: 36px;
-  height: 36px;
-  border-radius: 999px;
-}
-
-.logo-text-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.logo-text-main {
-  font-size: 16px;
-  font-weight: 700;
-}
-
-.logo-text-sub {
-  font-size: 11px;
-  color: var(--clay-text-subtle);
-}
-
-.primary-nav,
-.nav-actions {
-  display: flex;
+.top-actions { display: flex; align-items: center; gap: 8px; }
+.login-action, .user-profile {
+  --m3-button-label-gap: var(--career-spacing-2);
+  display: inline-flex;
+  min-height: 48px;
   align-items: center;
   gap: 8px;
-}
-
-.primary-nav {
-  flex: 1;
-  justify-content: center;
-}
-
-.nav-item,
-.btn,
-.theme-toggle,
-.user-profile,
-.dropdown-item,
-.mobile-nav-item {
-  border: 1px solid transparent;
+  border: 0;
+  border-radius: var(--md-sys-shape-corner-full);
+  padding: 0 16px;
   background: transparent;
-  color: var(--clay-text);
+  color: var(--md-sys-color-on-surface);
+  font-size: var(--md-sys-typescale-label-large-size);
+  font-weight: 500;
   cursor: pointer;
-  font: inherit;
 }
+.login-action { background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); }
+.user-profile:hover { background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent); }
+.user-profile img { width: 36px; height: 36px; border-radius: var(--md-sys-shape-corner-full); object-fit: cover; background: var(--md-sys-color-surface-container-highest); }
+.user-profile-wrapper { position: relative; }
 
-.nav-item {
-  padding: 8px 16px;
-  border-radius: 999px;
-}
-
-.nav-item:hover,
-.nav-item.active {
-  background: var(--clay-surface-variant);
-}
-
-.btn-primary {
-  padding: 8px 18px;
-  border-radius: 999px;
-  background: #000;
-  color: #fff;
-}
-
-.theme-toggle {
-  padding: 7px 12px;
-  border-radius: 999px;
-  border-color: var(--clay-border);
-  background: var(--clay-surface);
-}
-
-.user-profile-wrapper {
-  position: relative;
-}
-
-.user-profile {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 10px;
-  border-radius: 999px;
-}
-
-.user-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-}
-
-.dropdown-menu {
+.account-menu {
   position: absolute;
+  z-index: 120;
+  top: calc(100% + 8px);
   right: 0;
-  top: calc(100% + 10px);
-  width: 160px;
-  padding: 6px;
-  border: 1px solid var(--clay-border);
-  border-radius: var(--clay-radius-card);
-  background: var(--clay-surface);
-  box-shadow: var(--clay-shadow);
+  display: grid;
+  width: 200px;
+  border-radius: var(--md-sys-shape-corner-extra-small);
+  padding: 8px 0;
+  background: var(--md-sys-color-surface-container);
+  box-shadow: var(--md-sys-elevation-level3);
 }
+.account-menu .menu-action { width: 100%; min-height: 48px; justify-content: flex-start; text-align: left; }
+.account-menu .logout-action { color: var(--md-sys-color-error); --md-menu-item-label-text-color: var(--md-sys-color-error); --md-menu-item-leading-icon-color: var(--md-sys-color-error); }
+.menu-divider { height: 1px; margin: 8px 0; background: var(--md-sys-color-outline-variant); }
 
-.dropdown-item {
-  width: 100%;
-  padding: 10px 12px;
-  border-radius: 8px;
-  text-align: left;
-}
-
-.dropdown-item:hover {
-  background: var(--clay-dropdown-hover);
-}
-
-.logout {
-  color: #b42318;
-}
-
-.mobile-menu-btn {
-  display: none;
-  width: 36px;
-  height: 36px;
-  border: 1px solid var(--clay-border);
-  border-radius: 8px;
-  background: var(--clay-surface);
-  flex-direction: column;
-  justify-content: center;
-  gap: 4px;
-}
-
-.mobile-menu-btn span {
-  width: 18px;
-  height: 2px;
-  background: var(--clay-text);
-}
-
-.mobile-menu {
-  padding: 12px 16px;
-  border-top: 1px solid var(--clay-border-subtle);
-  background: var(--clay-surface);
-}
-
-.mobile-nav-item {
-  width: 100%;
-  padding: 12px 16px;
-  border-radius: 10px;
-  text-align: left;
-}
-
-.mobile-nav-item.active {
-  background: var(--clay-surface-variant);
-}
-
-.mobile-only {
-  display: none;
-}
-
-@media (max-width: 1024px) {
-  .desktop-only {
-    display: none;
-  }
-
-  .mobile-only,
-  .mobile-menu-btn {
-    display: flex;
-  }
-
-  .mobile-menu {
-    display: block;
-  }
+@media (max-width: 599px) {
+  .top-app-bar { padding: 0 8px 0 12px; }
+  .brand-copy small, .user-profile-name, .user-profile-chevron { display: none; }
+  .brand { gap: 8px; padding-right: 4px; }
+  .brand-mark { width: 36px; height: 36px; }
+  .user-profile { width: 48px; padding: 0 6px; }
+  .account-menu { position: fixed; top: 60px; right: 8px; }
 }
 </style>

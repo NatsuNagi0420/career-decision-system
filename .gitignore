@@ -21,6 +21,8 @@ web/node_modules/
 web/dist/
 web/.env
 web/.vite/
+web/playwright-report/
+web/test-results/
 
 # Android
 android/.gradle/
@@ -31,5 +33,7 @@ android/local.properties
 # Local uploads and generated files
 logs/
 uploads/
+backups/
+pilot-results/
 .local-https/
 *.log

@@ -22,6 +22,7 @@ class CareerReportRequest(BaseModel):
     profile: UserProfile = Field(default_factory=UserProfile)
     assessment: AssessmentSnapshot = Field(default_factory=AssessmentSnapshot)
     job_candidates: list[JobCandidate] = Field(default_factory=list)
+    allow_external_model: bool = False
 
 
 class CareerOption(BaseModel):

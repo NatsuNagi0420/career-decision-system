@@ -3,6 +3,9 @@ package com.careerdecision.backend.controller;
 import com.careerdecision.backend.common.ApiResponse;
 import com.careerdecision.backend.dto.PathPlanGenerateRequest;
 import com.careerdecision.backend.service.AgentServerClient;
+import com.careerdecision.backend.profile.UserProfileService;
+import com.careerdecision.backend.user.CurrentUser;
+import com.careerdecision.backend.user.UserInfo;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -15,13 +18,21 @@ import java.util.Map;
 @RequestMapping("/api/v1/path-plans")
 public class PathPlanController {
     private final AgentServerClient agentServerClient;
+    private final UserProfileService userProfileService;
 
-    public PathPlanController(AgentServerClient agentServerClient) {
+    public PathPlanController(AgentServerClient agentServerClient, UserProfileService userProfileService) {
         this.agentServerClient = agentServerClient;
+        this.userProfileService = userProfileService;
     }
 
     @PostMapping("/generate")
-    public ApiResponse<Map<String, Object>> generate(@Valid @RequestBody PathPlanGenerateRequest request) {
-        return ApiResponse.success(agentServerClient.generatePathPlan(request.toAgentPayload()), request.requestId());
+    public ApiResponse<Map<String, Object>> generate(
+            @CurrentUser UserInfo user,
+            @Valid @RequestBody PathPlanGenerateRequest request
+    ) {
+        Map<String, Object> payload = request.toAgentPayload();
+        payload.put("user_id", String.valueOf(user.id()));
+        payload.put("allow_external_model", userProfileService.allowsExternalAi(user.id()));
+        return ApiResponse.success(agentServerClient.generatePathPlan(payload), request.requestId());
     }
 }

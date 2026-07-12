@@ -1,68 +1,61 @@
-# Full Chain MVP
+# 第一版全链路状态
 
-This document records the current end-to-end development state with the imported job data available in `career_decision_system`.
+## 用户闭环
 
-## Runtime Layers
+```text
+Web 注册与引导
+  -> 职业方向与真实岗位探索
+  -> 2 至 5 个候选的决策项目
+  -> 确认主目标和备选目标
+  -> 生成 2 至 12 周行动计划
+  -> Web 或 Android 完成任务并记录成果
+  -> 提交每周复盘并确认计划调整
+```
 
-- `agent_server`: FastAPI + LangGraph agent service.
-- `backend`: Spring Boot business API, MySQL persistence, agent proxy.
-- `web`: Vue 3 web client.
-- `android`: Kotlin Jetpack Compose mobile MVP.
+## 数据流
 
-## Local Services
+```text
+Web / Android
+  -> HTTPS Backend（认证、用户隔离、事务、MySQL）
+  -> HTTP Agent（仅本机内部令牌）
+  -> LangGraph 规则基线
+  -> 可选 OpenAI-compatible 模型
+  -> Pydantic 结构校验
+  -> Backend 审计与业务持久化
+```
 
-Start order:
+Agent 只提出候选和修改建议，不直接写数据库。用户确认后由后端业务接口写入。
 
-1. MySQL with database `career_decision_system`.
-2. `agent_server` from its virtual environment.
-3. `backend`.
-4. `web`.
-5. Android from Android Studio or `android/gradlew.bat`.
+## 已完成
 
-Current local URLs:
+- Flyway B1/V2-V6，旧报告和旧路径接口继续兼容。
+- 职业目录、个人证据、决策项目、候选、岗位样本、比较、目标。
+- 行动计划、成果、变更历史、每周复盘、项目报告快照和工作台聚合。
+- Web 四区导航、五阶段决策、行动计划、复盘和上下文 AI 导师。
+- Android 四页行动端、Keystore 会话、Token 刷新、Room 缓存和 WorkManager 队列。
+- 计划、任务状态和任务成果使用 `requestId` 防重复提交。
+- 32 条固定 Agent 教练评测和真实模型配置模板。
 
-- Agent Server: `http://127.0.0.1:8001`
-- Backend: `http://127.0.0.1:8080`
-- Web: `http://127.0.0.1:5173`
-- Android emulator backend URL: `http://10.0.2.2:8080/api/v1/`
+## 地址
 
-## End-to-End Flow
+```text
+Agent  http://127.0.0.1:8001
+Backend https://192.168.1.159:8443
+Web     https://192.168.1.159:5173
+```
 
-The current MVP supports:
+## 自动化结果
 
-1. Register or login.
-2. Store access and refresh tokens on Web/Android, with refresh-token rotation for session restore.
-3. Load jobs from the MySQL job corpus.
-4. Load MBTI questions from MySQL.
-5. Submit MBTI answers and persist sessions for logged-in users.
-6. Generate a career report through backend -> agent_server.
-7. Archive generated reports in MySQL.
-8. Read archived reports on Web.
-9. Generate and archive resume analyses.
-10. Generate and archive path plans.
-11. Update archived path plan task progress.
-12. Use the same backend contract from Android.
+- 后端：执行 116 项，115 通过，1 条有编号的平台例外。
+- Agent：88 条通过，Ruff 通过。
+- Web：119 条单测、类型检查、生产构建、6 条 Playwright 流程通过。
+- Android：24 条单测、Debug/Release 构建和 Release Lint 通过。
+- Android：Repository/ViewModel/离线队列测试、Debug/Release 构建和 Release Lint 通过。
 
-## Job Data Status
+## 外部待验收
 
-The current database `career_decision_system` contains the imported job corpus used by the backend search, recommendation, target, and favorite flows. `SQL脚本/00_init_career_decision_system.sql` still contains baseline seed data for a fresh local initialization, while the import scripts under `SQL脚本/` document the real-job schema upgrade and import path.
+- 真机安装本地 CA 后，通过 HTTPS 完成任务并在 Web 看到同步结果。
+- 注入真实供应商密钥，确认 `generationMode=llm`，并实测超时后的规则降级。
+- 10 至 15 名学生试点以及下一周复盘/继续率。
 
-## Verification Status
-
-Verified in this environment:
-
-- Backend tests: `mvn test`
-- Agent tests: `.venv/Scripts/python.exe -m pytest`
-- Web check: `npm run check`
-- Android build: `android/gradlew.bat :app:testDebugUnitTest :app:assembleDebug :app:assembleRelease`
-- Full local gate: `powershell -ExecutionPolicy Bypass -File scripts/verify-all.ps1`
-- API smoke: `powershell -ExecutionPolicy Bypass -File scripts/smoke-api.ps1` covers health, auth, refresh-token rotation/revocation, profile, MBTI, real jobs, target/favorite jobs, Agent report/resume/path generation, archive persistence, path task updates, and logout.
-- Runtime smoke: `powershell -ExecutionPolicy Bypass -File scripts/smoke-runtime.ps1` starts or reuses Agent/backend, runs API smoke, then runs the Web browser smoke.
-- Browser UI smoke: register/login, profile save, target job selection, career report generation, report archive
-
-Android build notes:
-
-- The emulator uses `http://10.0.2.2:8080/api/v1/` to reach the host backend.
-- Android debug and release backend defaults live in `android/app/src/main/java/com/careerdecision/mobile/network/RequestConfig.kt`; release defaults and release overrides must use HTTPS and avoid local/emulator hosts.
-- If Gradle reports missing SDK packages, install Android SDK Platform 35 and Android SDK Build-Tools 34.0.0 from Android Studio SDK Manager.
-- The project includes a Gradle Wrapper. On this machine, SDK packages `platforms/android-35` and `build-tools/34.0.0` were added under `C:\Users\yunzh\AppData\Local\Android\Sdk`.
+这些结果依赖设备、密钥和真实参与者，不能在代码测试中伪造为完成。

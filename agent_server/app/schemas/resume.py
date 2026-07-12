@@ -6,6 +6,7 @@ class ResumeAnalysisRequest(BaseModel):
     user_id: str | None = None
     target_role: str | None = None
     resume_text: str
+    allow_external_model: bool = False
 
 
 class ResumeAnalysisResponse(BaseModel):

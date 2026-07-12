@@ -16,6 +16,7 @@ def request_payload() -> ResumeAnalysisRequest:
             "Project: Built a FastAPI career service with SQL storage, "
             "reduced report generation latency by 30%, and shipped API tests."
         ),
+        allow_external_model=True,
     )
 
 

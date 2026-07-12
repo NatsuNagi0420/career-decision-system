@@ -9,6 +9,10 @@ param(
     [int] $EmulatorBootWaitSeconds = 180,
     [int] $LaunchWaitSeconds = 8,
     [int] $LogcatLines = 300,
+    [string] $Username = "",
+    [string] $Password = "",
+    [string] $BackendBaseUrl = "https://192.168.1.159:8443",
+    [switch] $RequireAuthenticatedFlow,
     [switch] $StartEmulator,
     [switch] $SkipUiFlow
 )
@@ -401,41 +405,184 @@ function Tap-UiText {
     Start-Sleep -Milliseconds 700
 }
 
-function Assert-AndroidUiFlow {
-    Write-Host 'Android smoke UI flow: checking visible Compose screens' -ForegroundColor Cyan
+function Wait-UiText {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Text,
+        [int] $Seconds = 20
+    )
 
+    $Deadline = (Get-Date).AddSeconds($Seconds)
+    while ((Get-Date) -lt $Deadline) {
+        $Dump = Get-UiDump
+        if ($Dump.Contains($Text)) {
+            return $Dump
+        }
+        Start-Sleep -Seconds 1
+    }
+    throw "Android UI smoke timed out waiting for '$Text'."
+}
+
+function Input-UiField {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Label,
+        [Parameter(Mandatory = $true)]
+        [string] $Value
+    )
+
+    Tap-UiText $Label
+    Invoke-Adb @("shell", "input", "text", $Value) | Out-Null
+    Invoke-Adb @("shell", "input", "keyevent", "4") | Out-Null
+    Start-Sleep -Milliseconds 300
+}
+
+function Join-BackendUrl {
+    param([string] $Path)
+    return $BackendBaseUrl.TrimEnd("/") + "/" + $Path.TrimStart("/")
+}
+
+function Invoke-BackendJson {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Method,
+        [Parameter(Mandatory = $true)]
+        [string] $Path,
+        [object] $Body = $null,
+        [hashtable] $Headers = @{}
+    )
+
+    $Arguments = @{
+        UseBasicParsing = $true
+        Method = $Method
+        Uri = Join-BackendUrl $Path
+        Headers = $Headers
+        TimeoutSec = 10
+    }
+    if ($null -ne $Body) {
+        $Arguments.Body = [System.Text.Encoding]::UTF8.GetBytes(($Body | ConvertTo-Json -Depth 20))
+        $Arguments.ContentType = "application/json; charset=utf-8"
+    }
+    $Response = Invoke-WebRequest @Arguments
+    $Response.RawContentStream.Position = 0
+    $Reader = [System.IO.StreamReader]::new($Response.RawContentStream, [System.Text.Encoding]::UTF8)
+    return $Reader.ReadToEnd() | ConvertFrom-Json
+}
+
+function Start-BackendSyncVerification {
+    if ($BackendBaseUrl -notmatch '^https://') {
+        throw "Authenticated Android smoke requires an HTTPS backend. Actual value: $BackendBaseUrl"
+    }
+    $Login = Invoke-BackendJson -Method "POST" -Path "/api/v1/auth/login" -Body @{
+        username = $Username
+        password = $Password
+    }
+    if ($Login.code -ne 0 -or [string]::IsNullOrWhiteSpace([string] $Login.data.token)) {
+        throw "Backend login failed before Android cross-device verification."
+    }
+    $Headers = @{ Authorization = "Bearer $($Login.data.token)" }
+    $Today = Invoke-BackendJson -Method "GET" -Path "/api/v1/action-plans/current/today" -Headers $Headers
+    if ($Today.code -ne 0 -or [long] $Today.data.planId -le 0) {
+        throw "Authenticated Android smoke requires a current action plan in the shared backend."
+    }
+    return @{
+        Headers = $Headers
+        PlanId = [long] $Today.data.planId
+    }
+}
+
+function Wait-BackendTaskResult {
+    param(
+        [Parameter(Mandatory = $true)]
+        [hashtable] $Verification,
+        [Parameter(Mandatory = $true)]
+        [string] $ResultMarker,
+        [int] $Seconds = 45
+    )
+
+    $Deadline = (Get-Date).AddSeconds($Seconds)
+    while ((Get-Date) -lt $Deadline) {
+        $Plan = Invoke-BackendJson -Method "GET" -Path "/api/v1/action-plans/$($Verification.PlanId)" -Headers $Verification.Headers
+        if ($Plan.code -eq 0) {
+            $Tasks = @($Plan.data.weeks | ForEach-Object { $_.tasks } | ForEach-Object { $_ })
+            foreach ($Task in $Tasks) {
+                $MatchingResults = @($Task.results | Where-Object { [string] $_.description -eq $ResultMarker })
+                if ([string] $Task.status -eq "completed" -and $MatchingResults.Count -gt 0) {
+                    Write-Host "Android task and result are visible in the shared backend." -ForegroundColor Green
+                    return
+                }
+            }
+        }
+        Start-Sleep -Seconds 2
+    }
+    throw "Android UI completed, but the shared backend did not receive the completed task and result marker within $Seconds seconds."
+}
+
+function Assert-AndroidUiFlow {
+    Write-Host 'Android smoke UI flow: checking action client screens' -ForegroundColor Cyan
+
+    $ProductText = New-UiText @(0x804C, 0x9014)
+    $UsernameText = New-UiText @(0x7528, 0x6237, 0x540D)
+    $PasswordText = New-UiText @(0x5BC6, 0x7801)
     $LoginText = New-UiText @(0x767B, 0x5F55)
-    $JobsText = New-UiText @(0x5C97, 0x4F4D)
-    $ReportText = New-UiText @(0x62A5, 0x544A)
-    $AccountText = New-UiText @(0x8D26, 0x53F7)
-    $RealJobMatchText = New-UiText @(0x771F, 0x5B9E, 0x5C97, 0x4F4D, 0x5339, 0x914D)
-    $JobCatalogText = New-UiText @(0x5C97, 0x4F4D, 0x5E93)
-    $MbtiAssessmentText = 'MBTI ' + (New-UiText @(0x6D4B, 0x8BC4))
-    $AiReportText = 'AI ' + $ReportText
+    $TodayText = New-UiText @(0x4ECA, 0x65E5)
+    $GoalText = New-UiText @(0x76EE, 0x6807)
+    $MentorText = 'AI ' + (New-UiText @(0x5BFC, 0x5E08))
+    $ProfileText = New-UiText @(0x6211, 0x7684)
+    $CompleteText = New-UiText @(0x5B8C, 0x6210)
+    $CompleteTaskText = New-UiText @(0x5B8C, 0x6210, 0x4EFB, 0x52A1)
+    $ResultText = New-UiText @(0x6210, 0x679C, 0x8BF4, 0x660E, 0xFF08, 0x53EF, 0x9009, 0xFF09)
+    $ConfirmText = New-UiText @(0x786E, 0x8BA4)
 
     $Dump = Get-UiDump
-    $InitialTexts = @('VOCAPATH MOBILE', $LoginText, $JobsText, 'MBTI', $ReportText, $AccountText)
+    $InitialTexts = @($ProductText, $UsernameText, $PasswordText, $LoginText)
     Assert-UiText -Dump $Dump -ExpectedTexts $InitialTexts -Context 'initial login screen'
 
-    Tap-UiText $JobsText
-    $Dump = Get-UiDump
-    $JobsTexts = @($RealJobMatchText, $JobCatalogText)
-    Assert-UiText -Dump $Dump -ExpectedTexts $JobsTexts -Context 'jobs tab'
+    $HasCredentials = -not [string]::IsNullOrWhiteSpace($Username) -and -not [string]::IsNullOrWhiteSpace($Password)
+    if (-not $HasCredentials) {
+        if ($RequireAuthenticatedFlow) {
+            throw "Authenticated Android smoke requires -Username and -Password."
+        }
+        Write-Host "Android login screen passed. Supply -Username, -Password, and -RequireAuthenticatedFlow for HTTPS task sync." -ForegroundColor Yellow
+        return
+    }
 
-    Tap-UiText 'MBTI'
-    $Dump = Get-UiDump
-    $MbtiTexts = @($MbtiAssessmentText)
-    Assert-UiText -Dump $Dump -ExpectedTexts $MbtiTexts -Context 'MBTI tab'
-
-    Tap-UiText $ReportText
-    $Dump = Get-UiDump
-    $ReportTexts = @($AiReportText)
-    Assert-UiText -Dump $Dump -ExpectedTexts $ReportTexts -Context 'report tab'
-
+    Input-UiField -Label $UsernameText -Value $Username
+    Input-UiField -Label $PasswordText -Value $Password
     Tap-UiText $LoginText
+    $Dump = Wait-UiText -Text $TodayText -Seconds 30
+    Assert-UiText -Dump $Dump -ExpectedTexts @($TodayText, $GoalText, $MentorText, $ProfileText) -Context 'authenticated navigation'
+
+    Tap-UiText $ProfileText
+    $Dump = Wait-UiText -Text $ProfileText
+    Assert-UiText -Dump $Dump -ExpectedTexts @($Username, 'HTTPS') -Context 'profile and HTTPS synchronization status'
+
+    Tap-UiText $TodayText
+    $Dump = Wait-UiText -Text $TodayText
+    if (-not $Dump.Contains($CompleteText)) {
+        if ($RequireAuthenticatedFlow) {
+            throw "Authenticated Android smoke needs at least one actionable task in the current plan."
+        }
+        Write-Host "Authenticated navigation passed, but no actionable task was available." -ForegroundColor Yellow
+        return
+    }
+
+    $BackendVerification = $null
+    $ResultMarker = "Android_smoke_result_" + [guid]::NewGuid().ToString("N").Substring(0, 10)
+    if ($RequireAuthenticatedFlow) {
+        $BackendVerification = Start-BackendSyncVerification
+    }
+
+    Tap-UiText $CompleteText
+    Wait-UiText -Text $CompleteTaskText | Out-Null
+    Input-UiField -Label $ResultText -Value $ResultMarker
+    Tap-UiText $ConfirmText
+    Start-Sleep -Seconds 3
     $Dump = Get-UiDump
-    $LoginTexts = @($AccountText)
-    Assert-UiText -Dump $Dump -ExpectedTexts $LoginTexts -Context 'login tab after navigation'
+    Assert-UiText -Dump $Dump -ExpectedTexts @($TodayText, $GoalText, $MentorText, $ProfileText) -Context 'task result sync'
+    if ($null -ne $BackendVerification) {
+        Wait-BackendTaskResult -Verification $BackendVerification -ResultMarker $ResultMarker
+    }
 }
 
 $ResolvedAdb = Resolve-AdbPath $AdbPath

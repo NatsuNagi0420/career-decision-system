@@ -2,11 +2,15 @@
     [switch] $IncludeApiSmoke,
     [switch] $IncludeWebSmoke,
     [switch] $IncludeRuntimeSmoke,
+    [switch] $IncludeRealModelSmoke,
     [switch] $IncludeAndroidDeviceSmoke,
     [switch] $StartAndroidEmulator,
     [string] $AndroidAdbPath = "",
     [string] $AndroidDeviceSerial = "",
     [string] $AndroidAvdName = "",
+    [string] $AndroidSmokeUsername = "",
+    [string] $AndroidSmokePassword = "",
+    [switch] $RequireAndroidAuthenticatedFlow,
     [int] $AndroidDeviceWaitSeconds = 20,
     [int] $AndroidEmulatorBootWaitSeconds = 180
 )
@@ -86,10 +90,7 @@ function Assert-PowerShellScriptSyntax {
 
 function Assert-TextEncodingClean {
     $Patterns = "\x{FFFD}|\x{951B}|\x{9286}|\x{9427}|\x{5B80}|\x{52EB}|\x{7EEF}\x{8364}|\x{7459}\x{52EB}|\x{9471}\x{5C64}|\x{9474}\x{6C2D}\x{6E70}"
-    $Arguments = @(
-        "-n",
-        "--pcre2",
-        $Patterns,
+    $ScanPaths = @(
         "README.md",
         "docs",
         "SQL脚本",
@@ -99,7 +100,15 @@ function Assert-TextEncodingClean {
         "android/app/src/test/java",
         "backend/src",
         "agent_server/app",
-        "scripts",
+        "scripts"
+    ) | Where-Object { Test-Path (Join-Path $Root $_) }
+    $Arguments = @(
+        "-n",
+        "--pcre2",
+        $Patterns
+    )
+    $Arguments += $ScanPaths
+    $Arguments += @(
         "-S",
         "-g",
         "!**/build/**",
@@ -113,6 +122,8 @@ function Assert-TextEncodingClean {
         "!**/node_modules/**",
         "-g",
         "!SQL脚本/career_db.sql",
+        "-g",
+        "!SQL脚本/career_decision_system.sql",
         "-g",
         "!scripts/verify-all.ps1"
     )
@@ -136,7 +147,7 @@ function Assert-AndroidReleaseManifest {
             throw "Merged release AndroidManifest.xml was not produced."
         }
 
-        [xml] $Manifest = Get-Content -Path $ManifestPath
+        [xml] $Manifest = Get-Content -Path $ManifestPath -Encoding UTF8 -Raw
         $UsesCleartextTraffic = $Manifest.manifest.application.GetAttribute(
             "usesCleartextTraffic",
             "http://schemas.android.com/apk/res/android"
@@ -146,6 +157,38 @@ function Assert-AndroidReleaseManifest {
         }
     } finally {
         Pop-Location
+    }
+}
+
+function Assert-AndroidDebugManifest {
+    Push-Location (Join-Path $Root "android")
+    try {
+        .\gradlew.bat :app:processDebugMainManifest
+        $ManifestPath = Join-Path $Root "android\app\build\intermediates\merged_manifest\debug\processDebugMainManifest\AndroidManifest.xml"
+        if (-not (Test-Path $ManifestPath)) {
+            $ManifestPath = Join-Path $Root "android\app\build\intermediates\merged_manifests\debug\processDebugManifest\AndroidManifest.xml"
+        }
+        if (-not (Test-Path $ManifestPath)) {
+            throw "Merged debug AndroidManifest.xml was not produced."
+        }
+
+        [xml] $Manifest = Get-Content -Path $ManifestPath -Encoding UTF8 -Raw
+        $UsesCleartextTraffic = $Manifest.manifest.application.GetAttribute(
+            "usesCleartextTraffic",
+            "http://schemas.android.com/apk/res/android"
+        )
+        if ($UsesCleartextTraffic -ne "false") {
+            throw "Debug Android manifest must set android:usesCleartextTraffic to false. Actual value: $UsesCleartextTraffic"
+        }
+    } finally {
+        Pop-Location
+    }
+}
+
+function Assert-AgentStartupModelConfig {
+    $StartScript = Get-Content -Path (Join-Path $Root "scripts\start-dev.ps1") -Raw
+    if ($StartScript -match 'LLM_PROVIDER\s*=.*"mock"') {
+        throw "start-dev.ps1 must not override agent_server/.env with LLM_PROVIDER=mock."
     }
 }
 
@@ -194,11 +237,11 @@ function Assert-AndroidProductionBackendUrl {
 }
 
 function Assert-WebProductionBackendConfig {
-    $RequestConfigPath = Join-Path $Root "web\src\utils\request.js"
+    $RequestConfigPath = Join-Path $Root "web\src\utils\request.ts"
     $RequestConfigContent = Get-Content -Path $RequestConfigPath -Raw
     $ProductionDefaultMatch = [regex]::Match($RequestConfigContent, "PROD_BACKEND_BASE_URL\s*=\s*'([^']+)'")
     if (-not $ProductionDefaultMatch.Success) {
-        throw "request.js does not define PROD_BACKEND_BASE_URL."
+        throw "request.ts does not define PROD_BACKEND_BASE_URL."
     }
 
     Assert-WebProductionBackendUrl -Name "Web production default BACKEND_BASE_URL" -Url $ProductionDefaultMatch.Groups[1].Value
@@ -239,6 +282,9 @@ if (-not $IncludeAndroidDeviceSmoke) {
         -or -not [string]::IsNullOrWhiteSpace($AndroidAdbPath) `
         -or -not [string]::IsNullOrWhiteSpace($AndroidDeviceSerial) `
         -or -not [string]::IsNullOrWhiteSpace($AndroidAvdName) `
+        -or -not [string]::IsNullOrWhiteSpace($AndroidSmokeUsername) `
+        -or -not [string]::IsNullOrWhiteSpace($AndroidSmokePassword) `
+        -or $RequireAndroidAuthenticatedFlow `
         -or $AndroidDeviceWaitSeconds -ne 20 `
         -or $AndroidEmulatorBootWaitSeconds -ne 180
     if ($AndroidOptionsRequested) {
@@ -285,6 +331,15 @@ Invoke-Step "Web checks" {
     }
 }
 
+Invoke-Step "Web end-to-end flow (1440px and 360px)" {
+    Push-Location (Join-Path $Root "web")
+    try {
+        npm run test:e2e
+    } finally {
+        Pop-Location
+    }
+}
+
 Invoke-Step "Android checks" {
     Push-Location (Join-Path $Root "android")
     try {
@@ -294,25 +349,26 @@ Invoke-Step "Android checks" {
     }
 }
 
-Invoke-Step "Android release manifest policy" {
+Invoke-Step "Android cleartext and release URL policy" {
+    Assert-AndroidDebugManifest
     Assert-AndroidReleaseManifest
     Assert-AndroidReleaseBackendConfig
 }
 
 Invoke-Step "Client communication scans" {
+    Assert-AgentStartupModelConfig
     $AxiosMatches = @(rg -n "axios" web/src)
     Assert-CommandSucceeded $LASTEXITCODE "axios"
     Assert-OnlyAllowedMatches "axios" $AxiosMatches @(
-        "web[\\/]+src[\\/]+utils[\\/]+request\.js:",
-        "web[\\/]+src[\\/]+utils[\\/]+request\.spec\.ts:",
-        "web[\\/]+src[\\/]+utils[\\/]+request\.d\.ts:"
+        "web[\\/]+src[\\/]+utils[\\/]+request\.ts:",
+        "web[\\/]+src[\\/]+utils[\\/]+__tests__[\\/]+request\.spec\.ts:"
     )
 
-    $WebRequestImportMatches = @(rg -n 'from [''"](@/utils/request(\.js)?|\.\/request\.js|.*utils/request\.js)[''"]' web/src -g "*.ts" -g "*.js" -g "*.vue")
+    $WebRequestImportMatches = @(rg -n 'from [''"](@/utils/request|.*utils/request)[''"]' web/src -g "*.ts" -g "*.vue")
     Assert-CommandSucceeded $LASTEXITCODE "web request import"
     Assert-OnlyAllowedMatches "web request import" $WebRequestImportMatches @(
-        "web[\\/]+src[\\/]+api[\\/]+client\.ts:",
-        "web[\\/]+src[\\/]+utils[\\/]+request\.spec\.ts:"
+        "web[\\/]+src[\\/]+api[\\/]+[^:]+\.ts:",
+        "web[\\/]+src[\\/]+utils[\\/]+__tests__[\\/]+request\.spec\.ts:"
     )
 
     $WebTransportMatches = @(rg -n "fetch\(|XMLHttpRequest|EventSource|WebSocket|navigator\.sendBeacon" web/src -g "*.ts" -g "*.js" -g "*.vue")
@@ -334,14 +390,22 @@ Invoke-Step "Client communication scans" {
     $UrlMatches = @(rg -n "http://|https://|10\.0\.2\.2|127\.0\.0\.1|localhost|data-server|data_server|/images" web/src android/app/src -g "*.kt" -g "*.ts" -g "*.js" -g "*.vue")
     Assert-CommandSucceeded $LASTEXITCODE "client URL"
     Assert-OnlyAllowedMatches "client URL" $UrlMatches @(
-        "web[\\/]+src[\\/]+utils[\\/]+request\.js:\d+:const DEV_BACKEND_BASE_URL",
-        "web[\\/]+src[\\/]+utils[\\/]+request\.js:\d+:const PROD_BACKEND_BASE_URL",
+        "web[\\/]+src[\\/]+utils[\\/]+request\.ts:",
+        "web[\\/]+src[\\/]+[^:]*__tests__[\\/]+[^:]+:",
+        "web[\\/]+src[\\/]+pages[\\/]+[^:]+\.vue:\d+:.*placeholder=""https://""",
         "android[\\/]+app[\\/]+src[\\/]+main[\\/]+java[\\/]+com[\\/]+careerdecision[\\/]+mobile[\\/]+network[\\/]+RequestConfig\.kt:\d+:\s*private const val DEBUG_BACKEND_BASE_URL",
-        "android[\\/]+app[\\/]+src[\\/]+main[\\/]+java[\\/]+com[\\/]+careerdecision[\\/]+mobile[\\/]+network[\\/]+RequestConfig\.kt:\d+:\s*private const val RELEASE_BACKEND_BASE_URL"
+        "android[\\/]+app[\\/]+src[\\/]+main[\\/]+java[\\/]+com[\\/]+careerdecision[\\/]+mobile[\\/]+network[\\/]+RequestConfig\.kt:\d+:\s*private const val RELEASE_BACKEND_BASE_URL",
+        "android[\\/]+app[\\/]+src[\\/]+main[\\/]+java[\\/]+com[\\/]+careerdecision[\\/]+mobile[\\/]+network[\\/]+RequestConfig\.kt:\d+:\s*private const val DEBUG_WEB_BASE_URL",
+        "android[\\/]+app[\\/]+src[\\/]+main[\\/]+java[\\/]+com[\\/]+careerdecision[\\/]+mobile[\\/]+network[\\/]+RequestConfig\.kt:\d+:\s*private const val RELEASE_WEB_BASE_URL",
+        "android[\\/]+app[\\/]+src[\\/]+test[\\/]+[^:]+:"
     )
 }
 
-if ($IncludeRuntimeSmoke) {
+if ($IncludeRealModelSmoke) {
+    Invoke-Step "Real-model runtime smoke" {
+        & (Join-Path $Root "scripts\smoke-runtime.ps1") -RequireRealModel
+    }
+} elseif ($IncludeRuntimeSmoke) {
     Invoke-Step "Runtime smoke" {
         & (Join-Path $Root "scripts\smoke-runtime.ps1")
     }
@@ -380,6 +444,15 @@ if ($IncludeAndroidDeviceSmoke) {
         }
         if (-not [string]::IsNullOrWhiteSpace($AndroidAvdName)) {
             $AndroidSmokeArgs += @("-AvdName", $AndroidAvdName)
+        }
+        if (-not [string]::IsNullOrWhiteSpace($AndroidSmokeUsername)) {
+            $AndroidSmokeArgs += @("-Username", $AndroidSmokeUsername)
+        }
+        if (-not [string]::IsNullOrWhiteSpace($AndroidSmokePassword)) {
+            $AndroidSmokeArgs += @("-Password", $AndroidSmokePassword)
+        }
+        if ($RequireAndroidAuthenticatedFlow) {
+            $AndroidSmokeArgs += "-RequireAuthenticatedFlow"
         }
         & (Join-Path $Root "scripts\smoke-android.ps1") @AndroidSmokeArgs
     }

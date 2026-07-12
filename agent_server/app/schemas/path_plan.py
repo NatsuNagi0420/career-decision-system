@@ -8,6 +8,7 @@ class PathPlanRequest(BaseModel):
     user_id: str | None = None
     profile: UserProfile = Field(default_factory=UserProfile)
     target_role: str
+    allow_external_model: bool = False
 
 
 class Milestone(BaseModel):

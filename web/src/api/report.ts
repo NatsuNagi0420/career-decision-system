@@ -10,7 +10,13 @@ export type ReportArchiveRequest = {
 export type ReportArchiveRecord = {
   id: string
   userId?: string
+  decisionProjectId?: number | null
+  agentRunId?: number | null
+  snapshotVersion?: number | null
+  generationRequestId?: string | null
+  type: string
   title: string
+  summary: string
   reportJson: string
   sortIndex: number
   createTime?: string
@@ -64,6 +70,10 @@ type BackendCareerReport = {
 type BackendReportSnapshot = {
   id: string
   userId?: string
+  decisionProjectId?: number | null
+  agentRunId?: number | null
+  snapshotVersion?: number | null
+  generationRequestId?: string | null
   type: string
   title: string
   summary: string
@@ -138,7 +148,13 @@ function mapArchive(item: BackendReportSnapshot): ReportArchiveRecord {
   return {
     id: item.id,
     userId: item.userId,
+    decisionProjectId: item.decisionProjectId,
+    agentRunId: item.agentRunId,
+    snapshotVersion: item.snapshotVersion,
+    generationRequestId: item.generationRequestId,
+    type: item.type,
     title: item.title,
+    summary: item.summary,
     reportJson: item.content,
     sortIndex: 0,
     createTime: item.createdAt,
@@ -185,7 +201,7 @@ export const listReportArchivesApi = async () => {
   const page = await request<BackendReportPage>({
     url: '/reports',
     method: 'get',
-    params: { type: 'career', page: 0, size: 20 }
+    params: { page: 0, size: 50 }
   })
   return page.items.map(mapArchive)
 }
@@ -197,3 +213,13 @@ export const getReportArchiveDetailApi = async (id: number | string) => {
   })
   return mapArchive(item)
 }
+
+export const createDecisionSnapshotApi = (projectId: number, requestId: string) =>
+  request<BackendReportSnapshot>({
+    url: `/decision-projects/${projectId}/reports/snapshot`,
+    method: 'post',
+    data: { requestId }
+  })
+
+export const deleteReportArchiveApi = (id: number | string) =>
+  request<void>({ url: `/reports/${id}`, method: 'delete' })

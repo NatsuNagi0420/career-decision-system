@@ -1,336 +1,174 @@
-# Local Development
+# 本地开发
 
-This project is split into four layers:
-
-```text
-web <-> backend <-> agent_server
-android <-> backend <-> agent_server
-```
-
-`deploy/` is intentionally omitted in the current phase.
-
-## Ports
-
-Use these defaults during local development:
+## 固定调试地址
 
 ```text
-web           http://127.0.0.1:5173
-backend       http://127.0.0.1:8080
-agent_server  http://127.0.0.1:8001
+Agent  http://127.0.0.1:8001
+后端   https://192.168.1.159:8443
+Web    https://192.168.1.159:5173
 ```
 
-## Start Agent Server
+Agent 只被同一台电脑上的后端调用，因此保留回环 HTTP；学生端、Web 和 Android 到后端的通信必须使用 HTTPS。
 
-Always use the virtual environment under `agent_server/.venv`.
+## 首次准备
+
+需要 Java 17+、Maven、Node.js 20.19+、Python 3.12+、MySQL 8、Android SDK 35 和 Chrome。
 
 ```powershell
-cd D:\Project\career-decision-system\agent_server
-.\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8001 --reload
-```
+cd D:\Project\career-decision-system
+.\scripts\setup-local-https.ps1
 
-Health checks:
+cd agent_server
+py -3.12 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
 
-```powershell
-Invoke-RestMethod http://127.0.0.1:8001/api/v1/health
-Invoke-RestMethod http://127.0.0.1:8001/api/v1/ready
-```
-
-Optional real LLM mode for career reports, capability profile, resume analysis, path planning, and chat:
-
-```powershell
-cd D:\Project\career-decision-system\agent_server
-@'
-LLM_PROVIDER=openai_compatible
-LLM_MODEL=your-model-name
-LLM_BASE_URL=https://your-provider.example/v1
-LLM_API_KEY=your-api-key
-LLM_TIMEOUT_SECONDS=30
-LLM_MAX_RETRIES=2
-LLM_RETRY_BACKOFF_SECONDS=0.2
-'@ | Set-Content .env -Encoding UTF8
-```
-
-Without these variables, Agent Server stays in deterministic `mock` mode.
-
-Agent internal token:
-
-```powershell
-cd D:\Project\career-decision-system\agent_server
-@'
-INTERNAL_API_TOKEN=change-me
-'@ | Set-Content .env -Encoding UTF8
-```
-
-Keep this value aligned with the backend `AGENT_INTERNAL_TOKEN` or `INTERNAL_API_TOKEN` environment variable. Local defaults are `change-me`.
-
-Production-like readiness:
-
-```powershell
-$env:APP_ENV = 'production'
-$env:INTERNAL_API_TOKEN = 'replace-with-a-long-random-token'
-$env:LLM_PROVIDER = 'openai_compatible'
-$env:LLM_MODEL = 'your-model-name'
-$env:LLM_API_KEY = 'your-api-key'
-```
-
-When `APP_ENV` is `prod` or `production`, Agent readiness rejects the local `change-me` token, short internal tokens, `LLM_PROVIDER=mock`, unsupported providers, blank `LLM_MODEL`, and missing `LLM_API_KEY`. Keep the backend `AGENT_INTERNAL_TOKEN` set to the same value as `INTERNAL_API_TOKEN`.
-
-## Start Backend
-
-```powershell
-cd D:\Project\career-decision-system\backend
-mvn spring-boot:run
-```
-
-Backend Agent connection overrides:
-
-```powershell
-$env:AGENT_SERVER_BASE_URL = 'http://127.0.0.1:8001'
-$env:AGENT_INTERNAL_TOKEN = 'change-me'
-$env:AGENT_SERVER_TIMEOUT_SECONDS = '30'
-```
-
-If `AGENT_INTERNAL_TOKEN` is not set, backend falls back to `INTERNAL_API_TOKEN`, then the local default. `AGENT_SERVER_TIMEOUT_SECONDS` accepts an integer from 1 to 300 and applies to backend-to-Agent connection and request timeout.
-The backend trims and rejects blank Agent internal tokens before sending `X-Internal-Token`.
-
-Production-like backend readiness:
-
-```powershell
-$env:APP_ENV = 'production'
-$env:DB_USERNAME = 'career_user'
-$env:DB_PASSWORD = 'replace-with-a-strong-db-password'
-$env:AGENT_INTERNAL_TOKEN = 'replace-with-a-long-random-token'
-$env:CORS_ALLOWED_ORIGINS = 'https://career.example.com'
-```
-
-When `APP_ENV` is `prod` or `production`, backend `/api/v1/ready` rejects unsafe local defaults before reporting ready: Agent token `change-me`, short Agent tokens, `root/root` database credentials, and localhost-only CORS origins.
-
-Backend CORS origin overrides:
-
-```powershell
-$env:CORS_ALLOWED_ORIGINS = 'http://localhost:5173,http://127.0.0.1:5173'
-```
-
-Add LAN or emulator-facing frontend origins here when testing on another device. Do not edit Java source just to allow a different client origin.
-
-Backend auth token lifetime overrides:
-
-```powershell
-$env:AUTH_TOKEN_EXPIRE_DAYS = '7'
-$env:AUTH_REFRESH_TOKEN_EXPIRE_DAYS = '30'
-```
-
-Use an integer from 1 to 90 for access tokens and 1 to 180 for refresh tokens. The backend stores only token hashes. Login returns an access token and a refresh token; refresh tokens are single-use and rotated through `/api/v1/auth/refresh`.
-
-Existing databases initialized before refresh-token support must run the idempotent migration before restarting backend:
-
-```text
-D:\Project\career-decision-system\SQL脚本\04_add_refresh_tokens.sql
-```
-
-Backend login rate limit overrides:
-
-```powershell
-$env:AUTH_LOGIN_RATE_LIMIT_ENABLED = 'true'
-$env:AUTH_LOGIN_RATE_LIMIT_MAX_ATTEMPTS = '5'
-$env:AUTH_LOGIN_RATE_LIMIT_WINDOW_SECONDS = '300'
-```
-
-By default, the backend allows 5 failed login attempts per username and client IP within 300 seconds. After that, `/api/v1/auth/login` returns HTTP 429 until the window expires or a successful login clears the failure window.
-
-Health and readiness checks:
-
-```powershell
-Invoke-RestMethod http://127.0.0.1:8080/api/v1/health
-Invoke-RestMethod http://127.0.0.1:8080/api/v1/ready
-```
-
-`/api/v1/ready` checks production configuration and database connectivity with `SELECT 1`, so use it before running smoke tests that depend on MySQL state.
-
-## Start Web
-
-```powershell
-cd D:\Project\career-decision-system\web
+cd ..\web
 npm install
-npm run dev -- --host 127.0.0.1 --port 5173
 ```
 
-The Web client defaults to `http://127.0.0.1:8080` in development. For a production build, set the backend API origin with `VITE_BACKEND_BASE_URL` when the default placeholder is not your target:
+证书默认包含 `192.168.1.159`。IP 变化时重新生成：
 
 ```powershell
-cd D:\Project\career-decision-system\web
-$env:VITE_BACKEND_BASE_URL = 'https://api.your-domain.example'
-npm run build
+.\scripts\setup-local-https.ps1 -ExtraHosts "YOUR_NEW_LAN_IP"
 ```
 
-Production Web backend URLs must use HTTPS and must not point to local or emulator hosts. Web pages and feature APIs still read the backend only through `src/utils/request.js`.
+## 必要配置
 
-## Optional Local HTTPS
-
-Local HTTPS uses mkcert and is documented separately so it does not disturb the default HTTP workflow:
+后端最关键的环境变量：
 
 ```powershell
-cd D:\Project\career-decision-system
-powershell -ExecutionPolicy Bypass -File .\scripts\setup-local-https.ps1
+$env:DB_URL = 'jdbc:mysql://127.0.0.1:3306/career_decision_system?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai'
+$env:DB_USERNAME = 'root'
+$env:DB_PASSWORD = 'your-password'
 ```
 
-Then follow `docs/LOCAL_HTTPS.md` for backend, Web, and Android debug HTTPS startup commands.
+后端与 Agent 的配置位置：
 
-## Test Commands
+```text
+backend/src/main/resources/application.yml
+career.agent-server.base-url       <- AGENT_SERVER_BASE_URL
+career.agent-server.internal-token <- AGENT_INTERNAL_TOKEN
+career.agent-server.timeout-seconds<- AGENT_SERVER_TIMEOUT_SECONDS
+```
 
-Full project gate:
+Agent 的对应配置在 `agent_server/.env`：
+
+```text
+INTERNAL_API_TOKEN=change-me
+```
+
+这两个内部令牌必须一致。启动器默认同时注入 `change-me`，仅限本地开发。
+
+## 启动与停止
+
+推荐使用根目录启动器：
 
 ```powershell
-cd D:\Project\career-decision-system
-powershell -ExecutionPolicy Bypass -File .\scripts\verify-all.ps1
+.\scripts\start-dev.ps1 -Target all
 ```
 
-Full project gate plus API smoke, when `backend` and `agent_server` are already running:
+也可以双击 `start-dev.bat`。菜单支持 Agent、后端、Web 分层启动、状态查看和分别停止。服务在后台运行，关闭菜单窗口不会停止服务。
 
 ```powershell
-cd D:\Project\career-decision-system
-powershell -ExecutionPolicy Bypass -File .\scripts\verify-all.ps1 -IncludeApiSmoke
+.\scripts\start-dev.ps1 -Target status
+.\scripts\start-dev.ps1 -Target stop
 ```
 
-Full project gate plus runtime smoke:
+日志位于根目录 `logs/`。后端启动失败时先查看 `backend-dev.err.log`，常见原因是 MySQL 未启动、密码错误或 `8443` 被占用。
+
+## Web 地址配置
+
+唯一后端地址入口是 `web/src/utils/request.ts`，本地覆盖写在 `web/.env`：
+
+```text
+VITE_BACKEND_BASE_URL=https://192.168.1.159:8443
+VITE_DEV_HTTPS=true
+```
+
+业务页面不得直接创建 axios、fetch 或硬编码主机。
+
+## Android 地址与证书
+
+唯一地址入口是：
+
+```text
+android/app/src/main/java/com/careerdecision/mobile/network/RequestConfig.kt
+```
+
+Debug 默认指向 `https://192.168.1.159:8443`，Gradle 覆盖也会拒绝 HTTP。真机必须安装 `.local-https/mkcert-rootCA.pem` 作为用户 CA，Debug 网络策略才会信任本地证书。Release 不信任用户 CA，也拒绝本地或模拟器主机。
+
+## 真实模型
+
+默认 `LLM_PROVIDER=mock`，核心流程始终可使用规则降级。真实 OpenAI-compatible 配置模板为：
+
+```text
+agent_server/.env.openai-compatible.example
+```
+
+将其内容写入未提交的 `agent_server/.env`，填写真实 `LLM_MODEL`、`LLM_BASE_URL` 和 `LLM_API_KEY`。密钥不得写入源码、日志或提交记录。
+
+根目录启动器不会覆盖 `.env` 中的模型配置。修改配置后需要执行 `.\start-dev.bat stop-agent`，再重新启动所需链路；`.\start-dev.bat status` 会显示 Agent 当前实际使用的提供方。进程级环境变量仍会按标准优先级覆盖 `.env`。
+
+真实模型端到端验收会创建测试账号，只发起一次外部模型调用，并验证用户撤回授权后立即回到规则降级：
 
 ```powershell
-cd D:\Project\career-decision-system
-powershell -ExecutionPolicy Bypass -File .\scripts\verify-all.ps1 -IncludeRuntimeSmoke
+.\scripts\smoke-runtime.ps1 -RequireRealModel
 ```
 
-`-IncludeRuntimeSmoke` starts missing local Agent Server/backend processes, reuses already-running ones, runs the API write-path smoke, runs the Web browser smoke, and cleans up only processes it started. It still expects the configured MySQL database to be running and initialized.
-
-Runtime smoke without the full test/build gate:
+也可以在三层服务已经按真实配置启动后运行：
 
 ```powershell
-cd D:\Project\career-decision-system
-powershell -ExecutionPolicy Bypass -File .\scripts\smoke-runtime.ps1
+.\scripts\smoke-api.ps1 -RequireRealModel
 ```
 
-API smoke for already-running local services:
+没有 `-RequireRealModel` 的日常门禁保持 mock 模式，不会产生外部模型费用。
+
+## 数据库备份恢复
+
+发布前使用 MySQL 自带的 `mysqldump` 和 `mysql` 做一次全量恢复演练：
 
 ```powershell
-cd D:\Project\career-decision-system
-powershell -ExecutionPolicy Bypass -File .\scripts\smoke-api.ps1
+.\scripts\verify-db-backup.ps1
 ```
 
-This is a write-path smoke, not only a health check. It creates a unique `smoke_*` user and verifies auth, refresh-token rotation and reuse rejection, profile save, MBTI submit, target/favorite jobs, backend-to-Agent report/resume/path generation, report/resume/path archive persistence, path task status updates, logout, and refresh-token revocation after logout against the configured database.
+脚本把备份写入 Git 已忽略的 `backups/`，恢复到随机命名的临时数据库，逐表比较精确行数后删除临时库。它不会覆盖或删除当前 `career_decision_system`。非默认安装位置可通过 `-MySqlPath`、`-MySqlDumpPath` 或 `MYSQL_BIN_DIR` 指定；数据库凭据优先读取 `DB_USERNAME` 和 `DB_PASSWORD`。
 
-The smoke script defaults to `http://127.0.0.1:8080` for backend and `http://127.0.0.1:8001` for Agent Server. Override with parameters or environment variables:
+## 学生试点指标
+
+真实试点账号统一使用一个独立前缀，例如 `pilot26`。试点结束后运行：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\smoke-api.ps1 `
-  -BackendBaseUrl 'http://127.0.0.1:8080' `
-  -AgentBaseUrl 'http://127.0.0.1:8001'
+.\scripts\report-pilot-metrics.ps1 `
+  -CohortPrefix "pilot26" `
+  -RequireAcceptance
 ```
 
-Restart backend after backend code changes before relying on this smoke check; it validates the running process, not just the source tree.
+脚本拒绝 `smoke`、`web`、`test` 和 `demo` 前缀，只输出匿名编号与量化指标。验收要求为 10 至 15 名真实参与者，且至少一人完成目标确认、任务、成果、复盘和复盘后继续行动。报告写入未跟踪的 `pilot-results/`；定性记录使用 `docs/学生试点记录模板.md`。
 
-Web browser smoke for already-running backend:
+## 验证
+
+全部静态与自动化门禁：
 
 ```powershell
-cd D:\Project\career-decision-system
-powershell -ExecutionPolicy Bypass -File .\scripts\smoke-web.ps1
+.\scripts\verify-all.ps1
 ```
 
-The Web smoke starts Vite on `http://127.0.0.1:5173` when needed, passes the selected backend URL into `VITE_BACKEND_BASE_URL`, uses local Chrome or Edge through `playwright-core`, registers a unique `websmoke_*` user, saves a profile, selects a target job, generates an AI report, and verifies archive feedback in the rendered app. Override the browser path with `BROWSER_EXECUTABLE_PATH` when Chrome/Edge is installed somewhere else.
-
-Agent Server:
+已启动服务上的新版 API 闭环：
 
 ```powershell
-cd D:\Project\career-decision-system\agent_server
-.\.venv\Scripts\python.exe -m pytest
+.\scripts\smoke-api.ps1
 ```
 
-Backend:
+自动启动或复用 Agent、HTTPS 后端和 HTTPS Web，再执行 API 与浏览器烟测：
 
 ```powershell
-cd D:\Project\career-decision-system\backend
-mvn test
+.\scripts\smoke-runtime.ps1
 ```
 
-Web:
+Android 真机完整烟测：
 
 ```powershell
-cd D:\Project\career-decision-system\web
-npm run check
+.\scripts\smoke-android.ps1 -Username "test_user" -Password "test_password" -RequireAuthenticatedFlow
 ```
 
-Android:
-
-```powershell
-cd D:\Project\career-decision-system\android
-.\gradlew.bat :app:testDebugUnitTest :app:assembleDebug :app:assembleRelease
-```
-
-Android device smoke, when an emulator or USB-debuggable device is connected:
-
-```powershell
-cd D:\Project\career-decision-system
-powershell -ExecutionPolicy Bypass -File .\scripts\smoke-android.ps1
-```
-
-The script resolves `adb` from `ADB_PATH`, `PATH`, `%LOCALAPPDATA%\Android\Sdk\platform-tools`, `ANDROID_HOME`, or `ANDROID_SDK_ROOT`. It installs the debug APK, launches `com.careerdecision.mobile/.MainActivity`, checks that the app is visible, navigates the main Compose tabs with `uiautomator`, and fails on launch-time AndroidRuntime crashes. It intentionally fails when no device is connected so the missing runtime target is visible.
-
-If no emulator or device is ready, the script prints the resolved `adb` path, the resolved Android emulator path, and the available AVD names. If no AVD names are listed, open Android Studio Device Manager and create one first.
-
-After at least one AVD exists, the smoke script can start it automatically:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\smoke-android.ps1 `
-  -StartEmulator `
-  -EmulatorBootWaitSeconds 240
-```
-
-To start a specific AVD:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\smoke-android.ps1 `
-  -StartEmulator `
-  -AvdName 'Pixel_8_API_35' `
-  -EmulatorBootWaitSeconds 240
-```
-
-The full gate can pass the same emulator-start behavior into the Android smoke:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\verify-all.ps1 `
-  -IncludeAndroidDeviceSmoke `
-  -StartAndroidEmulator `
-  -AndroidEmulatorBootWaitSeconds 240
-```
-
-If multiple devices are connected, pin the target serial shown by `adb devices`:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\smoke-android.ps1 `
-  -DeviceSerial 'emulator-5554'
-```
-
-The full gate can pass the same serial and a custom `adb` path:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\verify-all.ps1 `
-  -IncludeAndroidDeviceSmoke `
-  -AndroidDeviceSerial 'emulator-5554' `
-  -AndroidAdbPath "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe"
-```
-
-If Android Studio has just started an emulator and it is still booting, increase the wait:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\smoke-android.ps1 -DeviceWaitSeconds 60
-```
-
-If the script reports `unauthorized`, unlock the device and approve the USB debugging prompt. If it reports `offline`, restart the emulator or run `adb kill-server` and rerun the smoke.
-
-## Parallel Work Rules
-
-- Keep `web`, `backend`, `agent_server`, and `android` changes separated unless a feature explicitly crosses layers.
-- Backend owns persistence, permission checks, and API orchestration.
-- Agent Server owns LLM prompts, LangGraph workflows, structured AI outputs, and AI-specific tests.
-- Web owns browser UX and API client calls.
-- Android follows the same backend API contract as Web. Use Android Studio SDK Manager if Gradle reports missing Android SDK Platform 35 or Build-Tools 34.0.0.
-- Do not add `deploy/` until deployment work begins.
-- Do not copy the old prototype UI directly. Use it only as product-flow reference.
+该账号需要已有当前行动计划和至少一项可执行任务。严格模式会生成唯一成果标记；真机完成任务后，脚本会轮询同一个 HTTPS 后端，只有后端任务状态为 `completed` 且成果标记已经入库才会通过。这一结果可直接由 Web 读取，用于验证 Android 与 Web 共享同一份服务端数据。

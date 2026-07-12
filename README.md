@@ -1,113 +1,117 @@
-# Career Decision System
+# 职业决策系统
 
-AI-driven career planning system with four product/runtime layers:
+面向大学生的职业决策与行动产品。第一版闭环为：
 
-- `web/`: Vue 3 web client.
-- `android/`: Kotlin Jetpack Compose mobile client.
-- `backend/`: Spring Boot business backend.
-- `agent_server/`: Python FastAPI AI agent service.
-- `docs/`: product, architecture, API, and development documentation.
-
-The current implementation starts from a clean architecture and borrows feature ideas from the previous experimental project at `D:\Project\career-decision-system-web`.
-
-## First Run Order
-
-1. Start `agent_server` in its Python virtual environment.
-2. Start `backend` and verify it can call `agent_server`.
-3. Start `web` and connect it to `backend`.
-4. Open `android/` in Android Studio or build it with `android/gradlew.bat`.
-
-Deployment files are intentionally not included yet.
-
-## Full Verification
-
-Run the full local quality gate from the repository root:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\verify-all.ps1
+```text
+个人档案 -> 决策项目 -> 候选职业 -> 岗位验证
+-> 确定目标 -> 4 周行动计划 -> 任务成果 -> 每周复盘
 ```
 
-The script runs backend tests, Agent Server tests and Ruff, Web type/tests/build, Android unit tests/build, and client communication scans for the request-wrapper rules.
+## 四层结构
 
-When local `agent_server` and `backend` are already running, include the write-path API smoke in the same gate:
+- `web/`：完整决策工作区，Vue 3 + TypeScript。
+- `android/`：今日行动端，Kotlin + Jetpack Compose + Room + WorkManager。
+- `backend/`：业务数据与权限，Spring Boot + MyBatis + Flyway（B1/V2-V7）。
+- `agent_server/`：结构化 AI 工作流，FastAPI + LangGraph + Pydantic。
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\verify-all.ps1 -IncludeApiSmoke
+Web 和 Android 只访问后端；后端通过内部令牌访问 Agent。Agent 不直接写业务数据库。
+
+## 本地启动
+
+局域网调试强制使用 HTTPS：
+
+```text
+Agent  http://127.0.0.1:8001
+后端   https://192.168.1.159:8443
+Web    https://192.168.1.159:5173
 ```
 
-To include the full runtime smoke, which starts or reuses Agent Server and backend, then runs API and Web browser smoke:
+首次运行先生成并信任本地证书：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\verify-all.ps1 -IncludeRuntimeSmoke
+.\scripts\setup-local-https.ps1
 ```
 
-When local `agent_server` and `backend` are running, run the API smoke check:
+随后双击根目录 `start-dev.bat`，或运行：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\smoke-api.ps1
+.\scripts\start-dev.ps1 -Target all
 ```
 
-The smoke script checks agent health/readiness, backend health, real job data, MBTI data, auth, refresh-token rotation/revocation, profile persistence, target/favorite jobs, backend -> Agent report/resume/path generation, archive persistence, path task updates, and logout. It creates a unique `smoke_*` user in the configured database.
+启动器会在后台运行服务。关闭菜单窗口不会停止服务；重新打开启动器并选择“查看运行状态”或“停止全部服务”。
 
-To run the runtime smoke without the full test/build gate:
+## 质量门禁
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\smoke-runtime.ps1
+.\scripts\verify-all.ps1
 ```
 
-It starts missing local Agent Server/backend processes, reuses already-running ones, and cleans up only processes it started.
+默认执行：
 
-Run the Web browser smoke when backend is running and Chrome or Edge is installed:
+- 后端执行 116 项（115 通过，1 条有编号的平台例外）；
+- Agent 88 条测试和 Ruff，其中含 32 条固定教练评测；
+- Web 类型检查、119 条单测、生产构建、8 条 1440px/360px Playwright 检查；
+- Android 24 条 Repository/ViewModel/离线同步测试、Debug/Release 构建；
+- PowerShell 语法、乱码、统一请求层、HTTPS 和明文流量策略扫描。
+
+运行真实局域网 HTTPS 链路：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\smoke-web.ps1
+.\scripts\verify-all.ps1 -IncludeRuntimeSmoke
 ```
 
-It starts Vite when needed and verifies registration, profile save, target job selection, report generation, and rendered archive feedback with a unique `websmoke_*` user.
-
-Run the Android device smoke when an emulator or USB-debuggable device is connected:
+对当前 MySQL 做全量备份，并恢复到随机临时库逐表核对：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\smoke-android.ps1
+.\scripts\verify-db-backup.ps1
 ```
 
-It installs the debug APK, launches `com.careerdecision.mobile/.MainActivity`, checks that the app is visible, and fails if launch-time AndroidRuntime crashes appear in logcat. The script reports the resolved `adb` path, emulator path, and available AVDs when no device is ready.
+备份保存在 Git 已忽略的 `backups/`，临时恢复库在核对后自动删除。
 
-After creating an AVD in Android Studio Device Manager, the script can start it for you:
+真实学生试点结束后，按匿名账号前缀生成量化验收报告：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\smoke-android.ps1 -StartEmulator -EmulatorBootWaitSeconds 240
+.\scripts\report-pilot-metrics.ps1 -CohortPrefix "pilot26" -RequireAcceptance
 ```
 
-The same option is available through the full gate:
+报告保存在 Git 已忽略的 `pilot-results/`，不会包含用户名、联系方式、项目正文或聊天内容。
+
+配置 `agent_server/.env` 并重启 Agent 后，执行一次真实 OpenAI-compatible 调用和授权撤回降级验收：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\verify-all.ps1 -IncludeAndroidDeviceSmoke -StartAndroidEmulator
+.\scripts\verify-all.ps1 -IncludeRealModelSmoke
 ```
 
-When more than one device is visible in `adb devices`, pass the target serial:
+该命令可能产生一次模型调用费用；普通 `verify-all.ps1` 不会调用外部模型。
+
+真机基础烟测：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\verify-all.ps1 -IncludeAndroidDeviceSmoke -AndroidDeviceSerial emulator-5554
+.\scripts\smoke-android.ps1
 ```
 
-Optional local HTTPS debugging is available through mkcert:
+真机登录、完成任务和成果同步：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\setup-local-https.ps1
+.\scripts\smoke-android.ps1 `
+  -Username "your_test_user" `
+  -Password "your_test_password" `
+  -RequireAuthenticatedFlow
 ```
 
-See `docs/LOCAL_HTTPS.md` for backend, Web, and Android HTTPS startup commands.
+Android 真机必须安装 `.local-https\mkcert-rootCA.pem` 作为本地调试 CA。
 
-## Useful Docs
+## 当前边界
 
-- `docs/TECH_STACK.md`: selected technology stack.
-- `docs/ARCHITECTURE.md`: four-layer responsibility split.
-- `docs/MVP.md`: first milestone scope.
-- `docs/FULL_CHAIN_MVP.md`: current end-to-end Web, backend, agent, and Android MVP status.
-- `docs/CODE_STANDARDS.md`: cross-layer coding and communication rules.
-- `docs/PRODUCTION_READINESS.md`: 95%+ production readiness definition and roadmap.
-- `docs/DATABASE_JOB_SCHEMA_REVIEW.md`: real job data schema review and import plan.
-- `docs/DEVELOPMENT_GUIDE.md`: coding conventions.
-- `docs/LOCAL_DEVELOPMENT.md`: local run, smoke test, and parallel workflow.
-- `docs/LOCAL_HTTPS.md`: optional mkcert-based HTTPS debugging.
+代码侧迭代 1 至 7 已完成；迭代 8 的评测、配置模板和烟测已完成。真实模型调用、Android 真机跨端同步以及 10 至 15 名学生试点仍需外部设备、密钥和参与者，不能用自动化结果代替。
+
+## 关键文档
+
+- `项目需求文档.md`：第一版产品需求。
+- `第一版实施计划.md`：八个迭代及当前状态。
+- `docs/ARCHITECTURE.md`：系统边界和数据流。
+- `docs/LOCAL_DEVELOPMENT.md`：本地配置与启动。
+- `docs/LOCAL_HTTPS.md`：证书与真机 HTTPS。
+- `docs/PRIVACY_AND_AI_CONSENT.md`：外部 AI 授权、最小数据和日志边界。
+- `docs/学生试点方案.md`：试点任务、指标和访谈提纲。
+- `docs/TEST_EXCEPTIONS.md`：有编号的测试平台例外。

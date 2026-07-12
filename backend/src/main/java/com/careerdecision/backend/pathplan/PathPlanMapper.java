@@ -55,6 +55,7 @@ public interface PathPlanMapper {
                    ) AS completed_task_count
             FROM path_plans p
             WHERE p.user_id = #{userId}
+              AND p.plan_type = 'legacy'
               AND p.status <> 'archived'
             ORDER BY p.created_at DESC, p.id DESC
             LIMIT #{limit} OFFSET #{offset}
@@ -71,6 +72,7 @@ public interface PathPlanMapper {
             FROM path_plans
             WHERE id = #{planId}
               AND user_id = #{userId}
+              AND plan_type = 'legacy'
               AND status <> 'archived'
             LIMIT 1
             """)
@@ -103,6 +105,7 @@ public interface PathPlanMapper {
                 JOIN path_plans p ON p.id = m.plan_id
                 WHERE p.id = #{planId}
                   AND p.user_id = #{userId}
+                  AND p.plan_type = 'legacy'
                   AND p.status <> 'archived'
               )
             """)
@@ -118,6 +121,7 @@ public interface PathPlanMapper {
             SET updated_at = CURRENT_TIMESTAMP
             WHERE id = #{planId}
               AND user_id = #{userId}
+              AND plan_type = 'legacy'
               AND status <> 'archived'
             """)
     int touchPlan(@Param("userId") long userId, @Param("planId") long planId);
@@ -128,10 +132,11 @@ public interface PathPlanMapper {
                 updated_at = CURRENT_TIMESTAMP
             WHERE id = #{planId}
               AND user_id = #{userId}
+              AND plan_type = 'legacy'
               AND status <> 'archived'
             """)
     int archivePlan(@Param("userId") long userId, @Param("planId") long planId);
 
-    @Delete("DELETE FROM path_plans WHERE id = #{planId} AND user_id = #{userId}")
+    @Delete("DELETE FROM path_plans WHERE id = #{planId} AND user_id = #{userId} AND plan_type = 'legacy'")
     int deletePlan(@Param("userId") long userId, @Param("planId") long planId);
 }

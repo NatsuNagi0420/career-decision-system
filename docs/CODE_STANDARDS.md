@@ -16,12 +16,12 @@ This project follows the same rules across Web, Android, backend, and Agent laye
 
 ## Client Communication Contract
 
-- Web HTTP requests must go through `web/src/utils/request.js`; feature APIs should call the typed wrappers in `web/src/api`.
-- Web backend root addresses are configured only in `web/src/utils/request.js`; `BACKEND_BASE_URL` selects the dev or production default, applies optional `VITE_BACKEND_BASE_URL`, and `API_BASE_URL` is derived from it.
-- When the Web backend network changes, update only `web/src/utils/request.js` or the documented `VITE_BACKEND_BASE_URL` override. Do not scatter host edits through pages, stores, or API modules.
+- Web HTTP requests must go through `web/src/utils/request.ts`; feature APIs should call the typed wrappers in `web/src/api`.
+- Web backend root addresses are configured only in `web/src/utils/request.ts`; `BACKEND_BASE_URL` selects the dev or production default, applies optional `VITE_BACKEND_BASE_URL`, and `API_BASE_URL` is derived from it.
+- When the Web backend network changes, update only `web/src/utils/request.ts` or the documented `VITE_BACKEND_BASE_URL` override. Do not scatter host edits through pages, stores, or API modules.
 - Web pages, components, stores, and feature API modules must not import `axios`, call `fetch`, create another HTTP client, or define another backend base URL.
 - Web request-client tests may import `axios` only to verify the centralized request client behavior.
-- Web access-token retry behavior belongs in `web/src/utils/request.js`; protected requests that receive 401 may refresh once with the stored refresh token, retry once, and sync session state through the auth store event bridge.
+- Web access-token retry behavior belongs in `web/src/utils/request.ts`; protected requests that receive 401 may refresh once with the stored refresh token, retry once, and sync session state through the auth store event bridge.
 - Android HTTP requests must go through the Retrofit client in `android/app/src/main/java/com/careerdecision/mobile/network`.
 - Android backend root addresses are configured only in `android/app/src/main/java/com/careerdecision/mobile/network/RequestConfig.kt`; `BACKEND_BASE_URL` selects the debug or release default, applies optional Gradle overrides, and `BACKEND_API_BASE_URL` is derived from it.
 - When the Android backend network changes, update only `RequestConfig.kt` or the documented Gradle backend URL override. Do not edit screens, view models, repositories, or DTOs for host changes.
@@ -31,17 +31,17 @@ This project follows the same rules across Web, Android, backend, and Agent laye
 
 ## Web
 
-- All HTTP calls go through `web/src/utils/request.js`.
-- Backend base URL is configured only in `web/src/utils/request.js`; production builds may override it with `VITE_BACKEND_BASE_URL`, but feature code must still read only the shared request client.
+- All HTTP calls go through `web/src/utils/request.ts`.
+- Backend base URL is configured only in `web/src/utils/request.ts`; production builds may override it with `VITE_BACKEND_BASE_URL`, but feature code must still read only the shared request client.
 - Web production backend defaults and `VITE_BACKEND_BASE_URL` production overrides must use `https://` and must not point to `localhost`, `127.0.0.1`, `10.0.2.2`, or `0.0.0.0`.
-- Backend envelope errors, timeout errors, network errors, auth expiry, rate limits, and 5xx failures are normalized in `web/src/utils/request.js`; pages and stores should surface `Error.message` instead of parsing Axios errors directly.
-- Expired Web access tokens are refreshed centrally in `web/src/utils/request.js`; auth store state is synchronized from the request-layer session events instead of each page handling 401 responses.
+- Backend envelope errors, timeout errors, network errors, auth expiry, rate limits, and 5xx failures are normalized in `web/src/utils/request.ts`; pages and stores should surface `Error.message` instead of parsing Axios errors directly.
+- Expired Web access tokens are refreshed centrally in `web/src/utils/request.ts`; auth store state is synchronized from the request-layer session events instead of each page handling 401 responses.
 - API function modules live in `web/src/api`.
 - Pages live in `web/src/pages`; reusable components live in `web/src/components`.
 - Every remote view must handle loading, error, empty, and success states.
 - Web validation or interaction changes should update Vitest coverage under `web/src/**/*.spec.ts`.
-- Web route, navigation shell, or cross-page flow changes should update the App-level routed smoke test in `web/src/App.smoke.spec.ts`.
-- Styling follows `docs/VISUAL_STYLE.md`: Miku-inspired cyan/mint direction, no dominant purple.
+- Web route, navigation shell, or cross-page flow changes must update `web/e2e/first-version-flow.spec.ts` for both 1440px and 360px projects.
+- Styling uses a neutral work surface with restrained teal, blue, and status accents; no single-hue or dominant purple theme.
 
 ## Android
 
@@ -49,24 +49,24 @@ This project follows the same rules across Web, Android, backend, and Agent laye
 - Backend API URL is configured only in `RequestConfig.kt`; Gradle may pass `career.backendDebugBaseUrl` or `career.backendReleaseBaseUrl` as build-time overrides, but feature code must still read only `RequestConfig.BACKEND_BASE_URL`.
 - OkHttp backend timeout values are configured only in `RequestConfig.kt`.
 - OkHttp logging level is configured only in `RequestConfig.kt`; release builds must use `HttpLoggingInterceptor.Level.NONE`.
-- Android debug builds may allow cleartext traffic for emulator/local backend development, but release manifests must set `android:usesCleartextTraffic="false"` through the Gradle manifest placeholder policy.
+- Android Debug and Release manifests must both set `android:usesCleartextTraffic="false"`; Gradle backend URL overrides must use HTTPS.
 - Android debug builds may trust user-installed CAs for mkcert HTTPS through the debug-only network security config; release builds must not trust local user CAs.
 - Android release backend defaults and release build overrides must use `https://` and must not point to `localhost`, `127.0.0.1`, `10.0.2.2`, or `0.0.0.0`.
 - Backend envelope errors, HTTP errors, timeout errors, and network errors are normalized in `NetworkErrors.kt`; screens and view models should use `runApiCatching` and surface `Error.message`.
 - Network DTOs stay in the `network` package.
 - Bearer token and current user persistence goes through `SessionStore`, backed by Android Keystore encryption; Composables must not access token storage directly.
-- View models depend on `CareerApi` and `SessionGateway` abstractions injected through factories; do not instantiate Retrofit clients or Android storage directly inside business-flow methods.
+- ViewModels depend on `CareerRepositoryGateway`; the Repository coordinates the small remote data source, Keystore session, Room cache, and WorkManager scheduler.
 - UI state is represented by immutable state data classes.
 - Nullable backend fields must be nullable in Kotlin models.
 - Local validation and parsing rules should live in testable helpers instead of being buried in Composables.
-- Android validation, parsing, or main-flow behavior changes should update JVM unit coverage under `android/app/src/test`, including `CareerViewModelTest` when the cross-feature flow changes.
+- Android validation, offline queue, token refresh, or main-flow changes should update `CareerRepositoryTest` and `AppViewModelTest`.
 
 ## Backend
 
 - Controller handles HTTP only.
 - Service owns business rules.
 - Mapper owns SQL.
-- Production SQL scripts under `SQL脚本` must be UTF-8 clean and importable. `SQL脚本/career_db.sql` is a reference-only old dump and must not be treated as the production schema.
+- Production migrations and seed scripts must be UTF-8 clean and importable. `SQL脚本/career_db.sql` and `SQL脚本/career_decision_system.sql` are reference/test snapshots and are excluded from the text scan; new schema changes must not be appended to those snapshots.
 - Response objects are explicit DTO/VO records or classes. Do not return persistence records directly.
 - Request DTOs and query parameters must define reasonable validation bounds for user-controlled strings, maps, lists, IDs, paging, and generated-content payloads.
 - Validation failures, malformed JSON, and request parameter type mismatches must return the standard `ApiResponse` envelope instead of framework-default error bodies.

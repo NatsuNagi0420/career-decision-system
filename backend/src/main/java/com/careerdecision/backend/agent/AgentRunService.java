@@ -4,6 +4,7 @@ import com.careerdecision.backend.exception.BusinessException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.dao.DuplicateKeyException;
 
 import java.lang.reflect.Array;
 import java.time.LocalDateTime;
@@ -12,6 +13,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -56,7 +58,14 @@ public class AgentRunService {
             "phone",
             "email",
             "idcard",
-            "identitynumber"
+            "identitynumber",
+            "focus",
+            "background",
+            "completedsummary",
+            "evidencesummary",
+            "difficulties",
+            "confidencereason",
+            "adjustmentproposal"
     );
 
     private final AgentRunMapper agentRunMapper;
@@ -80,8 +89,7 @@ public class AgentRunService {
         record.setStatus("success");
         record.setModelName(extractModelName(output));
         record.setOutputJson(toAuditJson(output));
-        agentRunMapper.insert(record);
-        return record.getId();
+        return insertOrReuse(record, true);
     }
 
     public Long recordFailure(
@@ -96,8 +104,7 @@ public class AgentRunService {
         AgentRunRecord record = baseRecord(agentType, requestId, input, latencyMs, startedAt, finishedAt);
         record.setStatus("failed");
         record.setErrorMessage(safeErrorMessage(error));
-        agentRunMapper.insert(record);
-        return record.getId();
+        return insertOrReuse(record, false);
     }
 
     public Long verifyLinkableRunId(Long agentRunId, long userId, String agentType) {
@@ -116,6 +123,38 @@ public class AgentRunService {
 
     Object sanitizeForAudit(Object value) {
         return sanitizeValue(value);
+    }
+
+    private Long insertOrReuse(AgentRunRecord record, boolean successful) {
+        try {
+            agentRunMapper.insert(record);
+            return record.getId();
+        } catch (DuplicateKeyException ex) {
+            AgentRunRecord existing = agentRunMapper.findByRequestId(record.getRequestId());
+            if (existing != null && sameRequestOwner(existing, record)) {
+                if (successful && !"success".equals(existing.getStatus())) {
+                    record.setId(existing.getId());
+                    agentRunMapper.upgradeToSuccess(record);
+                }
+                return existing.getId();
+            }
+
+            record.setRequestId(collisionSafeRequestId(record.getRequestId()));
+            agentRunMapper.insert(record);
+            return record.getId();
+        }
+    }
+
+    private boolean sameRequestOwner(AgentRunRecord left, AgentRunRecord right) {
+        return Objects.equals(left.getUserId(), right.getUserId())
+                && Objects.equals(left.getAgentType(), right.getAgentType());
+    }
+
+    private String collisionSafeRequestId(String requestId) {
+        String suffix = "-" + UUID.randomUUID().toString().substring(0, 12);
+        int prefixLength = Math.max(0, MAX_REQUEST_ID_LENGTH - suffix.length());
+        String prefix = requestId == null ? "request" : requestId.substring(0, Math.min(prefixLength, requestId.length()));
+        return prefix + suffix;
     }
 
     private AgentRunRecord baseRecord(

@@ -6,7 +6,10 @@ import com.careerdecision.backend.job.JobMatchResponse;
 import com.careerdecision.backend.job.JobRecommendationRequest;
 import com.careerdecision.backend.job.JobService;
 import com.careerdecision.backend.job.JobSummaryResponse;
+import com.careerdecision.backend.profile.UserProfileService;
 import com.careerdecision.backend.service.AgentServerClient;
+import com.careerdecision.backend.user.CurrentUser;
+import com.careerdecision.backend.user.UserInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,6 +17,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.core.MethodParameter;
+import org.springframework.web.context.request.NativeWebRequest;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.method.support.ModelAndViewContainer;
+import org.springframework.web.bind.support.WebDataBinderFactory;
 
 import java.util.List;
 import java.util.Map;
@@ -32,7 +40,12 @@ class CareerReportControllerTest {
     void setUp() {
         agentServerClient = new FakeAgentServerClient();
         mockMvc = MockMvcBuilders
-                .standaloneSetup(new CareerReportController(agentServerClient, new FakeJobService()))
+                .standaloneSetup(new CareerReportController(
+                        agentServerClient,
+                        new FakeJobService(),
+                        new FakeUserProfileService()
+                ))
+                .setCustomArgumentResolvers(new CurrentUserResolver())
                 .build();
     }
 
@@ -64,6 +77,8 @@ class CareerReportControllerTest {
                 .andExpect(jsonPath("$.data.summary", is("Generated smoke report.")));
 
         assertThat(agentServerClient.capturedPayload).containsEntry("request_id", "report-trace-001");
+        assertThat(agentServerClient.capturedPayload).containsEntry("user_id", "1");
+        assertThat(agentServerClient.capturedPayload).containsEntry("allow_external_model", true);
         Object jobCandidates = agentServerClient.capturedPayload.get("job_candidates");
         assertThat(jobCandidates).isInstanceOf(List.class);
         assertThat((List<?>) jobCandidates).hasSize(1);
@@ -112,11 +127,44 @@ class CareerReportControllerTest {
                     "month",
                     12,
                     "1-3 years",
+                    "Bachelor",
                     List.of("Java", "Vue 3", "LLM"),
                     "Build AI career planning features.",
-                    90.0
+                    90.0,
+                    "test-source",
+                    "https://example.test/job/1001",
+                    "2026-07-11",
+                    null
             );
             return List.of(new JobMatchResponse(job, 92, List.of("Matches target skills.")));
+        }
+    }
+
+    private static final class FakeUserProfileService extends UserProfileService {
+        private FakeUserProfileService() {
+            super(null, null);
+        }
+
+        @Override
+        public boolean allowsExternalAi(long userId) {
+            return true;
+        }
+    }
+
+    private static final class CurrentUserResolver implements HandlerMethodArgumentResolver {
+        @Override
+        public boolean supportsParameter(MethodParameter parameter) {
+            return parameter.hasParameterAnnotation(CurrentUser.class);
+        }
+
+        @Override
+        public Object resolveArgument(
+                MethodParameter parameter,
+                ModelAndViewContainer mavContainer,
+                NativeWebRequest webRequest,
+                WebDataBinderFactory binderFactory
+        ) {
+            return new UserInfo(1L, "alice", "alice@example.test", null);
         }
     }
 }

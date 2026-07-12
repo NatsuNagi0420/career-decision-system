@@ -25,8 +25,6 @@ $AgentUrl = "http://127.0.0.1:$AgentPort"
 $BackendUrl = "https://${LanIp}:$BackendPort"
 $WebUrl = "https://${LanIp}:$WebPort"
 
-[System.Net.ServicePointManager]::ServerCertificateValidationCallback = { $true }
-
 function Show-Menu {
     Write-Host ""
     Write-Host "========================================" -ForegroundColor Cyan
@@ -262,6 +260,19 @@ function Test-PortOpen {
     return (Get-PortProcessIds $Port).Count -gt 0
 }
 
+function Get-AgentProvider {
+    try {
+        $Response = Invoke-WebRequest -UseBasicParsing -Uri "$AgentUrl/api/v1/health" -TimeoutSec 3
+        $Body = $Response.Content | ConvertFrom-Json
+        if ($Body.code -eq 0 -and -not [string]::IsNullOrWhiteSpace([string] $Body.data.llmProvider)) {
+            return [string] $Body.data.llmProvider
+        }
+    } catch {
+        return $null
+    }
+    return $null
+}
+
 function Get-ServiceDefinitions {
     @(
         @{
@@ -316,6 +327,12 @@ function Show-Status {
         }
 
         Write-Host "  PID: $($ProcessIds -join ', ')"
+        if ($HealthOk -and $Service.Name -eq "Agent") {
+            $Provider = Get-AgentProvider
+            if (-not [string]::IsNullOrWhiteSpace($Provider)) {
+                Write-Host "  模型: $Provider"
+            }
+        }
         Write-Host "  日志: $($Service.LogOut)"
         Write-Host "        $($Service.LogErr)"
     }
@@ -456,7 +473,6 @@ function Start-Agent {
             APP_ENV = "local"
             INTERNAL_API_TOKEN = $InternalToken
             BACKEND_BASE_URL = $BackendUrl
-            LLM_PROVIDER = if ([string]::IsNullOrWhiteSpace($env:LLM_PROVIDER)) { "mock" } else { $env:LLM_PROVIDER }
         }
     Write-Host "[Agent] 启动进程 PID=$($Process.Id)，日志：logs\agent-dev.out.log / logs\agent-dev.err.log" -ForegroundColor DarkGray
     Wait-HttpOk $HealthUrl 60

@@ -54,7 +54,7 @@ def create_baseline_plan(state: PathPlanState) -> dict[str, Any]:
 
 def enhance_path_plan_with_llm(state: PathPlanState) -> dict[str, Any]:
     settings = get_settings()
-    if settings.llm_provider.lower() == "mock":
+    if settings.llm_provider.lower() == "mock" or not state["request"].allow_external_model:
         return {}
 
     fallback = state["plan"]

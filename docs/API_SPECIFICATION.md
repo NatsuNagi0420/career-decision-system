@@ -23,7 +23,7 @@ Backend Agent proxy calls persist an `agent_runs` audit row keyed by request ID.
 Base URL:
 
 ```text
-http://127.0.0.1:8080/api/v1
+https://192.168.1.159:8443/api/v1
 ```
 
 Backend request tracing:
@@ -127,15 +127,23 @@ The current user profile endpoints also require bearer auth. `GET /users/me/prof
   "skills": ["Java", "Python", "Vue 3"],
   "certificates": ["CET-6"],
   "experiences": ["AI career planning system"],
-  "values": ["growth", "technical depth"]
+  "values": ["growth", "technical depth"],
+  "preferredIndustries": ["enterprise software"],
+  "preferredWorkModes": ["collaboration", "deep work"],
+  "constraints": ["weekly study time is limited"],
+  "externalAiConsent": false,
+  "expectedVersion": 2
 }
 ```
+
+`GET` returns `profileVersion`. `PUT` sends that value as `expectedVersion`; stale saves return `40930`. `externalAiConsent=false` is the default and forces Agent coaching to the local fallback path. See `docs/PRIVACY_AND_AI_CONSENT.md`.
 
 ### MBTI Assessment
 
 ```text
 GET  /assessments/mbti/questions
 POST /assessments/mbti/submit
+GET  /assessments/mbti/history
 ```
 
 Submit request:
@@ -150,6 +158,8 @@ Submit request:
   }
 }
 ```
+
+`/submit` and `/history` use the authenticated user from the bearer token. A client-supplied `userId` is ignored. History returns at most 20 submitted results with `type`, `scores`, `description`, and `submittedAt`; assessment results are supporting evidence, not an automatic career target.
 
 ### Jobs
 
@@ -284,7 +294,7 @@ Example response:
 ```json
 {
   "filename": "avatar.png",
-  "url": "http://127.0.0.1:8080/data-server/images/avatar.png"
+  "url": "https://192.168.1.159:8443/data-server/images/avatar.png"
 }
 ```
 
@@ -309,16 +319,25 @@ Request:
 ```json
 {
   "requestId": "uuid",
-  "userId": "demo-user",
-  "page": "dashboard",
+  "sessionId": 12001,
+  "page": "decision-project",
   "message": "Help me create a 3-month learning plan.",
   "context": {
-    "targetRole": "AI Application Engineer"
+    "routePath": "/decision-projects/42",
+    "projectId": 42,
+    "candidateId": 108,
+    "jobId": 9001
   }
 }
 ```
 
-The Agent response includes `reply`, `intent`, and `actions`. Allowed action values are `go:resume`, `go:path-planning`, `go:career-report`, `go:jobs`, and `go:profile`; clients should ignore unknown action values defensively.
+Omit `sessionId` for the first message. Backend creates a user-owned session and returns its numeric `sessionId` inside `data`; send that value with later messages to continue the conversation. A logical retry must reuse its original `requestId`. If the assistant response was already saved, backend returns it without another Agent call; if only the user message was saved, backend resumes the same request without duplicating the message. A `requestId` cannot move to another session (`40990`), and a missing or foreign session returns `40490`.
+
+The client `context` is a resource-selection envelope, not trusted career data. Clients may send `routePath`, `tab`, `projectId`, `candidateId` (or `currentCandidateId`), `planId`, `reviewId`, `targetId`, and `jobId`. Backend derives the user from the bearer token, verifies every selected resource belongs to that user, and loads the profile, dashboard, project, candidates, targets, plan, review, and job data itself. Arbitrary client fields such as `targetRole`, evidence text, scores, or another user's IDs are never forwarded as authoritative context. A missing or foreign resource returns `404`; inconsistent project/plan/review selections return `40980`.
+
+Backend persists both sides of the conversation in `chat_sessions` and `chat_messages`. For an Agent request it loads only the authenticated session's most recent 12 user/assistant messages, truncates each history item to 1,200 characters, and excludes the current request. Clients cannot supply or replace this history through `context`.
+
+The Agent response includes `reply`, `intent`, `generationMode`, `confidence`, `evidenceBasis`, `uncertainties`, `nextStep`, and `actions`. Allowed actions include `go:dashboard`, `go:resume`, `go:action-plans`, `go:history`, `go:explore`, `go:profile`, and `go:decision-projects`; clients ignore unknown action values defensively.
 
 ### Resume
 
@@ -551,7 +570,7 @@ POST /path-plans/generate
 
 The agent service returns structured JSON only. Persistence is handled by `backend`.
 
-Backend stores operational Agent call audits in `agent_runs`; saved user-facing reports, resume analyses, and path plans are stored by the corresponding archive endpoints.
+Backend stores operational Agent call audits in `agent_runs`; saved user-facing reports, resume analyses, path plans, and chat conversations are stored by their corresponding business persistence services. Agent Server remains stateless for business storage.
 
 Agent request tracing:
 
@@ -561,3 +580,59 @@ X-Trace-ID: returned-agent-trace-id
 ```
 
 When an Agent request body includes `request_id`, that value wins over incoming trace headers for the response body and `X-Trace-ID` header.
+
+## First-Version Decision And Action APIs
+
+All endpoints below require `Authorization: Bearer <token>` and derive the user from that token.
+
+| Resource | Main endpoints |
+| --- | --- |
+| Career directions | `GET /career-directions`, `GET /career-directions/{id}` |
+| Personal evidence | `GET/POST /personal-evidence`, `PUT/DELETE /personal-evidence/{id}` |
+| Decision projects | `GET/POST /decision-projects`, `GET/PUT/DELETE /decision-projects/{id}` |
+| Project workflow | candidate, job-sample, evidence, criterion-result, stage, and target-confirm subresources under `/decision-projects/{id}` |
+| Target confidence | `POST /decision-projects/{id}/targets/{targetId}/confidence-feedback` |
+| Action plans | `GET /action-plans`, `POST /action-plans/generate`, `GET /action-plans/{id}` |
+| Today | `GET /action-plans/current/today` |
+| Tasks and results | task CRUD, ordering, status, and result subresources under `/action-plans/{id}/tasks` |
+| Weekly reviews | `GET/PUT /weekly-reviews`, detail, submit, and confirmed adjustment endpoints |
+| Dashboard | `GET /dashboard` |
+| Coaching | project coach/comparison, action-plan coach, and weekly-review coach endpoints |
+
+Action-plan generation, task status mutation, task result creation, weekly-review creation, target-confidence feedback, report snapshots, and confirmed batch adjustments accept a stable `requestId`. Retrying the same request must return the existing result instead of creating a duplicate.
+
+`GET /decision-projects` and `GET /decision-projects/{id}` return the aggregate `version`. First-version clients send that value as `expectedVersion` for project edits, selecting the current project, stage moves, candidate writes, job-sample writes, decision-evidence writes, criterion/result writes, and target confirmation. Delete operations, including project archiving, carry it as an `expectedVersion` query parameter. Each successful aggregate mutation increments the project version. A stale write returns HTTP `409` with code `40950`; clients reload the complete project before allowing another edit.
+
+Task edits and status changes also require the `version` returned by the last task read:
+
+```json
+{
+  "status": "completed",
+  "requestId": "android-status-...",
+  "expectedVersion": 3
+}
+```
+
+`PUT /action-plans/{planId}/tasks/{taskId}` and each confirmed weekly-review adjustment carry the same `expectedVersion` field. `PUT /action-plans/{planId}/tasks/order` carries an `expectedVersions` map for every ordered task, and the whole reorder transaction rolls back if any version is stale. `DELETE /action-plans/{planId}/tasks/{taskId}` requires `expectedVersion` as a query parameter. A stale write returns HTTP `409` with code `40962`; clients must reload the task and ask the user to retry instead of overwriting the newer value. An idempotent retry with the same `requestId` still returns success even if its original version is now stale.
+
+Task status and task-result request identifiers are bound to the original task. Reusing one for another task returns HTTP `409` with code `40964` and does not mutate the second task.
+
+`PUT /weekly-reviews` accepts an optional stable `requestId`. Mobile uses it for the two-step save-and-submit operation. Repeating the same key returns the existing draft or submitted review; reusing a key for another plan/week returns `40972`.
+
+Profile writes use `profileVersion` from `GET /users/me/profile` as `expectedVersion`. Stale profile writes return HTTP `409` with code `40930`.
+
+Agent-backed coaching responses include:
+
+```json
+{
+  "generationMode": "llm|fallback",
+  "confidence": 0.72,
+  "conclusion": "...",
+  "evidenceBasis": [],
+  "counterArguments": [],
+  "uncertainties": [],
+  "nextActions": []
+}
+```
+
+AI suggestions are drafts. Clients must ask for user confirmation before calling business mutation endpoints.

@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 @Mapper
 public interface AgentRunMapper {
@@ -32,6 +33,14 @@ public interface AgentRunMapper {
             LIMIT 1
             """)
     AgentRunRecord findByRequestId(@Param("requestId") String requestId);
+
+    @Update("""
+            UPDATE agent_runs
+            SET model_name = #{modelName}, status = 'success', output_json = #{outputJson},
+                error_message = NULL, latency_ms = #{latencyMs}, finished_at = #{finishedAt}
+            WHERE id = #{id}
+            """)
+    int upgradeToSuccess(AgentRunRecord record);
 
     @Select("""
             SELECT COUNT(1)

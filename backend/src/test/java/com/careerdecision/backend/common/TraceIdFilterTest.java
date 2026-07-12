@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Map;
 
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.matchesPattern;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -66,6 +68,19 @@ class TraceIdFilterTest {
                 .andExpect(header().string(TraceIdFilter.TRACE_ID_HEADER, "trace-invalid-001"))
                 .andExpect(jsonPath("$.code", is(400)))
                 .andExpect(jsonPath("$.traceId", is("trace-invalid-001")));
+    }
+
+    @Test
+    void unsafeInboundTraceIdIsReplacedBeforeLoggingOrReturning() throws Exception {
+        String unsafeTraceId = "contains spaces and is not safe";
+        mockMvc.perform(get("/api/v1/health")
+                        .header(TraceIdFilter.REQUEST_ID_HEADER, unsafeTraceId))
+                .andExpect(status().isOk())
+                .andExpect(header().string(TraceIdFilter.TRACE_ID_HEADER, not(unsafeTraceId)))
+                .andExpect(header().string(
+                        TraceIdFilter.TRACE_ID_HEADER,
+                        matchesPattern("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
+                ));
     }
 
     @RestController

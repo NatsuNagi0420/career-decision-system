@@ -1,14 +1,15 @@
 param(
     [string] $BackendBaseUrl = "",
     [string] $AgentBaseUrl = "",
-    [int] $TimeoutSeconds = 10
+    [int] $TimeoutSeconds = 10,
+    [switch] $RequireRealModel
 )
 
 $ErrorActionPreference = "Stop"
 
 if ([string]::IsNullOrWhiteSpace($BackendBaseUrl)) {
     $BackendBaseUrl = if ([string]::IsNullOrWhiteSpace($env:BACKEND_BASE_URL)) {
-        "http://127.0.0.1:8080"
+        "https://192.168.1.159:8443"
     } else {
         $env:BACKEND_BASE_URL
     }
@@ -69,13 +70,20 @@ function Invoke-SmokeJson {
     )
 
     try {
+        $RequestHeaders = @{}
+        foreach ($HeaderName in $Headers.Keys) {
+            $RequestHeaders[$HeaderName] = $Headers[$HeaderName]
+        }
+        if (-not $RequestHeaders.ContainsKey("X-Request-ID")) {
+            $RequestHeaders["X-Request-ID"] = "smoke-script-" + [guid]::NewGuid().ToString("N")
+        }
         $Response = $null
         if ($null -eq $Body) {
             $Response = Invoke-WebRequest `
                 -UseBasicParsing `
                 -Method $Method `
                 -Uri $Url `
-                -Headers $Headers `
+                -Headers $RequestHeaders `
                 -TimeoutSec $TimeoutSeconds
         } else {
             $JsonBody = $Body | ConvertTo-Json -Depth 32
@@ -84,7 +92,7 @@ function Invoke-SmokeJson {
                 -UseBasicParsing `
                 -Method $Method `
                 -Uri $Url `
-                -Headers $Headers `
+                -Headers $RequestHeaders `
                 -Body $BodyBytes `
                 -ContentType "application/json; charset=utf-8" `
                 -TimeoutSec $TimeoutSeconds
@@ -155,9 +163,18 @@ function Assert-CollectionNotEmpty {
 Write-Host "API smoke target backend: $BackendBaseUrl" -ForegroundColor Cyan
 Write-Host "API smoke target agent:   $AgentBaseUrl" -ForegroundColor Cyan
 
+Assert-True ($BackendBaseUrl -match '^https://') "Backend smoke target must use HTTPS. Actual value: $BackendBaseUrl"
+
 $AgentHealth = Invoke-SmokeJson "Agent health" "GET" (Join-Url $AgentBaseUrl "/api/v1/health")
 Assert-EnvelopeSuccess "Agent health" $AgentHealth
 Assert-True ($AgentHealth.data.status -eq "ok") "Agent health did not return status=ok."
+if ($RequireRealModel) {
+    Assert-True (
+        -not [string]::IsNullOrWhiteSpace([string] $AgentHealth.data.llmProvider) -and
+        [string] $AgentHealth.data.llmProvider -ne "mock"
+    ) "Real-model smoke requires a non-mock Agent provider. Configure agent_server/.env and restart Agent."
+    Write-Host "Real-model verification enabled. One external model call may incur provider cost." -ForegroundColor Yellow
+}
 Write-Host "OK agent health"
 
 $AgentReady = Invoke-SmokeJson "Agent readiness" "GET" (Join-Url $AgentBaseUrl "/api/v1/ready")
@@ -181,7 +198,9 @@ $Jobs = Invoke-SmokeJson "Job search" "GET" (Join-Url $BackendBaseUrl "/api/v1/j
 Assert-EnvelopeSuccess "Job search" $Jobs
 $JobItems = @(To-Array $Jobs.data.items)
 Assert-CollectionNotEmpty $JobItems "Job search returned no rows. Import job data before running smoke."
+Assert-True ($JobItems.Count -ge 2) "First-version decision smoke requires at least two real job rows."
 $PrimaryJob = $JobItems[0]
+$BackupJob = $JobItems[1]
 Assert-NotBlank $PrimaryJob.id "First job row does not include an id."
 Assert-NotBlank $PrimaryJob.title "First job row does not include a title."
 $TargetRole = ([string] $PrimaryJob.title).Trim()
@@ -266,12 +285,40 @@ $ProfilePayload = @{
     certificates = @("Smoke Certificate")
     experiences = @("Built an AI career planning prototype")
     values = @("growth", "impact")
+    externalAiConsent = $false
 }
 $SavedProfile = Invoke-SmokeJson "Profile save" "PUT" (Join-Url $BackendBaseUrl "/api/v1/users/me/profile") $ProfilePayload $AuthHeaders
 Assert-EnvelopeSuccess "Profile save" $SavedProfile
 Assert-True ($SavedProfile.data.completed -eq $true) "Saved profile is not marked completed."
 Assert-True (([string] $SavedProfile.data.targetRole).Trim() -eq $TargetRole) "Saved profile target role did not round-trip."
 Write-Host "OK profile save"
+
+$ChatRequestId = "smoke-chat-" + [guid]::NewGuid().ToString("N")
+$ChatPayload = @{
+    requestId = $ChatRequestId
+    page = "/profile"
+    message = "What evidence should I add first?"
+    context = @{ routePath = "/profile" }
+}
+$ChatFirst = Invoke-SmokeJson "Context chat first message" "POST" (Join-Url $BackendBaseUrl "/api/v1/chat/messages") $ChatPayload $AuthHeaders
+Assert-EnvelopeSuccess "Context chat first message" $ChatFirst
+Assert-True ([long] $ChatFirst.data.sessionId -gt 0) "Chat did not return a persisted sessionId."
+Assert-NotBlank $ChatFirst.data.reply "Chat reply is empty."
+Assert-True ([long] $ChatFirst.data.agentRunId -gt 0) "Chat did not return an Agent audit id."
+$ChatRepeated = Invoke-SmokeJson "Context chat idempotent retry" "POST" (Join-Url $BackendBaseUrl "/api/v1/chat/messages") $ChatPayload $AuthHeaders
+Assert-EnvelopeSuccess "Context chat idempotent retry" $ChatRepeated
+Assert-True ([long] $ChatRepeated.data.sessionId -eq [long] $ChatFirst.data.sessionId) "Chat retry changed the session."
+Assert-True ([long] $ChatRepeated.data.agentRunId -eq [long] $ChatFirst.data.agentRunId) "Chat retry did not return the cached Agent result."
+$ChatFollowUp = Invoke-SmokeJson "Context chat follow-up" "POST" (Join-Url $BackendBaseUrl "/api/v1/chat/messages") @{
+    requestId = "smoke-chat-follow-up-" + [guid]::NewGuid().ToString("N")
+    sessionId = [long] $ChatFirst.data.sessionId
+    page = "/profile"
+    message = "What should I verify next?"
+    context = @{ routePath = "/profile" }
+} $AuthHeaders
+Assert-EnvelopeSuccess "Context chat follow-up" $ChatFollowUp
+Assert-True ([long] $ChatFollowUp.data.sessionId -eq [long] $ChatFirst.data.sessionId) "Chat follow-up did not continue the session."
+Write-Host "OK persisted context chat and retry"
 
 $MbtiAnswers = @{}
 foreach ($Question in $QuestionItems) {
@@ -281,11 +328,13 @@ foreach ($Question in $QuestionItems) {
 }
 $MbtiSubmit = Invoke-SmokeJson "MBTI submit" "POST" (Join-Url $BackendBaseUrl "/api/v1/assessments/mbti/submit") @{
     answers = $MbtiAnswers
-    userId = $UserId
-}
+} $AuthHeaders
 Assert-EnvelopeSuccess "MBTI submit" $MbtiSubmit
 Assert-NotBlank $MbtiSubmit.data.type "MBTI submit did not return a type."
 Write-Host "OK MBTI submit returned $($MbtiSubmit.data.type)"
+$MbtiHistory = Invoke-SmokeJson "MBTI history" "GET" (Join-Url $BackendBaseUrl "/api/v1/assessments/mbti/history") -Headers $AuthHeaders
+Assert-EnvelopeSuccess "MBTI history" $MbtiHistory
+Assert-CollectionNotEmpty $MbtiHistory.data "MBTI history did not return the submitted result."
 
 $TargetJobs = Invoke-SmokeJson "Add target job" "POST" (Join-Url $BackendBaseUrl "/api/v1/jobs/targets/$($PrimaryJob.id)") -Headers $AuthHeaders
 Assert-EnvelopeSuccess "Add target job" $TargetJobs
@@ -326,7 +375,7 @@ $ReportPayload = @{
     profile = $AgentProfile
     assessment = $Assessment
 }
-$Report = Invoke-SmokeJson "Career report generate" "POST" (Join-Url $BackendBaseUrl "/api/v1/career-reports/generate") $ReportPayload
+$Report = Invoke-SmokeJson "Career report generate" "POST" (Join-Url $BackendBaseUrl "/api/v1/career-reports/generate") $ReportPayload $AuthHeaders
 Assert-EnvelopeSuccess "Career report generate" $Report
 Assert-True ($Report.traceId -eq $ReportRequestId) "Career report traceId did not echo the requestId."
 Assert-NotBlank $Report.data.summary "Career report summary is empty."
@@ -364,7 +413,7 @@ $Resume = Invoke-SmokeJson "Resume analysis generate" "POST" (Join-Url $BackendB
     userId = [string] $UserId
     targetRole = $TargetRole
     resumeText = $ResumeText
-}
+} $AuthHeaders
 Assert-EnvelopeSuccess "Resume analysis generate" $Resume
 Assert-True ($Resume.traceId -eq $ResumeRequestId) "Resume analysis traceId did not echo the requestId."
 Assert-True ([long] $Resume.data.agentRunId -gt 0) "Resume analysis did not include a persisted agentRunId."
@@ -399,7 +448,7 @@ $PathPlan = Invoke-SmokeJson "Path plan generate" "POST" (Join-Url $BackendBaseU
     userId = [string] $UserId
     profile = $AgentProfile
     targetRole = $TargetRole
-}
+} $AuthHeaders
 Assert-EnvelopeSuccess "Path plan generate" $PathPlan
 Assert-True ($PathPlan.traceId -eq $PathRequestId) "Path plan traceId did not echo the requestId."
 Assert-True ([long] $PathPlan.data.agentRunId -gt 0) "Path plan did not include a persisted agentRunId."
@@ -440,6 +489,318 @@ $PathListItems = @(To-Array $PathList.data)
 $MatchingPathPlans = @($PathListItems | Where-Object { $_.id -eq $ArchivedPath.data.id })
 Assert-True ($MatchingPathPlans.Count -gt 0) "Archived path plan was not visible in the list."
 Write-Host "OK path plan generate, archive, task update, and list"
+
+$DecisionProject = Invoke-SmokeJson "Decision project create" "POST" (Join-Url $BackendBaseUrl "/api/v1/decision-projects") @{
+    title = "Smoke Java Backend or Data Analysis"
+    question = "Which direction should be validated first during the next four weeks?"
+    background = "The smoke user has Java, SQL, and project experience."
+    priorities = @("real job demand", "verifiable output")
+    mustHaves = @("produce a portfolio result")
+    dealBreakers = @("no real-world feedback")
+} $AuthHeaders
+Assert-EnvelopeSuccess "Decision project create" $DecisionProject
+$DecisionProjectId = [long] $DecisionProject.data.id
+Assert-True ($DecisionProject.data.criteria.Count -eq 7) "Decision project did not create seven default criteria."
+
+$PrimaryCandidateResponse = Invoke-SmokeJson "Decision primary candidate" "POST" (Join-Url $BackendBaseUrl "/api/v1/decision-projects/$DecisionProjectId/candidates") @{
+    name = $TargetRole
+    recommendationReason = "Existing project and job evidence"
+    opposingFactors = "System design evidence is incomplete"
+    uncertainties = "Real work experience is still missing"
+    validationActions = @("Analyze five real jobs")
+    sourceType = "user"
+} $AuthHeaders
+Assert-EnvelopeSuccess "Decision primary candidate" $PrimaryCandidateResponse
+$PrimaryCandidateId = [long] $PrimaryCandidateResponse.data.candidates[0].id
+
+$BackupCandidateResponse = Invoke-SmokeJson "Decision backup candidate" "POST" (Join-Url $BackendBaseUrl "/api/v1/decision-projects/$DecisionProjectId/candidates") @{
+    name = "Data Analysis Smoke"
+    recommendationReason = "SQL skills can be reused"
+    opposingFactors = "Statistics evidence is limited"
+    uncertainties = "Business analysis preference is unknown"
+    validationActions = @("Complete a small analysis")
+    sourceType = "user"
+} $AuthHeaders
+Assert-EnvelopeSuccess "Decision backup candidate" $BackupCandidateResponse
+$BackupCandidateId = [long] $BackupCandidateResponse.data.candidates[1].id
+
+$PrimaryJobSample = Invoke-SmokeJson "Decision primary job sample" "POST" (Join-Url $BackendBaseUrl "/api/v1/decision-projects/$DecisionProjectId/job-samples") @{
+    candidateId = $PrimaryCandidateId
+    jobId = [long] $PrimaryJob.id
+    note = "Primary candidate real job evidence"
+} $AuthHeaders
+Assert-EnvelopeSuccess "Decision primary job sample" $PrimaryJobSample
+
+$BackupJobSample = Invoke-SmokeJson "Decision backup job sample" "POST" (Join-Url $BackendBaseUrl "/api/v1/decision-projects/$DecisionProjectId/job-samples") @{
+    candidateId = $BackupCandidateId
+    jobId = [long] $BackupJob.id
+    note = "Backup candidate real job evidence"
+} $AuthHeaders
+Assert-EnvelopeSuccess "Decision backup job sample" $BackupJobSample
+
+$PrimaryEvidenceResponse = Invoke-SmokeJson "Decision primary evidence" "POST" (Join-Url $BackendBaseUrl "/api/v1/decision-projects/$DecisionProjectId/evidence") @{
+    candidateId = $PrimaryCandidateId
+    title = "Existing project evidence"
+    detail = "A completed course project demonstrates implementation and delivery."
+    sourceType = "user"
+    credibility = "high"
+    stance = "support"
+} $AuthHeaders
+Assert-EnvelopeSuccess "Decision primary evidence" $PrimaryEvidenceResponse
+$PrimaryEvidenceId = [long] $PrimaryEvidenceResponse.data.evidence[0].id
+
+$BackupEvidenceResponse = Invoke-SmokeJson "Decision backup evidence" "POST" (Join-Url $BackendBaseUrl "/api/v1/decision-projects/$DecisionProjectId/evidence") @{
+    candidateId = $BackupCandidateId
+    title = "Reusable SQL evidence"
+    detail = "Basic SQL exercises support exploration but practical depth is uncertain."
+    sourceType = "user"
+    credibility = "medium"
+    stance = "support"
+} $AuthHeaders
+Assert-EnvelopeSuccess "Decision backup evidence" $BackupEvidenceResponse
+$BackupEvidenceId = [long] $BackupEvidenceResponse.data.evidence[0].id
+$ComparisonCriterionId = [long] $BackupEvidenceResponse.data.criteria[0].id
+
+$PrimaryComparison = Invoke-SmokeJson "Decision primary comparison" "PUT" (Join-Url $BackendBaseUrl "/api/v1/decision-projects/$DecisionProjectId/criteria/$ComparisonCriterionId/results") @{
+    candidateId = $PrimaryCandidateId
+    score = 4
+    assessment = "Existing project evidence is stronger."
+    evidenceIds = @($PrimaryEvidenceId)
+    uncertainty = "Work experience remains unverified."
+    validationAction = "Complete a small evidence-producing project."
+} $AuthHeaders
+Assert-EnvelopeSuccess "Decision primary comparison" $PrimaryComparison
+
+$BackupComparison = Invoke-SmokeJson "Decision backup comparison" "PUT" (Join-Url $BackendBaseUrl "/api/v1/decision-projects/$DecisionProjectId/criteria/$ComparisonCriterionId/results") @{
+    candidateId = $BackupCandidateId
+    score = 3
+    assessment = "SQL skills are reusable but practical analysis evidence is limited."
+    evidenceIds = @($BackupEvidenceId)
+    uncertainty = "Statistics and business analysis preference are unknown."
+    validationAction = "Complete a small analysis using a real dataset."
+} $AuthHeaders
+Assert-EnvelopeSuccess "Decision backup comparison" $BackupComparison
+
+$ConfirmedTarget = Invoke-SmokeJson "Decision target confirm" "POST" (Join-Url $BackendBaseUrl "/api/v1/decision-projects/$DecisionProjectId/targets/confirm") @{
+    primaryCandidateId = $PrimaryCandidateId
+    backupCandidateId = $BackupCandidateId
+    decisionReason = "The existing evidence is stronger, so validate it with a four-week plan."
+    mainRisks = "Job samples and system design evidence remain limited."
+    confirmed = $true
+} $AuthHeaders
+Assert-EnvelopeSuccess "Decision target confirm" $ConfirmedTarget
+$PrimaryTarget = @($ConfirmedTarget.data.targets | Where-Object { $_.targetType -eq "primary" })[0]
+Assert-NotBlank $PrimaryTarget.id "Confirmed decision did not return a primary target id."
+
+$ConfidenceRequestId = "smoke-confidence-" + [guid]::NewGuid().ToString("N")
+$ConfidencePayload = @{
+    requestId = $ConfidenceRequestId
+    trend = "stable"
+    reason = "The first validation task has not changed the target yet."
+}
+$ConfidenceFeedback = Invoke-SmokeJson "Target confidence feedback" "POST" (Join-Url $BackendBaseUrl "/api/v1/decision-projects/$DecisionProjectId/targets/$($PrimaryTarget.id)/confidence-feedback") $ConfidencePayload $AuthHeaders
+Assert-EnvelopeSuccess "Target confidence feedback" $ConfidenceFeedback
+$RepeatedConfidence = Invoke-SmokeJson "Target confidence feedback idempotent retry" "POST" (Join-Url $BackendBaseUrl "/api/v1/decision-projects/$DecisionProjectId/targets/$($PrimaryTarget.id)/confidence-feedback") $ConfidencePayload $AuthHeaders
+Assert-EnvelopeSuccess "Target confidence feedback idempotent retry" $RepeatedConfidence
+Assert-True ([long] $RepeatedConfidence.data.id -eq [long] $ConfidenceFeedback.data.id) "Repeated confidence feedback created a duplicate row."
+
+$ActionRequestId = "smoke-action-" + [guid]::NewGuid().ToString("N")
+$ActionPayload = @{
+    requestId = $ActionRequestId
+    projectId = $DecisionProjectId
+    targetId = [long] $PrimaryTarget.id
+    durationWeeks = 4
+}
+$ActionPlan = Invoke-SmokeJson "Action plan generate" "POST" (Join-Url $BackendBaseUrl "/api/v1/action-plans/generate") $ActionPayload $AuthHeaders
+Assert-EnvelopeSuccess "Action plan generate" $ActionPlan
+$ActionPlanId = [long] $ActionPlan.data.id
+$ActionTask = $ActionPlan.data.weeks[0].tasks[0]
+Assert-NotBlank $ActionTask.id "Generated action plan did not include task ids."
+
+$RepeatedActionPlan = Invoke-SmokeJson "Action plan idempotent retry" "POST" (Join-Url $BackendBaseUrl "/api/v1/action-plans/generate") $ActionPayload $AuthHeaders
+Assert-EnvelopeSuccess "Action plan idempotent retry" $RepeatedActionPlan
+Assert-True ([long] $RepeatedActionPlan.data.id -eq $ActionPlanId) "Repeated action plan request created a duplicate plan."
+
+$TodayTasks = Invoke-SmokeJson "Shared today tasks" "GET" (Join-Url $BackendBaseUrl "/api/v1/action-plans/current/today") -Headers $AuthHeaders
+Assert-EnvelopeSuccess "Shared today tasks" $TodayTasks
+Assert-True ([long] $TodayTasks.data.planId -eq $ActionPlanId) "Today endpoint did not return the new current action plan."
+
+if ($RequireRealModel) {
+    $LatestProfile = Invoke-SmokeJson "Reload profile before consent" "GET" (Join-Url $BackendBaseUrl "/api/v1/users/me/profile") -Headers $AuthHeaders
+    Assert-EnvelopeSuccess "Reload profile before consent" $LatestProfile
+    $ProfilePayload["externalAiConsent"] = $true
+    $ProfilePayload["expectedVersion"] = [int] $LatestProfile.data.profileVersion
+    $ConsentedProfile = Invoke-SmokeJson "Enable external AI consent" "PUT" (Join-Url $BackendBaseUrl "/api/v1/users/me/profile") $ProfilePayload $AuthHeaders
+    Assert-EnvelopeSuccess "Enable external AI consent" $ConsentedProfile
+    Assert-True ($ConsentedProfile.data.externalAiConsent -eq $true) "External AI consent was not enabled."
+}
+
+$CoachRequestId = "smoke-action-coach-" + [guid]::NewGuid().ToString("N")
+$ActionCoach = Invoke-SmokeJson "Action coach chain" "POST" (Join-Url $BackendBaseUrl "/api/v1/action-plans/$ActionPlanId/coach") @{
+    requestId = $CoachRequestId
+    focus = "Suggest one evidence-producing next action."
+} $AuthHeaders
+Assert-EnvelopeSuccess "Action coach chain" $ActionCoach
+Assert-True (@("llm", "fallback") -contains [string] $ActionCoach.data.generationMode) "Action coach did not return generationMode."
+Assert-NotBlank $ActionCoach.data.conclusion "Action coach conclusion is empty."
+Assert-CollectionNotEmpty $ActionCoach.data.uncertainties "Action coach did not expose uncertainties."
+if ($RequireRealModel) {
+    Assert-True ([string] $ActionCoach.data.generationMode -eq "llm") "Configured provider did not produce a valid llm result; inspect Agent logs and model JSON output."
+    Assert-NotBlank $ActionCoach.data.modelName "Real-model response did not identify the model."
+
+    $ProfilePayload["externalAiConsent"] = $false
+    $ProfilePayload["expectedVersion"] = [int] $ConsentedProfile.data.profileVersion
+    $RevokedProfile = Invoke-SmokeJson "Revoke external AI consent" "PUT" (Join-Url $BackendBaseUrl "/api/v1/users/me/profile") $ProfilePayload $AuthHeaders
+    Assert-EnvelopeSuccess "Revoke external AI consent" $RevokedProfile
+    Assert-True ($RevokedProfile.data.externalAiConsent -eq $false) "External AI consent was not revoked."
+
+    $ConsentFallback = Invoke-SmokeJson "Consent-gated fallback" "POST" (Join-Url $BackendBaseUrl "/api/v1/action-plans/$ActionPlanId/coach") @{
+        requestId = "smoke-consent-fallback-" + [guid]::NewGuid().ToString("N")
+        focus = "Verify that revoked consent prevents external model use."
+    } $AuthHeaders
+    Assert-EnvelopeSuccess "Consent-gated fallback" $ConsentFallback
+    Assert-True ([string] $ConsentFallback.data.generationMode -eq "fallback") "Revoked consent did not force the rule fallback."
+    Write-Host "OK real model result and consent-gated fallback"
+}
+
+$TaskStartRequestId = "smoke-task-start-" + [guid]::NewGuid().ToString("N")
+$StartedTask = Invoke-SmokeJson "Action task start" "PATCH" (Join-Url $BackendBaseUrl "/api/v1/action-plans/$ActionPlanId/tasks/$($ActionTask.id)/status") @{
+    status = "in_progress"
+    requestId = $TaskStartRequestId
+    expectedVersion = [int] $ActionTask.version
+} $AuthHeaders
+Assert-EnvelopeSuccess "Action task start" $StartedTask
+$StartedActionTask = @(
+    $StartedTask.data.weeks.tasks |
+        ForEach-Object { $_ } |
+        Where-Object { [long] $_.id -eq [long] $ActionTask.id }
+)[0]
+
+$RepeatedStart = Invoke-SmokeJson "Action task status idempotent retry" "PATCH" (Join-Url $BackendBaseUrl "/api/v1/action-plans/$ActionPlanId/tasks/$($ActionTask.id)/status") @{
+    status = "in_progress"
+    requestId = $TaskStartRequestId
+    expectedVersion = [int] $ActionTask.version
+} $AuthHeaders
+Assert-EnvelopeSuccess "Action task status idempotent retry" $RepeatedStart
+
+$TaskResultRequestId = "smoke-task-result-" + [guid]::NewGuid().ToString("N")
+$TaskResultPayload = @{
+    description = "Compared five job descriptions and saved their common requirements."
+    linkUrl = "https://example.test/smoke-job-evidence"
+    requestId = $TaskResultRequestId
+}
+$TaskWithResult = Invoke-SmokeJson "Action task result" "POST" (Join-Url $BackendBaseUrl "/api/v1/action-plans/$ActionPlanId/tasks/$($ActionTask.id)/results") $TaskResultPayload $AuthHeaders
+Assert-EnvelopeSuccess "Action task result" $TaskWithResult
+$RepeatedResult = Invoke-SmokeJson "Action task result idempotent retry" "POST" (Join-Url $BackendBaseUrl "/api/v1/action-plans/$ActionPlanId/tasks/$($ActionTask.id)/results") $TaskResultPayload $AuthHeaders
+Assert-EnvelopeSuccess "Action task result idempotent retry" $RepeatedResult
+$MatchingResultTasks = @(
+    $RepeatedResult.data.weeks.tasks |
+        ForEach-Object { $_ } |
+        Where-Object { [long] $_.id -eq [long] $ActionTask.id }
+)
+Assert-True ($MatchingResultTasks.Count -eq 1) "Action task was not found after adding a result."
+Assert-True (@($MatchingResultTasks[0].results).Count -eq 1) "Repeated task result request created a duplicate result."
+
+$CompletedTask = Invoke-SmokeJson "Action task complete" "PATCH" (Join-Url $BackendBaseUrl "/api/v1/action-plans/$ActionPlanId/tasks/$($ActionTask.id)/status") @{
+    status = "completed"
+    requestId = "smoke-task-complete-" + [guid]::NewGuid().ToString("N")
+    expectedVersion = [int] $StartedActionTask.version
+} $AuthHeaders
+Assert-EnvelopeSuccess "Action task complete" $CompletedTask
+Assert-True ([int] $CompletedTask.data.completedTaskCount -ge 1) "Completing the action task did not update plan progress."
+
+$SnapshotRequestId = "smoke-decision-snapshot-" + [guid]::NewGuid().ToString("N")
+$DecisionSnapshot = Invoke-SmokeJson "Decision snapshot with action plan" "POST" (Join-Url $BackendBaseUrl "/api/v1/decision-projects/$DecisionProjectId/reports/snapshot") @{
+    requestId = $SnapshotRequestId
+} $AuthHeaders
+Assert-EnvelopeSuccess "Decision snapshot with action plan" $DecisionSnapshot
+$SnapshotContent = ([string] $DecisionSnapshot.data.content) | ConvertFrom-Json
+Assert-True ([long] $SnapshotContent.actionPlan.id -eq $ActionPlanId) "Decision snapshot did not freeze the current action plan."
+$SnapshotTasks = @($SnapshotContent.actionPlan.weeks.tasks | ForEach-Object { $_ })
+Assert-True (@($SnapshotTasks | Where-Object { [long] $_.id -eq [long] $ActionTask.id }).Count -eq 1) "Decision snapshot did not include the completed task."
+$SnapshotResults = @($SnapshotTasks.results | ForEach-Object { $_ })
+Assert-True ($SnapshotResults.Count -ge 1) "Decision snapshot did not include task results."
+$RepeatedSnapshot = Invoke-SmokeJson "Decision snapshot idempotent retry" "POST" (Join-Url $BackendBaseUrl "/api/v1/decision-projects/$DecisionProjectId/reports/snapshot") @{
+    requestId = $SnapshotRequestId
+} $AuthHeaders
+Assert-EnvelopeSuccess "Decision snapshot idempotent retry" $RepeatedSnapshot
+Assert-True ([string] $RepeatedSnapshot.data.id -eq [string] $DecisionSnapshot.data.id) "Decision snapshot retry created a duplicate."
+
+$WeeklyReview = Invoke-SmokeJson "Weekly review save" "PUT" (Join-Url $BackendBaseUrl "/api/v1/weekly-reviews") @{
+    requestId = "smoke-review-" + [guid]::NewGuid().ToString("N")
+    planId = $ActionPlanId
+    weekNo = 1
+    completedSummary = "Completed one real job analysis task."
+    evidenceSummary = "Saved five job samples and common requirements."
+    difficulties = "System design evidence is still limited."
+    nextWeekMinutes = 300
+    confidenceTrend = "stable"
+    confidenceReason = "One task is not enough to change the target."
+    adjustmentProposal = "Keep the next validation task."
+} $AuthHeaders
+Assert-EnvelopeSuccess "Weekly review save" $WeeklyReview
+$SubmittedReview = Invoke-SmokeJson "Weekly review submit" "POST" (Join-Url $BackendBaseUrl "/api/v1/weekly-reviews/$($WeeklyReview.data.id)/submit") -Headers $AuthHeaders
+Assert-EnvelopeSuccess "Weekly review submit" $SubmittedReview
+Assert-True ($SubmittedReview.data.status -eq "submitted") "Weekly review was not submitted."
+
+$ProjectBeforeCurrentSwitch = Invoke-SmokeJson "Decision project before current switch" "GET" (Join-Url $BackendBaseUrl "/api/v1/decision-projects/$DecisionProjectId") -Headers $AuthHeaders
+Assert-EnvelopeSuccess "Decision project before current switch" $ProjectBeforeCurrentSwitch
+$TemporaryProject = Invoke-SmokeJson "Temporary decision project create" "POST" (Join-Url $BackendBaseUrl "/api/v1/decision-projects") @{
+    title = "Smoke current-project version contract"
+    question = "Can current-project changes be protected by aggregate versions?"
+} $AuthHeaders
+Assert-EnvelopeSuccess "Temporary decision project create" $TemporaryProject
+$TemporaryProjectId = [long] $TemporaryProject.data.id
+$TemporaryProjectInitialVersion = [int] $TemporaryProject.data.version
+
+$ProjectsAfterTemporaryCreate = Invoke-SmokeJson "Decision projects after temporary create" "GET" (Join-Url $BackendBaseUrl "/api/v1/decision-projects") -Headers $AuthHeaders
+Assert-EnvelopeSuccess "Decision projects after temporary create" $ProjectsAfterTemporaryCreate
+$OriginalProjectSummary = @(
+    (To-Array $ProjectsAfterTemporaryCreate.data) |
+        Where-Object { [long] $_.id -eq $DecisionProjectId }
+)
+Assert-True ($OriginalProjectSummary.Count -eq 1) "Original decision project was missing after creating a temporary project."
+Assert-True (
+    [int] $OriginalProjectSummary[0].version -eq ([int] $ProjectBeforeCurrentSwitch.data.version + 1)
+) "Clearing the old current project did not increment its aggregate version."
+
+$RestoredCurrentProject = Invoke-SmokeJson "Restore current decision project" "POST" (Join-Url $BackendBaseUrl "/api/v1/decision-projects/$DecisionProjectId/current") @{
+    expectedVersion = [int] $OriginalProjectSummary[0].version
+} $AuthHeaders
+Assert-EnvelopeSuccess "Restore current decision project" $RestoredCurrentProject
+Assert-True ([bool] $RestoredCurrentProject.data.current) "Original decision project was not restored as current."
+
+$ProjectsAfterCurrentRestore = Invoke-SmokeJson "Decision projects after current restore" "GET" (Join-Url $BackendBaseUrl "/api/v1/decision-projects") -Headers $AuthHeaders
+Assert-EnvelopeSuccess "Decision projects after current restore" $ProjectsAfterCurrentRestore
+$TemporaryProjectSummary = @(
+    (To-Array $ProjectsAfterCurrentRestore.data) |
+        Where-Object { [long] $_.id -eq $TemporaryProjectId }
+)
+Assert-True ($TemporaryProjectSummary.Count -eq 1) "Temporary decision project was missing before archive."
+Assert-True (
+    [int] $TemporaryProjectSummary[0].version -eq ($TemporaryProjectInitialVersion + 1)
+) "Clearing the temporary current project did not increment its aggregate version."
+
+$ArchivedTemporaryProject = Invoke-SmokeJson "Temporary decision project archive" "DELETE" (
+    (Join-Url $BackendBaseUrl "/api/v1/decision-projects/$TemporaryProjectId") +
+    "?expectedVersion=$([int] $TemporaryProjectSummary[0].version)"
+) -Headers $AuthHeaders
+Assert-EnvelopeSuccess "Temporary decision project archive" $ArchivedTemporaryProject
+$ProjectsAfterTemporaryArchive = Invoke-SmokeJson "Decision projects after temporary archive" "GET" (Join-Url $BackendBaseUrl "/api/v1/decision-projects") -Headers $AuthHeaders
+Assert-EnvelopeSuccess "Decision projects after temporary archive" $ProjectsAfterTemporaryArchive
+Assert-True (
+    @((To-Array $ProjectsAfterTemporaryArchive.data) | Where-Object { [long] $_.id -eq $TemporaryProjectId }).Count -eq 0
+) "Archived temporary decision project was still returned by the active project list."
+Write-Host "OK decision project current-selection and archive version contract"
+
+$Dashboard = Invoke-SmokeJson "Dashboard aggregate" "GET" (Join-Url $BackendBaseUrl "/api/v1/dashboard") -Headers $AuthHeaders
+Assert-EnvelopeSuccess "Dashboard aggregate" $Dashboard
+Assert-True ([long] $Dashboard.data.currentProject.id -eq $DecisionProjectId) "Dashboard did not aggregate the current decision project."
+Assert-True ([long] $Dashboard.data.today.planId -eq $ActionPlanId) "Dashboard did not aggregate the current action plan."
+Assert-True ([long] $Dashboard.data.latestReview.id -eq [long] $SubmittedReview.data.id) "Dashboard did not aggregate the submitted weekly review."
+Assert-NotBlank $Dashboard.data.primaryAction "Dashboard did not return one primary next action."
+Assert-NotBlank $Dashboard.data.primaryActionPath "Dashboard primary action path is empty."
+Write-Host "OK first-version decision, action, result, Agent, and review loop"
 
 $Logout = Invoke-SmokeJson "Auth logout" "POST" (Join-Url $BackendBaseUrl "/api/v1/auth/logout") -Headers $AuthHeaders
 Assert-EnvelopeSuccess "Auth logout" $Logout

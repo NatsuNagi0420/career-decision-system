@@ -1,5 +1,6 @@
 package com.careerdecision.backend.config;
 
+import com.careerdecision.backend.common.TraceIdFilter;
 import com.careerdecision.backend.user.CurrentUserArgumentResolver;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
@@ -31,6 +32,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedOrigins(allowedOrigins)
                 .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
+                .exposedHeaders(TraceIdFilter.TRACE_ID_HEADER)
                 .allowCredentials(true);
         registry.addMapping(dataServerProperties.normalizedPublicPath() + "/**")
                 .allowedOrigins(allowedOrigins)

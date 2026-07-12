@@ -1,6 +1,6 @@
-# Local HTTPS With mkcert
+# 使用 mkcert 进行本地 HTTPS 调试
 
-Local HTTPS is optional. The default development path stays HTTP so the existing smoke scripts and Android emulator flow remain stable.
+Web 和 Android 到后端的局域网调试必须使用 HTTPS。Agent 只在同一台电脑上被后端调用，保持 `http://127.0.0.1:8001`。
 
 ## Generate Certificates
 
@@ -21,7 +21,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\setup-local-https.ps1 -Includ
 If you want to pin a specific IP manually:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\setup-local-https.ps1 -ExtraHosts '192.168.1.166'
+powershell -ExecutionPolicy Bypass -File .\scripts\setup-local-https.ps1 -ExtraHosts '192.168.1.159'
 ```
 
 Generated files are written to `.local-https/` and ignored by git:
@@ -42,12 +42,13 @@ localhost
 127.0.0.1
 ::1
 10.0.2.2
+192.168.1.159
 career.local.test
 api.career.local.test
 web.career.local.test
 ```
 
-With `-IncludeLanIps`, the generated certificate also covers the current private LAN IP addresses reported by Windows.
+`192.168.1.159` 已包含在默认列表中；`-IncludeLanIps` 还会加入 Windows 当前检测到的其他私有地址。
 
 If you use the `*.career.local.test` names, add them to your Windows hosts file:
 
@@ -81,7 +82,7 @@ $env:HTTPS_KEY_STORE_PASSWORD = 'changeit'
 For LAN Web debugging, also allow the LAN Web origin through CORS before starting the backend:
 
 ```powershell
-$env:CORS_ALLOWED_ORIGINS = 'https://localhost:5173,https://127.0.0.1:5173,https://192.168.1.166:5173'
+$env:CORS_ALLOWED_ORIGINS = 'https://localhost:5173,https://127.0.0.1:5173,https://192.168.1.159:5173'
 ```
 
 ## Start Web Over HTTPS
@@ -104,14 +105,14 @@ For LAN debugging, bind Vite to all interfaces and point the Web client at the L
 ```powershell
 cd D:\Project\career-decision-system\web
 $env:VITE_DEV_HTTPS = 'true'
-$env:VITE_BACKEND_BASE_URL = 'https://192.168.1.166:8443'
+$env:VITE_BACKEND_BASE_URL = 'https://192.168.1.159:8443'
 .\node_modules\.bin\vite.cmd --host=0.0.0.0 --port=5173
 ```
 
 Then open the Web client from another device on the same network:
 
 ```text
-https://192.168.1.166:5173
+https://192.168.1.159:5173
 ```
 
 `web/vite.config.ts` reads the default cert/key from `.local-https/`. Override them only when testing a different certificate:
@@ -145,7 +146,7 @@ To test HTTPS from a real Android device on the same LAN:
 
 ```powershell
 cd D:\Project\career-decision-system\android
-.\gradlew.bat :app:assembleDebug "-Pcareer.backendDebugBaseUrl=https://192.168.1.166:8443"
+.\gradlew.bat :app:assembleDebug "-Pcareer.backendDebugBaseUrl=https://192.168.1.159:8443"
 ```
 
 If the phone cannot connect, allow inbound private-network access for ports `5173` and `8443` in Windows Firewall.

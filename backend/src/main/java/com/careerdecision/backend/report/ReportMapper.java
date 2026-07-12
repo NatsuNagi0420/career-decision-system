@@ -20,14 +20,21 @@ public interface ReportMapper {
     int countActiveUser(@Param("userId") long userId);
 
     @Insert("""
-            INSERT INTO reports (user_id, agent_run_id, type, title, summary, content_json, deleted)
-            VALUES (#{userId}, #{agentRunId}, #{type}, #{title}, #{summary}, #{contentJson}, 0)
+            INSERT INTO reports (
+              user_id, decision_project_id, agent_run_id, type, title, summary,
+              content_json, snapshot_version, generation_request_id, deleted
+            )
+            VALUES (
+              #{userId}, #{decisionProjectId}, #{agentRunId}, #{type}, #{title}, #{summary},
+              #{contentJson}, #{snapshotVersion}, #{generationRequestId}, 0
+            )
             """)
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void insert(ReportRecord report);
 
     @Select("""
-            SELECT id, user_id, agent_run_id, type, title, summary, content_json, created_at, updated_at
+            SELECT id, user_id, decision_project_id, agent_run_id, type, title, summary,
+                   content_json, snapshot_version, generation_request_id, created_at, updated_at
             FROM reports
             WHERE id = #{id}
               AND user_id = #{userId}
@@ -35,6 +42,40 @@ public interface ReportMapper {
             LIMIT 1
             """)
     ReportRecord findByIdAndUserId(@Param("userId") long userId, @Param("id") long id);
+
+    @Select("""
+            SELECT id, user_id, decision_project_id, agent_run_id, type, title, summary,
+                   content_json, snapshot_version, generation_request_id, created_at, updated_at
+            FROM reports
+            WHERE user_id = #{userId}
+              AND generation_request_id = #{requestId}
+              AND deleted = 0
+            LIMIT 1
+            """)
+    ReportRecord findByGenerationRequestId(
+            @Param("userId") long userId,
+            @Param("requestId") String requestId
+    );
+
+    @Select("""
+            SELECT id
+            FROM decision_projects
+            WHERE id = #{projectId}
+              AND user_id = #{userId}
+              AND status <> 'archived'
+            FOR UPDATE
+            """)
+    Long lockOwnedDecisionProject(
+            @Param("userId") long userId,
+            @Param("projectId") long projectId
+    );
+
+    @Select("""
+            SELECT COALESCE(MAX(snapshot_version), 0) + 1
+            FROM reports
+            WHERE decision_project_id = #{projectId}
+            """)
+    int nextSnapshotVersion(@Param("projectId") long projectId);
 
     @Select("""
             <script>
@@ -54,7 +95,8 @@ public interface ReportMapper {
 
     @Select("""
             <script>
-            SELECT id, user_id, agent_run_id, type, title, summary, content_json, created_at, updated_at
+            SELECT id, user_id, decision_project_id, agent_run_id, type, title, summary,
+                   content_json, snapshot_version, generation_request_id, created_at, updated_at
             FROM reports
             WHERE deleted = 0
               AND user_id = #{userId}

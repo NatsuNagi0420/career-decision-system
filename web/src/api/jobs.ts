@@ -14,9 +14,14 @@ type BackendJobSummary = {
   salaryMin?: number
   salaryMax?: number
   experienceLevel?: string
+  education?: string
   tags?: string[]
   summary?: string
   qualityScore?: number
+  sourcePlatform?: string
+  sourceUrl?: string
+  sourceUpdatedText?: string
+  sourceUpdatedAt?: string
 }
 
 type BackendJobDetail = BackendJobSummary & {
@@ -60,12 +65,17 @@ export type JobInfo = {
   salaryRange: string
   location: string
   industry?: string | null
+  experienceLevel?: string | null
+  education?: string | null
   companySize?: string | null
   companyType?: string | null
   jobCode?: string | null
   jobDetails?: string | null
   companyDetails?: string | null
   jobSourceUrl: string
+  sourcePlatform?: string | null
+  sourceUpdatedText?: string | null
+  sourceUpdatedAt?: string | null
   tags?: string[]
   responsibilities?: string[]
   requirements?: string[]
@@ -81,6 +91,9 @@ export type JobListQuery = {
   companySize?: string
   companyType?: string
   salary?: string
+  salaryMin?: number
+  salaryMax?: number
+  experienceLevel?: string
   page?: number
   pageSize?: number
 }
@@ -129,12 +142,17 @@ function mapJob(job: BackendJobSummary | BackendJobDetail): JobInfo {
     salaryRange: job.salaryRange || '薪资面议',
     location: job.location || job.city || '',
     industry: job.industry || job.direction || null,
+    experienceLevel: job.experienceLevel || null,
+    education: job.education || null,
     companySize: job.companySize || null,
     companyType: job.direction || null,
     jobCode: String(job.id),
     jobDetails: detailLines.join('\n'),
     companyDetails: '',
-    jobSourceUrl: '',
+    jobSourceUrl: job.sourceUrl || '',
+    sourcePlatform: job.sourcePlatform || null,
+    sourceUpdatedText: job.sourceUpdatedText || null,
+    sourceUpdatedAt: job.sourceUpdatedAt || null,
     tags: job.tags ?? [],
     responsibilities: detail.responsibilities ?? [],
     requirements: detail.requirements ?? [],
@@ -148,7 +166,10 @@ function mapQuery(query: JobListQuery) {
     keyword: query.keyword,
     location: query.locations?.[0] || query.location,
     direction: query.industry || query.companyType,
-    tag: query.companySize || query.salary,
+    tag: query.companySize,
+    salaryMin: query.salaryMin,
+    salaryMax: query.salaryMax,
+    experienceLevel: query.experienceLevel,
     page: Math.max((query.page ?? 1) - 1, 0),
     size: query.pageSize ?? 12
   }

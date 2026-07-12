@@ -12,6 +12,7 @@ def request_payload() -> PathPlanRequest:
         request_id="llm-path",
         user_id="user-001",
         target_role="Backend developer",
+        allow_external_model=True,
         profile=UserProfile(
             major="Software Engineering",
             skills=["Spring Boot", "SQL", "Redis"],

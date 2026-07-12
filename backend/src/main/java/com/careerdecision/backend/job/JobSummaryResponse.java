@@ -1,5 +1,6 @@
 package com.careerdecision.backend.job;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,9 +19,14 @@ public record JobSummaryResponse(
         String salaryPeriod,
         Integer salaryMonths,
         String experienceLevel,
+        String education,
         List<String> tags,
         String summary,
-        Double qualityScore
+        Double qualityScore,
+        String sourcePlatform,
+        String sourceUrl,
+        String sourceUpdatedText,
+        LocalDateTime sourceUpdatedAt
 ) {
     static JobSummaryResponse from(JobRecord job, List<String> tags) {
         List<String> displayTags = displayTags(job, tags);
@@ -39,9 +45,14 @@ public record JobSummaryResponse(
                 job.getSalaryPeriod(),
                 job.getSalaryMonths(),
                 job.getExperienceLevel(),
+                job.getEducation(),
                 displayTags,
                 summary(job.getDescription()),
-                job.getQualityScore()
+                job.getQualityScore(),
+                job.getSourcePlatform(),
+                job.getSourceUrl(),
+                job.getSourceUpdatedText(),
+                job.getSourceUpdatedAt()
         );
     }
 

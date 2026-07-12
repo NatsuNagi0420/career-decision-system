@@ -15,7 +15,7 @@ $WebErr = Join-Path $LogDir "web.err.log"
 
 if ([string]::IsNullOrWhiteSpace($WebBaseUrl)) {
     $WebBaseUrl = if ([string]::IsNullOrWhiteSpace($env:WEB_BASE_URL)) {
-        "http://127.0.0.1:5173"
+        "https://192.168.1.159:5173"
     } else {
         $env:WEB_BASE_URL
     }
@@ -23,7 +23,7 @@ if ([string]::IsNullOrWhiteSpace($WebBaseUrl)) {
 
 if ([string]::IsNullOrWhiteSpace($BackendBaseUrl)) {
     $BackendBaseUrl = if ([string]::IsNullOrWhiteSpace($env:BACKEND_BASE_URL)) {
-        "http://127.0.0.1:8080"
+        "https://192.168.1.159:8443"
     } else {
         $env:BACKEND_BASE_URL
     }
@@ -50,9 +50,30 @@ function Find-BrowserExecutable {
 function Test-HttpOk {
     param([string] $Url)
 
+    $Curl = Get-Command "curl.exe" -ErrorAction SilentlyContinue
+    if ($Curl) {
+        $PreviousErrorActionPreference = $ErrorActionPreference
+        $ErrorActionPreference = "SilentlyContinue"
+        try {
+            $StatusCode = & $Curl.Source --silent --insecure --output NUL --write-out "%{http_code}" --connect-timeout 2 --max-time 3 $Url 2>$null
+        } catch {
+            return $false
+        } finally {
+            $ErrorActionPreference = $PreviousErrorActionPreference
+        }
+        if ($LASTEXITCODE -eq 0) {
+            $StatusText = ($StatusCode | Select-Object -Last 1).ToString().Trim()
+            $ParsedStatus = 0
+            if ([int]::TryParse($StatusText, [ref] $ParsedStatus)) {
+                return $ParsedStatus -ge 200 -and $ParsedStatus -lt 300
+            }
+        }
+        return $false
+    }
+
     try {
         $Response = Invoke-WebRequest -UseBasicParsing -Uri $Url -TimeoutSec 3
-        return $Response.StatusCode -eq 200
+        return $Response.StatusCode -ge 200 -and $Response.StatusCode -lt 300
     } catch {
         return $false
     }
@@ -102,21 +123,24 @@ function Start-WebServerIfNeeded {
     }
 
     New-Item -ItemType Directory -Force -Path $LogDir | Out-Null
+    $WebUri = [System.Uri]::new($WebBaseUrl)
+    $WebPort = if ($WebUri.IsDefaultPort) { 443 } else { $WebUri.Port }
     $Process = Start-ProcessWithEnvironment `
         -FilePath "npm.cmd" `
-        -ArgumentList @("run", "dev", "--", "--host", "127.0.0.1", "--port", "5173") `
+        -ArgumentList @("run", "dev", "--", "--host", "0.0.0.0", "--port", [string] $WebPort) `
         -WorkingDirectory $WebRoot `
         -StandardOutputPath $WebOut `
         -StandardErrorPath $WebErr `
         -Environment @{
             VITE_BACKEND_BASE_URL = $BackendBaseUrl
             BACKEND_BASE_URL = $BackendBaseUrl
+            VITE_DEV_HTTPS = "true"
         }
 
     $Deadline = (Get-Date).AddSeconds($TimeoutSeconds)
     while ((Get-Date) -lt $Deadline) {
         if (Test-HttpOk $WebBaseUrl) {
-            $PortProcessId = (Get-NetTCPConnection -LocalPort 5173 -State Listen -ErrorAction SilentlyContinue |
+            $PortProcessId = (Get-NetTCPConnection -LocalPort $WebPort -State Listen -ErrorAction SilentlyContinue |
                     Select-Object -First 1 -ExpandProperty OwningProcess)
             return @{
                 LauncherProcess = $Process
@@ -142,6 +166,10 @@ if (-not (Test-Path $Browser)) {
     throw "Browser executable not found: $Browser"
 }
 
+if ($WebBaseUrl -notmatch '^https://' -or $BackendBaseUrl -notmatch '^https://') {
+    throw "Web and backend smoke targets must both use HTTPS. web=$WebBaseUrl backend=$BackendBaseUrl"
+}
+
 if (-not (Test-HttpOk "$BackendBaseUrl/api/v1/health")) {
     throw "Backend is not reachable at $BackendBaseUrl. Start backend before running web smoke."
 }
@@ -158,6 +186,7 @@ try {
         $env:BACKEND_BASE_URL = $BackendBaseUrl
         $env:VITE_BACKEND_BASE_URL = $BackendBaseUrl
         $env:BROWSER_EXECUTABLE_PATH = $Browser
+        $env:SMOKE_TIMEOUT_SECONDS = [string] $TimeoutSeconds
         node .\scripts\smoke-web.mjs
         if ($LASTEXITCODE -ne 0) {
             throw "Web smoke node runner failed with exit code $LASTEXITCODE."

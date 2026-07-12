@@ -128,13 +128,13 @@ DELETE /api/v1/reports/{id}
 
 - Use Vue 3 Composition API.
 - Keep API clients under `src/api`.
-- All Web HTTP communication must go through `src/utils/request.js`.
-- The backend root addresses are configured only in `src/utils/request.js`; do not define backend hosts in pages or feature API files.
-- Web production builds may use `VITE_BACKEND_BASE_URL=...` as a build-time override, but frontend feature code must still communicate only through `src/utils/request.js` and `src/api`.
-- If a Web dev machine, LAN address, or production backend origin changes, update only `src/utils/request.js` or `VITE_BACKEND_BASE_URL`.
+- All Web HTTP communication must go through `src/utils/request.ts`.
+- The backend root addresses are configured only in `src/utils/request.ts`; do not define backend hosts in pages or feature API files.
+- Web production builds may use `VITE_BACKEND_BASE_URL=...` as a build-time override, but frontend feature code must still communicate only through `src/utils/request.ts` and `src/api`.
+- If a Web dev machine, LAN address, or production backend origin changes, update only `src/utils/request.ts` or `VITE_BACKEND_BASE_URL`.
 - Web production backend URLs must use `https://` and must not point to local or emulator hosts.
-- Do not import `axios`, call `fetch`, or create another HTTP client outside `src/utils/request.js`; new backend communication should be wrapped as functions under `src/api`.
-- Keep request error normalization in `src/utils/request.js`. Feature pages and stores should display or forward the normalized `Error.message`, not parse Axios response objects.
+- Do not import `axios`, call `fetch`, or create another HTTP client outside `src/utils/request.ts`; new backend communication should be wrapped as functions under `src/api`.
+- Keep request error normalization in `src/utils/request.ts`. Feature pages and stores should display or forward the normalized `Error.message`, not parse Axios response objects.
 - Keep reusable UI under `src/components`.
 - Keep pages under `src/pages`.
 - Every async view needs loading, error, and empty states.

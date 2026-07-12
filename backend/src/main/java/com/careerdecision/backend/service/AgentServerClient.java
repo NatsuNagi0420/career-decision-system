@@ -71,6 +71,22 @@ public class AgentServerClient {
         return post("path_plan", "/api/v1/path-plans/generate", payload);
     }
 
+    public Map<String, Object> coachDecision(Map<String, Object> payload) {
+        return post("decision_coach", "/api/v1/coaching/decision", payload);
+    }
+
+    public Map<String, Object> compareDecisionJobs(Map<String, Object> payload) {
+        return post("job_comparison", "/api/v1/coaching/job-comparison", payload);
+    }
+
+    public Map<String, Object> coachAction(Map<String, Object> payload) {
+        return post("action_coach", "/api/v1/coaching/action", payload);
+    }
+
+    public Map<String, Object> coachWeeklyReview(Map<String, Object> payload) {
+        return post("weekly_review", "/api/v1/coaching/weekly-review", payload);
+    }
+
     private Map<String, Object> post(String agentType, String path, Map<String, Object> payload) {
         String traceId = traceIdFromPayload(payload);
         LocalDateTime startedAt = LocalDateTime.now();

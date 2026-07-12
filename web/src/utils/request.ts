@@ -1,6 +1,6 @@
 import axios from 'axios'
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
-import { ElMessage } from 'element-plus'
+import { m3Message } from '@/design-system/services/feedback'
 import type { ApiResponse, RequestConfig } from '@/types/api'
 import { ApiError } from '@/types/api'
 import {
@@ -13,6 +13,13 @@ import {
 
 const DEV_BACKEND_PORT = '8443'
 const PROD_BACKEND_BASE_URL = 'https://api.career-decision.example'
+const REQUEST_ID_HEADER = 'X-Request-ID'
+
+export function createClientRequestId() {
+  const randomUuid = globalThis.crypto?.randomUUID?.()
+  const randomPart = randomUuid || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`
+  return `web-${randomPart}`
+}
 
 function stripTrailingSlash(value: string) {
   return value.replace(/\/+$/, '')
@@ -50,6 +57,8 @@ const service: AxiosInstance = axios.create({
 })
 
 let refreshPromise: Promise<string> | null = null
+let lastErrorMessage = ''
+let lastErrorAt = 0
 
 function isAuthEndpoint(url = '') {
   return /\/auth\//.test(url)
@@ -74,6 +83,21 @@ function normalizeError(error: unknown): Error {
   return error instanceof Error ? error : new Error('Request failed')
 }
 
+function reportError(error: Error) {
+  const now = Date.now()
+  if (error.message !== lastErrorMessage || now - lastErrorAt > 2500) {
+    m3Message.error(error.message)
+    lastErrorMessage = error.message
+    lastErrorAt = now
+  }
+}
+
+function redirectToLogin() {
+  if (typeof window === 'undefined' || window.location.pathname === '/login') return
+  const redirect = `${window.location.pathname}${window.location.search}${window.location.hash}`
+  window.location.assign(`/login?redirect=${encodeURIComponent(redirect)}&expired=1`)
+}
+
 async function refreshAccessToken() {
   const refreshToken = getRefreshToken()
   if (!refreshToken) {
@@ -86,7 +110,7 @@ async function refreshAccessToken() {
       .post<ApiResponse<AuthSession>>(
         `${API_BASE_URL}/auth/refresh`,
         { refreshToken },
-        { timeout: 30000 }
+        { timeout: 30000, headers: { [REQUEST_ID_HEADER]: createClientRequestId() } }
       )
       .then((response) => {
         const session = response.data.data
@@ -110,8 +134,10 @@ async function refreshAccessToken() {
 
 service.interceptors.request.use((config) => {
   const token = getAccessToken()
+  if (!config.headers.get(REQUEST_ID_HEADER)) {
+    config.headers.set(REQUEST_ID_HEADER, createClientRequestId())
+  }
   if (token) {
-    config.headers = config.headers ?? {}
     config.headers.Authorization = `Bearer ${token}`
   }
   return config
@@ -121,7 +147,9 @@ service.interceptors.response.use(
   (response: AxiosResponse<ApiResponse<unknown>>) => {
     const body = response.data
     if (typeof body?.code === 'number' && body.code !== 0 && body.code !== 200) {
-      throw new ApiError(responseMessage(body), body.code, body.traceId)
+      const error = new ApiError(responseMessage(body), body.code, body.traceId)
+      reportError(error)
+      throw error
     }
     return response
   },
@@ -146,12 +174,12 @@ service.interceptors.response.use(
           return service(originalRequest)
         }
       } catch {
-        // Fall through and surface a normalized auth error.
+        redirectToLogin()
       }
     }
 
     const normalized = normalizeError(error)
-    ElMessage.error(normalized.message)
+    reportError(normalized)
     return Promise.reject(normalized)
   }
 )

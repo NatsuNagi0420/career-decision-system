@@ -87,6 +87,7 @@ class UserProfileControllerTest {
                         .content("""
                                 {
                                   "displayName": "Alice Product",
+                                  "expectedVersion": 1,
                                   "targetRole": "数据产品经理",
                                   "targetCities": ["深圳"],
                                   "skills": ["SQL", "用户研究"]
@@ -96,7 +97,8 @@ class UserProfileControllerTest {
                 .andExpect(jsonPath("$.data.displayName", is("Alice Product")))
                 .andExpect(jsonPath("$.data.targetRole", is("数据产品经理")))
                 .andExpect(jsonPath("$.data.targetCities[0]", is("深圳")))
-                .andExpect(jsonPath("$.data.skills", hasSize(2)));
+                .andExpect(jsonPath("$.data.skills", hasSize(2)))
+                .andExpect(jsonPath("$.data.profileVersion", is(2)));
 
         mockMvc.perform(get("/api/v1/users/me/profile")
                         .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION))
@@ -104,6 +106,36 @@ class UserProfileControllerTest {
                 .andExpect(jsonPath("$.data.displayName", is("Alice Product")))
                 .andExpect(jsonPath("$.data.targetRole", is("数据产品经理")))
                 .andExpect(jsonPath("$.data.skills", hasItem("SQL")));
+    }
+
+    @Test
+    void staleProfileVersionIsRejectedInsteadOfSilentlyOverwriting() throws Exception {
+        mockMvc.perform(put("/api/v1/users/me/profile")
+                        .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"displayName\":\"第一设备\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.profileVersion", is(1)));
+
+        mockMvc.perform(put("/api/v1/users/me/profile")
+                        .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"displayName\":\"第二设备的新版本\",\"expectedVersion\":1}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.profileVersion", is(2)));
+
+        mockMvc.perform(put("/api/v1/users/me/profile")
+                        .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"displayName\":\"第一设备的旧草稿\",\"expectedVersion\":1}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code", is(40930)));
+
+        mockMvc.perform(get("/api/v1/users/me/profile")
+                        .header(HttpHeaders.AUTHORIZATION, AUTHORIZATION))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.displayName", is("第二设备的新版本")))
+                .andExpect(jsonPath("$.data.profileVersion", is(2)));
     }
 
     @Test

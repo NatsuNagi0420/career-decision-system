@@ -31,6 +31,16 @@ type BackendMbtiResult = {
   description: string
 }
 
+export type MbtiHistoryItem = BackendMbtiResult & {
+  id: number
+  submittedAt: string
+}
+
+export const listMbtiHistoryApi = () => request<MbtiHistoryItem[]>({
+  url: '/assessments/mbti/history',
+  method: 'get'
+})
+
 export const getMbtiQuestionsApi = async () => {
   const questions = await request<BackendMbtiQuestion[]>({
     url: '/assessments/mbti/questions',
@@ -50,12 +60,11 @@ export const getMbtiQuestionsApi = async () => {
   })) satisfies MbtiQuestion[]
 }
 
-export const submitMbtiApi = async (answers: Record<number, string>, userId?: number | string) => {
+export const submitMbtiApi = async (answers: Record<number, string>, _userId?: number | string) => {
   const result = await request<BackendMbtiResult>({
     url: '/assessments/mbti/submit',
     method: 'post',
     data: {
-      userId: userId ? Number(userId) : undefined,
       answers
     }
   })

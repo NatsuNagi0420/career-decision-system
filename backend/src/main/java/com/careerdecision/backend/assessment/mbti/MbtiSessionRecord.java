@@ -1,5 +1,7 @@
 package com.careerdecision.backend.assessment.mbti;
 
+import java.time.LocalDateTime;
+
 public class MbtiSessionRecord {
     private Long id;
     private Long userId;
@@ -9,6 +11,7 @@ public class MbtiSessionRecord {
     private String resultCode;
     private String scoreJson;
     private String resultJson;
+    private LocalDateTime submittedAt;
 
     public Long getId() {
         return id;
@@ -72,5 +75,13 @@ public class MbtiSessionRecord {
 
     public void setResultJson(String resultJson) {
         this.resultJson = resultJson;
+    }
+
+    public LocalDateTime getSubmittedAt() {
+        return submittedAt;
+    }
+
+    public void setSubmittedAt(LocalDateTime submittedAt) {
+        this.submittedAt = submittedAt;
     }
 }

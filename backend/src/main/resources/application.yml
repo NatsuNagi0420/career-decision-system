@@ -10,6 +10,13 @@ spring:
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:root}
     driver-class-name: com.mysql.cj.jdbc.Driver
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 1
+    baseline-description: legacy schema baseline
+    locations: classpath:db/migration
+    validate-migration-naming: true
 
 mybatis:
   configuration:
@@ -28,7 +35,7 @@ career:
       max-attempts: ${AUTH_LOGIN_RATE_LIMIT_MAX_ATTEMPTS:5}
       window-seconds: ${AUTH_LOGIN_RATE_LIMIT_WINDOW_SECONDS:300}
   cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:https://localhost:5173,https://127.0.0.1:5173,https://192.168.1.159:5173}
   agent-server:
     base-url: ${AGENT_SERVER_BASE_URL:http://127.0.0.1:8001}
     internal-token: ${AGENT_INTERNAL_TOKEN:${INTERNAL_API_TOKEN:change-me}}

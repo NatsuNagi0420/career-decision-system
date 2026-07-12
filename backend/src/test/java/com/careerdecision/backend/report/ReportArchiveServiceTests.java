@@ -1,13 +1,17 @@
 package com.careerdecision.backend.report;
 
+import com.careerdecision.backend.action.ActionPlanModels.GenerateRequest;
+import com.careerdecision.backend.action.ActionPlanService;
 import com.careerdecision.backend.agent.AgentRunService;
 import com.careerdecision.backend.exception.BusinessException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,6 +26,12 @@ class ReportArchiveServiceTests {
     @Autowired
     private AgentRunService agentRunService;
 
+    @Autowired
+    private ActionPlanService actionPlanService;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
     @Test
     void archiveCreatesReportSnapshot() {
         ReportSnapshot report = service.archive(1L, request("career", "Career Report"));
@@ -29,6 +39,9 @@ class ReportArchiveServiceTests {
         assertThat(report.id()).isNotBlank();
         assertThat(report.userId()).isEqualTo("1");
         assertThat(report.agentRunId()).isNull();
+        assertThat(report.decisionProjectId()).isNull();
+        assertThat(report.snapshotVersion()).isNull();
+        assertThat(report.generationRequestId()).isNull();
         assertThat(report.type()).isEqualTo("career");
         assertThat(report.title()).isEqualTo("Career Report");
         assertThat(report.summary()).isEqualTo("summary");
@@ -131,6 +144,58 @@ class ReportArchiveServiceTests {
         assertThatThrownBy(() -> service.archive(1L, request("career_report", "Career Report", agentRunId)))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage("Agent run not found or not linkable: " + agentRunId);
+    }
+
+    @Test
+    void decisionSnapshotIsProjectOwnedVersionedAndIdempotent() {
+        long projectId = 91001L;
+        long candidateId = 91002L;
+        long targetId = 91003L;
+        jdbcTemplate.update("""
+                INSERT INTO decision_projects (
+                  id, user_id, title, question, status, current_stage, is_current, version, decided_at
+                ) VALUES (?, 1, 'Java 后端还是数据分析', '未来三个月优先验证哪个方向？',
+                          'decided', 'target', 1, 7, CURRENT_TIMESTAMP)
+                """, projectId);
+        jdbcTemplate.update("""
+                INSERT INTO decision_candidates (
+                  id, project_id, name, source_type, recommendation_reason, opposing_factors,
+                  uncertainties, validation_actions_json, status, sort_order
+                ) VALUES (?, ?, 'Java 后端', 'user', '已有项目证据', '系统基础仍需补齐',
+                          '岗位样本仍少', '["分析岗位"]', 'active', 0)
+                """, candidateId, projectId);
+        jdbcTemplate.update("""
+                INSERT INTO decision_targets (
+                  id, user_id, project_id, candidate_id, target_type, target_name,
+                  decision_reason, main_risks, confirmed_at
+                ) VALUES (?, 1, ?, ?, 'primary', 'Java 后端', '已有证据更强', '岗位样本仍少', CURRENT_TIMESTAMP)
+                """, targetId, projectId, candidateId);
+        actionPlanService.generate(1L, new GenerateRequest(
+                "decision-snapshot-plan-001", projectId, targetId, 4, LocalDate.of(2026, 7, 7)
+        ));
+
+        DecisionSnapshotRequest firstRequest = new DecisionSnapshotRequest("decision-snapshot-idempotent-001");
+        ReportSnapshot first = service.archiveDecisionSnapshot(1L, projectId, firstRequest);
+        ReportSnapshot repeated = service.archiveDecisionSnapshot(1L, projectId, firstRequest);
+        ReportSnapshot secondVersion = service.archiveDecisionSnapshot(
+                1L, projectId, new DecisionSnapshotRequest("decision-snapshot-idempotent-002")
+        );
+
+        assertThat(repeated.id()).isEqualTo(first.id());
+        assertThat(first.decisionProjectId()).isEqualTo(projectId);
+        assertThat(first.snapshotVersion()).isEqualTo(1);
+        assertThat(first.generationRequestId()).isEqualTo("decision-snapshot-idempotent-001");
+        assertThat(first.content()).contains(
+                "decision-project-snapshot", "Java 后端", "岗位样本仍少",
+                "actionPlan", "分析 5 个真实岗位", "acceptanceCriteria"
+        );
+        assertThat(secondVersion.snapshotVersion()).isEqualTo(2);
+
+        assertThatThrownBy(() -> service.archiveDecisionSnapshot(
+                2L, projectId, new DecisionSnapshotRequest("decision-snapshot-other-user")
+        ))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage("Decision project not found: " + projectId);
     }
 
     private ReportArchiveRequest request(String type, String title) {

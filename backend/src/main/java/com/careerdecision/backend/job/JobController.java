@@ -33,6 +33,7 @@ public class JobController {
             @RequestParam(required = false) @Size(max = 80) String tag,
             @RequestParam(required = false) Integer salaryMin,
             @RequestParam(required = false) Integer salaryMax,
+            @RequestParam(required = false) @Size(max = 80) String experienceLevel,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
@@ -44,6 +45,7 @@ public class JobController {
                 tag,
                 salaryMin,
                 salaryMax,
+                experienceLevel,
                 page,
                 size
         );

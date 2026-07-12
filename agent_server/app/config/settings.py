@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     app_name: str = "Career Decision Agent Server"
     app_env: str = "local"
     log_level: str = "INFO"
-    backend_base_url: str = "http://127.0.0.1:8080"
+    backend_base_url: str = "https://192.168.1.159:8443"
     internal_api_token: str = DEFAULT_INTERNAL_API_TOKEN
     llm_provider: str = "mock"
     llm_model: str = "mock-career-planner"

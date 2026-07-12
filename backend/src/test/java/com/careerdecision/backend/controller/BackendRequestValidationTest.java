@@ -75,6 +75,7 @@ class BackendRequestValidationTest {
     @Test
     void chatRejectsOversizedMessageBeforeAgentCall() throws Exception {
         mockMvc.perform(post("/api/v1/chat/messages")
+                        .header("Authorization", AUTHORIZATION)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json(Map.of(
                                 "requestId", "chat-validation-001",
@@ -88,6 +89,7 @@ class BackendRequestValidationTest {
     @Test
     void resumeAnalyzeRejectsOversizedResumeBeforeAgentCall() throws Exception {
         mockMvc.perform(post("/api/v1/resumes/analyze")
+                        .header("Authorization", AUTHORIZATION)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json(Map.of(
                                 "requestId", "resume-validation-001",
@@ -106,6 +108,7 @@ class BackendRequestValidationTest {
         }
 
         mockMvc.perform(post("/api/v1/career-reports/generate")
+                        .header("Authorization", AUTHORIZATION)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json(Map.of(
                                 "requestId", "report-validation-001",

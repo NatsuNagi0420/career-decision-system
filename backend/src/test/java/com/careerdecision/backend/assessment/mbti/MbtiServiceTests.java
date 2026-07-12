@@ -28,7 +28,7 @@ class MbtiServiceTests {
 
     @Test
     void submitCalculatesResultAndPersistsForUser() {
-        MbtiResult result = service.submit(new MbtiSubmitRequest(
+        MbtiResult result = service.submit(1L, new MbtiSubmitRequest(
                 Map.of(
                         1, "A",
                         2, "A",

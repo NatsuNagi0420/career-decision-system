@@ -129,4 +129,33 @@ class AgentRunServiceTest {
         assertThat(record.getInputJson()).contains("\"resume_text\":\"[redacted]\"");
         assertThat(record.getInputJson()).doesNotContain("private resume input should not be stored");
     }
+
+    @Test
+    void retryReusesAuditRowAndUpgradesFailureToSuccess() {
+        String requestId = "agent-run-retry-001";
+        Long failedId = agentRunService.recordFailure(
+                "chat", requestId, Map.of("request_id", requestId, "user_id", "1", "message", "private"),
+                new IllegalStateException("timeout"), 1000,
+                LocalDateTime.now().minusSeconds(1), LocalDateTime.now()
+        );
+
+        Long successId = agentRunService.recordSuccess(
+                "chat", requestId, Map.of("request_id", requestId, "user_id", "1", "message", "private"),
+                Map.of("reply", "ok", "modelName", "retry-model"), 20,
+                LocalDateTime.now().minusSeconds(1), LocalDateTime.now()
+        );
+        Long repeatedId = agentRunService.recordSuccess(
+                "chat", requestId, Map.of("request_id", requestId, "user_id", "1", "message", "private"),
+                Map.of("reply", "ok"), 20,
+                LocalDateTime.now().minusSeconds(1), LocalDateTime.now()
+        );
+
+        AgentRunRecord record = agentRunMapper.findByRequestId(requestId);
+        assertThat(successId).isEqualTo(failedId);
+        assertThat(repeatedId).isEqualTo(failedId);
+        assertThat(record.getStatus()).isEqualTo("success");
+        assertThat(record.getModelName()).isEqualTo("retry-model");
+        assertThat(record.getErrorMessage()).isNull();
+        assertThat(record.getOutputJson()).contains("\"reply\":\"ok\"");
+    }
 }

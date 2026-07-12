@@ -1,5 +1,6 @@
 package com.careerdecision.backend.profile;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public class UserProfileRecord {
@@ -10,9 +11,22 @@ public class UserProfileRecord {
     private String school;
     private String major;
     private String degree;
+    private String grade;
+    private LocalDate graduationDate;
+    private String city;
     private String targetRole;
     private String targetCities;
     private String expectedSalary;
+    private String preferredIndustriesJson;
+    private String preferredWorkModesJson;
+    private String constraintsJson;
+    private String currentConfusion;
+    private String existingDirectionsJson;
+    private Integer weeklyAvailableMinutes;
+    private LocalDateTime onboardingCompletedAt;
+    private LocalDateTime externalAiConsentAt;
+    private Integer profileVersion;
+    private Integer expectedProfileVersion;
     private String skills;
     private String certificates;
     private String experiences;
@@ -77,6 +91,18 @@ public class UserProfileRecord {
         this.degree = degree;
     }
 
+    public String getGrade() { return grade; }
+
+    public void setGrade(String grade) { this.grade = grade; }
+
+    public LocalDate getGraduationDate() { return graduationDate; }
+
+    public void setGraduationDate(LocalDate graduationDate) { this.graduationDate = graduationDate; }
+
+    public String getCity() { return city; }
+
+    public void setCity(String city) { this.city = city; }
+
     public String getTargetRole() {
         return targetRole;
     }
@@ -100,6 +126,46 @@ public class UserProfileRecord {
     public void setExpectedSalary(String expectedSalary) {
         this.expectedSalary = expectedSalary;
     }
+
+    public String getPreferredIndustriesJson() { return preferredIndustriesJson; }
+
+    public void setPreferredIndustriesJson(String value) { preferredIndustriesJson = value; }
+
+    public String getPreferredWorkModesJson() { return preferredWorkModesJson; }
+
+    public void setPreferredWorkModesJson(String value) { preferredWorkModesJson = value; }
+
+    public String getConstraintsJson() { return constraintsJson; }
+
+    public void setConstraintsJson(String value) { constraintsJson = value; }
+
+    public String getCurrentConfusion() { return currentConfusion; }
+
+    public void setCurrentConfusion(String currentConfusion) { this.currentConfusion = currentConfusion; }
+
+    public String getExistingDirectionsJson() { return existingDirectionsJson; }
+
+    public void setExistingDirectionsJson(String value) { existingDirectionsJson = value; }
+
+    public Integer getWeeklyAvailableMinutes() { return weeklyAvailableMinutes; }
+
+    public void setWeeklyAvailableMinutes(Integer value) { weeklyAvailableMinutes = value; }
+
+    public LocalDateTime getOnboardingCompletedAt() { return onboardingCompletedAt; }
+
+    public void setOnboardingCompletedAt(LocalDateTime value) { onboardingCompletedAt = value; }
+
+    public LocalDateTime getExternalAiConsentAt() { return externalAiConsentAt; }
+
+    public void setExternalAiConsentAt(LocalDateTime value) { externalAiConsentAt = value; }
+
+    public Integer getProfileVersion() { return profileVersion; }
+
+    public void setProfileVersion(Integer value) { profileVersion = value; }
+
+    public Integer getExpectedProfileVersion() { return expectedProfileVersion; }
+
+    public void setExpectedProfileVersion(Integer value) { expectedProfileVersion = value; }
 
     public String getSkills() {
         return skills;

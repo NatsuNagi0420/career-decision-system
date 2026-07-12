@@ -37,7 +37,16 @@ public class MbtiService {
                 .toList();
     }
 
-    public MbtiResult submit(MbtiSubmitRequest request) {
+    public List<MbtiHistoryItem> history(long userId) {
+        return mbtiMapper.findHistory(userId).stream().map(session -> {
+            MbtiResult result = parseResult(session);
+            return new MbtiHistoryItem(
+                    session.getId(), result.type(), result.scores(), result.description(), session.getSubmittedAt()
+            );
+        }).toList();
+    }
+
+    public MbtiResult submit(long userId, MbtiSubmitRequest request) {
         Map<String, Integer> scores = new LinkedHashMap<>();
         for (String direction : List.of("E", "I", "S", "N", "T", "F", "J", "P")) {
             scores.put(direction, 0);
@@ -56,7 +65,7 @@ public class MbtiService {
 
         String type = calculateType(scores);
         MbtiResult result = new MbtiResult(type, scores, description(type));
-        persistIfUserProvided(request.userId(), chosenOptions, result);
+        persist(userId, chosenOptions, result);
         return result;
     }
 
@@ -110,10 +119,7 @@ public class MbtiService {
         };
     }
 
-    private void persistIfUserProvided(Long userId, Map<Integer, MbtiOptionRecord> chosenOptions, MbtiResult result) {
-        if (userId == null) {
-            return;
-        }
+    private void persist(long userId, Map<Integer, MbtiOptionRecord> chosenOptions, MbtiResult result) {
         if (mbtiMapper.countActiveUser(userId) == 0) {
             throw new BusinessException(40402, "User not found: " + userId);
         }
@@ -145,6 +151,16 @@ public class MbtiService {
             return objectMapper.writeValueAsString(value);
         } catch (JsonProcessingException ex) {
             throw new IllegalStateException("Failed to serialize MBTI result.", ex);
+        }
+    }
+
+    private MbtiResult parseResult(MbtiSessionRecord session) {
+        try {
+            return objectMapper.readValue(session.getResultJson(), MbtiResult.class);
+        } catch (JsonProcessingException | IllegalArgumentException ex) {
+            return new MbtiResult(
+                    session.getResultCode(), Map.of(), description(session.getResultCode())
+            );
         }
     }
 }

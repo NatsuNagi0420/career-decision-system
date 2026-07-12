@@ -7,6 +7,7 @@ public record JobSearchCriteria(
         String tag,
         Integer salaryMin,
         Integer salaryMax,
+        String experienceLevel,
         int page,
         int size
 ) {

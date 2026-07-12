@@ -192,9 +192,27 @@ def test_chat_contract_returns_reply_intent_and_action():
 
     assert response.status_code == 200
     data = assert_success_response(response.json())
-    assert set(data) == {"reply", "actions", "intent"}
+    assert set(data) == {
+        "generationMode",
+        "modelName",
+        "confidence",
+        "responseMode",
+        "usedPersonalContext",
+        "reply",
+        "evidenceBasis",
+        "uncertainties",
+        "nextStep",
+        "actions",
+        "intent",
+    }
     assert isinstance(data["reply"], str)
-    assert "career decision" in data["reply"]
+    assert data["generationMode"] == "fallback"
+    assert data["responseMode"] == "coaching"
+    assert data["usedPersonalContext"] is True
+    assert 0 <= data["confidence"] <= 1
+    assert data["evidenceBasis"]
+    assert data["uncertainties"]
+    assert data["nextStep"]
     assert data["intent"] == "resume_advice"
 
     actions = data["actions"]
@@ -205,6 +223,29 @@ def test_chat_contract_returns_reply_intent_and_action():
     assert actions[0]["action"] == "go:resume"
 
 
+def test_direct_chat_contract_omits_coaching_content_and_personal_context():
+    response = api_post(
+        "/api/v1/chat/messages",
+        json={
+            "request_id": "contract-chat-identity",
+            "user_id": "user-001",
+            "page": "dashboard",
+            "message": "你是什么模型？",
+            "context": {"target_role": "Backend developer"},
+        },
+    )
+
+    assert response.status_code == 200
+    data = assert_success_response(response.json())
+    assert data["intent"] == "model_identity"
+    assert data["responseMode"] == "direct"
+    assert data["usedPersonalContext"] is False
+    assert data["evidenceBasis"] == []
+    assert data["uncertainties"] == []
+    assert data["nextStep"] is None
+    assert data["actions"] == []
+
+
 def test_resume_contract_has_scores_issues_and_improved_fragments():
     response = api_post(
         "/api/v1/resumes/analyze",
@@ -213,8 +254,7 @@ def test_resume_contract_has_scores_issues_and_improved_fragments():
             "user_id": "user-001",
             "target_role": "Backend developer",
             "resume_text": (
-                "Project: Built a FastAPI career service with SQL storage, "
-                "reduced report generation latency by 30%, and shipped API tests."
+                "Project: Built a FastAPI career service with SQL storage, reduced report generation latency by 30%, and shipped API tests."
             ),
         },
     )

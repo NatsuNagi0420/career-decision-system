@@ -28,7 +28,9 @@ public interface JobMapper {
             j.education,
             j.description,
             j.company_description,
+            j.source_platform,
             j.source_url,
+            j.source_updated_text,
             j.quality_score,
             j.source_updated_at
             """;
@@ -66,6 +68,9 @@ public interface JobMapper {
             <if test="criteria.salaryMax != null">
               AND j.salary_min IS NOT NULL
               AND j.salary_min &lt;= #{criteria.salaryMax}
+            </if>
+            <if test="criteria.experienceLevel != null and criteria.experienceLevel != ''">
+              AND j.experience_level = #{criteria.experienceLevel}
             </if>
             <if test="criteria.tag != null and criteria.tag != ''">
               AND EXISTS (
@@ -114,6 +119,9 @@ public interface JobMapper {
             <if test="criteria.salaryMax != null">
               AND j.salary_min IS NOT NULL
               AND j.salary_min &lt;= #{criteria.salaryMax}
+            </if>
+            <if test="criteria.experienceLevel != null and criteria.experienceLevel != ''">
+              AND j.experience_level = #{criteria.experienceLevel}
             </if>
             <if test="criteria.tag != null and criteria.tag != ''">
               AND EXISTS (

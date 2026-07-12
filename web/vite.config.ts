@@ -3,9 +3,6 @@ import { existsSync, readFileSync } from 'node:fs'
 
 import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import AutoImport from 'unplugin-auto-import/vite'
-import Components from 'unplugin-vue-components/vite'
-import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 
 const defaultLocalHttpsCertFile = fileURLToPath(
   new URL('../.local-https/local-cert.pem', import.meta.url)
@@ -54,12 +51,12 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [
-      vue(),
-      AutoImport({
-        resolvers: [ElementPlusResolver()]
-      }),
-      Components({
-        resolvers: [ElementPlusResolver()]
+      vue({
+        template: {
+          compilerOptions: {
+            isCustomElement: (tag) => tag.startsWith('md-')
+          }
+        }
       })
     ],
     server: {
@@ -90,8 +87,6 @@ export default defineConfig(({ mode }) => {
         output: {
           manualChunks: {
             'vue-vendor': ['vue', 'vue-router', 'pinia'],
-            'element-plus': ['element-plus'],
-            echarts: ['echarts'],
             utils: [
               './src/utils/request',
               './src/utils/storage',

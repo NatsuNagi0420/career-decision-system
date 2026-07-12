@@ -1,6 +1,8 @@
 package com.careerdecision.backend.assessment.mbti;
 
 import com.careerdecision.backend.common.ApiResponse;
+import com.careerdecision.backend.user.CurrentUser;
+import com.careerdecision.backend.user.UserInfo;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,7 +27,15 @@ public class MbtiController {
     }
 
     @PostMapping("/submit")
-    public ApiResponse<MbtiResult> submit(@Valid @RequestBody MbtiSubmitRequest request) {
-        return ApiResponse.success(mbtiService.submit(request));
+    public ApiResponse<MbtiResult> submit(
+            @CurrentUser UserInfo user,
+            @Valid @RequestBody MbtiSubmitRequest request
+    ) {
+        return ApiResponse.success(mbtiService.submit(user.id(), request));
+    }
+
+    @GetMapping("/history")
+    public ApiResponse<List<MbtiHistoryItem>> history(@CurrentUser UserInfo user) {
+        return ApiResponse.success(mbtiService.history(user.id()));
     }
 }

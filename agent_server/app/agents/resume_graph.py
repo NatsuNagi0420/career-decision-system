@@ -42,7 +42,7 @@ def build_baseline_resume_analysis(request: ResumeAnalysisRequest) -> ResumeAnal
 
 def enhance_resume_with_llm(request: ResumeAnalysisRequest, fallback: ResumeAnalysisResponse) -> ResumeAnalysisResponse:
     settings = get_settings()
-    if settings.llm_provider.lower() == "mock":
+    if settings.llm_provider.lower() == "mock" or not request.allow_external_model:
         return fallback
 
     try:

@@ -10,6 +10,7 @@ def request_payload() -> CapabilityProfileRequest:
     return CapabilityProfileRequest(
         request_id="llm-profile",
         user_id="user-001",
+        allow_external_model=True,
         profile=UserProfile(
             identity="graduate",
             major="Software Engineering",

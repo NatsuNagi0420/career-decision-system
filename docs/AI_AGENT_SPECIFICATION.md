@@ -4,7 +4,7 @@
 
 Use controlled LangGraph workflows before autonomous multi-agent behavior.
 
-The first milestone keeps deterministic graph nodes as safe fallbacks. `app/services/llm_client.py` supports mock and OpenAI-compatible HTTP providers, and graph nodes progressively adopt it where generation quality matters. When an LLM enhancement fails, the workflow returns the deterministic fallback and logs only workflow name, trace ID, and error type.
+The first milestone keeps deterministic graph nodes as safe fallbacks. `app/services/llm_client.py` supports mock and OpenAI-compatible HTTP providers, and graph nodes progressively adopt it where generation quality matters. Real enhancement requires both a configured provider and `allow_external_model=true`, which the backend derives from the logged-in user's explicit authorization. When an LLM enhancement is disabled or fails, the workflow returns the deterministic fallback and logs only workflow name, trace ID, and error type.
 
 ## Workflows
 
@@ -62,6 +62,17 @@ create_baseline_plan
 
 The path plan workflow keeps a deterministic 12-week baseline, then asks the configured LLM provider for JSON-only refinement. Empty strings, empty task lists, and empty checkpoint lists are normalized away; if the provider fails or returns invalid JSON, the baseline plan is returned.
 
+### Decision And Action Coaching
+
+```text
+build evidence-grounded fallback
+  -> optionally enhance with the consented provider
+  -> validate conclusion, evidence, counterarguments, uncertainty and next actions
+  -> return generationMode=llm|fallback
+```
+
+Decision coaching, job comparison, action coaching, and weekly-review coaching never write business data. Suggested candidates, comparisons, tasks, or batch adjustments remain drafts until the user confirms them through backend mutation APIs.
+
 ## Output Rules
 
 - Every endpoint must return structured data.
@@ -72,6 +83,7 @@ The path plan workflow keeps a deterministic 12-week baseline, then asks the con
 - Include risk notes and confidence for recommendation outputs.
 - Avoid logging raw private resume content.
 - LLM fallback logs must never include prompts, raw resumes, chat messages, tokens, or provider secrets.
+- Request schemas must keep `allow_external_model=false` as the default; provider configuration alone is not consent.
 - Chat actions must stay within `go:resume`, `go:path-planning`, `go:career-report`, `go:jobs`, and `go:profile`.
 
 ## Model Provider Plan

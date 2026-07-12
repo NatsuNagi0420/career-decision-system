@@ -81,13 +81,32 @@ class JobControllerTest {
     }
 
     @Test
+    void searchFiltersByExperienceLevel() throws Exception {
+        mockMvc.perform(get("/api/v1/jobs")
+                        .param("experienceLevel", "不限")
+                        .param("page", "0")
+                        .param("size", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code", is(0)))
+                .andExpect(jsonPath("$.data.totalElements", is(1)))
+                .andExpect(jsonPath("$.data.items[0].id", is(1006)))
+                .andExpect(jsonPath("$.data.items[0].experienceLevel", is("不限")));
+    }
+
+    @Test
     void detailReturnsJobDetail() throws Exception {
         mockMvc.perform(get("/api/v1/jobs/{id}", 1002L))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code", is(0)))
                 .andExpect(jsonPath("$.data.title", is("后端工程师")))
-                .andExpect(jsonPath("$.data.requirements", hasSize(greaterThanOrEqualTo(3))))
-                .andExpect(jsonPath("$.data.interviewFocus", hasItem("Spring Boot 设计")));
+                .andExpect(jsonPath("$.data.summary", is("建设职业决策系统业务后端。")))
+                .andExpect(jsonPath("$.data.education", is("本科及以上")))
+                .andExpect(jsonPath("$.data.experienceLevel", is("3-5年")))
+                .andExpect(jsonPath("$.data.sourcePlatform", is("seed")))
+                .andExpect(jsonPath("$.data.responsibilities", hasSize(0)))
+                .andExpect(jsonPath("$.data.requirements", hasSize(0)))
+                .andExpect(jsonPath("$.data.growthPath", hasSize(0)))
+                .andExpect(jsonPath("$.data.interviewFocus", hasSize(0)));
     }
 
     @Test

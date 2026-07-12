@@ -37,7 +37,7 @@ Default local behavior is deterministic:
 LLM_PROVIDER=mock
 ```
 
-Career report generation, capability profile, resume analysis, path planning, and chat can use any OpenAI-compatible `/chat/completions` provider:
+Career reports, profiles, resumes, path planning, chat, decision coaching, job comparison, action coaching, and weekly review can use any OpenAI-compatible `/chat/completions` provider. Start from `.env.openai-compatible.example`; leave the real key only in `.env` or process environment variables.
 
 ```powershell
 @'
@@ -48,4 +48,16 @@ LLM_API_KEY=your-api-key
 '@ | Set-Content .env -Encoding UTF8
 ```
 
-The career report, capability profile, resume analysis, path planning, and chat graphs keep deterministic baselines and only replace them when the provider returns valid structured JSON.
+Every graph keeps a deterministic baseline and only replaces it when the provider returns valid structured JSON.
+
+The root `start-dev.bat` launcher respects this `.env` file and does not force `LLM_PROVIDER=mock`. Restart Agent after changing the file, then use `start-dev.bat status` to inspect the active provider. Run `scripts/smoke-api.ps1 -RequireRealModel` for one consented provider call followed by a consent-revoked fallback check.
+
+Provider configuration alone does not authorize a real call. Business request schemas default `allow_external_model=false`; the backend sets it only after reading the logged-in user's `externalAiConsent`. Without both provider configuration and per-user consent, the graph returns its deterministic baseline. See `docs/PRIVACY_AND_AI_CONSENT.md`.
+
+## Fixed Evaluations
+
+`evals/coaching_cases.json` contains 32 deterministic coaching cases covering decision, comparison, action, and weekly-review workflows. They check relevance, evidence and uncertainty fields, JSON contracts, duplicate suggestions, and prompt-injection boundaries.
+
+```powershell
+python -m pytest tests/test_fixed_coaching_evals.py -q
+```

@@ -116,7 +116,7 @@ class AssetControllerTest {
         try {
             Files.createSymbolicLink(linkedImage, privateFile);
         } catch (FileSystemException | UnsupportedOperationException | SecurityException ex) {
-            Assumptions.abort("Symbolic links are not available in this environment.");
+            Assumptions.abort("[TEST-PLATFORM-001] Symbolic-link creation is unavailable on this Windows account; rerun on CI/Linux.");
         }
 
         mockMvc.perform(get("/api/v1/assets/images/linked.png"))

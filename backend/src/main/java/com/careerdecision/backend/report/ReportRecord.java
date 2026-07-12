@@ -5,11 +5,14 @@ import java.time.LocalDateTime;
 public class ReportRecord {
     private Long id;
     private Long userId;
+    private Long decisionProjectId;
     private Long agentRunId;
     private String type;
     private String title;
     private String summary;
     private String contentJson;
+    private Integer snapshotVersion;
+    private String generationRequestId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -31,6 +34,14 @@ public class ReportRecord {
 
     public Long getAgentRunId() {
         return agentRunId;
+    }
+
+    public Long getDecisionProjectId() {
+        return decisionProjectId;
+    }
+
+    public void setDecisionProjectId(Long decisionProjectId) {
+        this.decisionProjectId = decisionProjectId;
     }
 
     public void setAgentRunId(Long agentRunId) {
@@ -67,6 +78,22 @@ public class ReportRecord {
 
     public void setContentJson(String contentJson) {
         this.contentJson = contentJson;
+    }
+
+    public Integer getSnapshotVersion() {
+        return snapshotVersion;
+    }
+
+    public void setSnapshotVersion(Integer snapshotVersion) {
+        this.snapshotVersion = snapshotVersion;
+    }
+
+    public String getGenerationRequestId() {
+        return generationRequestId;
+    }
+
+    public void setGenerationRequestId(String generationRequestId) {
+        this.generationRequestId = generationRequestId;
     }
 
     public LocalDateTime getCreatedAt() {

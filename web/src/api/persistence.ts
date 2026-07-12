@@ -23,14 +23,14 @@ export type PathPlanArchivePayload = {
   checkpoints?: string[]
 }
 
-type BackendPathPlanTask = {
+export type BackendPathPlanTask = {
   id: number
   content: string
   status: string
   completedAt?: string
 }
 
-type BackendPathPlanMilestone = {
+export type BackendPathPlanMilestone = {
   id: number
   title: string
   duration: string
@@ -51,6 +51,10 @@ export type BackendPathPlanArchive = {
   checkpoints: string[]
   createdAt?: string
   updatedAt?: string
+}
+
+export type BackendPathPlanArchiveSummary = Omit<BackendPathPlanArchive, 'milestones' | 'checkpoints'> & {
+  milestoneCount: number
 }
 
 function profileFromPayload(payload: Record<string, unknown>) {
@@ -161,3 +165,22 @@ export const archivePathPlanApi = async (payload: PathPlanArchivePayload) => {
     }
   })
 }
+
+export const listArchivedPathPlansApi = () =>
+  request<BackendPathPlanArchiveSummary[]>({
+    url: '/path-plans',
+    method: 'get',
+    params: { page: 0, size: 50 }
+  })
+
+export const getArchivedPathPlanDetailApi = (id: number) =>
+  request<BackendPathPlanArchive>({
+    url: `/path-plans/${id}`,
+    method: 'get'
+  })
+
+export const deleteArchivedPathPlanApi = (id: number) =>
+  request<void>({
+    url: `/path-plans/${id}`,
+    method: 'delete'
+  })

@@ -1,250 +1,154 @@
-<!--
-  组件：主布局 MainLayout（整合顶部导航 + 侧边栏 + 内容区）
-  职责：提供统一的页面布局框架，管理导航状态和响应式行为
--->
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { Compass, GitCompareArrows, LayoutDashboard, ListChecks } from 'lucide-vue-next'
 import MainNavbar from './MainNavbar.vue'
-import Sidebar from './Sidebar.vue'
-import WorkflowStepper from './WorkflowStepper.vue'
-import { bottomNavItems, getActivePrimaryNav, isWorkflowPath } from '@/config/navigation'
+import NavigationMagneticCursor from './NavigationMagneticCursor.vue'
+import { primaryNavItems, getActivePrimaryNav } from '@/config/navigation'
+import { vMagnetic } from '@/design-system/directives/magnetic'
 
-defineOptions({
-  name: 'MainLayout'
-})
+defineOptions({ name: 'MainLayout' })
 
 const route = useRoute()
+const activeNav = computed(() => getActivePrimaryNav(route.path))
 
-// 响应式状态
-const isMobile = ref(false)
-const sidebarCollapsed = ref(false)
-const mobileSidebarOpen = ref(false)
-const mobileBottomNavVisible = ref(true)
-
-// 当前激活的一级导航
-const activeNav = computed(() => {
-  return getActivePrimaryNav(route.path)
-})
-
-const showWorkflowStepper = computed(() => {
-  return isWorkflowPath(route.path)
-})
-
-// 是否显示侧边栏（首页和登录页不显示）
-const showSidebar = computed(() => {
-  return activeNav.value !== 'home' && activeNav.value !== '' && route.path !== '/login'
-})
-
-// 内容区域的左边距（桌面端根据侧边栏状态调整）
-const contentMarginLeft = computed(() => {
-  if (isMobile.value) return '0'
-  if (!showSidebar.value) return '0'
-  return sidebarCollapsed.value ? '72px' : '240px'
-})
-
-// 检测屏幕尺寸
-const checkMobile = () => {
-  isMobile.value = window.innerWidth <= 1024
-  if (!isMobile.value) {
-    mobileSidebarOpen.value = false
-  }
+const navIcons = {
+  'layout-dashboard': LayoutDashboard,
+  compass: Compass,
+  'git-compare': GitCompareArrows,
+  'list-checks': ListChecks
 }
-
-onMounted(() => {
-  checkMobile()
-  window.addEventListener('resize', checkMobile)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('resize', checkMobile)
-})
-
-// 处理导航切换
-const handleNavChange = (navId: string) => {
-  // 移动端：切换导航时打开侧边栏
-  if (isMobile.value && navId !== 'home') {
-    mobileSidebarOpen.value = true
-  }
-}
-
-// 关闭移动端侧边栏
-const closeMobileSidebar = () => {
-  mobileSidebarOpen.value = false
-}
-
 </script>
 
 <template>
   <div class="main-layout">
-    <!-- 顶部导航栏 -->
-    <MainNavbar @nav-change="handleNavChange" />
+    <MainNavbar />
 
-    <!-- 侧边栏（桌面端固定，移动端抽屉式） -->
-    <Sidebar
-      v-if="showSidebar"
-      :active-nav="activeNav"
-      :collapsed="sidebarCollapsed"
-      :is-mobile="isMobile"
-      :class="{ 'mobile-open': mobileSidebarOpen && isMobile }"
-      @update:collapsed="sidebarCollapsed = $event"
-      @close="closeMobileSidebar"
-    />
+    <M3NavigationRail class="navigation-rail" aria-label="主要导航">
+      <router-link
+        v-for="item in primaryNavItems"
+        v-magnetic="{ group: 'primary-navigation' }"
+        :key="item.id"
+        :to="item.path"
+        class="rail-destination"
+        :class="{ active: activeNav === item.id }"
+        :aria-current="activeNav === item.id ? 'page' : undefined"
+      >
+        <span class="rail-indicator">
+          <component :is="navIcons[item.icon]" :size="22" aria-hidden="true" />
+        </span>
+        <span class="rail-label">{{ item.label }}</span>
+      </router-link>
+    </M3NavigationRail>
 
-    <!-- 移动端侧边栏遮罩 -->
-    <transition name="fade">
-      <div
-        v-if="mobileSidebarOpen && isMobile"
-        class="sidebar-overlay"
-        @click="closeMobileSidebar"
-      ></div>
-    </transition>
-
-    <!-- 主内容区域 -->
-    <main
-      class="main-content"
-      :style="{ marginLeft: contentMarginLeft }"
-      :class="{ 'with-bottom-nav': isMobile && mobileBottomNavVisible }"
-    >
-      <WorkflowStepper v-if="showWorkflowStepper" />
+    <main class="main-content">
       <slot />
     </main>
 
-    <!-- 移动端底部导航栏 -->
-    <nav v-if="isMobile && mobileBottomNavVisible" class="bottom-nav">
+    <M3NavigationBar class="navigation-bar" aria-label="主要导航">
       <router-link
-        v-for="item in bottomNavItems"
+        v-for="item in primaryNavItems"
+        v-magnetic="{ group: 'primary-navigation' }"
         :key="item.id"
         :to="item.path"
-        class="bottom-nav-item"
+        class="bar-destination"
         :class="{ active: activeNav === item.id }"
+        :aria-current="activeNav === item.id ? 'page' : undefined"
       >
-        <span class="nav-icon">{{ item.icon }}</span>
-        <span class="nav-label">{{ item.label }}</span>
+        <span class="bar-indicator">
+          <component :is="navIcons[item.icon]" :size="22" aria-hidden="true" />
+        </span>
+        <span>{{ item.shortLabel }}</span>
       </router-link>
-    </nav>
+    </M3NavigationBar>
+
+    <NavigationMagneticCursor target-group="primary-navigation" :reset-key="route.fullPath" />
   </div>
 </template>
 
 <style scoped>
-/* 主布局容器 */
 .main-layout {
+  --career-navigation-width: 220px;
   min-height: 100vh;
-  background: var(--clay-bg);
-  display: flex;
-  flex-direction: column;
+  background: color-mix(in srgb, var(--md-sys-color-surface) 88%, transparent);
 }
 
-/* 主内容区域 */
 .main-content {
-  flex: 1;
-  margin-top: 64px;
-  padding: 24px;
-  transition: margin-left 0.3s ease;
-  min-height: calc(100vh - 64px);
+  min-height: 100vh;
+  margin-left: var(--career-navigation-width);
+  padding-top: 64px;
 }
 
-.main-content.with-bottom-nav {
-  margin-bottom: 64px;
-  min-height: calc(100vh - 64px - 64px);
-}
-
-/* 移动端侧边栏遮罩 */
-.sidebar-overlay {
+.navigation-rail {
   position: fixed;
-  top: 56px;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 998;
-  backdrop-filter: blur(2px);
-}
-
-/* 移动端底部导航栏 */
-.bottom-nav {
-  position: fixed;
+  z-index: 90;
+  top: 64px;
   bottom: 0;
   left: 0;
-  right: 0;
-  height: 64px;
-  background: var(--clay-surface);
-  border-top: 1px solid var(--clay-border);
-  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08);
   display: flex;
-  align-items: center;
-  justify-content: space-around;
-  padding: 0 8px;
-  z-index: 1000;
-}
-
-.bottom-nav-item {
-  display: flex;
+  width: var(--career-navigation-width);
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
   gap: 4px;
-  padding: 8px 12px;
-  border-radius: var(--clay-radius-card);
-  text-decoration: none;
-  color: var(--clay-text-subtle);
-  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
-  flex: 1;
-  max-width: 80px;
+  border-right: 1px solid var(--md-sys-color-outline-variant);
+  padding: 16px 12px;
+  background: color-mix(in srgb, var(--md-sys-color-surface-container-low) 94%, transparent);
+  backdrop-filter: blur(16px);
 }
 
-.bottom-nav-item:hover {
-  background: var(--clay-surface-variant);
-}
-
-.bottom-nav-item.active {
-  background: #000000;
-  color: #ffffff;
-  transform: translateY(-2px);
-}
-
-.bottom-nav-item .nav-icon {
-  font-size: 20px;
-  line-height: 1;
-}
-
-.bottom-nav-item .nav-label {
-  font-size: 11px;
+.rail-destination {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  min-height: 56px;
+  align-items: center;
+  border-radius: var(--md-sys-shape-corner-full);
+  padding: 0 12px 0 4px;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: var(--md-sys-typescale-label-large-size);
   font-weight: 500;
-  line-height: 1;
+  line-height: var(--md-sys-typescale-label-large-line-height);
+  text-decoration: none;
+  transition: background-color var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard), color var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
 }
 
-/* 动画效果 */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease;
+.rail-destination:hover,
+.rail-destination[data-magnetic-active='true'] { background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent); }
+.rail-destination.active { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+.rail-indicator { display: grid; width: 56px; height: 40px; place-items: center; border-radius: var(--md-sys-shape-corner-full); }
+.navigation-bar { display: none; }
+
+.rail-destination > *, .bar-destination > * { pointer-events: none; }
+
+@media (min-width: 600px) and (max-width: 839px) {
+  .main-layout { --career-navigation-width: 80px; }
+  .navigation-rail { align-items: center; width: 80px; padding: 12px 8px; }
+  .rail-destination { display: flex; width: 64px; min-height: 64px; align-items: center; justify-content: center; flex-direction: column; gap: 2px; border-radius: var(--md-sys-shape-corner-medium); padding: 4px 0; font-size: var(--md-sys-typescale-label-small-size); }
+  .rail-indicator { width: 56px; height: 32px; }
+  .rail-destination.active { background: transparent; color: var(--md-sys-color-on-surface); }
+  .rail-destination.active .rail-indicator { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
 }
 
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-
-/* 响应式适配 */
-@media (max-width: 1024px) {
-  .main-content {
-    margin-left: 0 !important;
+@media (max-width: 599px) {
+  .main-layout { --career-navigation-width: 0px; }
+  .navigation-rail { display: none; }
+  .main-content { min-height: calc(100vh - 80px); margin-left: 0; padding-top: 64px; padding-bottom: 80px; }
+  .navigation-bar {
+    position: fixed;
+    z-index: 100;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    min-height: 80px;
+    border-top: 1px solid var(--md-sys-color-outline-variant);
+    padding: 8px max(4px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(4px, env(safe-area-inset-left));
+    background: color-mix(in srgb, var(--md-sys-color-surface-container) 96%, transparent);
+    backdrop-filter: blur(16px);
   }
+  .bar-destination { display: flex; min-width: 0; align-items: center; justify-content: center; flex-direction: column; gap: 2px; color: var(--md-sys-color-on-surface-variant); font-size: var(--md-sys-typescale-label-medium-size); font-weight: 500; line-height: var(--md-sys-typescale-label-medium-line-height); text-decoration: none; }
+  .bar-indicator { display: grid; width: 64px; height: 32px; place-items: center; border-radius: var(--md-sys-shape-corner-full); }
+  .bar-destination.active { color: var(--md-sys-color-on-surface); }
+  .bar-destination.active .bar-indicator { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
 }
 
-@media (max-width: 640px) {
-  .main-content {
-    margin-top: 56px;
-    padding: 16px;
-    min-height: calc(100vh - 56px);
-  }
-
-  .main-content.with-bottom-nav {
-    min-height: calc(100vh - 56px - 64px);
-  }
-
-  .sidebar-overlay {
-    top: 56px;
-  }
-}
 </style>

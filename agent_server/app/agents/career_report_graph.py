@@ -126,7 +126,7 @@ def compose_report(state: CareerReportState) -> dict[str, Any]:
 
 def enhance_report_with_llm(state: CareerReportState) -> dict[str, Any]:
     settings = get_settings()
-    if settings.llm_provider.lower() == "mock":
+    if settings.llm_provider.lower() == "mock" or not state["request"].allow_external_model:
         return {}
 
     fallback = state["report"]

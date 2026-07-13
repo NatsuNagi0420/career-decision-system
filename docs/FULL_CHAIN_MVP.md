@@ -32,7 +32,8 @@ Agent 只提出候选和修改建议，不直接写数据库。用户确认后�
 - 职业目录、个人证据、决策项目、候选、岗位样本、比较、目标。
 - 行动计划、成果、变更历史、每周复盘、项目报告快照和工作台聚合。
 - Web 四区导航、五阶段决策、行动计划、复盘和上下文 AI 导师。
-- Android 四页行动端、Keystore 会话、Token 刷新、Room 缓存和 WorkManager 队列。
+- Android 注册/登录与轻量引导、四页行动端、快速成果和周复盘、目标里程碑与信心反馈、持久 AI 会话、通知提醒、动态主题与同步状态。
+- Android Keystore 会话、刷新令牌并发单飞、Room v4 缓存、WorkManager 离线队列和永久认证失败回登录。
 - 计划、任务状态和任务成果使用 `requestId` 防重复提交。
 - 32 条固定 Agent 教练评测和真实模型配置模板。
 
@@ -49,12 +50,12 @@ Web     https://192.168.1.159:5173
 - 后端：执行 116 项，115 通过，1 条有编号的平台例外。
 - Agent：88 条通过，Ruff 通过。
 - Web：119 条单测、类型检查、生产构建、6 条 Playwright 流程通过。
-- Android：24 条单测、Debug/Release 构建和 Release Lint 通过。
-- Android：Repository/ViewModel/离线队列测试、Debug/Release 构建和 Release Lint 通过。
+- Android：75 条单测零失败、Debug/Release 构建和 Release Lint 通过；包含 Repository/ViewModel、离线队列、提醒策略、主题算法和设计规范静态门禁。
 
 ## 外部待验收
 
-- 真机安装本地 CA 后，通过 HTTPS 完成任务并在 Web 看到同步结果。
+- 覆盖安装内置当前项目 CA 的 Debug APK 后，通过 HTTPS 完成任务并在 Web 看到同步结果。
+- Android 12+ Monet、旧版本主题回退、通知权限/实际投递、本机背景和 360dp 长文本仍需真机验收。
 - 注入真实供应商密钥，确认 `generationMode=llm`，并实测超时后的规则降级。
 - 10 至 15 名学生试点以及下一周复盘/继续率。
 

@@ -5,6 +5,7 @@ import { ChevronDown, History, LogOut, Moon, Settings, Sun, UserRound } from 'lu
 import { logoutApi } from '@/api/user'
 import { M3IconButton, M3MenuItem } from '@/design-system/components'
 import { m3Confirm } from '@/design-system/services/feedback'
+import { createThemeTransition } from '@/design-system/theme/themeTransition'
 import { useThemeStore } from '@/stores/theme'
 import {
   clearSession,
@@ -23,6 +24,7 @@ const isDropdownOpen = ref(false)
 const userMenuTrigger = ref<ComponentPublicInstance | null>(null)
 const isDark = computed(() => themeStore.isDark)
 const isLoggedIn = computed(() => Boolean(user.value?.id))
+const themeTransition = createThemeTransition()
 
 const syncSession = () => { user.value = getStoredUser() }
 
@@ -53,6 +55,19 @@ const handleGlobalClick = (event: MouseEvent) => {
   if (!(event.target as HTMLElement).closest('.user-profile-wrapper')) isDropdownOpen.value = false
 }
 
+const handleThemeToggle = (event: MouseEvent) => {
+  const trigger = event.currentTarget as HTMLElement | null
+  if (!trigger) {
+    themeStore.toggleTheme()
+    return
+  }
+
+  void themeTransition.run(trigger, async () => {
+    themeStore.toggleTheme()
+    await nextTick()
+  })
+}
+
 const closeAccountMenu = async (restoreFocus: boolean) => {
   isDropdownOpen.value = false
   if (!restoreFocus) return
@@ -68,6 +83,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  themeTransition.cancel()
   window.removeEventListener('click', handleGlobalClick)
   window.removeEventListener(SESSION_REFRESHED_EVENT, syncSession)
   window.removeEventListener(SESSION_CLEARED_EVENT, syncSession)
@@ -82,7 +98,7 @@ onUnmounted(() => {
     </M3Button>
 
     <div class="top-actions">
-      <M3IconButton :label="isDark ? '切换浅色模式' : '切换深色模式'" @click="themeStore.toggleTheme">
+      <M3IconButton :label="isDark ? '切换浅色模式' : '切换深色模式'" @click="handleThemeToggle">
         <Sun v-if="isDark" />
         <Moon v-else />
       </M3IconButton>

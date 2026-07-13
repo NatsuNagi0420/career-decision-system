@@ -1,18 +1,23 @@
 package com.careerdecision.mobile.ui
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AutoAwesome
-import androidx.compose.material.icons.outlined.Flag
-import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material.icons.outlined.TaskAlt
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.NavigationDrawerItemDefaults
+import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailItem
+import androidx.compose.material3.NavigationRailItemDefaults
+import androidx.compose.material3.PermanentDrawerSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -25,19 +30,30 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.careerdecision.mobile.CareerApplication
 import com.careerdecision.mobile.network.RequestConfig
+import com.careerdecision.mobile.notification.reminder.ReminderGateway
+import com.careerdecision.mobile.ui.design.CareerIcons
+import com.careerdecision.mobile.ui.design.CareerSize
+import com.careerdecision.mobile.ui.design.CareerSpacing
 import com.careerdecision.mobile.ui.screens.GoalScreen
 import com.careerdecision.mobile.ui.screens.LoginScreen
 import com.careerdecision.mobile.ui.screens.MentorScreen
+import com.careerdecision.mobile.ui.screens.OnboardingInitialData
+import com.careerdecision.mobile.ui.screens.OnboardingScreen
 import com.careerdecision.mobile.ui.screens.ProfileScreen
 import com.careerdecision.mobile.ui.screens.TodayScreen
+import com.careerdecision.mobile.ui.theme.CareerPageCanvas
 
 private data class Destination(
     val route: String,
@@ -46,14 +62,18 @@ private data class Destination(
 )
 
 private val destinations = listOf(
-    Destination("today", "今日", Icons.Outlined.TaskAlt),
-    Destination("goal", "目标", Icons.Outlined.Flag),
-    Destination("mentor", "AI 导师", Icons.Outlined.AutoAwesome),
-    Destination("profile", "我的", Icons.Outlined.Person)
+    Destination("today", "今日", CareerIcons.Today),
+    Destination("goal", "目标", CareerIcons.Goal),
+    Destination("mentor", "AI 导师", CareerIcons.Mentor),
+    Destination("profile", "我的", CareerIcons.Profile)
 )
 
 @Composable
-fun CareerApp(viewModel: AppViewModel) {
+fun CareerApp(
+    viewModel: AppViewModel,
+    requestedDestination: String? = null,
+    onDestinationConsumed: () -> Unit = {}
+) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -65,14 +85,46 @@ fun CareerApp(viewModel: AppViewModel) {
         }
     }
 
-    when {
-        state.loading && !state.authenticated -> LoadingScreen()
-        !state.authenticated -> LoginScreen(
-            loading = state.loading,
-            onLogin = viewModel::login,
-            snackbarHostState = snackbarHostState
-        )
-        else -> AuthenticatedApp(state, viewModel, snackbarHostState)
+    CareerPageCanvas(Modifier.fillMaxSize()) {
+        when {
+            state.loading && !state.authenticated -> LoadingScreen()
+            !state.authenticated -> Box(Modifier.fillMaxSize()) {
+                LoginScreen(
+                    loading = state.loading,
+                    onLogin = { username, password -> viewModel.login(username, password) },
+                    onRegister = { username, password, confirm, email ->
+                        viewModel.register(username, password, confirm, email)
+                    }
+                )
+                SnackbarHost(snackbarHostState, Modifier.align(Alignment.BottomCenter))
+            }
+            state.onboardingRequired -> Box(Modifier.fillMaxSize()) {
+                val profile = state.fullProfile
+                OnboardingScreen(
+                    userId = state.user?.id ?: 0L,
+                    initialData = OnboardingInitialData(
+                        displayName = profile?.displayName.orEmpty(),
+                        school = profile?.school.orEmpty(),
+                        major = profile?.major.orEmpty(),
+                        grade = profile?.grade.orEmpty(),
+                        city = profile?.city.orEmpty(),
+                        currentConfusion = profile?.currentConfusion.orEmpty(),
+                        existingDirections = profile?.existingDirections.orEmpty(),
+                        weeklyAvailableMinutes = profile?.weeklyAvailableMinutes ?: 300
+                    ),
+                    saving = state.onboardingSaving,
+                    onComplete = { form, onSaved -> viewModel.completeOnboarding(form, onSaved) }
+                )
+                SnackbarHost(snackbarHostState, Modifier.align(Alignment.BottomCenter))
+            }
+            else -> AuthenticatedApp(
+                state = state,
+                viewModel = viewModel,
+                snackbarHostState = snackbarHostState,
+                requestedDestination = requestedDestination,
+                onDestinationConsumed = onDestinationConsumed
+            )
+        }
     }
 }
 
@@ -80,87 +132,175 @@ fun CareerApp(viewModel: AppViewModel) {
 private fun AuthenticatedApp(
     state: AppUiState,
     viewModel: AppViewModel,
-    snackbarHostState: SnackbarHostState
+    snackbarHostState: SnackbarHostState,
+    requestedDestination: String?,
+    onDestinationConsumed: () -> Unit
 ) {
     val navController = rememberNavController()
     val uriHandler = LocalUriHandler.current
+    val context = LocalContext.current
+    val app = context.applicationContext as CareerApplication
+    val reminderGateway = app.reminderGateway
     val backStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = backStackEntry?.destination?.route
+    val currentRoute = backStackEntry?.destination?.route ?: "today"
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        bottomBar = {
-            NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
-                destinations.forEach { destination ->
-                    NavigationBarItem(
-                        selected = currentRoute == destination.route,
-                        onClick = {
-                            navController.navigate(destination.route) {
-                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        },
-                        icon = { androidx.compose.material3.Icon(destination.icon, contentDescription = destination.label) },
-                        label = { Text(destination.label) },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = MaterialTheme.colorScheme.primary,
-                            selectedTextColor = MaterialTheme.colorScheme.primary,
-                            indicatorColor = MaterialTheme.colorScheme.primaryContainer
-                        )
-                    )
-                }
-            }
+    LaunchedEffect(requestedDestination) {
+        val route = requestedDestination?.takeIf { requested -> destinations.any { it.route == requested } }
+        if (route != null) {
+            navigateTopLevel(navController, route)
+            onDestinationConsumed()
         }
-    ) { padding ->
-        NavHost(
+    }
+
+    val content: @Composable (Modifier) -> Unit = { modifier ->
+        CareerNavHost(
             navController = navController,
-            startDestination = "today",
-            modifier = Modifier.padding(padding)
-        ) {
-            composable("today") {
-                TodayScreen(
-                    state = state,
-                    onRefresh = { viewModel.refresh() },
-                    onOpenWeb = { uriHandler.openUri("${RequestConfig.WEB_BASE_URL}/decision-projects") },
-                    onUpdateTask = viewModel::updateTask,
-                    onSubmitReview = viewModel::submitWeeklyReview
-                )
+            state = state,
+            viewModel = viewModel,
+            reminderGateway = reminderGateway,
+            openWeb = { path -> uriHandler.openUri("${RequestConfig.WEB_BASE_URL}$path") },
+            modifier = modifier
+        )
+    }
+
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        when {
+            maxWidth < 600.dp -> Scaffold(
+                containerColor = Color.Transparent,
+                snackbarHost = { SnackbarHost(snackbarHostState) },
+                bottomBar = {
+                    NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
+                        destinations.forEach { destination ->
+                            NavigationBarItem(
+                                selected = currentRoute == destination.route,
+                                onClick = { navigateTopLevel(navController, destination.route) },
+                                icon = { Icon(destination.icon, contentDescription = destination.label) },
+                                label = { Text(destination.label) },
+                                colors = NavigationBarItemDefaults.colors(
+                                    indicatorColor = MaterialTheme.colorScheme.secondaryContainer
+                                )
+                            )
+                        }
+                    }
+                }
+            ) { padding -> content(Modifier.padding(padding)) }
+
+            maxWidth < 840.dp -> Row(Modifier.fillMaxSize()) {
+                NavigationRail(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
+                    destinations.forEach { destination ->
+                        NavigationRailItem(
+                            selected = currentRoute == destination.route,
+                            onClick = { navigateTopLevel(navController, destination.route) },
+                            icon = { Icon(destination.icon, contentDescription = destination.label) },
+                            label = { Text(destination.label) },
+                            colors = NavigationRailItemDefaults.colors(
+                                indicatorColor = MaterialTheme.colorScheme.secondaryContainer
+                            )
+                        )
+                    }
+                }
+                Scaffold(
+                    modifier = Modifier.weight(1f),
+                    containerColor = Color.Transparent,
+                    snackbarHost = { SnackbarHost(snackbarHostState) }
+                ) { padding -> content(Modifier.padding(padding)) }
             }
-            composable("goal") {
-                GoalScreen(
-                    state = state,
-                    onOpenWeb = { uriHandler.openUri("${RequestConfig.WEB_BASE_URL}/decision-projects") },
-                    onSubmitConfidence = viewModel::submitGoalConfidence
-                )
-            }
-            composable("mentor") {
-                MentorScreen(
-                    state = state,
-                    onAsk = viewModel::askMentor,
-                    onNavigateToday = { navController.navigate("today") { launchSingleTop = true } },
-                    onNavigateGoal = { navController.navigate("goal") { launchSingleTop = true } }
-                )
-            }
-            composable("profile") {
-                ProfileScreen(
-                    state = state,
-                    onRefresh = { viewModel.refresh() },
-                    onOpenWeb = { path -> uriHandler.openUri("${RequestConfig.WEB_BASE_URL}$path") },
-                    onLogout = viewModel::logout
-                )
+
+            else -> Row(Modifier.fillMaxSize()) {
+                PermanentDrawerSheet(
+                    modifier = Modifier.width(CareerSize.NavigationDrawer),
+                    drawerContainerColor = MaterialTheme.colorScheme.surfaceContainer
+                ) {
+                    Text(
+                        "职途",
+                        modifier = Modifier.padding(CareerSpacing.ExtraLarge),
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    destinations.forEach { destination ->
+                        NavigationDrawerItem(
+                            label = { Text(destination.label) },
+                            selected = currentRoute == destination.route,
+                            onClick = { navigateTopLevel(navController, destination.route) },
+                            icon = { Icon(destination.icon, contentDescription = null) },
+                            modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                        )
+                    }
+                }
+                Scaffold(
+                    modifier = Modifier.weight(1f),
+                    containerColor = Color.Transparent,
+                    snackbarHost = { SnackbarHost(snackbarHostState) }
+                ) { padding -> content(Modifier.padding(padding)) }
             }
         }
     }
 }
 
 @Composable
+private fun CareerNavHost(
+    navController: NavHostController,
+    state: AppUiState,
+    viewModel: AppViewModel,
+    reminderGateway: ReminderGateway,
+    openWeb: (String) -> Unit,
+    modifier: Modifier
+) {
+    NavHost(navController, startDestination = "today", modifier = modifier) {
+        composable("today") {
+            TodayScreen(
+                state = state,
+                onRefresh = { viewModel.refresh() },
+                onOpenWeb = { openWeb("/decision-projects") },
+                onUpdateTask = viewModel::updateTask,
+                onAddResult = { task, description, link -> viewModel.addTaskResult(task, description, link) },
+                onSubmitReview = viewModel::submitWeeklyReview
+            )
+        }
+        composable("goal") {
+            GoalScreen(
+                state = state,
+                onOpenWeb = { openWeb("/decision-projects") },
+                onSubmitConfidence = viewModel::submitGoalConfidence
+            )
+        }
+        composable("mentor") {
+            MentorScreen(
+                state = state,
+                onSend = { viewModel.sendMentorMessage(it) },
+                onRetry = { viewModel.retryMentorMessage(it) },
+                onNewConversation = { viewModel.startNewMentorConversation() },
+                onNavigateToday = { navigateTopLevel(navController, "today") },
+                onNavigateGoal = { navigateTopLevel(navController, "goal") }
+            )
+        }
+        composable("profile") {
+            ProfileScreen(
+                state = state,
+                reminderGateway = reminderGateway,
+                onRefresh = { viewModel.refresh() },
+                onSaveProfile = { displayName, school, major, grade, city, onSaved ->
+                    viewModel.saveAccountProfile(displayName, school, major, grade, city, onSaved)
+                },
+                onUpdateAiConsent = { viewModel.updateExternalAiConsent(it) },
+                onOpenWeb = openWeb,
+                onLogout = { viewModel.logout() }
+            )
+        }
+    }
+}
+
+private fun navigateTopLevel(navController: NavHostController, route: String) {
+    navController.navigate(route) {
+        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+        launchSingleTop = true
+        restoreState = true
+    }
+}
+
+@Composable
 private fun LoadingScreen() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        CircularProgressIndicator(color = Color(0xFF0F766E))
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
     }
 }

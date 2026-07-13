@@ -420,7 +420,6 @@ const saveCustomDirection = async () => {
           <h1>职业探索</h1>
           <p>先理解职业方向，再用真实招聘岗位验证要求、地域和薪资。岗位数据不完整时会明确显示未知。</p>
         </div>
-        <M3Button variant="outlined" v-if="activeTab === 'directions'" type="button" @click="showCustomDirectionDialog = true"><Plus :size="16" />自定义方向</M3Button>
       </header>
 
       <M3Tabs class="explore-tabs" aria-label="探索类型">
@@ -436,23 +435,25 @@ const saveCustomDirection = async () => {
         <M3Button type="button" @click="search">搜索</M3Button>
       </div>
 
-      <template v-if="activeTab === 'directions'">
-        <div class="filter-strip" role="group" aria-label="职业方向分类" @wheel="scrollDirectionCategories">
+      <Transition name="explore-fade-through" mode="out-in">
+        <div v-if="activeTab === 'directions'" key="directions" class="explore-view" data-explore-view="directions">
+        <div class="filter-strip explore-motion-group" role="group" aria-label="职业方向分类" @wheel="scrollDirectionCategories">
           <SlidersHorizontal :size="16" />
           <M3Chip label="全部" type="filter" :selected="!category" @click="category = ''; loadDirections()" />
           <M3Chip v-for="item in categories" :key="item" :label="item" type="filter" :selected="category === item" @click="category = item; loadDirections()" />
         </div>
-        <M3Card tag="div" class="direction-filters">
+        <M3Card tag="div" class="direction-filters explore-motion-group">
           <label>专业<M3Select v-model="majorFilter"><option value="">全部专业</option><option v-for="item in majorTags" :key="item">{{ item }}</option></M3Select></label>
           <label>行业<M3Select v-model="industryFilter"><option value="">全部行业</option><option v-for="item in industryTags" :key="item">{{ item }}</option></M3Select></label>
           <label>工作方式<M3Select v-model="workTypeFilter"><option value="">全部方式</option><option v-for="item in workTypes" :key="item">{{ item }}</option></M3Select></label>
           <label>兴趣<M3TextField v-model="interestFilter" placeholder="例如：分析、创作" /></label>
           <M3Button v-if="majorFilter || industryFilter || workTypeFilter || interestFilter" variant="text" @click="majorFilter = ''; industryFilter = ''; workTypeFilter = ''; interestFilter = ''">清除筛选</M3Button>
+          <M3Button variant="outlined" type="button" @click="showCustomDirectionDialog = true"><Plus :size="16" />自定义方向</M3Button>
         </M3Card>
 
-        <div class="explore-layout">
-          <section class="direction-grid loading-host">
-            <M3ProgressOverlay :visible="loading" label="正在加载职业方向" />
+        <div class="explore-layout explore-motion-group">
+          <TransitionGroup name="direction-list" tag="section" class="direction-grid loading-host">
+            <M3ProgressOverlay key="direction-loading" :visible="loading" label="正在加载职业方向" />
             <M3Card tag="article" v-for="item in visibleDirections" :key="item.id" class="direction-card">
               <div class="card-head">
                 <span>{{ item.category }}<template v-if="item.custom"> · 自定义</template></span>
@@ -469,7 +470,7 @@ const saveCustomDirection = async () => {
                 <M3Button variant="outlined" type="button" class="compact" @click="openDirectionDialog(item)"><Plus :size="15" />加入项目</M3Button>
               </footer>
             </M3Card>
-          </section>
+          </TransitionGroup>
 
           <M3Card tag="aside" class="detail-pane">
             <template v-if="selectedDirection">
@@ -484,10 +485,10 @@ const saveCustomDirection = async () => {
             <div v-else class="empty-detail"><Compass :size="28" /><strong>选择一个职业方向</strong><span>这里会显示工作内容、能力、成长路径和常见误区。</span></div>
           </M3Card>
         </div>
-      </template>
+        </div>
 
-      <template v-else>
-        <M3Card tag="div" class="job-filters">
+        <div v-else key="jobs" class="explore-view" data-explore-view="jobs">
+        <M3Card tag="div" class="job-filters explore-motion-group">
           <label><MapPin :size="16" /><M3Select v-model="city"><option value="">全部城市</option><option v-for="item in cities" :key="item">{{ item }}</option></M3Select></label>
           <label><SlidersHorizontal :size="16" /><M3Select v-model="jobDirection"><option value="">全部岗位方向</option><option v-for="item in jobDirections" :key="item">{{ item }}</option></M3Select></label>
           <label><M3Select v-model="salaryBand"><option v-for="(item, key) in salaryBands" :key="key" :value="key === 'any' ? '' : key">{{ item.label }}</option></M3Select></label>
@@ -495,7 +496,7 @@ const saveCustomDirection = async () => {
           <span>共 {{ jobTotal }} 个岗位样本</span>
         </M3Card>
 
-        <div class="jobs-layout">
+        <div class="jobs-layout explore-motion-group">
           <M3Card tag="section" class="job-list loading-host">
             <M3ProgressOverlay :visible="loading" label="正在加载招聘岗位" />
             <article v-for="job in jobs" :key="job.id" :class="{ selected: selectedJob?.id === job.id }" @click="openJob(job)">
@@ -532,14 +533,15 @@ const saveCustomDirection = async () => {
           </M3Card>
         </div>
 
-        <M3Card tag="section" v-if="comparedJobs.length" class="compare-tray">
+        <M3Card tag="section" v-if="comparedJobs.length" class="compare-tray explore-motion-group">
           <header><div><GitCompareArrows :size="18" /><strong>岗位比较</strong><span>{{ comparedJobs.length }} / 3</span></div><M3IconButton label="清空比较" @click="comparedJobs = []"><X :size="17" /></M3IconButton></header>
           <div class="compare-table" :style="{ '--compare-count': comparedJobs.length }">
             <div class="compare-labels"><span>岗位</span><span>公司</span><span>城市</span><span>薪资</span><span>学历</span><span>经验</span><span>技能标签</span><span>职责/岗位原文</span></div>
             <div v-for="job in comparedJobs" :key="job.id" class="compare-column"><strong>{{ job.jobName }}</strong><span>{{ job.companyName }}</span><span>{{ job.location || '未知' }}</span><span>{{ job.salaryRange || '未知' }}</span><span>{{ job.education || '未知' }}</span><span>{{ job.experienceLevel || '未知' }}</span><span>{{ (job.tags || []).slice(0, 6).join('、') || '未知' }}</span><span>{{ compactJobText(job) }}</span></div>
           </div>
         </M3Card>
-      </template>
+        </div>
+      </Transition>
     </div>
 
     <M3Dialog v-model="showDirectionDialog" title="加入决策项目">
@@ -583,6 +585,15 @@ const saveCustomDirection = async () => {
 <style scoped>
 .explore-shell { max-width: 1280px; }
 .explore-tabs { margin-top: 24px; }
+.explore-view { min-width: 0; }
+.explore-fade-through-enter-active { animation: explore-fade-through-enter var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-emphasized-decelerate) both; }
+.explore-fade-through-leave-active { animation: explore-fade-through-leave var(--md-sys-motion-duration-short2) var(--md-sys-motion-easing-emphasized-accelerate) both; }
+.explore-fade-through-enter-active .explore-motion-group { animation: explore-motion-group-enter var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-emphasized-decelerate) both; }
+.explore-fade-through-enter-active .explore-motion-group:nth-child(2) { animation-delay: 40ms; }
+.explore-fade-through-enter-active .explore-motion-group:nth-child(3) { animation-delay: 80ms; }
+@keyframes explore-fade-through-enter { from { opacity: 0; } to { opacity: 1; } }
+@keyframes explore-fade-through-leave { from { opacity: 1; } to { opacity: 0; } }
+@keyframes explore-motion-group-enter { from { transform: translateY(var(--career-spacing-2)); } to { transform: translateY(0); } }
 .search-row { display: flex; gap: 10px; max-width: 720px; margin: 22px 0; }
 .search-box { display: grid; flex: 1; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 9px; min-width: 0; }
 .filter-strip { display: flex; align-items: center; gap: 8px; overflow-x: auto; overflow-y: hidden; overscroll-behavior-inline: contain; margin-bottom: 18px; padding-bottom: 4px; scrollbar-width: thin; }
@@ -593,6 +604,8 @@ const saveCustomDirection = async () => {
 .direction-filters > :last-child { margin-left: auto; }
 .explore-layout, .jobs-layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 22px; align-items: start; }
 .direction-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.direction-list-enter-active, .direction-list-leave-active, .direction-list-move { transition: opacity var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-emphasized-decelerate), transform var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-emphasized-decelerate); }
+.direction-list-enter-from, .direction-list-leave-to { opacity: 0; transform: translateY(var(--career-spacing-2)); }
 .direction-card { display: grid; min-height: 230px; gap: 12px; padding: 18px; }
 .card-head, .detail-title, .compare-tray header, .job-main, .job-actions, .pagination { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .card-head { color: var(--md-sys-color-on-surface-variant); font-size: var(--md-sys-typescale-body-small-size); }
@@ -657,4 +670,11 @@ const saveCustomDirection = async () => {
 .full-dialog-field { grid-column: 1 / -1; }
 @media (max-width: 980px) { .explore-layout, .jobs-layout { grid-template-columns: 1fr; } .detail-pane { position: static; min-height: 0; } }
 @media (max-width: 680px) { .direction-grid { grid-template-columns: 1fr; } .search-row { align-items: stretch; } .direction-filters { align-items: stretch; flex-direction: column; } .direction-filters label { justify-content: space-between; } .direction-filters label > :last-child { flex: 1; } .direction-filters > :last-child { align-self: flex-start; margin-left: 0; } .job-filters { align-items: stretch; flex-direction: column; } .job-filters label { border-right: 0; border-bottom: 1px solid var(--md-sys-color-outline-variant); padding: 8px 0; } .job-filters label > :last-child { width: 100%; } .job-filters > span { margin-left: 0; } .job-main { align-items: flex-start; flex-direction: column; } .job-actions { justify-content: flex-start; flex-wrap: wrap; } .two-column-dialog { grid-template-columns: 1fr; } .full-dialog-field { grid-column: auto; } }
+@media (prefers-reduced-motion: reduce) {
+  .explore-fade-through-enter-active,
+  .explore-fade-through-leave-active,
+  .explore-fade-through-enter-active .explore-motion-group { animation: none; }
+  .direction-list-enter-active, .direction-list-leave-active, .direction-list-move { transition: none; }
+  .direction-list-enter-from, .direction-list-leave-to { opacity: 1; transform: none; }
+}
 </style>

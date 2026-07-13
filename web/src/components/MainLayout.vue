@@ -70,7 +70,7 @@ const navIcons = {
 .main-layout {
   --career-navigation-width: 220px;
   min-height: 100vh;
-  background: color-mix(in srgb, var(--md-sys-color-surface) 88%, transparent);
+  background: color-mix(in srgb, var(--md-sys-color-surface) var(--career-background-canvas-tint-opacity), transparent);
 }
 
 .main-content {

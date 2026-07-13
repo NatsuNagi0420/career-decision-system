@@ -27,7 +27,13 @@ data class ApiEnvelope<T>(
 )
 
 data class UserInfo(val id: Long, val username: String, val email: String?, val phone: String?)
-data class RegisterRequest(val username: String, val password: String, val confirmPassword: String, val email: String?)
+data class RegisterRequest(
+    val username: String,
+    val password: String,
+    val confirmPassword: String,
+    val email: String? = null,
+    val phone: String? = null
+)
 data class LoginRequest(val username: String, val password: String)
 data class RefreshTokenRequest(val refreshToken: String)
 data class LoginResponse(val token: String, val refreshToken: String, val user: UserInfo)
@@ -39,13 +45,25 @@ data class UserProfile(
     val school: String?,
     val major: String?,
     val degree: String?,
+    val grade: String?,
+    val graduationDate: String?,
+    val city: String?,
     val targetRole: String?,
     val targetCities: List<String>,
     val expectedSalary: String?,
+    val currentConfusion: String?,
+    val existingDirections: List<String>,
+    val weeklyAvailableMinutes: Int?,
+    val onboardingCompleted: Boolean,
+    val profileVersion: Int,
     val skills: List<String>,
     val certificates: List<String>,
     val experiences: List<String>,
     val values: List<String>,
+    val preferredIndustries: List<String>,
+    val preferredWorkModes: List<String>,
+    val constraints: List<String>,
+    val externalAiConsent: Boolean,
     val completed: Boolean,
     val updatedAt: String?
 )
@@ -56,13 +74,25 @@ data class UserProfileRequest(
     val school: String? = null,
     val major: String? = null,
     val degree: String? = null,
+    val grade: String? = null,
+    val graduationDate: String? = null,
+    val city: String? = null,
     val targetRole: String? = null,
     val targetCities: List<String>? = null,
     val expectedSalary: String? = null,
+    val currentConfusion: String? = null,
+    val existingDirections: List<String>? = null,
+    val weeklyAvailableMinutes: Int? = null,
     val skills: List<String>? = null,
     val certificates: List<String>? = null,
     val experiences: List<String>? = null,
-    val values: List<String>? = null
+    val values: List<String>? = null,
+    val preferredIndustries: List<String>? = null,
+    val preferredWorkModes: List<String>? = null,
+    val constraints: List<String>? = null,
+    val externalAiConsent: Boolean? = null,
+    val completeOnboarding: Boolean? = null,
+    val expectedVersion: Int? = null
 )
 
 data class JobSummary(
@@ -339,6 +369,9 @@ interface CareerApi {
     @GET("action-plans")
     suspend fun actionPlans(): ApiEnvelope<List<ActionPlanSummary>>
 
+    @GET("action-plans/{planId}")
+    suspend fun actionPlan(@Path("planId") planId: Long): ApiEnvelope<ActionPlanDetail>
+
     @GET("action-plans/current/today")
     suspend fun today(): ApiEnvelope<TodayResponse>
 
@@ -361,6 +394,9 @@ interface CareerApi {
         @Path("planId") planId: Long,
         @Body request: CoachingRequest
     ): ApiEnvelope<ActionCoachResponse>
+
+    @POST("chat/messages")
+    suspend fun sendChatMessage(@Body request: AssistantChatRequest): ApiEnvelope<AssistantChatResponse>
 
     @POST("decision-projects/{projectId}/targets/{targetId}/confidence-feedback")
     suspend fun submitConfidenceFeedback(

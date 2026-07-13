@@ -557,7 +557,7 @@ function Show-Success {
     Write-Host "cd android"
     Write-Host ".\gradlew.bat :app:assembleDebug `"-Pcareer.backendDebugBaseUrl=$BackendUrl`""
     Write-Host ""
-    Write-Host "注意：真机 HTTPS 调试需要把 .local-https\mkcert-rootCA.pem 安装到手机证书中。" -ForegroundColor Yellow
+    Write-Host "注意：Debug APK 已内置项目 CA；证书变化后需重新构建并覆盖安装 Debug APK。" -ForegroundColor Yellow
     Write-Host "日志目录：$LogDir"
 }
 

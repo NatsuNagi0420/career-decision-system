@@ -109,6 +109,8 @@ if (-not $SkipInstallRootCA) {
 $CertPath = Join-Path $OutputDirectory "local-cert.pem"
 $KeyPath = Join-Path $OutputDirectory "local-key.pem"
 $BackendP12Path = Join-Path $OutputDirectory "backend-local.p12"
+$AndroidDebugCaDirectory = Join-Path $Root "android\app\src\debug\res\raw"
+$AndroidDebugCaPath = Join-Path $AndroidDebugCaDirectory "local_debug_ca.pem"
 
 & $ResolvedMkcert -cert-file $CertPath -key-file $KeyPath @Hosts
 & $ResolvedMkcert -pkcs12 -p12-file $BackendP12Path @Hosts
@@ -116,7 +118,10 @@ $BackendP12Path = Join-Path $OutputDirectory "backend-local.p12"
 $CaRoot = & $ResolvedMkcert -CAROOT
 $RootCaPath = Join-Path $CaRoot "rootCA.pem"
 if (Test-Path $RootCaPath) {
-    Copy-Item -LiteralPath $RootCaPath -Destination (Join-Path $OutputDirectory "mkcert-rootCA.pem") -Force
+    $ExportedRootCaPath = Join-Path $OutputDirectory "mkcert-rootCA.pem"
+    Copy-Item -LiteralPath $RootCaPath -Destination $ExportedRootCaPath -Force
+    New-Item -ItemType Directory -Force -Path $AndroidDebugCaDirectory | Out-Null
+    Copy-Item -LiteralPath $RootCaPath -Destination $AndroidDebugCaPath -Force
 }
 
 Write-Host ""
@@ -125,5 +130,6 @@ Write-Host "mkcert:      $ResolvedMkcert"
 Write-Host "cert:        $CertPath"
 Write-Host "key:         $KeyPath"
 Write-Host "backend p12: $BackendP12Path"
+Write-Host "Android CA: $AndroidDebugCaPath"
 Write-Host "hosts:       $($Hosts -join ', ')"
 Write-Host "p12 pass:    changeit"

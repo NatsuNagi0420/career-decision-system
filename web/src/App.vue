@@ -8,10 +8,18 @@
     >
       <div class="app-background__scrim"></div>
     </div>
-    <MainLayout v-if="!isStandalonePage">
-      <RouterView />
-    </MainLayout>
-    <RouterView v-else />
+    <div class="app-content">
+      <RouterView v-slot="{ Component, route: viewRoute }">
+        <MainLayout v-if="!isStandalonePage">
+          <Transition name="m3-page" mode="out-in">
+            <component :is="Component" :key="viewRoute.name || viewRoute.path" />
+          </Transition>
+        </MainLayout>
+        <Transition v-else name="m3-page" mode="out-in">
+          <component :is="Component" :key="viewRoute.name || viewRoute.path" />
+        </Transition>
+      </RouterView>
+    </div>
     <AiAssistant v-if="!isStandalonePage" />
     <M3SnackbarHost />
     <M3ConfirmHost />

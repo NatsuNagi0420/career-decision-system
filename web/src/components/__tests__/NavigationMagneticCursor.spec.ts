@@ -204,6 +204,33 @@ describe('NavigationMagneticCursor', () => {
     expect(cursor.element.getAttribute('style')).toContain('--career-magnetic-target-height: 48.00px')
   })
 
+  it('hides native cursors inside shadow roots mounted after the cursor is visible', async () => {
+    mountCursor()
+    document.dispatchEvent(pointerEvent('pointermove', { clientX: 320, clientY: 180 }))
+    flushAnimationFrames()
+    await nextTick()
+
+    const menuItem = document.createElement('md-menu-item')
+    menuItem.getBoundingClientRect = vi.fn(() => rect(100, 100, 180, 48))
+    const shadowRoot = menuItem.attachShadow({ mode: 'open' })
+    const interactive = document.createElement('li')
+    interactive.className = 'list-item'
+    interactive.style.cursor = 'pointer'
+    shadowRoot.append(interactive)
+    document.body.append(menuItem)
+    await nextTick()
+
+    document.dispatchEvent(pointerEvent('pointermove', { clientX: 190, clientY: 124 }))
+    flushAnimationFrames()
+    await nextTick()
+
+    const injectedStyle = shadowRoot.querySelector<HTMLStyleElement>(
+      'style[data-career-magnetic-cursor="true"]'
+    )
+    expect(menuItem.dataset.magneticActive).toBe('true')
+    expect(injectedStyle?.textContent).toBe(':host,:host *{cursor:none!important;}')
+  })
+
   it('ignores targets clipped by a horizontal scroller until they are fully visible', async () => {
     const scroller = document.createElement('div')
     scroller.style.overflowX = 'auto'

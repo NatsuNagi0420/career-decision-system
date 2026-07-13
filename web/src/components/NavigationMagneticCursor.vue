@@ -68,7 +68,7 @@ const NATIVE_CURSOR_SELECTOR = [
   'md-dialog',
   '[data-magnetic-ignore]'
 ].join(',')
-const SHADOW_CURSOR_STYLE = ':host :is(.button,.icon-button,button,input,[role="button"],[role="menuitem"],[role="tab"],[role="switch"]){cursor:none;}'
+const SHADOW_CURSOR_STYLE = ':host,:host *{cursor:none!important;}'
 
 const cursorElement = ref<HTMLElement | null>(null)
 const enabled = ref(false)

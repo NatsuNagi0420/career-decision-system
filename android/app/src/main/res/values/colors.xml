@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="cyan_miku">#39C5BB</color>
-    <color name="deep_stage">#050B0D</color>
+    <color name="career_launch_surface">#F8FAF0</color>
 </resources>

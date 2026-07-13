@@ -50,7 +50,7 @@ This project follows the same rules across Web, Android, backend, and Agent laye
 - OkHttp backend timeout values are configured only in `RequestConfig.kt`.
 - OkHttp logging level is configured only in `RequestConfig.kt`; release builds must use `HttpLoggingInterceptor.Level.NONE`.
 - Android Debug and Release manifests must both set `android:usesCleartextTraffic="false"`; Gradle backend URL overrides must use HTTPS.
-- Android debug builds may trust user-installed CAs for mkcert HTTPS through the debug-only network security config; release builds must not trust local user CAs.
+- Android Debug builds may trust only the system store and the project CA bundled in the Debug source set; they must not trust arbitrary user-installed CAs. Release builds must not contain or trust the local project CA.
 - Android release backend defaults and release build overrides must use `https://` and must not point to `localhost`, `127.0.0.1`, `10.0.2.2`, or `0.0.0.0`.
 - Backend envelope errors, HTTP errors, timeout errors, and network errors are normalized in `NetworkErrors.kt`; screens and view models should use `runApiCatching` and surface `Error.message`.
 - Network DTOs stay in the `network` package.

@@ -133,8 +133,10 @@
   --career-navigation-cursor-attraction-range: var(--career-spacing-12);
   --career-motion-magnetic-follow-duration: var(--md-sys-motion-duration-short2);
   --career-motion-magnetic-snap-duration: var(--md-sys-motion-duration-short4);
+  --career-motion-theme-reveal-duration: 900ms;
 
   --career-background-scrim-opacity: 0.36;
+  --career-background-canvas-tint-opacity: 72%;
 
 }
 
@@ -144,5 +146,6 @@
     --md-sys-motion-duration-short4: 0ms;
     --md-sys-motion-duration-medium2: 0ms;
     --md-sys-motion-duration-medium4: 0ms;
+    --career-motion-theme-reveal-duration: 0ms;
   }
 }

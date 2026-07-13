@@ -272,7 +272,7 @@ const submit = async () => {
 </template>
 
 <style scoped>
-.onboarding-page { background: var(--md-sys-color-surface); }
+.onboarding-page { background: color-mix(in srgb, var(--md-sys-color-surface) var(--career-background-canvas-tint-opacity), transparent); }
 .onboarding-shell { width: min(760px, calc(100% - 32px)); margin: 0 auto; padding: 28px 0 64px; }
 .onboarding-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
 .brand { color: var(--md-sys-color-primary); font-size: var(--md-sys-typescale-title-large-size); font-weight: 500; }

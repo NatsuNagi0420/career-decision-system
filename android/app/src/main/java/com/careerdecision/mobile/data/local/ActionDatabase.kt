@@ -92,6 +92,36 @@ data class PendingOperationEntity(
     val createdAt: Long = System.currentTimeMillis()
 )
 
+@Entity(tableName = "cached_chat_sessions")
+data class CachedChatSessionEntity(
+    @PrimaryKey val userId: Long,
+    val sessionId: Long?,
+    val page: String,
+    val updatedAt: Long = System.currentTimeMillis()
+)
+
+@Entity(
+    tableName = "cached_chat_messages",
+    indices = [
+        Index(value = ["userId", "requestId", "role"], unique = true),
+        Index(value = ["userId", "createdAt"])
+    ]
+)
+data class CachedChatMessageEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val userId: Long,
+    val requestId: String,
+    val sessionId: Long?,
+    val role: String,
+    val content: String,
+    val deliveryStatus: String,
+    val page: String?,
+    val contextJson: String?,
+    val responseJson: String?,
+    val errorMessage: String?,
+    val createdAt: Long = System.currentTimeMillis()
+)
+
 @Dao
 interface ActionDao {
     @Query("SELECT * FROM cached_goals WHERE userId = :userId LIMIT 1")
@@ -121,6 +151,9 @@ interface ActionDao {
     @Query("SELECT * FROM pending_operations WHERE userId = :userId ORDER BY createdAt, id LIMIT :limit")
     suspend fun pending(userId: Long, limit: Int): List<PendingOperationEntity>
 
+    @Query("SELECT * FROM pending_operations WHERE userId = :userId AND planId = :planId AND operationType = 'weekly_review' ORDER BY createdAt, id LIMIT 1")
+    suspend fun pendingWeeklyReview(userId: Long, planId: Long): PendingOperationEntity?
+
     @Query("DELETE FROM pending_operations WHERE id = :id")
     suspend fun deletePending(id: Long)
 
@@ -130,6 +163,35 @@ interface ActionDao {
     @Query("SELECT COUNT(*) FROM pending_operations WHERE userId = :userId")
     suspend fun pendingCount(userId: Long): Int
 
+    @Query("SELECT * FROM cached_chat_sessions WHERE userId = :userId LIMIT 1")
+    suspend fun chatSession(userId: Long): CachedChatSessionEntity?
+
+    @Query("SELECT * FROM cached_chat_messages WHERE userId = :userId ORDER BY id")
+    suspend fun chatMessages(userId: Long): List<CachedChatMessageEntity>
+
+    @Query("SELECT * FROM cached_chat_messages WHERE userId = :userId AND requestId = :requestId AND role = 'user' LIMIT 1")
+    suspend fun chatRequest(userId: Long, requestId: String): CachedChatMessageEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun saveChatSession(session: CachedChatSessionEntity)
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertChatMessage(message: CachedChatMessageEntity): Long
+
+    @Query("UPDATE cached_chat_messages SET deliveryStatus = :status, errorMessage = :errorMessage WHERE userId = :userId AND requestId = :requestId AND role = 'user'")
+    suspend fun updateChatRequestStatus(
+        userId: Long,
+        requestId: String,
+        status: String,
+        errorMessage: String?
+    )
+
+    @Query("DELETE FROM cached_chat_messages WHERE userId = :userId")
+    suspend fun deleteChatMessages(userId: Long)
+
+    @Query("DELETE FROM cached_chat_sessions WHERE userId = :userId")
+    suspend fun deleteChatSession(userId: Long)
+
     @Query("DELETE FROM cached_goals WHERE userId = :userId")
     suspend fun deleteGoal(userId: Long)
 
@@ -138,8 +200,14 @@ interface ActionDao {
 }
 
 @Database(
-    entities = [CachedGoalEntity::class, CachedTaskEntity::class, PendingOperationEntity::class],
-    version = 3,
+    entities = [
+        CachedGoalEntity::class,
+        CachedTaskEntity::class,
+        PendingOperationEntity::class,
+        CachedChatSessionEntity::class,
+        CachedChatMessageEntity::class
+    ],
+    version = 4,
     exportSchema = true
 )
 abstract class ActionDatabase : RoomDatabase() {
@@ -176,12 +244,54 @@ abstract class ActionDatabase : RoomDatabase() {
             }
         }
 
+        private val migration3To4 = object : Migration(3, 4) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS cached_chat_sessions (
+                      userId INTEGER NOT NULL,
+                      sessionId INTEGER,
+                      page TEXT NOT NULL,
+                      updatedAt INTEGER NOT NULL,
+                      PRIMARY KEY(userId)
+                    )
+                    """.trimIndent()
+                )
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS cached_chat_messages (
+                      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                      userId INTEGER NOT NULL,
+                      requestId TEXT NOT NULL,
+                      sessionId INTEGER,
+                      role TEXT NOT NULL,
+                      content TEXT NOT NULL,
+                      deliveryStatus TEXT NOT NULL,
+                      page TEXT,
+                      contextJson TEXT,
+                      responseJson TEXT,
+                      errorMessage TEXT,
+                      createdAt INTEGER NOT NULL
+                    )
+                    """.trimIndent()
+                )
+                database.execSQL(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS index_cached_chat_messages_userId_requestId_role " +
+                        "ON cached_chat_messages (userId, requestId, role)"
+                )
+                database.execSQL(
+                    "CREATE INDEX IF NOT EXISTS index_cached_chat_messages_userId_createdAt " +
+                        "ON cached_chat_messages (userId, createdAt)"
+                )
+            }
+        }
+
         fun get(context: Context): ActionDatabase = instance ?: synchronized(this) {
             instance ?: Room.databaseBuilder(
                 context.applicationContext,
                 ActionDatabase::class.java,
                 "career_action.db"
-            ).addMigrations(migration1To2, migration2To3).build().also { instance = it }
+            ).addMigrations(migration1To2, migration2To3, migration3To4).build().also { instance = it }
         }
     }
 }

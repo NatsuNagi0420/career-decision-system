@@ -11,6 +11,9 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.careerdecision.mobile.CareerApplication
 import com.careerdecision.mobile.data.PendingSyncScheduler
+import com.careerdecision.mobile.network.ApiException
+import com.careerdecision.mobile.network.normalizeNetworkError
+import kotlinx.coroutines.CancellationException
 import java.util.concurrent.TimeUnit
 
 class PendingOperationWorker(
@@ -19,13 +22,30 @@ class PendingOperationWorker(
 ) : CoroutineWorker(appContext, params) {
     override suspend fun doWork(): Result {
         val app = applicationContext as CareerApplication
-        return runCatching { app.repository.syncPendingOperations() }
-            .fold(
-                onSuccess = { synced -> if (synced) Result.success() else Result.retry() },
-                onFailure = { Result.retry() }
-            )
+        return try {
+            if (app.repository.syncPendingOperations()) Result.success() else Result.retry()
+        } catch (error: Throwable) {
+            when (classifyPendingSyncFailure(error)) {
+                PendingSyncFailureDisposition.RETRY -> Result.retry()
+                PendingSyncFailureDisposition.FAILURE -> Result.failure()
+            }
+        }
     }
 }
+
+internal enum class PendingSyncFailureDisposition { RETRY, FAILURE }
+
+internal fun classifyPendingSyncFailure(error: Throwable): PendingSyncFailureDisposition {
+    if (error is CancellationException) throw error
+    val normalized = normalizeNetworkError(error)
+    return if (normalized.isUnauthorized()) {
+        PendingSyncFailureDisposition.FAILURE
+    } else {
+        PendingSyncFailureDisposition.RETRY
+    }
+}
+
+private fun ApiException.isUnauthorized(): Boolean = httpStatus == 401 || apiCode == 401
 
 class WorkManagerPendingSyncScheduler(context: Context) : PendingSyncScheduler {
     private val workManager = WorkManager.getInstance(context.applicationContext)

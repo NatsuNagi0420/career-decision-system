@@ -6,9 +6,16 @@ import com.careerdecision.mobile.data.FakeCareerRemote
 import com.careerdecision.mobile.data.FakeScheduler
 import com.careerdecision.mobile.data.FakeSessionGateway
 import com.careerdecision.mobile.data.PLAN
+import com.careerdecision.mobile.data.PENDING_STATUS_OPERATION
 import com.careerdecision.mobile.data.TEST_SESSION
 import com.careerdecision.mobile.data.TEST_USER
 import com.careerdecision.mobile.data.TODAY
+import com.careerdecision.mobile.data.CareerRemoteDataSource
+import com.careerdecision.mobile.network.ApiException
+import com.careerdecision.mobile.network.AssistantChatRequest
+import com.careerdecision.mobile.network.AssistantChatResponse
+import com.careerdecision.mobile.network.DashboardReview
+import com.careerdecision.mobile.network.LoginResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -19,6 +26,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -66,6 +74,262 @@ class AppViewModelTest {
 
         assertEquals("fallback", viewModel.state.value.mentor?.generationMode)
         assertEquals("先完成岗位样本验证", viewModel.state.value.mentor?.conclusion)
+    }
+
+    @Test
+    fun permanentChatAuthenticationFailureReturnsToLogin() = runTest {
+        val cache = FakeActionCache().apply { replace(TEST_USER.id, TODAY, PLAN) }
+        val baseRemote = FakeCareerRemote()
+        val remote = object : CareerRemoteDataSource by baseRemote {
+            override suspend fun sendChatMessage(request: AssistantChatRequest): AssistantChatResponse {
+                throw ApiException("登录已过期", apiCode = 401, httpStatus = 401)
+            }
+
+            override suspend fun refresh(refreshToken: String): LoginResponse {
+                throw ApiException("刷新令牌已失效", apiCode = 401, httpStatus = 401)
+            }
+        }
+        val repository = CareerRepository(
+            FakeSessionGateway(TEST_SESSION), remote, cache, FakeScheduler()
+        )
+        val viewModel = AppViewModel(repository)
+        advanceUntilIdle()
+        assertTrue(viewModel.state.value.authenticated)
+
+        viewModel.sendMentorMessage("今天先做什么")
+        advanceUntilIdle()
+
+        assertFalse(viewModel.state.value.authenticated)
+        assertNull(repository.currentSession())
+        assertTrue(viewModel.state.value.error?.contains("失效") == true)
+    }
+
+    @Test
+    fun dashboardLatestReviewMarksCurrentWeekAndBlocksDuplicateReview() = runTest {
+        val cache = FakeActionCache().apply { replace(TEST_USER.id, TODAY, PLAN) }
+        val baseRemote = FakeCareerRemote()
+        val remote = object : CareerRemoteDataSource by baseRemote {
+            override suspend fun dashboard() = baseRemote.dashboard().copy(
+                latestReview = DashboardReview(
+                    id = 901L,
+                    planId = PLAN.id,
+                    weekNo = TODAY.weekNo,
+                    status = "submitted",
+                    updatedAt = "2026-07-12T08:00:00"
+                )
+            )
+        }
+        val repository = CareerRepository(
+            FakeSessionGateway(TEST_SESSION), remote, cache, FakeScheduler()
+        )
+        val viewModel = AppViewModel(repository)
+        advanceUntilIdle()
+
+        assertEquals("submitted", viewModel.state.value.latestReview?.status)
+        viewModel.submitWeeklyReview("再次提交", null, null, 300, "stable", null)
+        advanceUntilIdle()
+
+        assertEquals(0, baseRemote.reviewRequests.size)
+        assertTrue(viewModel.state.value.notice?.contains("已提交") == true)
+    }
+
+    @Test
+    fun goalFeedbackEmitsSuccessSignalOnlyAfterRepositoryAcceptsIt() = runTest {
+        val cache = FakeActionCache().apply { replace(TEST_USER.id, TODAY, PLAN) }
+        val repository = CareerRepository(
+            FakeSessionGateway(TEST_SESSION), FakeCareerRemote(), cache, FakeScheduler()
+        )
+        val viewModel = AppViewModel(repository)
+        advanceUntilIdle()
+
+        viewModel.submitGoalConfidence("increased", "完成了真实岗位验证")
+        advanceUntilIdle()
+
+        assertEquals(1L, viewModel.state.value.goalFeedbackSubmissionVersion)
+        assertFalse(viewModel.state.value.goalFeedbackLoading)
+    }
+
+    @Test
+    fun offlineReviewIsMarkedPendingAndCannotBeQueuedTwice() = runTest {
+        val cache = FakeActionCache().apply { replace(TEST_USER.id, TODAY, PLAN) }
+        val remote = FakeCareerRemote()
+        val repository = CareerRepository(
+            FakeSessionGateway(TEST_SESSION), remote, cache, FakeScheduler()
+        )
+        val viewModel = AppViewModel(repository)
+        advanceUntilIdle()
+
+        remote.offline = true
+        viewModel.submitWeeklyReview("本周完成了验证", null, null, 300, "stable", null)
+        advanceUntilIdle()
+
+        assertEquals(TODAY.weekNo, viewModel.state.value.reviewPendingWeek)
+        assertEquals(1L, viewModel.state.value.reviewSubmissionVersion)
+        assertEquals(1, cache.pending(TEST_USER.id).count { it.operationType == "weekly_review" })
+
+        viewModel.submitWeeklyReview("重复提交", null, null, 300, "stable", null)
+        advanceUntilIdle()
+
+        assertEquals(1, cache.pending(TEST_USER.id).count { it.operationType == "weekly_review" })
+    }
+
+    @Test
+    fun pendingReviewIsRestoredAfterProcessRecreation() = runTest {
+        val cache = FakeActionCache().apply { replace(TEST_USER.id, TODAY, PLAN) }
+        val remote = FakeCareerRemote(offline = true)
+        val firstRepository = CareerRepository(
+            FakeSessionGateway(TEST_SESSION), remote, cache, FakeScheduler()
+        )
+        firstRepository.submitWeeklyReview(
+            planId = PLAN.id,
+            weekNo = TODAY.weekNo,
+            completedSummary = "离线复盘",
+            evidenceSummary = null,
+            difficulties = null,
+            nextWeekMinutes = 300,
+            confidenceTrend = "stable",
+            confidenceReason = null
+        )
+
+        val restoredRepository = CareerRepository(
+            FakeSessionGateway(TEST_SESSION), remote, cache, FakeScheduler()
+        )
+        val restoredViewModel = AppViewModel(restoredRepository)
+        advanceUntilIdle()
+
+        assertEquals(PLAN.id, restoredViewModel.state.value.reviewPendingPlanId)
+        assertEquals(TODAY.weekNo, restoredViewModel.state.value.reviewPendingWeek)
+
+        restoredViewModel.submitWeeklyReview("不应重复", null, null, 300, "stable", null)
+        advanceUntilIdle()
+
+        assertEquals(1, cache.pending(TEST_USER.id).count { it.operationType == "weekly_review" })
+    }
+
+    @Test
+    fun failedChatDeliveryKeepsFailedMessageWithoutAcceptedSendSignal() = runTest {
+        val cache = FakeActionCache().apply { replace(TEST_USER.id, TODAY, PLAN) }
+        val remote = FakeCareerRemote().apply { failNextChat = true }
+        val repository = CareerRepository(
+            FakeSessionGateway(TEST_SESSION), remote, cache, FakeScheduler()
+        )
+        val viewModel = AppViewModel(repository)
+        advanceUntilIdle()
+
+        viewModel.sendMentorMessage("保留这条草稿")
+        advanceUntilIdle()
+
+        assertEquals(0L, viewModel.state.value.chatSendAcceptedVersion)
+        assertTrue(viewModel.state.value.mentorMessages.any { it.failed })
+    }
+
+    @Test
+    fun successfulChatRetryEmitsAcceptedSendSignal() = runTest {
+        val cache = FakeActionCache().apply { replace(TEST_USER.id, TODAY, PLAN) }
+        val remote = FakeCareerRemote().apply { failNextChat = true }
+        val repository = CareerRepository(
+            FakeSessionGateway(TEST_SESSION), remote, cache, FakeScheduler()
+        )
+        val viewModel = AppViewModel(repository)
+        advanceUntilIdle()
+
+        viewModel.sendMentorMessage("先保留这条消息")
+        advanceUntilIdle()
+        val failed = viewModel.state.value.mentorMessages.first { it.failed }
+
+        viewModel.retryMentorMessage(requireNotNull(failed.requestId))
+        advanceUntilIdle()
+
+        assertEquals(1L, viewModel.state.value.chatSendAcceptedVersion)
+        assertTrue(viewModel.state.value.mentorMessages.none { it.failed })
+    }
+
+    @Test
+    fun logoutWithPendingOperationsKeepsSessionAndExplainsSyncRequirement() = runTest {
+        val cache = FakeActionCache().apply {
+            enqueue(PENDING_STATUS_OPERATION.copy(operationId = "logout-pending"))
+        }
+        val remote = FakeCareerRemote(offline = true)
+        val repository = CareerRepository(
+            FakeSessionGateway(TEST_SESSION), remote, cache, FakeScheduler()
+        )
+        val viewModel = AppViewModel(repository)
+        advanceUntilIdle()
+
+        viewModel.logout()
+        advanceUntilIdle()
+
+        assertTrue(viewModel.state.value.authenticated)
+        assertEquals(TEST_SESSION, repository.currentSession())
+        assertTrue(viewModel.state.value.error?.contains("尚未同步") == true)
+    }
+
+    @Test
+    fun onboardingDraftClearSignalWaitsForSuccessfulSave() = runTest {
+        val remote = FakeCareerRemote()
+        val repository = CareerRepository(
+            FakeSessionGateway(TEST_SESSION), remote, FakeActionCache(), FakeScheduler()
+        )
+        val viewModel = AppViewModel(repository)
+        advanceUntilIdle()
+        remote.profileRequests.clear()
+
+        val form = OnboardingForm(
+            displayName = "  ",
+            school = "",
+            major = "Computer Science",
+            grade = "Junior",
+            city = "  ",
+            currentConfusion = "Choose a direction",
+            existingDirections = listOf("Backend"),
+            weeklyAvailableMinutes = 300
+        )
+        var savedSignals = 0
+
+        remote.offline = true
+        viewModel.completeOnboarding(form) { savedSignals += 1 }
+        advanceUntilIdle()
+
+        assertEquals(0, savedSignals)
+
+        remote.offline = false
+        viewModel.completeOnboarding(form) { savedSignals += 1 }
+        advanceUntilIdle()
+
+        assertEquals(1, savedSignals)
+        assertEquals("", remote.profileRequests.single().displayName)
+        assertEquals("", remote.profileRequests.single().school)
+        assertEquals("", remote.profileRequests.single().city)
+    }
+
+    @Test
+    fun profileEditorClosesOnlyAfterSuccessAndBlankFieldsClearExistingValues() = runTest {
+        val remote = FakeCareerRemote()
+        val repository = CareerRepository(
+            FakeSessionGateway(TEST_SESSION), remote, FakeActionCache(), FakeScheduler()
+        )
+        val viewModel = AppViewModel(repository)
+        advanceUntilIdle()
+        remote.profileRequests.clear()
+        var savedSignals = 0
+
+        remote.offline = true
+        viewModel.saveAccountProfile("", "", "", "", "") { savedSignals += 1 }
+        advanceUntilIdle()
+
+        assertEquals(0, savedSignals)
+
+        remote.offline = false
+        viewModel.saveAccountProfile("  ", "", "  ", "", "  ") { savedSignals += 1 }
+        advanceUntilIdle()
+
+        assertEquals(1, savedSignals)
+        val request = remote.profileRequests.single()
+        assertEquals("", request.displayName)
+        assertEquals("", request.school)
+        assertEquals("", request.major)
+        assertEquals("", request.grade)
+        assertEquals("", request.city)
     }
 }
 

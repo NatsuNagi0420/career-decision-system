@@ -124,12 +124,12 @@ $env:VITE_HTTPS_KEY_FILE = 'D:\Project\career-decision-system\.local-https\local
 
 ## Android Debug HTTPS
 
-Debug builds trust user-installed CAs through `android/app/src/debug/res/xml/debug_network_security_config.xml`. Release builds do not.
+Debug builds trust the project CA bundled at `android/app/src/debug/res/raw/local_debug_ca.pem` through the Debug-only network security config. `setup-local-https.ps1` keeps that public certificate synchronized with the active mkcert root. Release builds contain neither the certificate nor the Debug network policy.
 
 To test HTTPS from an emulator:
 
-1. Install `.local-https/mkcert-rootCA.pem` into the emulator as a user CA.
-2. Build debug with an HTTPS backend URL:
+1. Rebuild and install the Debug APK after generating certificates.
+2. Build Debug with an HTTPS backend URL:
 
 ```powershell
 cd D:\Project\career-decision-system\android
@@ -141,14 +141,14 @@ The certificate includes `10.0.2.2`, so the emulator can reach the host backend 
 To test HTTPS from a real Android device on the same LAN:
 
 1. Generate certificates with `-IncludeLanIps` or add the phone-facing host IP with `-ExtraHosts`.
-2. Install `.local-https/mkcert-rootCA.pem` into the device's user certificate store.
-3. Build debug with the LAN backend URL:
+2. Rebuild and replace the installed Debug APK so it contains the current project CA.
+3. Build Debug with the LAN backend URL:
 
 ```powershell
 cd D:\Project\career-decision-system\android
 .\gradlew.bat :app:assembleDebug "-Pcareer.backendDebugBaseUrl=https://192.168.1.159:8443"
 ```
 
-If the phone cannot connect, allow inbound private-network access for ports `5173` and `8443` in Windows Firewall.
+The device does not need a system-installed CA. If it still cannot connect, allow inbound access for ports `5173` and `8443` in Windows Firewall and verify that the phone is not on an isolated guest network.
 
 Keep release builds on real HTTPS domains. The release URL policy still rejects local and emulator hosts.

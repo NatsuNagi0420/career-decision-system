@@ -129,7 +129,7 @@ const register = async () => {
 </template>
 
 <style scoped>
-.auth-page { min-height: 100vh; display: grid; place-items: center; padding: 28px 20px; background: var(--md-sys-color-surface); color: var(--md-sys-color-on-surface); }
+.auth-page { min-height: 100vh; display: grid; place-items: center; padding: 28px 20px; background: color-mix(in srgb, var(--md-sys-color-surface) var(--career-background-canvas-tint-opacity), transparent); color: var(--md-sys-color-on-surface); }
 .auth-shell { width: min(470px, 100%); }
 .auth-brand { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 18px; }
 .brand-mark { width: 40px; height: 40px; display: grid; place-items: center; border-radius: var(--md-sys-shape-corner-small); background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); }

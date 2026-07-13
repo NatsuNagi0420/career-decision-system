@@ -214,8 +214,9 @@ const logout = async () => {
 .range-control small, .switch-row small { color: var(--md-sys-color-on-surface-variant); }
 .range-control > :last-child { grid-column: 1 / -1; width: 100%; }
 .background-preview, .background-empty { position: relative; display: grid; min-height: 190px; overflow: hidden; place-items: end start; border-radius: var(--md-sys-shape-corner-large); background-position: center; background-size: cover; }
-.background-preview > div { position: absolute; inset: 0; background: color-mix(in srgb, var(--md-sys-color-scrim) 42%, transparent); }
-.background-preview span { position: relative; padding: 16px; color: var(--md-sys-color-inverse-on-surface); font-weight: 500; }
+.background-preview > div { position: absolute; z-index: 0; inset: 0; background: var(--md-sys-color-scrim); opacity: var(--career-background-scrim-opacity); pointer-events: none; }
+.background-preview::after { position: absolute; z-index: 1; inset: 0; background: color-mix(in srgb, var(--md-sys-color-surface) var(--career-background-canvas-tint-opacity), transparent); content: ''; pointer-events: none; }
+.background-preview span { position: relative; z-index: 2; padding: 16px; color: var(--md-sys-color-on-surface); font-weight: 500; }
 .background-empty { place-items: center; align-content: center; gap: 10px; background: var(--md-sys-color-surface-container); color: var(--md-sys-color-on-surface-variant); }
 .image-colors > span { width: 100%; color: var(--md-sys-color-on-surface-variant); font-size: var(--md-sys-typescale-label-large-size); }
 .logout-button { --md-text-button-label-text-color: var(--md-sys-color-error); }

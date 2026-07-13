@@ -95,7 +95,7 @@ VITE_DEV_HTTPS=true
 android/app/src/main/java/com/careerdecision/mobile/network/RequestConfig.kt
 ```
 
-Debug 默认指向 `https://192.168.1.159:8443`，Gradle 覆盖也会拒绝 HTTP。真机必须安装 `.local-https/mkcert-rootCA.pem` 作为用户 CA，Debug 网络策略才会信任本地证书。Release 不信任用户 CA，也拒绝本地或模拟器主机。
+Debug 默认指向 `https://192.168.1.159:8443`，Gradle 覆盖也会拒绝 HTTP。`setup-local-https.ps1` 会把公开根证书同步到 Debug 专用资源，真机无需安装系统 CA，但证书变化后必须重新构建并覆盖安装 Debug APK。Release 不包含开发 CA，也拒绝本地或模拟器主机。
 
 ## 真实模型
 

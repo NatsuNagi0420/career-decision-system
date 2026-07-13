@@ -33,12 +33,16 @@
 
 ### Android
 
-- `MainActivity` 仅作为导航入口，界面拆为今日、目标、AI 导师、我的。
+- 注册自动登录、三步轻量引导和加密草稿；`MainActivity` 仅作为导航与通知路由入口。
+- 界面拆为今日、目标、AI 导师、我的；Compact 使用 Navigation Bar，Medium 使用 Rail，Expanded 使用 Permanent Drawer。
 - Repository、远程数据源、ViewModel、Room 和 WorkManager 分层。
-- Keystore 会话、Token 刷新、统一错误、HTTPS-only Debug/Release。
+- Keystore 会话、刷新令牌并发单飞、统一错误、永久 401 回登录、HTTPS-only Debug/Release。
 - 离线完成/延期/跳过、成果、目标信心和快速周复盘队列，联网后使用稳定 `requestId` 恢复同步。
-- Room 保存任务版本，冲突操作不会静默覆盖或无限重试。
-- Debug/Release APK、Release Lint 和 Repository/ViewModel 单测通过。
+- Room v4 保存任务版本与 AI 会话；冲突操作不会静默覆盖或无限重试，聊天失败可用同一请求重试。
+- 任务与周复盘提醒默认关闭并显式请求通知权限；退出登录取消当前用户提醒。
+- 项目 M3 组件、Lucide 图标、Light/Dark/跟随系统、Monet、种子色/图片取色、对比度和 Android 独立背景已接入。
+- 业务页面静态门禁禁止 Material 2、Material Icons、直接 Material 控件、硬编码颜色和形状。
+- Debug/Release APK、Release Lint 和 75 条 Android 单测通过。
 
 ## 自动化门禁
 
@@ -49,7 +53,7 @@
 - 后端：执行 116 项，115 通过；1 条符号链接测试受 Windows 权限限制，见 `TEST-PLATFORM-001`。
 - Agent：88 条通过，Ruff 通过。
 - Web：119 条单测、类型检查、生产构建、8 条双视口 E2E 通过。
-- Android：24 条单测、Debug/Release 构建、Release Lint 和明文流量策略通过。
+- Android：75 条单测、Debug/Release 构建、Release Lint 和明文流量策略通过。
 - PowerShell 语法、乱码、请求层和硬编码 URL 扫描通过。
 - 本机 MySQL 8 已从 Flyway v6 增量迁移到 v7；V7 能兼容全量快照中预先存在的旧聊天空表，并原地升级结构。局域网 Agent/后端/Web HTTPS 运行态烟测通过。
 - 2026-07-11 使用 `verify-db-backup.ps1` 完成全量备份恢复演练：随机临时库中的 41 张表、3450 行与源库逐表一致，临时库已删除，备份保存在未跟踪的 `backups/`。
@@ -64,6 +68,7 @@
 ### 外部产品验证
 
 - Android 真机 HTTPS 完成任务并在 Web 看到同步结果。
+- Android 12+ Monet、旧版本回退主题、通知实际投递和本机背景需真机验收。
 - 弱网下响应已到达但客户端超时的重复提交实测。
 - 10 至 15 名学生完成试点，至少一人下一周继续执行和复盘。
 - 无障碍、长文本、不同 Android 厂商系统和更多浏览器的兼容性验证。

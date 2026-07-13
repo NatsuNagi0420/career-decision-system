@@ -8,6 +8,18 @@ type CursorContinuityWindow = Window & {
   }
 }
 
+type ThemeRevealWindow = Window & {
+  __careerThemeReveal?: {
+    animation: Animation
+    duration: number
+    easing: string
+    end: string
+    pseudoElement: string
+    start: string
+  }
+  __careerViewTransitionCalls?: number
+}
+
 test.beforeEach(async ({ page }) => {
   await installMockApi(page)
   await page.addInitScript(() => {
@@ -57,6 +69,151 @@ test('动态颜色、对比度和账户菜单保持完整交互', async ({ page 
   await expect(accountTrigger).toBeFocused()
 })
 
+test('theme button reveals the new scheme radially without moving or losing focus', async ({ page }, testInfo) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await page.evaluate(() => {
+    const originalAnimate = Element.prototype.animate
+    Element.prototype.animate = function (
+      keyframes: Keyframe[] | PropertyIndexedKeyframes | null,
+      options?: number | KeyframeAnimationOptions
+    ) {
+      const animation = originalAnimate.call(this, keyframes, options)
+      const animationOptions = typeof options === 'number' ? { duration: options } : options
+      if (animationOptions?.pseudoElement !== '::view-transition-new(root)' || !keyframes || Array.isArray(keyframes)) {
+        return animation
+      }
+
+      const clipPath = keyframes.clipPath
+      const values = Array.isArray(clipPath) ? clipPath.map(String) : [String(clipPath)]
+      const duration = Number(animationOptions.duration)
+      animation.pause()
+      animation.currentTime = duration * 0.45
+      ;(window as ThemeRevealWindow).__careerThemeReveal = {
+        animation,
+        duration,
+        easing: String(animationOptions.easing),
+        end: values[1] || '',
+        pseudoElement: animationOptions.pseudoElement,
+        start: values[0] || ''
+      }
+      return animation
+    }
+  })
+
+  const root = page.locator('html')
+  const themeButton = page.locator('.top-actions md-icon-button').first()
+  const boundsBefore = await themeButton.boundingBox()
+  expect(boundsBefore).not.toBeNull()
+  const themeBefore = await root.getAttribute('data-theme-mode')
+
+  await themeButton.focus()
+  await expect(themeButton).toBeFocused()
+  await themeButton.press('Enter')
+
+  await expect.poll(() => page.evaluate(() => Boolean(
+    (window as ThemeRevealWindow).__careerThemeReveal
+  ))).toBe(true)
+  await expect.poll(() => root.getAttribute('data-theme-mode')).not.toBe(themeBefore)
+  await expect(root).toHaveAttribute('data-theme-transition', 'running')
+  await expect(themeButton).toBeFocused()
+
+  const capture = await page.evaluate(() => {
+    const reveal = (window as ThemeRevealWindow).__careerThemeReveal
+    if (!reveal) throw new Error('Theme reveal animation was not captured')
+    return {
+      duration: reveal.duration,
+      easing: reveal.easing,
+      end: reveal.end,
+      pseudoElement: reveal.pseudoElement,
+      start: reveal.start
+    }
+  })
+  const startMatch = capture.start.match(/^circle\(([\d.]+)px at ([\d.]+)px ([\d.]+)px\)$/)
+  const endMatch = capture.end.match(/^circle\(([\d.]+)px at ([\d.]+)px ([\d.]+)px\)$/)
+  expect(startMatch).not.toBeNull()
+  expect(endMatch).not.toBeNull()
+
+  const expectedX = boundsBefore!.x + boundsBefore!.width / 2
+  const expectedY = boundsBefore!.y + boundsBefore!.height / 2
+  const actualX = Number(endMatch![2])
+  const actualY = Number(endMatch![3])
+  const actualRadius = Number(endMatch![1])
+  const viewport = page.viewportSize()
+  expect(viewport).not.toBeNull()
+  const expectedRadius = Math.hypot(
+    Math.max(expectedX, viewport!.width - expectedX),
+    Math.max(expectedY, viewport!.height - expectedY)
+  )
+  expect(Number(startMatch![1])).toBe(0)
+  expect(Math.abs(Number(startMatch![2]) - expectedX)).toBeLessThanOrEqual(1)
+  expect(Math.abs(Number(startMatch![3]) - expectedY)).toBeLessThanOrEqual(1)
+  expect(Math.abs(actualX - expectedX)).toBeLessThanOrEqual(1)
+  expect(Math.abs(actualY - expectedY)).toBeLessThanOrEqual(1)
+  expect(actualRadius).toBeGreaterThanOrEqual(expectedRadius - 1)
+  expect(capture).toMatchObject({
+    duration: 900,
+    easing: 'cubic-bezier(0.05, 0.7, 0.1, 1)',
+    pseudoElement: '::view-transition-new(root)'
+  })
+
+  const boundsDuring = await themeButton.boundingBox()
+  expect(boundsDuring).not.toBeNull()
+  expect(Math.abs(boundsDuring!.x - boundsBefore!.x)).toBeLessThanOrEqual(0.01)
+  expect(Math.abs(boundsDuring!.y - boundsBefore!.y)).toBeLessThanOrEqual(0.01)
+  expect(Math.abs(boundsDuring!.width - boundsBefore!.width)).toBeLessThanOrEqual(0.01)
+  expect(Math.abs(boundsDuring!.height - boundsBefore!.height)).toBeLessThanOrEqual(0.01)
+
+  if (process.env.E2E_CAPTURE === '1') {
+    await testInfo.attach(`theme-reveal-midpoint-${testInfo.project.name}`, {
+      body: await page.screenshot(),
+      contentType: 'image/png'
+    })
+  }
+
+  await page.evaluate(() => {
+    (window as ThemeRevealWindow).__careerThemeReveal?.animation.play()
+  })
+  await expect(root).not.toHaveAttribute('data-theme-transition', 'running', { timeout: 3_000 })
+  await expect(themeButton).toBeFocused()
+})
+
+test('theme switching falls back cleanly for reduced motion and unsupported browsers', async ({ page }) => {
+  const root = page.locator('html')
+  const themeButton = page.locator('.top-actions md-icon-button').first()
+
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.evaluate(() => {
+    const original = document.startViewTransition?.bind(document)
+    ;(window as ThemeRevealWindow).__careerViewTransitionCalls = 0
+    if (!original) return
+    Object.defineProperty(document, 'startViewTransition', {
+      configurable: true,
+      value: (callback: ViewTransitionUpdateCallback) => {
+        const target = window as ThemeRevealWindow
+        target.__careerViewTransitionCalls = (target.__careerViewTransitionCalls || 0) + 1
+        return original(callback)
+      }
+    })
+  })
+  const reducedThemeBefore = await root.getAttribute('data-theme-mode')
+  await themeButton.click()
+  await expect.poll(() => root.getAttribute('data-theme-mode')).not.toBe(reducedThemeBefore)
+  expect(await page.evaluate(() => (window as ThemeRevealWindow).__careerViewTransitionCalls)).toBe(0)
+  await expect(root).not.toHaveAttribute('data-theme-transition')
+
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'startViewTransition', {
+      configurable: true,
+      value: undefined
+    })
+  })
+  const fallbackThemeBefore = await root.getAttribute('data-theme-mode')
+  await themeButton.click()
+  await expect.poll(() => root.getAttribute('data-theme-mode')).not.toBe(fallbackThemeBefore)
+  await expect(root).not.toHaveAttribute('data-theme-transition')
+})
+
 test('品牌、账户信息和按钮图标保持水平居中', async ({ page }, testInfo) => {
   const expectCenteredContent = async (selector: string, expectedChildren: number) => {
     const metrics = await page.locator(selector).evaluate((element) => {
@@ -98,6 +255,146 @@ test('品牌、账户信息和按钮图标保持水平居中', async ({ page }, 
       contentType: 'image/png'
     })
   }
+})
+
+test('route pages and explore tabs use tokenized MD3 motion without moving the app shell', async ({ page }, testInfo) => {
+  await page.goto('/')
+  await expect(page.locator('.dashboard-page')).toBeVisible()
+  await page.addStyleTag({
+    content: `:root {
+      --md-sys-motion-duration-short2: 300ms;
+      --md-sys-motion-duration-short4: 500ms;
+      --md-sys-motion-duration-medium2: 700ms;
+    }`
+  })
+  expect(await page.evaluate(() => getComputedStyle(document.documentElement).scrollbarGutter)).toBe('stable')
+
+  const isCompact = testInfo.project.name === 'chromium-360'
+  const navbar = page.locator('.top-app-bar')
+  const primaryNavigation = page.locator(isCompact ? '.navigation-bar' : '.navigation-rail')
+  const exploreDestination = page.locator(
+    `${isCompact ? '.bar-destination' : '.rail-destination'}[href="/explore"]`
+  )
+  const readShellGeometry = async () => Promise.all([navbar, primaryNavigation].map(async (locator) => {
+    const bounds = await locator.boundingBox()
+    if (!bounds) throw new Error('App shell element is not visible')
+    return bounds
+  }))
+  const expectGeometryStable = (
+    before: Awaited<ReturnType<typeof readShellGeometry>>,
+    after: Awaited<ReturnType<typeof readShellGeometry>>
+  ) => {
+    for (let index = 0; index < before.length; index += 1) {
+      expect(Math.abs(after[index]!.x - before[index]!.x)).toBeLessThanOrEqual(0.5)
+      expect(Math.abs(after[index]!.y - before[index]!.y)).toBeLessThanOrEqual(0.5)
+      expect(Math.abs(after[index]!.width - before[index]!.width)).toBeLessThanOrEqual(0.5)
+      expect(Math.abs(after[index]!.height - before[index]!.height)).toBeLessThanOrEqual(0.5)
+    }
+  }
+
+  const shellBefore = await readShellGeometry()
+  await page.locator('.main-layout').evaluate((element) => {
+    element.setAttribute('data-motion-shell-sentinel', 'true')
+  })
+  await exploreDestination.click()
+  await expect(page).toHaveURL(/\/explore$/)
+  const explorePage = page.locator('.product-page').first()
+  await expect(explorePage).toHaveClass(/m3-page-enter-active/)
+  const routeMotion = await explorePage.evaluate((element) => {
+    const style = getComputedStyle(element)
+    return {
+      duration: style.transitionDuration,
+      easing: style.transitionTimingFunction,
+      properties: style.transitionProperty
+    }
+  })
+  expect(routeMotion.properties).toContain('opacity')
+  expect(routeMotion.properties).toContain('transform')
+  expect(routeMotion.duration.split(',').map((item) => item.trim())).toEqual(['0.5s', '0.5s'])
+  expect(routeMotion.easing).toBe(
+    'cubic-bezier(0.05, 0.7, 0.1, 1), cubic-bezier(0.05, 0.7, 0.1, 1)'
+  )
+  expect(await page.locator('.main-layout').getAttribute('data-motion-shell-sentinel')).toBe('true')
+  expectGeometryStable(shellBefore, await readShellGeometry())
+  if (process.env.E2E_CAPTURE === '1') {
+    await testInfo.attach(`route-page-motion-${testInfo.project.name}`, {
+      body: await page.screenshot(),
+      contentType: 'image/png'
+    })
+  }
+  await expect(explorePage).not.toHaveClass(/m3-page-enter-active/, { timeout: 2_000 })
+
+  const stableElements = [
+    page.locator('.product-header'),
+    page.locator('.explore-tabs'),
+    page.locator('.search-row')
+  ]
+  const stableBefore = await Promise.all(stableElements.map(async (locator) => {
+    const bounds = await locator.boundingBox()
+    if (!bounds) throw new Error('Stable explore element is not visible')
+    return bounds
+  }))
+  await explorePage.evaluate((element) => {
+    element.setAttribute('data-motion-page-sentinel', 'true')
+  })
+
+  const directionsView = page.locator('[data-explore-view="directions"]')
+  await page.getByRole('tab', { name: '招聘岗位' }).click()
+  await expect(directionsView).toHaveClass(/explore-fade-through-leave-active/)
+  const leaveMotion = await directionsView.evaluate((element) => {
+    const style = getComputedStyle(element)
+    return { duration: style.animationDuration, easing: style.animationTimingFunction }
+  })
+  expect(leaveMotion).toEqual({
+    duration: '0.3s',
+    easing: 'cubic-bezier(0.3, 0, 0.8, 0.15)'
+  })
+
+  const jobsView = page.locator('[data-explore-view="jobs"]')
+  await expect(jobsView).toBeVisible()
+  await expect(jobsView).toHaveClass(/explore-fade-through-enter-active/)
+  await expect(page).toHaveURL(/\/explore\?tab=jobs$/)
+  const enterMotion = await jobsView.evaluate((element) => {
+    const style = getComputedStyle(element)
+    const groups = Array.from(element.querySelectorAll<HTMLElement>('.explore-motion-group'))
+    return {
+      duration: style.animationDuration,
+      easing: style.animationTimingFunction,
+      groupDurations: groups.map((group) => getComputedStyle(group).animationDuration),
+      groupDelays: groups.map((group) => getComputedStyle(group).animationDelay)
+    }
+  })
+  expect(enterMotion).toMatchObject({
+    duration: '0.7s',
+    easing: 'cubic-bezier(0.05, 0.7, 0.1, 1)',
+    groupDurations: ['0.5s', '0.5s'],
+    groupDelays: ['0s', '0.04s']
+  })
+  expect(await explorePage.getAttribute('data-motion-page-sentinel')).toBe('true')
+
+  const stableAfter = await Promise.all(stableElements.map(async (locator) => {
+    const bounds = await locator.boundingBox()
+    if (!bounds) throw new Error('Stable explore element disappeared')
+    return bounds
+  }))
+  expectGeometryStable(stableBefore, stableAfter)
+  if (process.env.E2E_CAPTURE === '1') {
+    await testInfo.attach(`explore-fade-through-${testInfo.project.name}`, {
+      body: await page.screenshot(),
+      contentType: 'image/png'
+    })
+  }
+  await expect(jobsView).not.toHaveClass(/explore-fade-through-enter-active/, { timeout: 2_000 })
+
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.getByRole('tab', { name: '职业方向' }).click()
+  await expect(page.locator('[data-explore-view="directions"]')).toBeVisible()
+  const reducedMotion = await page.locator('[data-explore-view="directions"]').evaluate((element) => {
+    const style = getComputedStyle(element)
+    return { animationName: style.animationName, transform: style.transform }
+  })
+  expect(reducedMotion).toEqual({ animationName: 'none', transform: 'none' })
+  expect(await explorePage.getAttribute('data-motion-page-sentinel')).toBe('true')
 })
 
 test('导航磁吸只移动自定义光标并尊重设备动态偏好', async ({ page }, testInfo) => {
@@ -359,6 +656,35 @@ test('磁吸点击保持目标可用且不会闪回系统光标', async ({ page 
     return state.changes
   })
 
+  await page.evaluate(() => {
+    const originalAnimate = Element.prototype.animate
+    Element.prototype.animate = function (
+      keyframes: Keyframe[] | PropertyIndexedKeyframes | null,
+      options?: number | KeyframeAnimationOptions
+    ) {
+      const animation = originalAnimate.call(this, keyframes, options)
+      const animationOptions = typeof options === 'number' ? { duration: options } : options
+      if (animationOptions?.pseudoElement !== '::view-transition-new(root)' || !keyframes || Array.isArray(keyframes)) {
+        return animation
+      }
+
+      const clipPath = keyframes.clipPath
+      const values = Array.isArray(clipPath) ? clipPath.map(String) : [String(clipPath)]
+      const duration = Number(animationOptions.duration)
+      animation.pause()
+      animation.currentTime = duration * 0.45
+      ;(window as ThemeRevealWindow).__careerThemeReveal = {
+        animation,
+        duration,
+        easing: String(animationOptions.easing),
+        end: values[1] || '',
+        pseudoElement: animationOptions.pseudoElement,
+        start: values[0] || ''
+      }
+      return animation
+    }
+  })
+
   const themeButton = page.locator('.top-actions md-icon-button').first()
   const themeBounds = await themeButton.boundingBox()
   expect(themeBounds).not.toBeNull()
@@ -378,12 +704,61 @@ test('磁吸点击保持目标可用且不会闪回系统光标', async ({ page 
   await startContinuityObservation()
   await page.mouse.click(themePoint.x, themePoint.y)
   await expect.poll(() => root.getAttribute('data-theme-mode')).not.toBe(previousTheme)
+  await expect(root).toHaveAttribute('data-theme-transition', 'running')
+  await expect(root).toHaveAttribute('data-theme-transition-cursor', 'custom')
+  await expect.poll(() => page.evaluate(() => Boolean(
+    (window as ThemeRevealWindow).__careerThemeReveal
+  ))).toBe(true)
   await expect(cursor).toBeVisible()
   await expect(root).toHaveAttribute('data-navigation-magnetic-cursor-visible', '')
   expect(await themeButton.evaluate((element) => {
     const control = element.shadowRoot?.querySelector<HTMLElement>('.icon-button')
     return control ? getComputedStyle(control).cursor : null
   })).toBe('none')
+
+  const transitionAccountTrigger = page.locator('md-text-button.user-profile')
+  const transitionAccountBounds = await transitionAccountTrigger.boundingBox()
+  expect(transitionAccountBounds).not.toBeNull()
+  await page.mouse.move(
+    transitionAccountBounds!.x + transitionAccountBounds!.width / 2,
+    transitionAccountBounds!.y + transitionAccountBounds!.height / 2
+  )
+  await expect(transitionAccountTrigger).toHaveAttribute('data-magnetic-active', 'true')
+  const cursorLock = await page.evaluate(() => {
+    const rootElement = document.documentElement
+    const account = document.querySelector<HTMLElement>('md-text-button.user-profile')
+    const control = account?.shadowRoot?.querySelector<HTMLElement>('.button')
+    return {
+      account: account ? getComputedStyle(account).cursor : null,
+      body: getComputedStyle(document.body).cursor,
+      html: getComputedStyle(rootElement).cursor,
+      shadowControl: control ? getComputedStyle(control).cursor : null,
+      shadowLockCount: account?.shadowRoot?.querySelectorAll(
+        'style[data-career-theme-cursor-lock="true"]'
+      ).length ?? 0,
+      viewTransition: getComputedStyle(rootElement, '::view-transition').cursor,
+      viewTransitionNew: getComputedStyle(rootElement, '::view-transition-new(root)').cursor,
+      viewTransitionOld: getComputedStyle(rootElement, '::view-transition-old(root)').cursor
+    }
+  })
+  expect(cursorLock).toMatchObject({
+    account: 'none',
+    body: 'none',
+    html: 'none',
+    shadowControl: 'none',
+    viewTransition: 'none',
+    viewTransitionNew: 'none',
+    viewTransitionOld: 'none'
+  })
+  expect(cursorLock.shadowLockCount).toBeGreaterThan(0)
+
+  await page.evaluate(() => {
+    (window as ThemeRevealWindow).__careerThemeReveal?.animation.play()
+  })
+  await expect(root).not.toHaveAttribute('data-theme-transition', 'running', { timeout: 3_000 })
+  expect(await transitionAccountTrigger.evaluate((element) =>
+    element.shadowRoot?.querySelectorAll('style[data-career-theme-cursor-lock="true"]').length ?? 0
+  )).toBe(0)
   expect(await stopContinuityObservation()).toEqual([])
 
   const accountTrigger = page.locator('md-text-button.user-profile')
@@ -403,13 +778,34 @@ test('磁吸点击保持目标可用且不会闪回系统光标', async ({ page 
   await expect(accountTrigger).toHaveAttribute('data-aria-expanded', 'true')
   const accountMenu = page.locator('.account-menu')
   await expect(accountMenu).toBeVisible()
-  await expect(accountMenu.locator('md-menu-item').first()).toBeFocused()
+  const firstMenuItem = accountMenu.locator('md-menu-item').first()
+  await expect(firstMenuItem).toBeFocused()
   await expect(cursor).toBeVisible()
   await expect(root).toHaveAttribute('data-navigation-magnetic-cursor-visible', '')
   expect(await accountTrigger.evaluate((element) => {
     const control = element.shadowRoot?.querySelector<HTMLElement>('.button')
     return control ? getComputedStyle(control).cursor : null
   })).toBe('none')
+
+  const firstMenuItemBounds = await firstMenuItem.boundingBox()
+  expect(firstMenuItemBounds).not.toBeNull()
+  await page.mouse.move(
+    firstMenuItemBounds!.x + firstMenuItemBounds!.width / 2,
+    firstMenuItemBounds!.y + firstMenuItemBounds!.height / 2
+  )
+  await expect(firstMenuItem).toHaveAttribute('data-magnetic-active', 'true')
+  await expect(cursor).toHaveAttribute('data-magnetic-active', 'true')
+  const menuItemCursor = await firstMenuItem.evaluate((element) => {
+    const interactive = element.shadowRoot?.querySelector<HTMLElement>('.list-item')
+    return {
+      cursor: interactive ? getComputedStyle(interactive).cursor : null,
+      injectedStyles: element.shadowRoot?.querySelectorAll(
+        'style[data-career-magnetic-cursor="true"]'
+      ).length ?? 0
+    }
+  })
+  expect(menuItemCursor.cursor).toBe('none')
+  expect(menuItemCursor.injectedStyles).toBeGreaterThan(0)
   expect(await stopContinuityObservation()).toEqual([])
 })
 
@@ -635,6 +1031,25 @@ test('职业方向分类条将滚轮输入转换为单一横向滚动', async ({
 
   await page.goto('/explore')
   await expect(page.getByRole('heading', { name: '职业探索' })).toBeVisible()
+  await page.addStyleTag({
+    content: `:root {
+      --md-sys-motion-duration-short4: 500ms;
+      --md-sys-motion-duration-medium2: 700ms;
+    }`
+  })
+
+  const readViewportGeometry = () => page.evaluate(() => {
+    const layout = document.querySelector<HTMLElement>('.main-layout')?.getBoundingClientRect()
+    return {
+      clientWidth: document.documentElement.clientWidth,
+      innerWidth: window.innerWidth,
+      layoutLeft: layout?.left ?? null,
+      layoutWidth: layout?.width ?? null,
+      scrollbarGutter: getComputedStyle(document.documentElement).scrollbarGutter
+    }
+  })
+  const viewportBeforeFiltering = await readViewportGeometry()
+  expect(viewportBeforeFiltering.scrollbarGutter).toBe('stable')
 
   const strip = page.getByRole('group', { name: '职业方向分类' })
   await expect(strip).toBeVisible()
@@ -667,33 +1082,264 @@ test('职业方向分类条将滚轮输入转换为单一横向滚动', async ({
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(pageScrollBefore)
 
   await strip.evaluate((element) => { element.scrollLeft = 0 })
+  const directionCards = page.locator('.direction-card')
+  await expect(directionCards).toHaveCount(directionCategories.length)
   await page.getByRole('button', { name: '技术研发', exact: true }).click()
   await expect(page.getByRole('button', { name: '技术研发', exact: true })).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.locator('.direction-list-leave-active')).not.toHaveCount(0)
+  await expect(page.locator('.direction-list-leave-active')).toHaveCount(0)
+  await expect(directionCards).toHaveCount(1)
+  expect(await readViewportGeometry()).toEqual(viewportBeforeFiltering)
+
+  await page.getByRole('button', { name: '全部', exact: true }).click()
+  await expect(page.getByRole('button', { name: '全部', exact: true })).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.locator('.direction-card.direction-list-enter-active').first()).toBeVisible()
+  if (process.env.E2E_CAPTURE === '1') {
+    await testInfo.attach(`direction-list-restoring-${testInfo.project.name}`, {
+      body: await page.screenshot(),
+      contentType: 'image/png'
+    })
+  }
+  await expect(page.locator('.direction-list-enter-active')).toHaveCount(0)
+  await expect(directionCards).toHaveCount(directionCategories.length)
+  expect(await readViewportGeometry()).toEqual(viewportBeforeFiltering)
   await expect(page.getByRole('button', { name: '数字内容', exact: true })).toBeAttached()
 })
 
-test('Web 背景可持久化、独立移除并在失败时回退', async ({ page }) => {
+test('Web 背景真实可见、遮罩语义正确并可持久化', async ({ page }, testInfo) => {
+  const waitForPaint = () => page.evaluate(() => new Promise<void>((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+  }))
+  const readBackgroundGutter = async () => {
+    await page.evaluate(() => window.scrollTo(0, 0))
+    await waitForPaint()
+    const viewport = page.viewportSize()
+    if (!viewport) throw new Error('Viewport is unavailable')
+    const image = await page.screenshot({
+      clip: {
+        x: viewport.width - 18,
+        y: 80,
+        width: 6,
+        height: Math.min(440, viewport.height - 180)
+      },
+      scale: 'css'
+    })
+    return page.evaluate(async (source) => {
+      const screenshot = new Image()
+      await new Promise<void>((resolve, reject) => {
+        screenshot.onload = () => resolve()
+        screenshot.onerror = () => reject(new Error('Unable to decode screenshot'))
+        screenshot.src = source
+      })
+      const canvas = document.createElement('canvas')
+      canvas.width = screenshot.naturalWidth
+      canvas.height = screenshot.naturalHeight
+      const context = canvas.getContext('2d', { willReadFrequently: true })
+      if (!context) throw new Error('Unable to inspect screenshot pixels')
+      context.drawImage(screenshot, 0, 0)
+      const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data
+      let red = 0
+      let green = 0
+      let blue = 0
+      for (let index = 0; index < pixels.length; index += 4) {
+        red += pixels[index] ?? 0
+        green += pixels[index + 1] ?? 0
+        blue += pixels[index + 2] ?? 0
+      }
+      const count = pixels.length / 4
+      return {
+        red: red / count,
+        green: green / count,
+        blue: blue / count,
+        luminance: (red * 0.2126 + green * 0.7152 + blue * 0.0722) / count
+      }
+    }, `data:image/png;base64,${image.toString('base64')}`)
+  }
+  const averageColorDifference = (
+    first: Awaited<ReturnType<typeof readBackgroundGutter>>,
+    second: Awaited<ReturnType<typeof readBackgroundGutter>>
+  ) => (
+    Math.abs(first.red - second.red) +
+    Math.abs(first.green - second.green) +
+    Math.abs(first.blue - second.blue)
+  ) / 3
+
   const backgroundInput = page.locator('input[type="file"][accept*="image/png"]')
+  const colorfulPng = await page.evaluate(() => {
+    const canvas = document.createElement('canvas')
+    canvas.width = 96
+    canvas.height = 96
+    const context = canvas.getContext('2d')
+    if (!context) throw new Error('Unable to create test image')
+    const swatches = ['#ff1744', '#00c853', '#2962ff', '#ffd600']
+    swatches.forEach((color, index) => {
+      context.fillStyle = color
+      context.fillRect((index % 2) * 48, Math.floor(index / 2) * 48, 48, 48)
+    })
+    context.fillStyle = '#ffffff'
+    context.fillRect(44, 0, 8, 96)
+    context.fillStyle = '#111111'
+    context.fillRect(0, 44, 96, 8)
+    return canvas.toDataURL('image/png').split(',')[1] || ''
+  })
   await backgroundInput.setInputFiles({
-    name: 'theme-source.png',
+    name: 'color-quadrants.png',
     mimeType: 'image/png',
-    buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZSmIAAAAASUVORK5CYII=', 'base64')
+    buffer: Buffer.from(colorfulPng, 'base64')
   })
 
   await expect(page.getByText('当前 Web 背景')).toBeVisible()
+  const appBackground = page.locator('.app-background')
+  const backgroundScrim = page.locator('.app-background__scrim')
+  await expect(appBackground).toBeVisible()
+  const initialComposition = await appBackground.evaluate(async (element) => {
+    const background = getComputedStyle(element)
+    const pageLayer = document.querySelector<HTMLElement>('.app-content')
+    const mainLayout = document.querySelector<HTMLElement>('.main-layout')
+    const match = background.backgroundImage.match(/url\(["']?(blob:[^"')]+)["']?\)/)
+    const source = match?.[1] || ''
+    const image = new Image()
+    if (source) {
+      await new Promise<void>((resolve, reject) => {
+        image.onload = () => resolve()
+        image.onerror = () => reject(new Error('Unable to load background blob URL'))
+        image.src = source
+      })
+    }
+    const colorAlpha = (color: string) => {
+      const canvas = document.createElement('canvas')
+      canvas.width = 1
+      canvas.height = 1
+      const context = canvas.getContext('2d')!
+      context.clearRect(0, 0, 1, 1)
+      context.fillStyle = color
+      context.fillRect(0, 0, 1, 1)
+      return context.getImageData(0, 0, 1, 1).data[3]! / 255
+    }
+    const rect = element.getBoundingClientRect()
+    const hitTarget = document.elementFromPoint(window.innerWidth - 18, 100)
+    return {
+      backgroundImage: background.backgroundImage,
+      position: background.position,
+      pointerEvents: background.pointerEvents,
+      backgroundZIndex: Number.parseInt(background.zIndex, 10),
+      pageLayerZIndex: Number.parseInt(getComputedStyle(pageLayer!).zIndex, 10),
+      canvasAlpha: colorAlpha(getComputedStyle(mainLayout!).backgroundColor),
+      width: rect.width,
+      height: rect.height,
+      imageWidth: image.naturalWidth,
+      imageHeight: image.naturalHeight,
+      hitBackground: Boolean(hitTarget && element.contains(hitTarget))
+    }
+  })
+  expect(initialComposition.backgroundImage).toMatch(/^url\(["']?blob:/)
+  expect(initialComposition.position).toBe('fixed')
+  expect(initialComposition.pointerEvents).toBe('none')
+  expect(initialComposition.backgroundZIndex).toBe(0)
+  expect(initialComposition.pageLayerZIndex).toBeGreaterThan(initialComposition.backgroundZIndex)
+  expect(initialComposition.canvasAlpha).toBeCloseTo(0.72, 2)
+  expect(initialComposition.width).toBe(page.viewportSize()?.width)
+  expect(initialComposition.height).toBe(page.viewportSize()?.height)
+  expect(initialComposition.imageWidth).toBeGreaterThan(1)
+  expect(initialComposition.imageHeight).toBeGreaterThan(1)
+  expect(initialComposition.hitBackground).toBe(false)
+
   const storedWithBackground = await page.evaluate(() => JSON.parse(localStorage.getItem('career-md3-theme-v1') || '{}'))
   expect(storedWithBackground.backgroundEnabled).toBe(true)
   expect(storedWithBackground.colorSource).toBe('custom_image')
   const imageSeed = storedWithBackground.seedColor
 
+  const scrimSlider = page.getByRole('slider', { name: '背景遮罩' })
+  await scrimSlider.press('Home')
+  await expect.poll(() => scrimSlider.evaluate((element) => Number((element as HTMLElement & { value: number }).value))).toBe(0.2)
+  await expect.poll(() => backgroundScrim.evaluate((element) => Number(getComputedStyle(element).opacity))).toBe(0.2)
+  const lowScrimPixels = await readBackgroundGutter()
+  if (process.env.E2E_CAPTURE === '1') {
+    await testInfo.attach('web-background-low-scrim', {
+      body: await page.screenshot(),
+      contentType: 'image/png'
+    })
+  }
+
+  await scrimSlider.press('End')
+  await expect.poll(() => scrimSlider.evaluate((element) => Number((element as HTMLElement & { value: number }).value))).toBe(0.8)
+  await expect.poll(() => backgroundScrim.evaluate((element) => Number(getComputedStyle(element).opacity))).toBe(0.8)
+  const highScrimPixels = await readBackgroundGutter()
+  expect(averageColorDifference(lowScrimPixels, highScrimPixels)).toBeGreaterThan(4)
+  expect(lowScrimPixels.luminance - highScrimPixels.luminance).toBeGreaterThan(2)
+
+  await scrimSlider.press('Home')
+  await expect.poll(async () => {
+    const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('career-md3-theme-v1') || '{}'))
+    return stored.backgroundScrim
+  }).toBe(0.2)
+  const persistedPixelsBeforeReload = await readBackgroundGutter()
   await page.reload()
   await expect(page.getByText('当前 Web 背景')).toBeVisible()
+  await expect(appBackground).toBeVisible()
+  await expect(appBackground).toHaveCSS('pointer-events', 'none')
+  await expect(appBackground).toHaveCSS('z-index', '0')
+  await expect(backgroundScrim).toHaveCSS('opacity', '0.2')
+  await expect(appBackground).toHaveCSS('background-image', /^url\(["']?blob:/)
+  const storedAfterReload = await page.evaluate(() => JSON.parse(localStorage.getItem('career-md3-theme-v1') || '{}'))
+  expect(storedAfterReload).toMatchObject({ backgroundEnabled: true, backgroundScrim: 0.2 })
+  const persistedPixelsAfterReload = await readBackgroundGutter()
+  expect(averageColorDifference(persistedPixelsBeforeReload, persistedPixelsAfterReload)).toBeLessThan(1)
+
+  const expectStandaloneCanvas = async (path: string, selector: string) => {
+    await page.goto(path)
+    const standalonePage = page.locator(selector)
+    await expect(standalonePage).toBeVisible()
+    await expect(appBackground).toBeVisible()
+    await expect(appBackground).toHaveCSS('background-image', /^url\(["']?blob:/)
+    const canvasAlpha = await standalonePage.evaluate((element) => {
+      const canvas = document.createElement('canvas')
+      canvas.width = 1
+      canvas.height = 1
+      const context = canvas.getContext('2d')!
+      context.clearRect(0, 0, 1, 1)
+      context.fillStyle = getComputedStyle(element).backgroundColor
+      context.fillRect(0, 0, 1, 1)
+      return context.getImageData(0, 0, 1, 1).data[3]! / 255
+    })
+    expect(canvasAlpha).toBeCloseTo(0.72, 2)
+  }
+  await expectStandaloneCanvas('/login', '.auth-page')
+  await expectStandaloneCanvas('/onboarding', '.onboarding-page')
+  await page.goto('/settings')
+  await expect(page.getByRole('heading', { name: '设置' })).toBeVisible()
+  await expect(appBackground).toBeVisible()
+
+  const supportsMagnetic = await page.evaluate(() =>
+    matchMedia('(min-width: 600px) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)').matches
+  )
+  if (supportsMagnetic) {
+    const destination = page.locator('.rail-destination[href="/explore"]')
+    const cursor = page.locator('.navigation-magnetic-cursor')
+    const bounds = await destination.boundingBox()
+    expect(bounds).not.toBeNull()
+    const attractionPoint = {
+      x: bounds!.x + bounds!.width + 8,
+      y: bounds!.y + bounds!.height / 2
+    }
+    await page.mouse.move(attractionPoint.x, attractionPoint.y)
+    await expect(destination).toHaveAttribute('data-magnetic-active', 'true')
+    await expect(cursor).toHaveAttribute('data-magnetic-active', 'true')
+    await expect(cursor).toHaveCSS('pointer-events', 'none')
+    await page.mouse.click(attractionPoint.x, attractionPoint.y)
+    await expect(page).toHaveURL(/\/explore$/)
+    await page.goto('/settings')
+    await expect(page.getByRole('heading', { name: '设置' })).toBeVisible()
+    await expect(appBackground).toBeVisible()
+  }
+
   const removeButton = page.getByRole('button', { name: '移除背景', exact: true })
   await removeButton.click()
   const dialog = page.locator('md-dialog[open]')
   await expect(dialog.getByRole('heading', { name: '移除背景' })).toBeVisible()
   await dialog.getByRole('button', { name: '移除背景', exact: true }).click()
   await expect(page.getByText('还没有自定义背景')).toBeVisible()
+  await expect(appBackground).toHaveCount(0)
 
   const storedWithoutBackground = await page.evaluate(() => JSON.parse(localStorage.getItem('career-md3-theme-v1') || '{}'))
   expect(storedWithoutBackground.backgroundEnabled).toBe(false)

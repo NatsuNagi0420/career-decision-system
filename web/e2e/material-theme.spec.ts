@@ -508,7 +508,16 @@ test('导航磁吸只移动自定义光标并尊重设备动态偏好', async ({
     })
   }
 
-  await page.mouse.move(bounds!.x + bounds!.width + 32, bounds!.y + bounds!.height / 2)
+  const outsideAttractionPoint = {
+    x: bounds!.x + bounds!.width + 24,
+    y: bounds!.y + bounds!.height / 2
+  }
+  await page.mouse.move(outsideAttractionPoint.x, outsideAttractionPoint.y)
+  await expect(destination).not.toHaveAttribute('data-magnetic-active', 'true')
+  await expect(cursor).toHaveAttribute('data-magnetic-active', 'false')
+  await expectCursorGeometry({ ...outsideAttractionPoint, width: 26, height: 26 })
+
+  await page.mouse.move(bounds!.x + bounds!.width + 12, bounds!.y + bounds!.height / 2)
   await expect(destination).toHaveAttribute('data-magnetic-active', 'true')
   await expect(cursor).toHaveAttribute('data-magnetic-active', 'true')
   await expect(cursor).toHaveCSS('opacity', '1')

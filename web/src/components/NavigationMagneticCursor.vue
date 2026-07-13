@@ -184,7 +184,7 @@ const readAttractionRange = (target: HTMLElement) => {
   const tokenRange = Number.parseFloat(
     getComputedStyle(target).getPropertyValue('--career-navigation-cursor-attraction-range')
   )
-  const range = Number.isFinite(tokenRange) ? tokenRange : 48
+  const range = Number.isFinite(tokenRange) ? tokenRange : 16
   attractionRangeCache.set(target, range)
   return range
 }

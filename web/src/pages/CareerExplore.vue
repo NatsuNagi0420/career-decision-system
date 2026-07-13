@@ -2,11 +2,14 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
-  Bookmark, BookmarkCheck, BriefcaseBusiness, ChevronRight, Compass, GitCompareArrows,
-  Heart, HeartOff, MapPin, Plus, Search, SlidersHorizontal, Target, X
+  Bookmark, BookmarkCheck, BriefcaseBusiness, Building2, CalendarClock, ChevronRight, Compass,
+  Database, FileSearch, GitCompareArrows, GraduationCap, Heart, HeartOff, Layers3, MapPin,
+  Plus, Search, SlidersHorizontal, Target, Timer, TriangleAlert, X
 } from 'lucide-vue-next'
 import { m3Message } from '@/design-system/services/feedback'
 import { M3Dialog, M3ProgressOverlay } from '@/design-system/components'
+import CareerVisual from '@/components/CareerVisual.vue'
+import { getCareerAsset } from '@/content/careerAssets'
 import {
   createCareerDirectionApi,
   favoriteCareerDirectionApi,
@@ -35,6 +38,7 @@ import {
   type DecisionProjectSummary
 } from '@/api/decisionProjects'
 import { listPersonalEvidenceApi, type PersonalEvidence } from '@/api/personalEvidence'
+import { collectJobRequirements, compareResumeToJob, matchEvidence } from '@/utils/careerInsights'
 
 defineOptions({ name: 'CareerExplorePage' })
 
@@ -51,6 +55,7 @@ const interestFilter = ref('')
 const directions = ref<CareerDirection[]>([])
 const directionCatalog = ref<CareerDirection[]>([])
 const selectedDirection = ref<CareerDirection | null>(null)
+const comparedDirectionIds = ref<number[]>([])
 
 const jobs = ref<JobInfo[]>([])
 const jobTotal = ref(0)
@@ -67,6 +72,8 @@ const comparedJobs = ref<JobInfo[]>([])
 const favoriteJobIds = ref(new Set<number>())
 const targetJobIds = ref(new Set<number>())
 const personalEvidence = ref<PersonalEvidence[]>([])
+const showResumeCompareDialog = ref(false)
+const resumeCompareText = ref('')
 
 const projects = ref<DecisionProjectSummary[]>([])
 const showDirectionDialog = ref(false)
@@ -94,37 +101,32 @@ const visibleDirections = computed(() => directions.value.filter((item) =>
   && (!interestFilter.value || [item.name, item.summary, ...item.typicalWork, ...item.commonSkills, ...item.workTypes]
     .join(' ').toLocaleLowerCase().includes(interestFilter.value.trim().toLocaleLowerCase()))
 ))
+const comparedDirections = computed(() => comparedDirectionIds.value
+  .map((id) => directionCatalog.value.find((item) => item.id === id))
+  .filter((item): item is CareerDirection => Boolean(item)))
 const totalPages = computed(() => Math.max(1, Math.ceil(jobTotal.value / pageSize)))
 const jobEvidenceMatch = computed(() => {
   const job = selectedJob.value
   if (!job) return { existing: [], missing: [], uncertain: [] }
-  const keywords = Array.from(new Set((job.tags || []).map((item) => item.trim()).filter(Boolean)))
-  const evidenceRows = personalEvidence.value.map((item) => ({
-    item,
-    text: [item.title, item.description, item.roleName, item.resultSummary, item.proficiency, item.feedback]
-      .filter(Boolean)
-      .join(' ')
-      .toLocaleLowerCase()
-  }))
-  const existing: string[] = []
-  const matched = new Set<string>()
-  for (const keyword of keywords) {
-    const evidence = evidenceRows.find((row) => row.text.includes(keyword.toLocaleLowerCase()))
-    if (!evidence) continue
-    matched.add(keyword)
-    existing.push(`${keyword}：关联个人证据“${evidence.item.title}”`)
-  }
-  const missing = keywords
-    .filter((keyword) => !matched.has(keyword))
-    .map((keyword) => `${keyword}：档案中暂未找到直接证据`)
+  const requirements = collectJobRequirements(job)
+  const matches = matchEvidence(requirements, personalEvidence.value)
+  const existing = matches
+    .filter((item) => item.evidence)
+    .map((item) => `${item.requirement}：${item.confidence === 'direct' ? '直接关联' : '可能关联'}个人证据“${item.evidence!.title}”`)
+  const missing = matches
+    .filter((item) => !item.evidence)
+    .map((item) => `${item.requirement}：档案中暂未找到直接证据`)
   const uncertain: string[] = []
   if (!personalEvidence.value.length) uncertain.push('尚未录入个人证据，当前不能判断你是否具备岗位要求。')
   if (job.experienceLevel) uncertain.push(`经验要求“${job.experienceLevel}”需要结合经历内容逐条核对。`)
   if (job.education) uncertain.push(`学历要求“${job.education}”只表示招聘条件，不代表实际录用概率。`)
   if (!(job.requirements || []).length) uncertain.push('岗位没有结构化要求字段，不能从原始描述自动推断完整能力清单。')
-  if (!keywords.length) uncertain.push('岗位没有结构化技能标签，当前无法可靠拆解技能缺口。')
+  if (!requirements.length) uncertain.push('岗位没有结构化技能或要求，当前无法可靠拆解技能缺口。')
   return { existing, missing, uncertain }
 })
+const resumeComparison = computed(() => selectedJob.value && resumeCompareText.value.trim()
+  ? compareResumeToJob(resumeCompareText.value, selectedJob.value)
+  : null)
 const salaryBands: Record<string, { label: string; min?: number; max?: number }> = {
   any: { label: '全部薪资' },
   under15: { label: '15k 以下', max: 15000 },
@@ -191,6 +193,20 @@ const initialize = async () => {
   targetJobIds.value = new Set(targets.map((item) => item.id))
   personalEvidence.value = evidenceRows
   await Promise.all([loadDirections(), loadJobs()])
+
+  const directionId = Number(route.query.directionId)
+  if (Number.isFinite(directionId)) {
+    const target = directionCatalog.value.find((item) => item.id === directionId)
+    if (target) {
+      selectedDirection.value = target
+      if (route.query.action === 'add') openDirectionDialog(target)
+    }
+  }
+
+  const jobId = Number(route.query.jobId)
+  if (route.query.tab === 'jobs' && Number.isFinite(jobId)) {
+    selectedJob.value = await getJobDetailApi(jobId)
+  }
 }
 
 onMounted(initialize)
@@ -250,6 +266,28 @@ const toggleDirectionFavorite = async (item: CareerDirection) => {
 const openDirectionDialog = (item: CareerDirection) => {
   selectedDirection.value = item
   showDirectionDialog.value = true
+}
+
+const openDirectionDetail = (item: CareerDirection) => router.push(`/explore/directions/${item.id}`)
+
+const toggleDirectionCompare = (item: CareerDirection) => {
+  if (comparedDirectionIds.value.includes(item.id)) {
+    comparedDirectionIds.value = comparedDirectionIds.value.filter((id) => id !== item.id)
+    return
+  }
+  if (comparedDirectionIds.value.length >= 3) {
+    m3Message.warning('最多同时比较 3 个职业方向')
+    return
+  }
+  comparedDirectionIds.value = [...comparedDirectionIds.value, item.id]
+}
+
+const openDirectionComparison = () => {
+  if (comparedDirectionIds.value.length < 2) {
+    m3Message.warning('请至少选择 2 个职业方向')
+    return
+  }
+  router.push({ path: '/explore/compare', query: { directions: comparedDirectionIds.value.join(',') } })
 }
 
 const addDirectionToProject = async () => {
@@ -322,7 +360,14 @@ const toggleCompare = async (job: JobInfo) => {
   comparedJobs.value.push(detail)
 }
 
-const sourceDate = (job: JobInfo) => job.sourceUpdatedAt || job.sourceUpdatedText || job.updateDate || ''
+const sourceDate = (job: JobInfo) => {
+  const raw = job.sourceUpdatedAt || job.sourceUpdatedText || job.updateDate || ''
+  if (!raw) return ''
+  const date = new Date(raw)
+  return Number.isFinite(date.getTime())
+    ? new Intl.DateTimeFormat('zh-CN', { year: 'numeric', month: 'short', day: 'numeric' }).format(date)
+    : raw
+}
 const sourceLabel = (job: JobInfo) => job.sourcePlatform || '来源未提供'
 const sourceWarning = (job: JobInfo) => {
   const raw = job.sourceUpdatedAt || job.updateDate
@@ -451,40 +496,41 @@ const saveCustomDirection = async () => {
           <M3Button variant="outlined" type="button" @click="showCustomDirectionDialog = true"><Plus :size="16" />自定义方向</M3Button>
         </M3Card>
 
-        <div class="explore-layout explore-motion-group">
+        <div class="direction-explore-layout explore-motion-group">
           <TransitionGroup name="direction-list" tag="section" class="direction-grid loading-host">
             <M3ProgressOverlay key="direction-loading" :visible="loading" label="正在加载职业方向" />
-            <M3Card tag="article" v-for="item in visibleDirections" :key="item.id" class="direction-card">
+            <M3Card tag="article" v-for="item in visibleDirections" :key="item.id" class="direction-card" :class="{ compared: comparedDirectionIds.includes(item.id) }">
               <div class="card-head">
                 <span>{{ item.category }}<template v-if="item.custom"> · 自定义</template></span>
-                <M3IconButton :label="item.favorite ? '取消收藏' : '收藏方向'" :selected="item.favorite" @click="toggleDirectionFavorite(item)">
-                  <BookmarkCheck v-if="item.favorite" :size="18" />
-                  <Bookmark v-else :size="18" />
-                </M3IconButton>
+                <div class="direction-card-tools">
+                  <M3IconButton :label="comparedDirectionIds.includes(item.id) ? `移出对比：${item.name}` : `加入对比：${item.name}`" :selected="comparedDirectionIds.includes(item.id)" @click="toggleDirectionCompare(item)"><GitCompareArrows :size="18" /></M3IconButton>
+                  <M3IconButton :label="item.favorite ? '取消收藏' : '收藏方向'" :selected="item.favorite" @click="toggleDirectionFavorite(item)">
+                    <BookmarkCheck v-if="item.favorite" :size="18" />
+                    <Bookmark v-else :size="18" />
+                  </M3IconButton>
+                </div>
               </div>
+              <CareerVisual class="direction-card-visual" :visual="getCareerAsset(item.category).visual" :label="item.name" compact />
               <h2>{{ item.name }}</h2>
               <p>{{ item.summary }}</p>
               <div class="tag-row"><span v-for="skill in item.commonSkills.slice(0, 3)" :key="skill">{{ skill }}</span></div>
               <footer>
-                <M3Button variant="text" @click="selectedDirection = item">查看详情<ChevronRight :size="15" /></M3Button>
+                <M3Button variant="text" @click="openDirectionDetail(item)">查看详情<ChevronRight :size="15" /></M3Button>
                 <M3Button variant="outlined" type="button" class="compact" @click="openDirectionDialog(item)"><Plus :size="15" />加入项目</M3Button>
               </footer>
             </M3Card>
           </TransitionGroup>
-
-          <M3Card tag="aside" class="detail-pane">
-            <template v-if="selectedDirection">
-              <div class="detail-title"><div><span>{{ selectedDirection.category }}</span><h2>{{ selectedDirection.name }}</h2></div><M3IconButton label="关闭详情" @click="selectedDirection = null"><X :size="18" /></M3IconButton></div>
-              <p class="detail-summary">{{ selectedDirection.summary }}</p>
-              <section><h3>典型工作</h3><ul><li v-for="item in selectedDirection.typicalWork" :key="item">{{ item }}</li></ul></section>
-              <section><h3>常见能力</h3><div class="tag-row"><span v-for="item in selectedDirection.commonSkills" :key="item">{{ item }}</span></div></section>
-              <section><h3>成长路径</h3><ol><li v-for="item in selectedDirection.growthPath" :key="item">{{ item }}</li></ol></section>
-              <section><h3>常见误区</h3><ul><li v-for="item in selectedDirection.misconceptions" :key="item">{{ item }}</li></ul></section>
-              <M3Button class="full-button" type="button" @click="openDirectionDialog(selectedDirection)"><Plus :size="16" />加入决策项目</M3Button>
-            </template>
-            <div v-else class="empty-detail"><Compass :size="28" /><strong>选择一个职业方向</strong><span>这里会显示工作内容、能力、成长路径和常见误区。</span></div>
-          </M3Card>
         </div>
+        <M3Card v-if="comparedDirections.length" tag="section" variant="elevated" class="direction-compare-bar" aria-label="已选职业方向对比">
+          <div class="direction-compare-selection">
+            <span>快速对比</span>
+            <div><M3Chip v-for="item in comparedDirections" :key="item.id" :label="item.name" /></div>
+          </div>
+          <div class="direction-compare-actions">
+            <M3Button variant="text" type="button" @click="comparedDirectionIds = []">清空</M3Button>
+            <M3Button type="button" :disabled="comparedDirections.length < 2" @click="openDirectionComparison"><GitCompareArrows :size="17" />对比 {{ comparedDirections.length }} 个方向</M3Button>
+          </div>
+        </M3Card>
         </div>
 
         <div v-else key="jobs" class="explore-view" data-explore-view="jobs">
@@ -512,12 +558,31 @@ const saveCustomDirection = async () => {
             <M3Pagination v-model:page="page" class="pagination" :total-pages="totalPages" label="招聘岗位分页" />
           </M3Card>
 
-          <M3Card tag="aside" class="detail-pane job-detail-pane">
+          <M3Card tag="aside" variant="outlined" class="detail-pane job-detail-pane">
             <template v-if="selectedJob">
-              <div class="detail-title"><div><span>招聘岗位</span><h2>{{ selectedJob.jobName }}</h2></div><M3IconButton label="关闭详情" @click="closeJob"><X :size="18" /></M3IconButton></div>
-              <p>{{ selectedJob.companyName }} · {{ selectedJob.location || '地点未知' }}</p>
-              <dl><div><dt>薪资</dt><dd>{{ selectedJob.salaryRange || '未知' }}</dd></div><div><dt>方向</dt><dd>{{ selectedJob.industry || '未知' }}</dd></div><div><dt>经验</dt><dd>{{ selectedJob.experienceLevel || '未知' }}</dd></div><div><dt>学历</dt><dd>{{ selectedJob.education || '未知' }}</dd></div><div><dt>数据来源</dt><dd><a v-if="selectedJob.jobSourceUrl" :href="selectedJob.jobSourceUrl" target="_blank" rel="noopener noreferrer">{{ sourceLabel(selectedJob) }}</a><span v-else>{{ sourceLabel(selectedJob) }}</span></dd></div><div><dt>更新时间</dt><dd>{{ sourceDate(selectedJob) || '未提供' }}</dd></div></dl>
-              <p v-if="sourceWarning(selectedJob)" class="source-warning">{{ sourceWarning(selectedJob) }}</p>
+              <header class="job-detail-header">
+                <div class="job-title-copy">
+                  <span class="job-kicker">招聘岗位</span>
+                  <h2>{{ selectedJob.jobName }}</h2>
+                  <p><span><Building2 :size="15" />{{ selectedJob.companyName }}</span><span><MapPin :size="15" />{{ selectedJob.location || '地点未知' }}</span></p>
+                </div>
+                <M3IconButton label="关闭详情" @click="closeJob"><X :size="18" /></M3IconButton>
+              </header>
+              <div v-if="selectedJob.tags?.length" class="job-detail-tags"><span v-for="tag in selectedJob.tags.slice(0, 5)" :key="tag">{{ tag }}</span></div>
+              <section class="job-fact-grid" aria-label="岗位条件">
+                <div class="salary-fact"><span>薪资范围</span><strong>{{ selectedJob.salaryRange || '未知' }}</strong></div>
+                <div><span><Layers3 :size="15" />职业方向</span><strong>{{ selectedJob.industry || '未知' }}</strong></div>
+                <div><span><Timer :size="15" />经验要求</span><strong>{{ selectedJob.experienceLevel || '未知' }}</strong></div>
+                <div><span><GraduationCap :size="15" />学历要求</span><strong>{{ selectedJob.education || '未知' }}</strong></div>
+              </section>
+              <section class="job-source-panel">
+                <header><div><Database :size="17" /><strong>数据来源</strong></div><span :class="{ stale: sourceWarning(selectedJob) }">{{ sourceWarning(selectedJob) ? '建议复核' : '当前样本' }}</span></header>
+                <div class="source-details">
+                  <div><span>来源平台</span><a v-if="selectedJob.jobSourceUrl" :href="selectedJob.jobSourceUrl" target="_blank" rel="noopener noreferrer">{{ sourceLabel(selectedJob) }}</a><strong v-else>{{ sourceLabel(selectedJob) }}</strong></div>
+                  <div><span><CalendarClock :size="14" />更新时间</span><time>{{ sourceDate(selectedJob) || '未提供' }}</time></div>
+                </div>
+              </section>
+              <p v-if="sourceWarning(selectedJob)" class="source-warning"><TriangleAlert :size="17" />{{ sourceWarning(selectedJob) }}</p>
               <section class="match-breakdown">
                 <h3>个人证据匹配</h3>
                 <div class="match-groups">
@@ -527,6 +592,7 @@ const saveCustomDirection = async () => {
                 </div>
               </section>
               <section><h3>招聘原始描述</h3><p class="job-copy">{{ selectedJob.jobDetails || '该样本未提供完整岗位描述，不能据此推断职责或要求。' }}</p></section>
+              <M3Button class="full-button" variant="outlined" type="button" @click="showResumeCompareDialog = true"><FileSearch :size="16" />使用简历对照这份 JD</M3Button>
               <M3Button class="full-button" type="button" @click="openJobDialog(selectedJob)"><Plus :size="16" />作为岗位样本加入项目</M3Button>
             </template>
             <div v-else class="empty-detail"><BriefcaseBusiness :size="28" /><strong>选择一个招聘岗位</strong><span>查看职责、要求、来源和更新时间。</span></div>
@@ -562,6 +628,21 @@ const saveCustomDirection = async () => {
       </div>
       <div v-else class="dialog-empty"><p>你还没有决策项目。</p><M3Button type="button" @click="createProject">创建第一个项目</M3Button></div>
       <template #actions><M3Button variant="outlined" type="button" @click="showJobDialog = false">取消</M3Button><M3Button v-if="projects.length" type="button" :disabled="savingLink || !targetCandidateId" @click="addJobToProject">确认加入</M3Button></template>
+    </M3Dialog>
+
+    <M3Dialog v-model="showResumeCompareDialog" title="简历与目标 JD 对照">
+      <div class="resume-compare-dialog">
+        <p>当前岗位：<strong>{{ selectedJob?.jobName }}</strong><template v-if="selectedJob"> · {{ selectedJob.companyName }}</template></p>
+        <M3TextArea v-model="resumeCompareText" class="resume-text-area" :rows="9" maxlength="20000" label="粘贴简历文本" placeholder="粘贴简历中的技能、项目和经历。内容只在当前页面本地对照，不会自动保存。" />
+        <section v-if="resumeComparison" class="resume-compare-result">
+          <header><div><span>结构化要求覆盖</span><strong>{{ resumeComparison.score }}%</strong></div><p>仅表示简历文字是否出现对应要求，不代表实际能力或录用概率。</p></header>
+          <div class="resume-match-columns">
+            <article><h3>简历中已出现</h3><div class="tag-row"><span v-for="item in resumeComparison.matched" :key="item">{{ item }}</span><p v-if="!resumeComparison.matched.length">暂未发现直接关键词。</p></div></article>
+            <article><h3>建议核对或补充</h3><div class="tag-row missing-tags"><span v-for="item in resumeComparison.missing" :key="item">{{ item }}</span><p v-if="!resumeComparison.missing.length">结构化要求均有文字命中，请继续核对证据强度。</p></div></article>
+          </div>
+        </section>
+      </div>
+      <template #actions><M3Button type="button" @click="showResumeCompareDialog = false">完成对照</M3Button></template>
     </M3Dialog>
 
     <M3Dialog v-model="showCustomDirectionDialog" title="自定义职业方向">
@@ -602,11 +683,16 @@ const saveCustomDirection = async () => {
 .direction-filters label { display: flex; align-items: center; gap: 7px; color: var(--md-sys-color-on-surface-variant); font-size: var(--md-sys-typescale-body-small-size); }
 .direction-filters label > :last-child { min-width: 140px; }
 .direction-filters > :last-child { margin-left: auto; }
-.explore-layout, .jobs-layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 22px; align-items: start; }
-.direction-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.explore-layout, .jobs-layout { display: grid; gap: 22px; align-items: start; }
+.jobs-layout { grid-template-columns: minmax(0, 1fr) 420px; }
+.direction-explore-layout { min-width: 0; padding-bottom: 96px; }
+.direction-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
 .direction-list-enter-active, .direction-list-leave-active, .direction-list-move { transition: opacity var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-emphasized-decelerate), transform var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-emphasized-decelerate); }
 .direction-list-enter-from, .direction-list-leave-to { opacity: 0; transform: translateY(var(--career-spacing-2)); }
-.direction-card { display: grid; min-height: 230px; gap: 12px; padding: 18px; }
+.direction-card { display: grid; min-height: 290px; gap: 12px; padding: 18px; }
+.direction-card.compared { outline: 2px solid var(--md-sys-color-primary); outline-offset: -2px; background: var(--md-sys-color-primary-container); }
+.direction-card-tools { display: flex; align-items: center; gap: 2px; }
+.direction-card-visual { margin: 0 -2px; }
 .card-head, .detail-title, .compare-tray header, .job-main, .job-actions, .pagination { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .card-head { color: var(--md-sys-color-on-surface-variant); font-size: var(--md-sys-typescale-body-small-size); }
 .direction-card h2, .job-list h2 { margin: 0; font-size: var(--md-sys-typescale-title-medium-size); }
@@ -614,6 +700,11 @@ const saveCustomDirection = async () => {
 .tag-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .tag-row span { border-radius: var(--md-sys-shape-corner-extra-small); background: var(--md-sys-color-surface-container); color: var(--md-sys-color-primary); padding: 4px 7px; font-size: var(--md-sys-typescale-label-small-size); }
 .direction-card footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; }
+.direction-compare-bar { position: fixed; z-index: 82; right: 96px; bottom: 24px; left: 244px; display: flex; min-width: 0; max-width: 1120px; align-items: center; justify-content: space-between; gap: 18px; margin: 0 auto; border: 1px solid var(--md-sys-color-outline-variant); padding: 12px 14px; }
+.direction-compare-selection { display: flex; min-width: 0; align-items: center; gap: 12px; }
+.direction-compare-selection > span { flex: none; color: var(--md-sys-color-on-surface-variant); font-size: var(--md-sys-typescale-label-large-size); font-weight: 600; }
+.direction-compare-selection > div { display: flex; min-width: 0; gap: 6px; overflow-x: auto; scrollbar-width: thin; }
+.direction-compare-actions { display: flex; flex: none; align-items: center; gap: 6px; }
 .compact { min-height: 34px; padding: 0 10px; font-size: var(--md-sys-typescale-body-small-size); }
 .detail-pane { position: sticky; top: 86px; min-height: 420px; padding: 20px; }
 .detail-title span { color: var(--md-sys-color-primary); font-size: var(--md-sys-typescale-body-small-size); }
@@ -637,12 +728,35 @@ const saveCustomDirection = async () => {
 .job-actions { justify-content: flex-end; gap: 4px; }
 .pagination { justify-content: center; padding: 16px; }
 .pagination span { color: var(--md-sys-color-on-surface-variant); font-size: var(--md-sys-typescale-body-small-size); }
-.job-detail-pane dl { display: grid; gap: 1px; margin: 18px 0; background: var(--md-sys-color-outline-variant); }
-.job-detail-pane dl div { display: grid; grid-template-columns: 90px 1fr; background: var(--md-sys-color-surface-container-lowest); padding: 9px 0; font-size: var(--md-sys-typescale-body-medium-size); }
-.job-detail-pane dt { color: var(--md-sys-color-on-surface-variant); }
-.job-detail-pane dd { margin: 0; }
-.job-detail-pane dd a { color: var(--md-sys-color-primary); }
-.source-warning { border-left: 3px solid var(--md-sys-color-tertiary); background: color-mix(in srgb, var(--md-sys-color-tertiary) 8%, var(--md-sys-color-surface-container-lowest)); padding: 10px 12px; color: var(--md-sys-color-on-surface-variant); font-size: var(--md-sys-typescale-body-small-size); line-height: 1.5; }
+.job-detail-pane { overflow: hidden; padding-right: 76px; background: color-mix(in srgb, var(--md-sys-color-surface) 88%, transparent); }
+.job-detail-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.job-title-copy { min-width: 0; }
+.job-kicker { color: var(--md-sys-color-primary); font-size: var(--md-sys-typescale-label-medium-size); font-weight: 600; }
+.job-title-copy h2 { margin: 6px 0 9px; font-size: var(--md-sys-typescale-headline-small-size); line-height: var(--md-sys-typescale-headline-small-line-height); overflow-wrap: anywhere; }
+.job-title-copy p { display: flex; flex-wrap: wrap; gap: 7px 13px; margin: 0; color: var(--md-sys-color-on-surface-variant); font-size: var(--md-sys-typescale-body-small-size); }
+.job-title-copy p span { display: inline-flex; align-items: center; gap: 5px; }
+.job-detail-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; }
+.job-detail-tags span { border-radius: var(--md-sys-shape-corner-extra-small); background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); padding: 4px 7px; font-size: var(--md-sys-typescale-label-small-size); }
+.job-detail-pane .job-fact-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; margin-top: 20px; border-top: 1px solid var(--md-sys-color-outline-variant); border-bottom: 1px solid var(--md-sys-color-outline-variant); }
+.job-fact-grid > div { display: grid; min-width: 0; gap: 5px; padding: 14px 12px 14px 0; border-bottom: 1px solid var(--md-sys-color-outline-variant); }
+.job-fact-grid > div:nth-child(odd) { border-right: 1px solid var(--md-sys-color-outline-variant); }
+.job-fact-grid > div:nth-child(even) { padding-right: 0; padding-left: 14px; }
+.job-fact-grid > div:nth-last-child(-n + 2) { border-bottom: 0; }
+.job-fact-grid span { display: flex; align-items: center; gap: 5px; color: var(--md-sys-color-on-surface-variant); font-size: var(--md-sys-typescale-label-small-size); }
+.job-fact-grid strong { overflow-wrap: anywhere; font-size: var(--md-sys-typescale-body-medium-size); font-weight: 600; }
+.job-fact-grid .salary-fact strong { color: var(--md-sys-color-tertiary); font-size: var(--md-sys-typescale-title-medium-size); }
+.job-detail-pane .job-source-panel { margin-top: 20px; }
+.job-source-panel > header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.job-source-panel > header > div { display: flex; align-items: center; gap: 7px; }
+.job-source-panel > header > span { border-radius: var(--md-sys-shape-corner-full); background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); padding: 4px 8px; font-size: var(--md-sys-typescale-label-small-size); }
+.job-source-panel > header > span.stale { background: var(--md-sys-color-tertiary-container); color: var(--md-sys-color-on-tertiary-container); }
+.source-details { display: grid; gap: 9px; margin-top: 11px; }
+.source-details > div { display: flex; align-items: center; justify-content: space-between; gap: 14px; font-size: var(--md-sys-typescale-body-small-size); }
+.source-details span { display: inline-flex; align-items: center; gap: 5px; color: var(--md-sys-color-on-surface-variant); }
+.source-details a { color: var(--md-sys-color-primary); font-weight: 600; overflow-wrap: anywhere; }
+.source-details time, .source-details strong { font-weight: 500; text-align: right; }
+.source-warning { display: flex; align-items: flex-start; gap: 8px; margin: 16px 0 0; border-left: 3px solid var(--md-sys-color-tertiary); background: var(--md-sys-color-tertiary-container); padding: 11px 12px; color: var(--md-sys-color-on-tertiary-container); font-size: var(--md-sys-typescale-body-small-size); line-height: 1.5; }
+.source-warning svg { flex: none; margin-top: 1px; }
 .job-copy { max-height: 240px; overflow-y: auto; white-space: pre-line; color: var(--md-sys-color-on-surface-variant); font-size: var(--md-sys-typescale-body-medium-size); line-height: 1.65; }
 .match-breakdown { border-top: 1px solid var(--md-sys-color-outline-variant); padding-top: 18px; }
 .match-groups { display: grid; gap: 13px; }
@@ -666,10 +780,24 @@ const saveCustomDirection = async () => {
 .dialog-empty { display: grid; justify-items: start; gap: 14px; }
 .dialog-form .warning-note { color: var(--md-sys-color-error); font-size: var(--md-sys-typescale-body-medium-size); }
 .dialog-grid { display: grid; gap: 14px; }
+.resume-compare-dialog { display: grid; width: min(560px, calc(100vw - 80px)); max-width: 100%; min-width: 0; gap: 18px; }
+.resume-compare-dialog > *, .resume-text-area { min-width: 0; max-width: 100%; }
+.resume-compare-dialog > p, .resume-compare-result header p { margin: 0; color: var(--md-sys-color-on-surface-variant); line-height: 1.5; }
+.resume-compare-result { display: grid; gap: 16px; padding-top: 16px; border-top: 1px solid var(--md-sys-color-outline-variant); }
+.resume-compare-result header { display: grid; gap: 5px; }
+.resume-compare-result header > div { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+.resume-compare-result header span { color: var(--md-sys-color-on-surface-variant); }
+.resume-compare-result header strong { color: var(--md-sys-color-primary); font-size: var(--md-sys-typescale-headline-small-size); }
+.resume-match-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.resume-match-columns article { padding: 14px; background: var(--md-sys-color-surface-container); border-radius: var(--md-sys-shape-corner-small); }
+.resume-match-columns h3 { margin: 0 0 10px; font-size: var(--md-sys-typescale-title-small-size); }
+.resume-match-columns p { margin: 0; color: var(--md-sys-color-on-surface-variant); font-size: var(--md-sys-typescale-body-small-size); }
+.missing-tags span { background: var(--md-sys-color-error-container); color: var(--md-sys-color-on-error-container); }
 .two-column-dialog { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .full-dialog-field { grid-column: 1 / -1; }
-@media (max-width: 980px) { .explore-layout, .jobs-layout { grid-template-columns: 1fr; } .detail-pane { position: static; min-height: 0; } }
-@media (max-width: 680px) { .direction-grid { grid-template-columns: 1fr; } .search-row { align-items: stretch; } .direction-filters { align-items: stretch; flex-direction: column; } .direction-filters label { justify-content: space-between; } .direction-filters label > :last-child { flex: 1; } .direction-filters > :last-child { align-self: flex-start; margin-left: 0; } .job-filters { align-items: stretch; flex-direction: column; } .job-filters label { border-right: 0; border-bottom: 1px solid var(--md-sys-color-outline-variant); padding: 8px 0; } .job-filters label > :last-child { width: 100%; } .job-filters > span { margin-left: 0; } .job-main { align-items: flex-start; flex-direction: column; } .job-actions { justify-content: flex-start; flex-wrap: wrap; } .two-column-dialog { grid-template-columns: 1fr; } .full-dialog-field { grid-column: auto; } }
+@media (max-width: 1100px) { .direction-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .direction-compare-bar { left: 104px; } }
+@media (max-width: 980px) { .explore-layout, .jobs-layout { grid-template-columns: 1fr; } .detail-pane { position: static; min-height: 0; } .job-detail-pane { padding-right: 20px; } }
+@media (max-width: 680px) { .direction-grid { grid-template-columns: 1fr; } .search-row { align-items: stretch; } .direction-filters { align-items: stretch; flex-direction: column; } .direction-filters label { justify-content: space-between; } .direction-filters label > :last-child { flex: 1; } .direction-filters > :last-child { align-self: flex-start; margin-left: 0; } .direction-compare-bar { right: 16px; bottom: 96px; left: 16px; align-items: stretch; flex-direction: column; gap: 10px; } .direction-compare-selection { align-items: flex-start; flex-direction: column; gap: 6px; } .direction-compare-selection > div { width: 100%; } .direction-compare-actions { justify-content: space-between; } .job-filters { align-items: stretch; flex-direction: column; } .job-filters label { border-right: 0; border-bottom: 1px solid var(--md-sys-color-outline-variant); padding: 8px 0; } .job-filters label > :last-child { width: 100%; } .job-filters > span { margin-left: 0; } .job-main { align-items: flex-start; flex-direction: column; } .job-actions { justify-content: flex-start; flex-wrap: wrap; } .two-column-dialog, .resume-match-columns { grid-template-columns: 1fr; } .full-dialog-field { grid-column: auto; } .resume-compare-dialog { min-width: 0; } }
 @media (prefers-reduced-motion: reduce) {
   .explore-fade-through-enter-active,
   .explore-fade-through-leave-active,

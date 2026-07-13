@@ -63,6 +63,8 @@ export type JobInfo = {
   companyName: string
   updateDate: string
   salaryRange: string
+  salaryMin?: number | null
+  salaryMax?: number | null
   location: string
   industry?: string | null
   experienceLevel?: string | null
@@ -76,6 +78,7 @@ export type JobInfo = {
   sourcePlatform?: string | null
   sourceUpdatedText?: string | null
   sourceUpdatedAt?: string | null
+  qualityScore?: number | null
   tags?: string[]
   responsibilities?: string[]
   requirements?: string[]
@@ -140,6 +143,8 @@ function mapJob(job: BackendJobSummary | BackendJobDetail): JobInfo {
     companyName: job.company,
     updateDate: '',
     salaryRange: job.salaryRange || '薪资面议',
+    salaryMin: job.salaryMin ?? null,
+    salaryMax: job.salaryMax ?? null,
     location: job.location || job.city || '',
     industry: job.industry || job.direction || null,
     experienceLevel: job.experienceLevel || null,
@@ -153,6 +158,7 @@ function mapJob(job: BackendJobSummary | BackendJobDetail): JobInfo {
     sourcePlatform: job.sourcePlatform || null,
     sourceUpdatedText: job.sourceUpdatedText || null,
     sourceUpdatedAt: job.sourceUpdatedAt || null,
+    qualityScore: job.qualityScore ?? null,
     tags: job.tags ?? [],
     responsibilities: detail.responsibilities ?? [],
     requirements: detail.requirements ?? [],

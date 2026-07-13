@@ -130,7 +130,7 @@
   --career-control-height: 48px;
   --career-magnetic-cursor-size: 26px;
   --career-magnetic-cursor-color: #edeef3;
-  --career-navigation-cursor-attraction-range: var(--career-spacing-12);
+  --career-navigation-cursor-attraction-range: var(--career-spacing-4);
   --career-motion-magnetic-follow-duration: var(--md-sys-motion-duration-short2);
   --career-motion-magnetic-snap-duration: var(--md-sys-motion-duration-short4);
   --career-motion-theme-reveal-duration: 900ms;

@@ -4,12 +4,19 @@ import { activityMonitor } from '@/utils/activityMonitor'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) return savedPosition
+    if (to.path !== from.path) return { left: 0, top: 0 }
+    return false
+  },
   routes: [
     { path: '/', name: 'dashboard', component: () => import('@/pages/Home.vue'), meta: { auth: true } },
     { path: '/login', name: 'login', component: () => import('@/pages/Login.vue') },
     { path: '/onboarding', name: 'onboarding', component: () => import('@/pages/Onboarding.vue'), meta: { auth: true } },
     { path: '/profile', name: 'profile', component: () => import('@/pages/Profile.vue'), meta: { auth: true } },
     { path: '/explore', name: 'explore', component: () => import('@/pages/CareerExplore.vue'), meta: { auth: true } },
+    { path: '/explore/compare', name: 'career-direction-compare', component: () => import('@/pages/CareerDirectionCompare.vue'), meta: { auth: true } },
+    { path: '/explore/directions/:id', name: 'career-direction-detail', component: () => import('@/pages/CareerDirectionDetail.vue'), meta: { auth: true } },
     { path: '/decision-projects', name: 'decision-projects', component: () => import('@/pages/DecisionProjects.vue'), meta: { auth: true } },
     { path: '/decision-projects/new', name: 'decision-project-new', component: () => import('@/pages/DecisionProjectWorkspace.vue'), meta: { auth: true } },
     { path: '/decision-projects/:id', name: 'decision-project', component: () => import('@/pages/DecisionProjectWorkspace.vue'), meta: { auth: true } },

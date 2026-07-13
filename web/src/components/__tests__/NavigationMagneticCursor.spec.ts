@@ -185,6 +185,27 @@ describe('NavigationMagneticCursor', () => {
     expect(document.documentElement.hasAttribute('data-navigation-magnetic-cursor-visible')).toBe(false)
   })
 
+  it('keeps nearby text outside the tightened attraction range free', async () => {
+    const target = appendTarget()
+    mountCursor()
+    const cursor = getCursor()
+
+    document.dispatchEvent(pointerEvent('pointermove', { clientX: 224, clientY: 130 }))
+    flushAnimationFrames()
+    await nextTick()
+
+    expect(target.dataset.magneticActive).toBeUndefined()
+    expect(cursor.attributes('data-magnetic-active')).toBe('false')
+    expect(cursor.element.getAttribute('style')).toContain('--career-magnetic-cursor-x: 224.00px')
+
+    document.dispatchEvent(pointerEvent('pointermove', { clientX: 212, clientY: 130 }))
+    flushAnimationFrames()
+    await nextTick()
+
+    expect(target.dataset.magneticActive).toBe('true')
+    expect(cursor.attributes('data-magnetic-active')).toBe('true')
+  })
+
   it('automatically adapts standard interactive components', async () => {
     const button = document.createElement('button')
     button.textContent = '保存'

@@ -76,7 +76,7 @@ test('学生完成第一版职业决策与行动闭环', async ({ page }, testIn
   await page.goto('/explore?tab=jobs')
   await expect(page.getByRole('heading', { name: '职业探索' })).toBeVisible()
   const javaJob = page.locator('.job-list article').filter({ hasText: 'Java 后端工程师' })
-  await javaJob.click()
+  await javaJob.getByRole('heading', { name: 'Java 后端工程师' }).click()
   await expect(page.getByRole('heading', { name: '个人证据匹配' })).toBeVisible()
   await javaJob.getByRole('button', { name: '设为目标' }).click()
   await expect(javaJob.getByRole('button', { name: '目标岗位' })).toBeVisible()

@@ -75,6 +75,28 @@ android {
             )
             manifestPlaceholders["usesCleartextTraffic"] = "false"
         }
+        create("performance") {
+            initWith(getByName("release"))
+            // Installable with the local debug key, but compiled without Debug/Compose
+            // inspection overhead so physical-device scrolling reflects shipped code.
+            signingConfig = signingConfigs.getByName("debug")
+            isDebuggable = false
+            isProfileable = true
+            matchingFallbacks += listOf("release")
+            buildConfigField(
+                "String",
+                "BACKEND_BASE_URL_OVERRIDE",
+                debugBackendBaseUrlOverride.toBuildConfigStringLiteral()
+            )
+            manifestPlaceholders["usesCleartextTraffic"] = "false"
+        }
+    }
+
+    sourceSets.getByName("performance") {
+        // Performance is a local-only, release-optimized build that must still reach
+        // the developer HTTPS backend secured by the bundled project CA.
+        manifest.srcFile("src/debug/AndroidManifest.xml")
+        res.srcDir("src/debug/res")
     }
 
     compileOptions {

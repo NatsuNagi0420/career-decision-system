@@ -8,6 +8,8 @@ import { getProfileApi, saveProfileApi } from '@/api/profile'
 import { createDecisionProjectApi } from '@/api/decisionProjects'
 import { clearFormDraft, loadFormDraft, saveFormDraft } from '@/utils/formDraft'
 import { getStoredUser } from '@/utils/session'
+import BrandIdentity from '@/components/BrandIdentity.vue'
+import DecisionTagInput from '@/components/DecisionTagInput.vue'
 
 defineOptions({ name: 'OnboardingPage' })
 
@@ -41,13 +43,14 @@ const steps = [
   { index: 3, label: '投入与开始', icon: Clock3 }
 ]
 
-const existingDirections = computed(() =>
-  form.existingDirectionsText
-    .split(/[，,、\n]/)
+const existingDirections = computed<string[]>({
+  get: () => form.existingDirectionsText
+    .split(/[，,、；;\n]/)
     .map((item) => item.trim())
     .filter(Boolean)
-    .slice(0, 5)
-)
+    .slice(0, 5),
+  set: (value) => { form.existingDirectionsText = value.join('、') }
+})
 
 const canContinue = computed(() => {
   if (step.value === 1) return !!form.major.trim() && !!form.grade
@@ -96,7 +99,12 @@ watch([form, step, createProject], () => {
 
 const next = () => {
   if (!canContinue.value) {
-    m3Message.warning('请先完成当前步骤的必填项')
+    const prompt = step.value === 1
+      ? '请先填写专业和当前年级，再继续。'
+      : step.value === 2
+        ? '请先写下你现在最想弄清楚的事情。'
+        : '请确认每周大概可以留出多少时间。'
+    m3Message.warning(prompt)
     return
   }
   step.value = Math.min(3, step.value + 1)
@@ -132,7 +140,8 @@ const submit = async () => {
           .join('；'),
         priorities: [],
         mustHaves: [],
-        dealBreakers: []
+        dealBreakers: [],
+        initialCandidates: existingDirections.value.map((name) => ({ name, sourceType: 'profile' as const }))
       })
       m3Message.success('基础档案与第一个决策项目已建立')
       clearFormDraft(draftScope, draftUserId)
@@ -153,7 +162,7 @@ const submit = async () => {
   <div class="onboarding-page product-page">
     <div class="onboarding-shell">
       <header class="onboarding-header">
-        <span class="brand">职途</span>
+        <BrandIdentity :show-avatar="false" :show-descriptor="false" compact />
         <span class="muted">约 5 分钟</span>
       </header>
 
@@ -209,12 +218,16 @@ const submit = async () => {
             <p>把大问题缩小到未来几个月可以验证的选择。</p>
           </div>
 
-          <label class="field-label">当前困惑 <span class="required">必填</span>
+          <label class="field-label">你现在最想想清楚什么？ <span class="required">必填</span>
             <M3TextArea v-model="form.currentConfusion" class="confusion-input" placeholder="例如：未来三个月，我应该优先准备 Java 后端还是数据分析？"></M3TextArea>
           </label>
-          <label class="field-label">已经想到的方向（选填，最多 5 个）
-            <M3TextField v-model="form.existingDirectionsText"  placeholder="用逗号分隔，例如：Java 后端、数据分析" />
-          </label>
+          <DecisionTagInput
+            v-model="existingDirections"
+            label="你已经想到哪些方向？（选填）"
+            hint="想到一个就添加一个，不确定也没关系，接下来还可以调整。"
+            placeholder="例如：Java 后端"
+            :max-items="5"
+          />
 
           <div class="example-block">
             <strong>更容易执行的表达</strong>
@@ -240,15 +253,15 @@ const submit = async () => {
           </label>
 
           <label class="project-option">
-            <M3Checkbox v-model="createProject" label="同时创建第一个决策项目" />
-            <span><strong>同时创建第一个决策项目</strong><small>推荐。创建后直接进入五阶段决策工作区。</small></span>
+            <M3Checkbox v-model="createProject" label="把这次思考保存下来" />
+            <span><strong>把这次思考保存下来</strong><small>推荐。接下来可以继续看看不同方向，不需要重新填写这些内容。</small></span>
           </label>
 
           <div v-if="createProject" class="form-grid two-columns compact-fields">
-            <label class="field-label">项目标题（选填）
-              <M3TextField v-model="form.projectTitle"  placeholder="默认使用当前困惑" />
+            <label class="field-label">给这次思考起个名字（选填）
+              <M3TextField v-model="form.projectTitle"  placeholder="不填写也没关系，我们会帮你生成" />
             </label>
-            <label class="field-label">希望何时做出决定（选填）
+            <label class="field-label">希望什么时候有一个初步答案？（选填）
               <M3DatePicker v-model="form.decisionDeadline" />
             </label>
           </div>
@@ -275,7 +288,6 @@ const submit = async () => {
 .onboarding-page { background: color-mix(in srgb, var(--md-sys-color-surface) var(--career-background-canvas-tint-opacity), transparent); }
 .onboarding-shell { width: min(760px, calc(100% - 32px)); margin: 0 auto; padding: 28px 0 64px; }
 .onboarding-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
-.brand { color: var(--md-sys-color-primary); font-size: var(--md-sys-typescale-title-large-size); font-weight: 500; }
 .step-nav { display: grid; grid-template-columns: repeat(3, 1fr); margin-bottom: 16px; }
 .step-item { display: flex; align-items: center; gap: 8px; color: var(--md-sys-color-on-surface-variant); font-size: var(--md-sys-typescale-body-medium-size); }
 .step-item::after { content: ''; height: 1px; flex: 1; background: var(--md-sys-color-outline-variant); }

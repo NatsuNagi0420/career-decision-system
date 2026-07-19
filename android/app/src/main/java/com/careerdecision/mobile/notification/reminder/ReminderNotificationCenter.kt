@@ -37,20 +37,64 @@ internal class ReminderNotificationCenter(private val context: Context) {
     fun showTaskReminder(userId: Long, taskId: Long, content: ReminderContent) {
         notificationManager.notify(
             taskNotificationId(userId, taskId),
-            notification(content, TASK_CHANNEL_ID, taskNotificationId(userId, taskId))
+            notification(
+                content = content,
+                channelId = TASK_CHANNEL_ID,
+                requestCode = taskNotificationId(userId, taskId),
+                destination = "$DESTINATION_TODAY?taskId=$taskId",
+                groupKey = TASK_GROUP_KEY
+            )
         )
+    }
+
+    @SuppressLint("MissingPermission")
+    fun showDailySummary(userId: Long, content: ReminderContent) {
+        notificationManager.notify(
+            dailyNotificationId(userId),
+            notification(
+                content = content,
+                channelId = TASK_CHANNEL_ID,
+                requestCode = dailyNotificationId(userId),
+                destination = DESTINATION_TODAY,
+                groupKey = TASK_GROUP_KEY,
+                groupSummary = true
+            )
+        )
+    }
+
+    fun cancelTaskReminder(userId: Long, taskId: Long) {
+        notificationManager.cancel(taskNotificationId(userId, taskId))
+    }
+
+    fun cancelDailySummary(userId: Long) {
+        notificationManager.cancel(dailyNotificationId(userId))
     }
 
     @SuppressLint("MissingPermission")
     fun showWeeklyReviewReminder(userId: Long, content: ReminderContent) {
         notificationManager.notify(
             weeklyNotificationId(userId),
-            notification(content, REVIEW_CHANNEL_ID, weeklyNotificationId(userId))
+            notification(
+                content = content,
+                channelId = REVIEW_CHANNEL_ID,
+                requestCode = weeklyNotificationId(userId),
+                destination = "$DESTINATION_TODAY?review=true"
+            )
         )
     }
 
-    private fun notification(content: ReminderContent, channelId: String, requestCode: Int): Notification =
-        Notification.Builder(context, channelId)
+    fun cancelWeeklyReviewReminder(userId: Long) {
+        notificationManager.cancel(weeklyNotificationId(userId))
+    }
+
+    private fun notification(
+        content: ReminderContent,
+        channelId: String,
+        requestCode: Int,
+        destination: String,
+        groupKey: String? = null,
+        groupSummary: Boolean = false
+    ): Notification = Notification.Builder(context, channelId)
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(content.title)
             .setContentText(content.body)
@@ -58,13 +102,19 @@ internal class ReminderNotificationCenter(private val context: Context) {
             .setCategory(Notification.CATEGORY_REMINDER)
             .setVisibility(Notification.VISIBILITY_PRIVATE)
             .setAutoCancel(true)
-            .setContentIntent(todayPendingIntent(requestCode))
+            .setContentIntent(destinationPendingIntent(requestCode, destination))
+            .apply {
+                if (groupKey != null) {
+                    setGroup(groupKey)
+                    setGroupSummary(groupSummary)
+                }
+            }
             .build()
 
-    private fun todayPendingIntent(requestCode: Int): PendingIntent {
+    private fun destinationPendingIntent(requestCode: Int, destination: String): PendingIntent {
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-            putExtra(EXTRA_DESTINATION, DESTINATION_TODAY)
+            putExtra(EXTRA_DESTINATION, destination)
         }
         return PendingIntent.getActivity(
             context,
@@ -77,6 +127,8 @@ internal class ReminderNotificationCenter(private val context: Context) {
     private fun taskNotificationId(userId: Long, taskId: Long): Int =
         positiveHash("task:$userId:$taskId")
 
+    private fun dailyNotificationId(userId: Long): Int = positiveHash("daily:$userId")
+
     private fun weeklyNotificationId(userId: Long): Int = positiveHash("weekly:$userId")
 
     private fun positiveHash(value: String): Int = value.hashCode() and Int.MAX_VALUE
@@ -86,5 +138,6 @@ internal class ReminderNotificationCenter(private val context: Context) {
         const val REVIEW_CHANNEL_ID = "career_weekly_review_reminders_v1"
         const val EXTRA_DESTINATION = "notification_destination"
         const val DESTINATION_TODAY = "today"
+        private const val TASK_GROUP_KEY = "career_task_reminders"
     }
 }

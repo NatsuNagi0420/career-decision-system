@@ -20,7 +20,7 @@ import java.util.List;
 public interface ActionPlanMapper {
     String PLAN_COLUMNS = """
             p.id, p.user_id, p.decision_project_id, p.decision_target_id,
-            p.target_role, p.overview, p.status, p.duration_weeks,
+            p.target_role, p.overview, p.status, p.plan_type, p.duration_weeks,
             p.generation_request_id, p.version, p.start_date, p.end_date,
             p.created_at, p.updated_at,
             (SELECT COUNT(1) FROM path_plan_milestones m JOIN path_plan_tasks t ON t.milestone_id = m.id
@@ -30,7 +30,8 @@ public interface ActionPlanMapper {
             """;
 
     @Select("""
-            SELECT t.id, t.project_id, t.target_name
+            SELECT t.id, t.project_id, t.candidate_id, t.target_name,
+                   COALESCE(t.verification_status, 'verified') AS verification_status
             FROM decision_targets t
             JOIN decision_projects p ON p.id = t.project_id
             WHERE t.id = #{targetId} AND t.user_id = #{userId} AND t.project_id = #{projectId}
@@ -44,7 +45,8 @@ public interface ActionPlanMapper {
     );
 
     @Select("""
-            SELECT t.id, t.project_id, t.target_name
+            SELECT t.id, t.project_id, t.candidate_id, t.target_name,
+                   COALESCE(t.verification_status, 'verified') AS verification_status
             FROM decision_targets t
             JOIN decision_projects p ON p.id = t.project_id
             WHERE t.user_id = #{userId} AND t.project_id = #{projectId}
@@ -59,7 +61,7 @@ public interface ActionPlanMapper {
               status, plan_type, duration_weeks, generation_request_id, start_date, end_date
             ) VALUES (
               #{userId}, #{decisionProjectId}, #{decisionTargetId}, #{targetRole}, #{overview},
-              'active', 'action', #{durationWeeks}, #{generationRequestId}, #{startDate}, #{endDate}
+              'active', #{planType}, #{durationWeeks}, #{generationRequestId}, #{startDate}, #{endDate}
             )
             """)
     @Options(useGeneratedKeys = true, keyProperty = "id")
@@ -89,7 +91,7 @@ public interface ActionPlanMapper {
             SELECT
             """ + PLAN_COLUMNS + """
             FROM path_plans p
-            WHERE p.user_id = #{userId} AND p.plan_type = 'action' AND p.status <> 'archived'
+            WHERE p.user_id = #{userId} AND p.plan_type IN ('action', 'validation') AND p.status <> 'archived'
             ORDER BY CASE WHEN p.status = 'active' THEN 0 ELSE 1 END, p.updated_at DESC, p.id DESC
             """)
     List<PlanEntity> listPlans(@Param("userId") long userId);
@@ -99,7 +101,7 @@ public interface ActionPlanMapper {
             """ + PLAN_COLUMNS + """
             FROM path_plans p
             WHERE p.id = #{planId} AND p.user_id = #{userId}
-              AND p.plan_type = 'action' AND p.status <> 'archived'
+              AND p.plan_type IN ('action', 'validation') AND p.status <> 'archived'
             LIMIT 1
             """)
     PlanEntity findPlan(@Param("userId") long userId, @Param("planId") long planId);
@@ -108,8 +110,8 @@ public interface ActionPlanMapper {
             SELECT
             """ + PLAN_COLUMNS + """
             FROM path_plans p
-            WHERE p.user_id = #{userId} AND p.plan_type = 'action' AND p.status = 'active'
-            ORDER BY p.updated_at DESC, p.id DESC LIMIT 1
+            WHERE p.user_id = #{userId} AND p.plan_type IN ('action', 'validation') AND p.status = 'active'
+            ORDER BY CASE WHEN p.plan_type = 'action' THEN 0 ELSE 1 END, p.updated_at DESC, p.id DESC LIMIT 1
             """)
     PlanEntity findCurrentPlan(@Param("userId") long userId);
 
@@ -118,7 +120,7 @@ public interface ActionPlanMapper {
             """ + PLAN_COLUMNS + """
             FROM path_plans p
             WHERE p.user_id = #{userId} AND p.decision_project_id = #{projectId}
-              AND p.plan_type = 'action' AND p.status <> 'archived'
+              AND p.plan_type IN ('action', 'validation') AND p.status <> 'archived'
             ORDER BY CASE WHEN p.status = 'active' THEN 0 ELSE 1 END, p.updated_at DESC, p.id DESC
             LIMIT 1
             """)
@@ -132,7 +134,7 @@ public interface ActionPlanMapper {
             """ + PLAN_COLUMNS + """
             FROM path_plans p
             WHERE p.user_id = #{userId} AND p.generation_request_id = #{requestId}
-              AND p.plan_type = 'action'
+              AND p.plan_type IN ('action', 'validation')
             LIMIT 1
             """)
     PlanEntity findByRequestId(@Param("userId") long userId, @Param("requestId") String requestId);
@@ -162,7 +164,7 @@ public interface ActionPlanMapper {
             JOIN path_plan_milestones m ON m.id = t.milestone_id
             JOIN path_plans p ON p.id = m.plan_id
             WHERE t.id = #{taskId} AND t.deleted = 0 AND p.id = #{planId} AND p.user_id = #{userId}
-              AND p.plan_type = 'action' AND p.status <> 'archived'
+              AND p.plan_type IN ('action', 'validation') AND p.status <> 'archived'
             LIMIT 1
             """)
     TaskEntity findOwnedTask(
@@ -181,7 +183,8 @@ public interface ActionPlanMapper {
     @Update("""
             UPDATE path_plans SET overview = #{overview}, status = #{status},
                 version = version + 1, updated_at = CURRENT_TIMESTAMP
-            WHERE id = #{planId} AND user_id = #{userId} AND plan_type = 'action' AND status <> 'archived'
+            WHERE id = #{planId} AND user_id = #{userId}
+              AND plan_type IN ('action', 'validation') AND status <> 'archived'
             """)
     int updatePlan(
             @Param("userId") long userId,
@@ -192,9 +195,17 @@ public interface ActionPlanMapper {
 
     @Update("""
             UPDATE path_plans SET status = 'archived', updated_at = CURRENT_TIMESTAMP
-            WHERE id = #{planId} AND user_id = #{userId} AND plan_type = 'action' AND status <> 'archived'
+            WHERE id = #{planId} AND user_id = #{userId}
+              AND plan_type IN ('action', 'validation') AND status <> 'archived'
             """)
     int archivePlan(@Param("userId") long userId, @Param("planId") long planId);
+
+    @Update("""
+            UPDATE path_plans SET status = 'archived', updated_at = CURRENT_TIMESTAMP
+            WHERE user_id = #{userId} AND decision_project_id = #{projectId}
+              AND plan_type IN ('action', 'validation') AND status <> 'archived'
+            """)
+    int archiveActiveProjectPlans(@Param("userId") long userId, @Param("projectId") long projectId);
 
     @Select("""
             SELECT id FROM path_plan_milestones

@@ -13,6 +13,9 @@ public class DecisionTargetEntity {
     private String decisionReason;
     private String mainRisks;
     private LocalDate reviewDate;
+    private String verificationStatus;
+    private LocalDateTime verifiedAt;
+    private String overrideReason;
     private LocalDateTime confirmedAt;
 
     public Long getId() { return id; }
@@ -33,6 +36,12 @@ public class DecisionTargetEntity {
     public void setMainRisks(String value) { mainRisks = value; }
     public LocalDate getReviewDate() { return reviewDate; }
     public void setReviewDate(LocalDate value) { reviewDate = value; }
+    public String getVerificationStatus() { return verificationStatus; }
+    public void setVerificationStatus(String value) { verificationStatus = value; }
+    public LocalDateTime getVerifiedAt() { return verifiedAt; }
+    public void setVerifiedAt(LocalDateTime value) { verifiedAt = value; }
+    public String getOverrideReason() { return overrideReason; }
+    public void setOverrideReason(String value) { overrideReason = value; }
     public LocalDateTime getConfirmedAt() { return confirmedAt; }
     public void setConfirmedAt(LocalDateTime value) { confirmedAt = value; }
 }

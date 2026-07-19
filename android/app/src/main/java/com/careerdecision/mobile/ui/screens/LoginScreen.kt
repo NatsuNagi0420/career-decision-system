@@ -1,10 +1,18 @@
 package com.careerdecision.mobile.ui.screens
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
@@ -29,6 +37,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.careerdecision.mobile.CareerValidators
+import com.careerdecision.mobile.ui.design.BrandIdentity
 import com.careerdecision.mobile.ui.design.CareerIcons
 import com.careerdecision.mobile.ui.design.CareerSpacing
 import com.careerdecision.mobile.ui.design.M3Button
@@ -36,8 +45,14 @@ import com.careerdecision.mobile.ui.design.M3Card
 import com.careerdecision.mobile.ui.design.M3IconButton
 import com.careerdecision.mobile.ui.design.M3SegmentedControl
 import com.careerdecision.mobile.ui.design.M3TextField
+import com.careerdecision.mobile.ui.theme.CareerMotionTokens
 
 private enum class AuthMode { Login, Register }
+
+private val authModeOptions = listOf(
+    AuthMode.Login to "登录",
+    AuthMode.Register to "注册"
+)
 
 @Composable
 fun LoginScreen(
@@ -84,100 +99,124 @@ fun LoginScreen(
                 .padding(CareerSpacing.PageHorizontal),
             verticalArrangement = Arrangement.spacedBy(CareerSpacing.ExtraLarge)
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(CareerSpacing.Small)) {
-                Text(
-                    "职途",
-                    style = MaterialTheme.typography.displaySmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    "大学生职业决策与行动",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            BrandIdentity(showAvatar = true, showDescriptor = true)
             M3Card {
                 M3SegmentedControl(
-                    options = listOf(AuthMode.Login to "登录", AuthMode.Register to "注册"),
+                    options = authModeOptions,
                     selected = mode,
                     onSelected = {
-                        mode = it
-                        localError = null
+                        if (it != mode) {
+                            focusManager.clearFocus()
+                            mode = it
+                            localError = null
+                        }
                     }
                 )
-                M3TextField(
-                    value = username,
-                    onValueChange = { username = it; localError = null },
-                    label = "用户名",
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Text,
-                        imeAction = ImeAction.Next
-                    ),
-                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
-                )
-                if (mode == AuthMode.Register) {
-                    M3TextField(
-                        value = email,
-                        onValueChange = { email = it; localError = null },
-                        label = "邮箱（选填）",
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Email,
-                            imeAction = ImeAction.Next
-                        ),
-                        keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
-                    )
+                AnimatedContent(
+                    targetState = mode,
+                    modifier = Modifier.fillMaxWidth(),
+                    transitionSpec = {
+                        fadeIn(tween(CareerMotionTokens.Standard))
+                            .togetherWith(fadeOut(tween(CareerMotionTokens.Short)))
+                            .using(
+                                SizeTransform(clip = false) { _, _ ->
+                                    tween(CareerMotionTokens.Standard)
+                                }
+                            )
+                    },
+                    label = "登录注册表单切换"
+                ) { contentMode ->
+                    Column(verticalArrangement = Arrangement.spacedBy(CareerSpacing.Medium)) {
+                        M3TextField(
+                            value = username,
+                            onValueChange = { username = it; localError = null },
+                            label = "用户名",
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Text,
+                                imeAction = ImeAction.Next
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                            )
+                        )
+                        if (contentMode == AuthMode.Register) {
+                            M3TextField(
+                                value = email,
+                                onValueChange = { email = it; localError = null },
+                                label = "邮箱（选填）",
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Email,
+                                    imeAction = ImeAction.Next
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                                )
+                            )
+                        }
+                        M3TextField(
+                            value = password,
+                            onValueChange = { password = it; localError = null },
+                            label = "密码",
+                            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Password,
+                                imeAction = if (contentMode == AuthMode.Login) ImeAction.Done else ImeAction.Next
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onDone = { submit() },
+                                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                            ),
+                            trailingContent = {
+                                M3IconButton(
+                                    icon = if (passwordVisible) CareerIcons.EyeOff else CareerIcons.Eye,
+                                    label = if (passwordVisible) "隐藏密码" else "显示密码",
+                                    onClick = { passwordVisible = !passwordVisible }
+                                )
+                            }
+                        )
+                        if (contentMode == AuthMode.Register) {
+                            M3TextField(
+                                value = confirmPassword,
+                                onValueChange = { confirmPassword = it; localError = null },
+                                label = "再次输入密码",
+                                visualTransformation = if (passwordVisible) {
+                                    VisualTransformation.None
+                                } else {
+                                    PasswordVisualTransformation()
+                                },
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Password,
+                                    imeAction = ImeAction.Done
+                                ),
+                                keyboardActions = KeyboardActions(onDone = { submit() })
+                            )
+                        }
+                    }
                 }
-                M3TextField(
-                    value = password,
-                    onValueChange = { password = it; localError = null },
-                    label = "密码",
-                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Password,
-                        imeAction = if (mode == AuthMode.Login) ImeAction.Done else ImeAction.Next
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onDone = { submit() },
-                        onNext = { focusManager.moveFocus(FocusDirection.Down) }
-                    ),
-                    trailingContent = {
-                        M3IconButton(
-                            icon = if (passwordVisible) CareerIcons.EyeOff else CareerIcons.Eye,
-                            label = if (passwordVisible) "隐藏密码" else "显示密码",
-                            onClick = { passwordVisible = !passwordVisible }
+                Column {
+                    localError?.let {
+                        Spacer(Modifier.height(CareerSpacing.Medium))
+                        Text(
+                            it,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.error
                         )
                     }
-                )
-                if (mode == AuthMode.Register) {
-                    M3TextField(
-                        value = confirmPassword,
-                        onValueChange = { confirmPassword = it; localError = null },
-                        label = "再次输入密码",
-                        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Password,
-                            imeAction = ImeAction.Done
-                        ),
-                        keyboardActions = KeyboardActions(onDone = { submit() })
+                    Spacer(Modifier.height(CareerSpacing.Medium))
+                    M3Button(
+                        text = when {
+                            loading && mode == AuthMode.Login -> "正在登录"
+                            loading -> "正在注册"
+                            mode == AuthMode.Login -> "登录"
+                            else -> "注册并继续"
+                        },
+                        onClick = ::submit,
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !loading,
+                        loading = loading,
+                        icon = if (mode == AuthMode.Login) CareerIcons.Login else CareerIcons.Register
                     )
                 }
-                localError?.let {
-                    Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
-                }
-                M3Button(
-                    text = when {
-                        loading && mode == AuthMode.Login -> "正在登录"
-                        loading -> "正在注册"
-                        mode == AuthMode.Login -> "登录"
-                        else -> "注册并继续"
-                    },
-                    onClick = ::submit,
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !loading,
-                    loading = loading,
-                    icon = if (mode == AuthMode.Login) CareerIcons.Login else CareerIcons.Register
-                )
             }
         }
     }

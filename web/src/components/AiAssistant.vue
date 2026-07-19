@@ -1,12 +1,24 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Bot, MessageCircle, Send, X } from 'lucide-vue-next'
+import { Maximize2, Send, Trash2, X } from 'lucide-vue-next'
 import {
   assistantChatApi,
+  deleteAssistantSessionApi,
   type AssistantChatResponse,
   type AssistantResponseMode
 } from '@/api/assistant'
+import AssistantAvatar from '@/components/AssistantAvatar.vue'
+import {
+  preloadAssistantAvatarAssets,
+  type AssistantVisualState
+} from '@/assets/brand'
+import { visualStateForAssistantResponse } from '@/utils/assistantPresentation'
+import {
+  M3ConfirmCancelledError,
+  m3Confirm,
+  m3Message
+} from '@/design-system/services/feedback'
 
 type MentorMessage = {
   id: string
@@ -15,6 +27,7 @@ type MentorMessage = {
   response?: AssistantChatResponse
   retryText?: string
   retryRequestId?: string
+  visualState: AssistantVisualState
 }
 
 const route = useRoute()
@@ -22,6 +35,8 @@ const router = useRouter()
 const isOpen = ref(false)
 const input = ref('')
 const sending = ref(false)
+const sessionMutationPending = ref(false)
+const inputFocused = ref(false)
 const bodyRef = ref<HTMLElement | null>(null)
 const quickQuestionsRef = ref<HTMLElement | null>(null)
 const sessionId = ref<number | null>(null)
@@ -29,7 +44,8 @@ const messages = ref<MentorMessage[]>([
   {
     id: 'mentor-welcome',
     role: 'assistant',
-    text: '我会先直接回答你的问题；需要职业判断时，再提供可展开的依据和下一步。'
+    text: '我会先直接回答你的问题；需要职业判断时，再提供可展开的依据和下一步。',
+    visualState: 'default'
   }
 ])
 
@@ -103,14 +119,61 @@ const explanationSummary = (response: AssistantChatResponse) => {
   return parts.join(' · ')
 }
 
+const activeVisualState = computed<AssistantVisualState>(() => {
+  if (sending.value) return 'thinking'
+  if (inputFocused.value) return 'listening'
+  const latestAssistantMessage = [...messages.value].reverse().find((message) => message.role === 'assistant')
+  return latestAssistantMessage?.visualState ?? 'default'
+})
+
 const scrollToBottom = async () => {
   await nextTick()
   if (bodyRef.value) bodyRef.value.scrollTop = bodyRef.value.scrollHeight
 }
 
+const isSessionNotFound = (error: unknown) => {
+  const code = (error as { code?: unknown })?.code
+  return code === 40490 || code === 404
+}
+
+const resetMentorSession = () => {
+  sessionId.value = null
+  input.value = ''
+  messages.value = [{
+    id: 'mentor-welcome',
+    role: 'assistant',
+    text: '我会先直接回答你的问题；需要职业判断时，再提供可展开的依据和下一步。',
+    visualState: 'default'
+  }]
+}
+
+const deleteMentorSession = async () => {
+  const id = sessionId.value
+  if (id == null || sending.value || sessionMutationPending.value) return
+  sessionMutationPending.value = true
+  try {
+    await m3Confirm('删除后，这段对话和其中的消息将无法恢复。不会删除你的个人档案、决策项目或行动计划。', '删除会话', {
+      confirmButtonText: '删除会话',
+      cancelButtonText: '取消',
+      type: 'error'
+    })
+    try {
+      await deleteAssistantSessionApi(id)
+    } catch (error) {
+      if (!isSessionNotFound(error)) throw error
+    }
+    resetMentorSession()
+    m3Message.success('会话已删除')
+  } catch (error) {
+    if (error instanceof M3ConfirmCancelledError) return
+    m3Message.error(error instanceof Error ? error.message : '会话删除失败')
+  } finally {
+    sessionMutationPending.value = false
+  }
+}
 const send = async (suggested?: string, retryMessageId?: string) => {
   const text = (suggested ?? input.value).trim()
-  if (!text || sending.value) return
+  if (!text || sending.value || sessionMutationPending.value) return
   const retryMessage = retryMessageId
     ? messages.value.find((message) => message.id === retryMessageId)
     : undefined
@@ -118,7 +181,7 @@ const send = async (suggested?: string, retryMessageId?: string) => {
   if (retryMessageId) {
     messages.value = messages.value.filter((message) => message.id !== retryMessageId)
   } else {
-    messages.value.push({ id: `user-${crypto.randomUUID()}`, role: 'user', text })
+    messages.value.push({ id: `user-${crypto.randomUUID()}`, role: 'user', text, visualState: 'default' })
     input.value = ''
   }
   sending.value = true
@@ -136,16 +199,24 @@ const send = async (suggested?: string, retryMessageId?: string) => {
       id: `assistant-${crypto.randomUUID()}`,
       role: 'assistant',
       text: response.reply,
-      response
+      response,
+      visualState: visualStateForAssistantResponse(response)
     })
   } catch (error) {
+    if (isSessionNotFound(error)) {
+      resetMentorSession()
+      input.value = text
+      m3Message.info('这段会话已经删除，请重新发送消息开始新会话')
+      return
+    }
     const reason = error instanceof Error ? error.message : '网络或服务异常'
     messages.value.push({
       id: `assistant-error-${crypto.randomUUID()}`,
       role: 'assistant',
       text: `导师暂时无法回答：${reason}。页面中的档案、决策和行动功能仍可正常使用。`,
       retryText: text,
-      retryRequestId: requestId
+      retryRequestId: requestId,
+      visualState: 'concerned'
     })
   } finally {
     sending.value = false
@@ -158,6 +229,17 @@ const navigate = async (action: string) => {
   if (!path) return
   isOpen.value = false
   await router.push(path)
+}
+
+const openStandaloneAssistant = async () => {
+  isOpen.value = false
+  await router.push({
+    path: '/assistant',
+    query: {
+      from: route.fullPath,
+      ...(sessionId.value ? { session: String(sessionId.value) } : {})
+    }
+  })
 }
 
 const handleInputKeydown = (event: KeyboardEvent) => {
@@ -183,26 +265,34 @@ watch(() => route.fullPath, () => {
   if (quickQuestionsRef.value) quickQuestionsRef.value.scrollLeft = 0
   if (isOpen.value) void scrollToBottom()
 })
+
+watch(isOpen, (open) => {
+  if (open) preloadAssistantAvatarAssets()
+})
 </script>
 
 <template>
   <Teleport to="body">
     <M3Fab class="mentor-fab" :class="{ 'panel-open': isOpen }" :label="isOpen ? '关闭 AI 导师' : '打开 AI 导师'" size="small" :aria-expanded="isOpen" @click="isOpen = !isOpen">
       <X v-if="isOpen" :size="22" />
-      <MessageCircle v-else :size="23" />
+      <AssistantAvatar v-else class="mentor-fab-avatar" :state="activeVisualState" size="medium" />
     </M3Fab>
 
     <Transition name="mentor-panel">
       <section v-if="isOpen" class="mentor-panel" aria-label="AI 导师">
         <header>
-          <div class="mentor-title"><span><Bot :size="19" /></span><div><strong>AI 导师</strong><small>{{ pageLabel }}</small></div></div>
-          <M3IconButton label="关闭 AI 导师" @click="isOpen = false"><X :size="19" /></M3IconButton>
+          <div class="mentor-title"><AssistantAvatar :state="activeVisualState" size="medium" /><div><strong>穗奈 · AI 导师</strong><small>{{ pageLabel }}</small></div></div>
+          <div class="mentor-header-actions"><M3IconButton v-if="sessionId != null" label="删除会话" :disabled="sending || sessionMutationPending" @click="deleteMentorSession"><Trash2 :size="19" /></M3IconButton><M3IconButton label="打开完整穗奈助手" :disabled="sending || sessionMutationPending" @click="openStandaloneAssistant"><Maximize2 :size="19" /></M3IconButton><M3IconButton label="关闭 AI 导师" @click="isOpen = false"><X :size="19" /></M3IconButton></div>
         </header>
 
         <div ref="bodyRef" class="mentor-body" aria-live="polite">
-          <M3Card
+          <div
             v-for="message in messages"
             :key="message.id"
+            :class="['mentor-message-row', message.role]"
+          >
+            <AssistantAvatar v-if="message.role === 'assistant'" :state="message.visualState" size="small" />
+            <M3Card
             tag="article"
             :variant="message.role === 'user' ? 'filled' : 'outlined'"
             :class="['mentor-message', message.role]"
@@ -235,13 +325,14 @@ watch(() => route.fullPath, () => {
 
               <div v-if="responseMode(message.response) === 'coaching' && message.response.actions?.length" class="response-actions"><M3Button v-for="action in message.response.actions" :key="action.action" variant="tonal" @click="navigate(action.action)">{{ action.label }}</M3Button></div>
             </template>
-          </M3Card>
-          <M3Card v-if="sending" class="mentor-message assistant pending" tag="div" variant="outlined"><M3CircularProgress indeterminate label="AI 导师正在回答" /></M3Card>
+            </M3Card>
+          </div>
+          <div v-if="sending" class="mentor-message-row assistant"><AssistantAvatar state="thinking" size="small" /><M3Card class="mentor-message assistant pending" tag="div" variant="outlined"><M3CircularProgress indeterminate label="AI 导师正在回答" /></M3Card></div>
         </div>
 
         <footer>
-          <div ref="quickQuestionsRef" class="quick-questions" role="group" aria-label="示例问题" tabindex="0" @wheel="handleQuickQuestionsWheel"><M3Button v-for="question in quickQuestions" :key="question" variant="text" :disabled="sending" @click="send(question)">{{ question }}</M3Button></div>
-          <div class="mentor-input"><M3TextArea v-model="input" class="mentor-input-field" :rows="2" maxlength="2000" label="向 AI 导师提问" @keydown="handleInputKeydown" /><M3IconButton label="发送" variant="filled" :disabled="!input.trim() || sending" @click="send()"><Send :size="18" /></M3IconButton></div>
+          <div ref="quickQuestionsRef" class="quick-questions" role="group" aria-label="示例问题" tabindex="0" @wheel="handleQuickQuestionsWheel"><M3Button v-for="question in quickQuestions" :key="question" variant="text" :disabled="sending || sessionMutationPending" @click="send(question)">{{ question }}</M3Button></div>
+          <div class="mentor-input"><M3TextArea v-model="input" class="mentor-input-field" :rows="2" maxlength="2000" label="向 AI 导师提问" :disabled="sending || sessionMutationPending" @focus="inputFocused = true" @blur="inputFocused = false" @keydown="handleInputKeydown" /><M3IconButton label="发送" variant="filled" :disabled="!input.trim() || sending || sessionMutationPending" @click="send()"><Send :size="18" /></M3IconButton></div>
         </footer>
       </section>
     </Transition>
@@ -250,15 +341,18 @@ watch(() => route.fullPath, () => {
 
 <style scoped>
 .mentor-fab { position: fixed; z-index: 1202; right: var(--career-spacing-6); bottom: var(--career-spacing-6); }
+.mentor-fab-avatar { margin: -7px; }
 .mentor-panel { position: fixed; z-index: 1201; right: var(--career-spacing-6); bottom: 88px; width: min(400px, calc(100vw - 32px)); height: min(680px, calc(100vh - 128px)); display: grid; grid-template-rows: auto minmax(0, 1fr) auto; overflow: hidden; border-radius: var(--md-sys-shape-corner-large); background: var(--md-sys-color-surface-container-high); color: var(--md-sys-color-on-surface); box-shadow: var(--md-sys-elevation-level3); }
 .mentor-panel > header { min-height: 64px; display: flex; align-items: center; justify-content: space-between; gap: var(--career-spacing-4); padding: var(--career-spacing-2) var(--career-spacing-3) var(--career-spacing-2) var(--career-spacing-4); border-bottom: 1px solid var(--md-sys-color-outline-variant); }
 .mentor-title { display: flex; align-items: center; gap: var(--career-spacing-3); }
-.mentor-title > span { width: 40px; height: 40px; display: grid; place-items: center; border-radius: var(--md-sys-shape-corner-medium); background: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container); }
+.mentor-header-actions { display: flex; align-items: center; gap: var(--career-spacing-1); }
 .mentor-title > div { display: grid; gap: var(--career-spacing-1); }
 .mentor-title strong { font: 500 var(--md-sys-typescale-title-medium-size) / var(--md-sys-typescale-title-medium-line-height) var(--md-ref-typeface-brand); }
 .mentor-title small { color: var(--md-sys-color-on-surface-variant); font: 500 var(--md-sys-typescale-label-medium-size) / var(--md-sys-typescale-label-medium-line-height) var(--md-ref-typeface-plain); }
 .mentor-body { overflow-y: auto; padding: var(--career-spacing-4); background: var(--md-sys-color-surface); }
-.mentor-message { width: min(92%, 340px); margin-bottom: var(--career-spacing-3); padding: var(--career-spacing-3) var(--career-spacing-4); }
+.mentor-message-row { display: flex; width: 100%; align-items: flex-start; gap: var(--career-spacing-2); margin-bottom: var(--career-spacing-3); }
+.mentor-message-row.user { justify-content: flex-end; }
+.mentor-message { width: min(calc(100% - 40px), 300px); padding: var(--career-spacing-3) var(--career-spacing-4); }
 .mentor-message.user { margin-left: auto; background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
 .message-copy { font: 400 var(--md-sys-typescale-body-medium-size) / var(--md-sys-typescale-body-medium-line-height) var(--md-ref-typeface-plain); white-space: pre-wrap; }
 .primary-answer { color: var(--md-sys-color-on-surface); }

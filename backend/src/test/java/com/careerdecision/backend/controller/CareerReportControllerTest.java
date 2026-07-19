@@ -107,7 +107,7 @@ class CareerReportControllerTest {
 
     private static final class FakeJobService extends JobService {
         private FakeJobService() {
-            super(null);
+            super(null, null);
         }
 
         @Override

@@ -242,7 +242,18 @@ test('品牌、账户信息和按钮图标保持水平居中', async ({ page }, 
     expect(Math.max(...(metrics?.offsets || [0]))).toBeLessThanOrEqual(1)
   }
 
-  await expectCenteredContent('md-text-button.brand', 2)
+  await expectCenteredContent('md-text-button.brand', 1)
+  const brandOffsets = await page.locator('.top-app-bar .brand-identity').evaluate((element) => {
+    const bounds = element.getBoundingClientRect()
+    const center = bounds.top + bounds.height / 2
+    return Array.from(element.children)
+      .filter((child) => getComputedStyle(child).display !== 'none')
+      .map((child) => {
+        const childBounds = child.getBoundingClientRect()
+        return Math.abs(childBounds.top + childBounds.height / 2 - center)
+      })
+  })
+  expect(Math.max(...brandOffsets)).toBeLessThanOrEqual(1)
   await expectCenteredContent('md-text-button.user-profile', testInfo.project.name === 'chromium-360' ? 1 : 3)
 
   await page.goto('/decision-projects')
@@ -628,6 +639,96 @@ test('导航磁吸只移动自定义光标并尊重设备动态偏好', async ({
   await expect(page.locator('html')).toHaveAttribute('data-navigation-magnetic-cursor-visible', '')
 })
 
+test('大尺寸磁吸按钮点击时不播放扩散回弹动画', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === 'chromium-360', '移动端使用原生光标')
+
+  await page.evaluate(() => {
+    const button = document.createElement('md-filled-button')
+    button.id = 'large-magnetic-button-fixture'
+    button.textContent = '大尺寸磁吸操作'
+    button.style.cssText = [
+      'position:fixed',
+      'z-index:1500',
+      'left:240px',
+      'top:170px',
+      'width:min(360px, calc(100vw - 280px))',
+      '--md-filled-button-container-height:96px'
+    ].join(';')
+    button.dataset.clickCount = '0'
+    button.addEventListener('click', () => {
+      button.dataset.clickCount = String(Number(button.dataset.clickCount || 0) + 1)
+    })
+    document.body.append(button)
+  })
+
+  const button = page.locator('#large-magnetic-button-fixture')
+  const cursor = page.locator('.navigation-magnetic-cursor')
+  const boundsBefore = await button.boundingBox()
+  expect(boundsBefore).not.toBeNull()
+  expect(boundsBefore!.height).toBeGreaterThanOrEqual(90)
+
+  const center = {
+    x: boundsBefore!.x + boundsBefore!.width / 2,
+    y: boundsBefore!.y + boundsBefore!.height / 2
+  }
+  await page.mouse.move(center.x, center.y)
+  await expect(button).toHaveAttribute('data-magnetic-active', 'true')
+  await expect(cursor).toHaveAttribute('data-magnetic-active', 'true')
+  await expect.poll(async () => {
+    const cursorBounds = await cursor.boundingBox()
+    if (!cursorBounds) return Number.POSITIVE_INFINITY
+    return Math.max(
+      Math.abs(cursorBounds.x - boundsBefore!.x),
+      Math.abs(cursorBounds.y - boundsBefore!.y),
+      Math.abs(cursorBounds.width - boundsBefore!.width),
+      Math.abs(cursorBounds.height - boundsBefore!.height)
+    )
+  }).toBeLessThanOrEqual(1)
+
+  const rippleBefore = await button.evaluate((element) => {
+    const ripple = element.shadowRoot?.querySelector<HTMLElement>('md-ripple')
+    return ripple
+      ? Number.parseFloat(getComputedStyle(ripple).getPropertyValue('--md-ripple-pressed-opacity'))
+      : null
+  })
+  expect(rippleBefore).toBe(0)
+
+  const cursorBefore = await cursor.boundingBox()
+  expect(cursorBefore).not.toBeNull()
+  await page.mouse.down()
+  await page.waitForTimeout(140)
+
+  const pressedVisual = await button.evaluate((element) => {
+    const ripple = element.shadowRoot?.querySelector<HTMLElement>('md-ripple')
+    const surface = ripple?.shadowRoot?.querySelector<HTMLElement>('.surface')
+    const bounds = element.getBoundingClientRect()
+    return {
+      afterOpacity: surface ? Number.parseFloat(getComputedStyle(surface, '::after').opacity) : null,
+      height: bounds.height,
+      transform: getComputedStyle(element).transform,
+      width: bounds.width,
+      x: bounds.x,
+      y: bounds.y
+    }
+  })
+  const cursorPressed = await cursor.boundingBox()
+  expect(pressedVisual.afterOpacity).toBe(0)
+  expect(pressedVisual.transform).toBe('none')
+  expect(Math.abs(pressedVisual.x - boundsBefore!.x)).toBeLessThanOrEqual(0.01)
+  expect(Math.abs(pressedVisual.y - boundsBefore!.y)).toBeLessThanOrEqual(0.01)
+  expect(Math.abs(pressedVisual.width - boundsBefore!.width)).toBeLessThanOrEqual(0.01)
+  expect(Math.abs(pressedVisual.height - boundsBefore!.height)).toBeLessThanOrEqual(0.01)
+  expect(cursorPressed).not.toBeNull()
+  expect(Math.abs(cursorPressed!.x - cursorBefore!.x)).toBeLessThanOrEqual(0.01)
+  expect(Math.abs(cursorPressed!.y - cursorBefore!.y)).toBeLessThanOrEqual(0.01)
+  expect(Math.abs(cursorPressed!.width - cursorBefore!.width)).toBeLessThanOrEqual(0.01)
+  expect(Math.abs(cursorPressed!.height - cursorBefore!.height)).toBeLessThanOrEqual(0.01)
+
+  await page.mouse.up()
+  await expect(button).toHaveAttribute('data-click-count', '1')
+  await expect(cursor).toHaveAttribute('data-magnetic-active', 'true')
+})
+
 test('磁吸点击保持目标可用且不会闪回系统光标', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name === 'chromium-360', '移动端使用原生光标')
 
@@ -848,9 +949,11 @@ test('AI 助手保持在磁吸光标下方且示例问题可以完整滚动', as
     .filter({ hasText: '怎样避免盲目选择？' })
   await expect(mentorPanel).toBeVisible()
   await expect(questions).toBeVisible()
+  await expect(mentorPanel.locator('.mentor-title [data-assistant-state="default"]')).toBeVisible()
 
   await page.getByLabel('向 AI 导师提问').focus()
   await expect(page.getByLabel('向 AI 导师提问')).toBeFocused()
+  await expect(mentorPanel.locator('.mentor-title [data-assistant-state="listening"]')).toBeVisible()
   const footerSpacing = await page.evaluate(() => {
     const questionsElement = document.querySelector<HTMLElement>('.quick-questions')
     const textAreaElement = document.querySelector<HTMLElement>('.mentor-input-field')
@@ -933,6 +1036,27 @@ test('AI 助手保持在磁吸光标下方且示例问题可以完整滚动', as
       contentType: 'image/png'
     })
   }
+})
+
+test('青穗集品牌资源在登录页和导航栏按视口正确呈现', async ({ page }, testInfo) => {
+  await page.goto('/login')
+  await expect(page).toHaveTitle('青穗集 · 职业决策与行动')
+  const wordmark = page.locator('.auth-brand img[alt="青穗集"]')
+  await expect(wordmark).toBeVisible()
+  await expect.poll(() => wordmark.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true)
+
+  const showcase = page.getByRole('complementary', { name: '青穗集品牌介绍' })
+  if ((page.viewportSize()?.width ?? 0) > 820) {
+    await expect(showcase).toBeVisible()
+    await expect(showcase.locator('img')).toHaveAttribute('alt', '青穗集与 AI 导师穗奈')
+  } else {
+    await expect(showcase).toBeHidden()
+  }
+
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth)).toBe(false)
+
+  await page.goto('/settings')
+  await expect(page.locator('.top-app-bar img[alt="青穗集"]')).toBeVisible()
 })
 
 test('AI 助手区分模型身份直接回答与可展开教练建议', async ({ page }, testInfo) => {

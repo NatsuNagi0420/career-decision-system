@@ -33,6 +33,8 @@ Android 端定位为高频、轻量、可随时进入的行动客户端，默认
 
 实现遵守 `docs/项目设计规范.md`：根节点统一使用 `CareerTheme`，业务页面只使用项目 `M3*` 组件和语义 Token，不直接使用 Material 控件、Material Icons、硬编码颜色或形状。Android 12+ 可使用系统动态颜色，旧版本使用同源种子色方案；本机背景会移除 EXIF 并复制到应用私有目录，不覆盖 Web 背景。
 
+品牌名称统一为“青穗集”，启动图标使用穗奈标准头像；AI 导师的默认、倾听、思考、讲解、担心、提醒、鼓励和完成头像与 Web 使用相同源图和状态优先级。Android 派生资源由 `android/scripts/prepare_brand_assets.py` 从 `docs/品牌形象/BgSub_*.png` 生成到 `drawable-nodpi`，不把多兆像素源图直接打包进 APK。
+
 ## 构建
 
 ```powershell
@@ -51,6 +53,18 @@ https://192.168.1.159:8443
 ```powershell
 .\gradlew.bat :app:assembleDebug "-Pcareer.backendDebugBaseUrl=https://YOUR_LAN_IP:8443"
 ```
+
+### 真机性能构建
+
+不要用 Debug APK 判断 Compose 滑动帧率。`performance` 变体使用与 Release
+相同的非调试编译路径，同时保留本地开发后端、项目 CA 和 Debug 签名，可直接覆盖安装：
+
+```powershell
+.\gradlew.bat :app:assemblePerformance "-Pcareer.backendDebugBaseUrl=https://YOUR_LAN_IP:8443"
+adb install -r .\app\build\outputs\apk\performance\app-performance.apk
+```
+
+该 APK 可被系统性能工具读取，但不包含 Debug/Compose Inspector 的运行时开销。
 
 ## 真机 HTTPS
 

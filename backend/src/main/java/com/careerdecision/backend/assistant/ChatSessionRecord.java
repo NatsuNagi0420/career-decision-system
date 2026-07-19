@@ -8,6 +8,8 @@ public class ChatSessionRecord {
     private String title;
     private String lastPage;
     private String status;
+    private Integer messageCount;
+    private String lastMessage;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -21,6 +23,10 @@ public class ChatSessionRecord {
     public void setLastPage(String value) { lastPage = value; }
     public String getStatus() { return status; }
     public void setStatus(String value) { status = value; }
+    public Integer getMessageCount() { return messageCount; }
+    public void setMessageCount(Integer value) { messageCount = value; }
+    public String getLastMessage() { return lastMessage; }
+    public void setLastMessage(String value) { lastMessage = value; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime value) { createdAt = value; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }

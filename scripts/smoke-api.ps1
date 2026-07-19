@@ -318,7 +318,35 @@ $ChatFollowUp = Invoke-SmokeJson "Context chat follow-up" "POST" (Join-Url $Back
 } $AuthHeaders
 Assert-EnvelopeSuccess "Context chat follow-up" $ChatFollowUp
 Assert-True ([long] $ChatFollowUp.data.sessionId -eq [long] $ChatFirst.data.sessionId) "Chat follow-up did not continue the session."
-Write-Host "OK persisted context chat and retry"
+$ChatSessionId = [long] $ChatFirst.data.sessionId
+$ChatSessions = Invoke-SmokeJson "Chat session list" "GET" (Join-Url $BackendBaseUrl "/api/v1/chat/sessions") -Headers $AuthHeaders
+Assert-EnvelopeSuccess "Chat session list" $ChatSessions
+$ListedChatSession = @(To-Array $ChatSessions.data | Where-Object { [long] $_.id -eq $ChatSessionId })
+Assert-True ($ListedChatSession.Count -eq 1) "Persisted chat session was not returned exactly once."
+Assert-True ([int] $ListedChatSession[0].messageCount -eq 4) "Chat session list did not report the two persisted turns."
+
+$ChatSessionDetail = Invoke-SmokeJson "Chat session detail" "GET" (Join-Url $BackendBaseUrl "/api/v1/chat/sessions/$ChatSessionId") -Headers $AuthHeaders
+Assert-EnvelopeSuccess "Chat session detail" $ChatSessionDetail
+$ChatSessionMessages = @(To-Array $ChatSessionDetail.data.messages)
+Assert-True ($ChatSessionMessages.Count -eq 4) "Chat session detail did not restore every persisted message."
+$RestoredAssistantMessages = @($ChatSessionMessages | Where-Object { [string] $_.role -eq "assistant" })
+Assert-True ($RestoredAssistantMessages.Count -eq 2) "Chat session detail did not restore both assistant messages."
+Assert-NotBlank $RestoredAssistantMessages[0].response.reply "Restored assistant response lost its structured reply."
+
+$RenamedChatSession = Invoke-SmokeJson "Chat session rename" "PATCH" (Join-Url $BackendBaseUrl "/api/v1/chat/sessions/$ChatSessionId") @{
+    title = "Smoke conversation history"
+} $AuthHeaders
+Assert-EnvelopeSuccess "Chat session rename" $RenamedChatSession
+Assert-True ([string] $RenamedChatSession.data.title -eq "Smoke conversation history") "Chat session title did not round-trip."
+
+$DeletedChatSession = Invoke-SmokeJson "Chat session delete" "DELETE" (Join-Url $BackendBaseUrl "/api/v1/chat/sessions/$ChatSessionId") -Headers $AuthHeaders
+Assert-EnvelopeSuccess "Chat session delete" $DeletedChatSession
+Assert-True ($DeletedChatSession.data.deleted -eq $true) "Chat session was not permanently deleted."
+$ChatSessionsAfterDelete = Invoke-SmokeJson "Chat session list after delete" "GET" (Join-Url $BackendBaseUrl "/api/v1/chat/sessions") -Headers $AuthHeaders
+Assert-EnvelopeSuccess "Chat session list after delete" $ChatSessionsAfterDelete
+$DeletedStillListed = @(To-Array $ChatSessionsAfterDelete.data | Where-Object { [long] $_.id -eq $ChatSessionId })
+Assert-True ($DeletedStillListed.Count -eq 0) "Deleted chat session remained visible in the active list."
+Write-Host "OK persisted context chat, retry, restore, rename, and delete"
 
 $MbtiAnswers = @{}
 foreach ($Question in $QuestionItems) {

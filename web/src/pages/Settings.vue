@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, nextTick, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   FileClock,
@@ -17,6 +17,7 @@ import { logoutApi } from '@/api/user'
 import { M3Button } from '@/design-system/components'
 import { m3Confirm, m3Message } from '@/design-system/services/feedback'
 import { PRESET_SEED_COLORS } from '@/design-system/theme/materialTheme'
+import { createThemeTransition } from '@/design-system/theme/themeTransition'
 import { useThemeStore, type ThemeMode } from '@/stores/theme'
 import { clearSession, getStoredUser } from '@/utils/session'
 
@@ -26,6 +27,7 @@ const router = useRouter()
 const themeStore = useThemeStore()
 const user = computed(() => getStoredUser())
 const processingImage = ref(false)
+const themeTransition = createThemeTransition()
 
 const modeOptions: Array<{ value: ThemeMode; label: string; icon: typeof Sun }> = [
   { value: 'light', label: '浅色', icon: Sun },
@@ -34,6 +36,28 @@ const modeOptions: Array<{ value: ThemeMode; label: string; icon: typeof Sun }> 
 ]
 
 const presetSeeds = PRESET_SEED_COLORS
+
+const handleThemeModeChange = (event: MouseEvent, mode: ThemeMode) => {
+  if (mode === themeStore.themeMode) return
+
+  const trigger = event.currentTarget as HTMLElement | null
+  const systemDark = typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+    ? window.matchMedia('(prefers-color-scheme: dark)').matches
+    : false
+  const nextIsDark = mode === 'dark' || (mode === 'system' && systemDark)
+
+  if (!trigger || nextIsDark === themeStore.isDark) {
+    themeStore.setTheme(mode)
+    return
+  }
+
+  void themeTransition.run(trigger, async () => {
+    themeStore.setTheme(mode)
+    await nextTick()
+  })
+}
+
+onUnmounted(() => themeTransition.cancel())
 
 const handleBackgroundFile = async (file: File) => {
   processingImage.value = true
@@ -100,7 +124,7 @@ const logout = async () => {
               v-for="option in modeOptions"
               :key="option.value"
               :active="themeStore.themeMode === option.value"
-              @click="themeStore.setTheme(option.value)"
+              @click="handleThemeModeChange($event, option.value)"
             >
               <component :is="option.icon" :size="18" />{{ option.label }}
             </M3Tab>

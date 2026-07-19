@@ -3,9 +3,7 @@ from typing import Any
 import anyio
 import httpx
 
-from app.main import app
-
-DEFAULT_INTERNAL_TOKEN = "change-me"
+from app.main import app, settings
 
 
 def api_get(
@@ -39,7 +37,11 @@ def _request(
     async def run_request() -> httpx.Response:
         request_headers: dict[str, str] = {}
         if internal_token:
-            request_headers["X-Internal-Token"] = DEFAULT_INTERNAL_TOKEN
+            # A request marked as authenticated must follow the same effective
+            # configuration as the in-process app. This keeps the suite
+            # isolated from whether a developer's local .env overrides the
+            # documented development default.
+            request_headers["X-Internal-Token"] = settings.normalized_internal_api_token()
         if headers:
             request_headers.update(headers)
 

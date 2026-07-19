@@ -225,6 +225,124 @@ describe('NavigationMagneticCursor', () => {
     expect(cursor.element.getAttribute('style')).toContain('--career-magnetic-target-height: 48.00px')
   })
 
+  it('preserves a square tab shape instead of turning it into a pill', async () => {
+    const tab = document.createElement('button')
+    tab.type = 'button'
+    tab.role = 'tab'
+    tab.style.borderRadius = '0px'
+    tab.getBoundingClientRect = vi.fn(() => rect(480, 100, 120, 48))
+    document.body.append(tab)
+    mountCursor()
+    const cursor = getCursor()
+
+    document.dispatchEvent(pointerEvent('pointermove', { clientX: 540, clientY: 124 }))
+    flushAnimationFrames()
+    await nextTick()
+
+    expect(tab.dataset.magneticActive).toBe('true')
+    expect(cursor.element.style.getPropertyValue('--career-magnetic-target-radius')).toBe('0px')
+  })
+
+  it('uses an explicitly registered visible surface for cursor geometry and shape', async () => {
+    const target = document.createElement('button')
+    target.dataset.magneticSurface = '.visible-surface'
+    target.dataset.magneticRadius = '10px'
+    target.getBoundingClientRect = vi.fn(() => rect(460, 80, 160, 80))
+    const surface = document.createElement('span')
+    surface.className = 'visible-surface'
+    surface.getBoundingClientRect = vi.fn(() => rect(480, 100, 120, 48))
+    target.append(surface)
+    document.body.append(target)
+    mountCursor()
+    const cursor = getCursor()
+
+    document.dispatchEvent(pointerEvent('pointermove', { clientX: 540, clientY: 124 }))
+    flushAnimationFrames()
+    await nextTick()
+
+    expect(target.dataset.magneticActive).toBe('true')
+    expect(cursor.element.style.getPropertyValue('--career-magnetic-cursor-x')).toBe('540.00px')
+    expect(cursor.element.style.getPropertyValue('--career-magnetic-cursor-y')).toBe('124.00px')
+    expect(cursor.element.style.getPropertyValue('--career-magnetic-target-width')).toBe('120.00px')
+    expect(cursor.element.style.getPropertyValue('--career-magnetic-target-height')).toBe('48.00px')
+    expect(cursor.element.style.getPropertyValue('--career-magnetic-target-radius')).toBe('10px')
+  })
+
+  it('resolves an explicitly registered surface inside an open shadow root', async () => {
+    const target = document.createElement('div')
+    target.dataset.magneticTarget = 'primary-navigation'
+    target.dataset.magneticSurface = '.control-surface'
+    target.getBoundingClientRect = vi.fn(() => rect(460, 80, 160, 80))
+    const shadowRoot = target.attachShadow({ mode: 'open' })
+    const surface = document.createElement('button')
+    surface.className = 'control-surface'
+    surface.style.borderRadius = '6px'
+    surface.getBoundingClientRect = vi.fn(() => rect(480, 100, 120, 48))
+    shadowRoot.append(surface)
+    document.body.append(target)
+    mountCursor()
+    const cursor = getCursor()
+
+    document.dispatchEvent(pointerEvent('pointermove', { clientX: 540, clientY: 124 }))
+    flushAnimationFrames()
+    await nextTick()
+
+    expect(target.dataset.magneticActive).toBe('true')
+    expect(cursor.element.style.getPropertyValue('--career-magnetic-target-width')).toBe('120.00px')
+    expect(cursor.element.style.getPropertyValue('--career-magnetic-target-height')).toBe('48.00px')
+    expect(cursor.element.style.getPropertyValue('--career-magnetic-target-radius')).toBe('6px')
+  })
+
+  it('keeps icon-button cursor geometry equal to the real control surface', async () => {
+    const iconButton = document.createElement('md-icon-button')
+    iconButton.getBoundingClientRect = vi.fn(() => rect(480, 100, 40, 40))
+    document.body.append(iconButton)
+    mountCursor()
+    const cursor = getCursor()
+
+    document.dispatchEvent(pointerEvent('pointermove', { clientX: 500, clientY: 120 }))
+    flushAnimationFrames()
+    await nextTick()
+
+    expect(iconButton.dataset.magneticActive).toBe('true')
+    expect(cursor.element.style.getPropertyValue('--career-magnetic-target-width')).toBe('40.00px')
+    expect(cursor.element.style.getPropertyValue('--career-magnetic-target-height')).toBe('40.00px')
+    expect(cursor.element.style.getPropertyValue('--career-magnetic-target-radius')).toBe(
+      'var(--md-sys-shape-corner-full)'
+    )
+  })
+
+  it('cuts protected raster media out of the blended magnetic surface', async () => {
+    const target = appendTarget()
+    const avatar = document.createElement('img')
+    avatar.dataset.magneticPreserve = ''
+    avatar.style.borderRadius = '50%'
+    avatar.getBoundingClientRect = vi.fn(() => rect(112, 112, 36, 36))
+    target.append(avatar)
+    mountCursor()
+    const cursor = getCursor()
+    cursor.element.getBoundingClientRect = vi.fn(() => rect(100, 100, 100, 60))
+
+    document.dispatchEvent(pointerEvent('pointermove', { clientX: 150, clientY: 130 }))
+    flushAnimationFrames()
+    flushAnimationFrames()
+    await nextTick()
+
+    expect(target.dataset.magneticActive).toBe('true')
+    expect(cursor.attributes('data-magnetic-preserved-media')).toBe('1')
+    expect(cursor.element.style.maskImage).toContain('data:image/svg+xml')
+    expect(decodeURIComponent(cursor.element.style.maskImage)).toContain(
+      '<rect x="11.00" y="11.00" width="38.00" height="38.00" rx="19.00" fill="black"/>'
+    )
+
+    document.dispatchEvent(pointerEvent('pointermove', { clientX: 340, clientY: 320 }))
+    flushAnimationFrames()
+    await nextTick()
+
+    expect(cursor.attributes('data-magnetic-preserved-media')).toBeUndefined()
+    expect(cursor.element.style.maskImage).toBe('')
+  })
+
   it('hides native cursors inside shadow roots mounted after the cursor is visible', async () => {
     mountCursor()
     document.dispatchEvent(pointerEvent('pointermove', { clientX: 320, clientY: 180 }))
@@ -249,7 +367,10 @@ describe('NavigationMagneticCursor', () => {
       'style[data-career-magnetic-cursor="true"]'
     )
     expect(menuItem.dataset.magneticActive).toBe('true')
-    expect(injectedStyle?.textContent).toBe(':host,:host *{cursor:none!important;}')
+    expect(injectedStyle?.textContent).toContain(':host,:host *{cursor:none!important;}')
+    expect(injectedStyle?.textContent).toContain(
+      ':host([data-magnetic-active="true"]) md-ripple{--md-ripple-pressed-opacity:0!important;}'
+    )
   })
 
   it('ignores targets clipped by a horizontal scroller until they are fully visible', async () => {
@@ -351,6 +472,37 @@ describe('NavigationMagneticCursor', () => {
     input.dispatchEvent(pointerEvent('pointermove', { clientX: 320, clientY: 180 }))
     await nextTick()
 
+    expect(cursor.attributes('data-visible')).toBe('false')
+    expect(document.documentElement.hasAttribute('data-navigation-magnetic-cursor-visible')).toBe(false)
+  })
+
+  it('releases a nearby magnetic target while the pointer operates a scrollbar', async () => {
+    const target = appendTarget()
+    const scroller = document.createElement('div')
+    scroller.style.overflowX = 'auto'
+    scroller.getBoundingClientRect = vi.fn(() => rect(100, 100, 180, 60))
+    Object.defineProperties(scroller, {
+      clientWidth: { configurable: true, value: 180 },
+      clientHeight: { configurable: true, value: 44 },
+      offsetWidth: { configurable: true, value: 180 },
+      offsetHeight: { configurable: true, value: 60 },
+      scrollWidth: { configurable: true, value: 360 },
+      scrollHeight: { configurable: true, value: 44 }
+    })
+    document.body.append(scroller)
+    mountCursor()
+    const cursor = getCursor()
+
+    document.dispatchEvent(pointerEvent('pointermove', { clientX: 150, clientY: 130 }))
+    flushAnimationFrames()
+    await nextTick()
+    expect(target.dataset.magneticActive).toBe('true')
+
+    scroller.dispatchEvent(pointerEvent('pointermove', { clientX: 150, clientY: 152 }))
+    await nextTick()
+
+    expect(target.dataset.magneticActive).toBeUndefined()
+    expect(cursor.attributes('data-magnetic-active')).toBe('false')
     expect(cursor.attributes('data-visible')).toBe('false')
     expect(document.documentElement.hasAttribute('data-navigation-magnetic-cursor-visible')).toBe(false)
   })

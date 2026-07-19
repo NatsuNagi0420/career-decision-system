@@ -393,10 +393,12 @@ Invoke-Step "Client communication scans" {
         "web[\\/]+src[\\/]+utils[\\/]+request\.ts:",
         "web[\\/]+src[\\/]+[^:]*__tests__[\\/]+[^:]+:",
         "web[\\/]+src[\\/]+pages[\\/]+[^:]+\.vue:\d+:.*placeholder=""https://""",
+        "web[\\/]+src[\\/]+components[\\/]+NavigationMagneticCursor\.vue:\d+:.*www\.w3\.org/2000/svg",
         "android[\\/]+app[\\/]+src[\\/]+main[\\/]+java[\\/]+com[\\/]+careerdecision[\\/]+mobile[\\/]+network[\\/]+RequestConfig\.kt:\d+:\s*private const val DEBUG_BACKEND_BASE_URL",
         "android[\\/]+app[\\/]+src[\\/]+main[\\/]+java[\\/]+com[\\/]+careerdecision[\\/]+mobile[\\/]+network[\\/]+RequestConfig\.kt:\d+:\s*private const val RELEASE_BACKEND_BASE_URL",
         "android[\\/]+app[\\/]+src[\\/]+main[\\/]+java[\\/]+com[\\/]+careerdecision[\\/]+mobile[\\/]+network[\\/]+RequestConfig\.kt:\d+:\s*private const val DEBUG_WEB_BASE_URL",
         "android[\\/]+app[\\/]+src[\\/]+main[\\/]+java[\\/]+com[\\/]+careerdecision[\\/]+mobile[\\/]+network[\\/]+RequestConfig\.kt:\d+:\s*private const val RELEASE_WEB_BASE_URL",
+        "android[\\/]+app[\\/]+src[\\/]+main[\\/]+java[\\/]+com[\\/]+careerdecision[\\/]+mobile[\\/]+ui[\\/]+screens[\\/]+GoalScreen\.kt:\d+:\s*value\.startsWith\(""https://""",
         "android[\\/]+app[\\/]+src[\\/]+test[\\/]+[^:]+:"
     )
 }

@@ -37,6 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "DELETE FROM comparison_results",
         "DELETE FROM comparison_criteria",
         "DELETE FROM decision_evidence",
+        "DELETE FROM personal_evidence",
         "DELETE FROM decision_project_job_samples",
         "DELETE FROM decision_candidates",
         "DELETE FROM decision_projects",
@@ -108,7 +109,8 @@ class ActionPlanControllerTest {
                         {
                           "description": "Compared five backend job descriptions and extracted common requirements.",
                           "linkUrl": "https://example.com/job-analysis",
-                          "requestId": "task-result-1"
+                          "requestId": "task-result-1",
+                          "saveAsEvidence": true
                         }
                         """));
         org.assertj.core.api.Assertions.assertThat(
@@ -130,6 +132,14 @@ class ActionPlanControllerTest {
                 Integer.class
         );
         org.assertj.core.api.Assertions.assertThat(resultCount).isEqualTo(1);
+        org.assertj.core.api.Assertions.assertThat(jdbcTemplate.queryForObject(
+                "SELECT COUNT(1) FROM personal_evidence WHERE source_type = 'task_result'",
+                Integer.class
+        )).isEqualTo(1);
+        org.assertj.core.api.Assertions.assertThat(jdbcTemplate.queryForObject(
+                "SELECT COUNT(1) FROM decision_evidence WHERE source_type = 'task_result' AND candidate_id = 8011",
+                Integer.class
+        )).isEqualTo(1);
 
         JsonNode completed = json(patch("/api/v1/action-plans/{planId}/tasks/{taskId}/status", planId, taskId)
                 .header(HttpHeaders.AUTHORIZATION, AUTH)
@@ -267,6 +277,9 @@ class ActionPlanControllerTest {
         org.assertj.core.api.Assertions.assertThat(dashboard.path("data").path("state").asText()).isEqualTo("executing");
         org.assertj.core.api.Assertions.assertThat(dashboard.path("data").path("primaryAction").asText())
                 .isEqualTo("continue_task");
+        org.assertj.core.api.Assertions.assertThat(
+                dashboard.path("data").path("executionRisk").path("deferredTaskCount").asInt()
+        ).isEqualTo(1);
     }
 
     @Test
@@ -337,6 +350,85 @@ class ActionPlanControllerTest {
     }
 
     @Test
+    void personalisedPlanIsPreviewedBeforeTheConfirmedDraftIsPersisted() throws Exception {
+        jdbcTemplate.update("""
+                INSERT INTO jobs (id, title, company, city, direction, description, status)
+                VALUES (8801, 'Java 后端实习生', '测试企业', '杭州', 'Java Backend',
+                        '负责 Spring Boot 接口开发与数据库设计', 'active')
+                """);
+        jdbcTemplate.update("""
+                INSERT INTO job_requirement_items (
+                    job_id, item_type, original_text, normalized_key, confidence,
+                    extraction_method, extractor_version, sort_order
+                ) VALUES (8801, 'skill', '熟悉 Spring Boot', 'spring boot', 0.95, 'manual', 'test-v1', 0)
+                """);
+        jdbcTemplate.update("""
+                INSERT INTO decision_project_job_samples (project_id, candidate_id, job_id, note)
+                VALUES (8001, 8011, 8801, '用于校准目标岗位要求')
+                """);
+        JsonNode preview = json(post("/api/v1/action-plans/preview")
+                .header(HttpHeaders.AUTHORIZATION, AUTH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                          "requestId":"personal-plan-preview-1",
+                          "projectId":8001,
+                          "targetId":8101,
+                          "durationWeeks":4,
+                          "startDate":"2026-07-13"
+                        }
+                        """));
+        JsonNode draft = preview.path("data");
+        org.assertj.core.api.Assertions.assertThat(draft.path("weeks")).hasSize(4);
+        org.assertj.core.api.Assertions.assertThat(draft.path("evidenceBasis")).isNotEmpty();
+        org.assertj.core.api.Assertions.assertThat(
+                draft.path("weeks").get(0).path("tasks").get(0).path("capabilityGap").asText()
+        ).isNotBlank();
+        org.assertj.core.api.Assertions.assertThat(draft.toString()).contains("Spring Boot").contains("job:8801");
+
+        com.fasterxml.jackson.databind.node.ObjectNode confirmation = objectMapper.createObjectNode();
+        confirmation.put("requestId", "personal-plan-confirm-1");
+        confirmation.put("projectId", 8001);
+        confirmation.put("targetId", 8101);
+        confirmation.put("durationWeeks", 4);
+        confirmation.put("startDate", "2026-07-13");
+        confirmation.put("planType", draft.path("planType").asText());
+        confirmation.put("overview", draft.path("overview").asText());
+        confirmation.set("weeks", draft.path("weeks").deepCopy());
+
+        com.fasterxml.jackson.databind.node.ObjectNode forgedConfirmation = confirmation.deepCopy();
+        forgedConfirmation.put("requestId", "personal-plan-forged-refs");
+        ((com.fasterxml.jackson.databind.node.ObjectNode) forgedConfirmation.path("weeks").get(0)
+                .path("tasks").get(0)).putArray("sourceRefs").add("job:999999");
+        mockMvc.perform(post("/api/v1/action-plans/generate-confirmed")
+                        .header(HttpHeaders.AUTHORIZATION, AUTH)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(forgedConfirmation)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code", is(40067)));
+        org.assertj.core.api.Assertions.assertThat(jdbcTemplate.queryForObject(
+                "SELECT COUNT(1) FROM path_plans WHERE generation_request_id = 'personal-plan-forged-refs'",
+                Integer.class
+        )).isZero();
+
+        JsonNode generated = json(post("/api/v1/action-plans/generate-confirmed")
+                .header(HttpHeaders.AUTHORIZATION, AUTH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(confirmation)));
+        org.assertj.core.api.Assertions.assertThat(generated.path("data").path("taskCount").asInt()).isEqualTo(8);
+        org.assertj.core.api.Assertions.assertThat(
+                generated.path("data").path("weeks").get(0).path("tasks").get(0).path("content").asText()
+        ).contains("能力缺口：").contains("来源：");
+
+        JsonNode repeated = json(post("/api/v1/action-plans/generate-confirmed")
+                .header(HttpHeaders.AUTHORIZATION, AUTH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(confirmation)));
+        org.assertj.core.api.Assertions.assertThat(repeated.path("data").path("id").asLong())
+                .isEqualTo(generated.path("data").path("id").asLong());
+    }
+
+    @Test
     void staleTaskVersionsCannotPartiallyReorderOrDeleteTasks() throws Exception {
         JsonNode generated = json(post("/api/v1/action-plans/generate")
                 .header(HttpHeaders.AUTHORIZATION, AUTH)
@@ -383,7 +475,7 @@ class ActionPlanControllerTest {
         jdbcTemplate.update("INSERT INTO decision_candidates (id, project_id, name, source_type, sort_order) VALUES (8211, 8201, 'Private target', 'user', 0)");
         jdbcTemplate.update("INSERT INTO decision_targets (id, user_id, project_id, candidate_id, target_type, target_name, decision_reason) VALUES (8221, 2, 8201, 8211, 'primary', 'Private target', 'Private')");
         return actionPlanService.generate(
-                2L, new ActionPlanModels.GenerateRequest("bob-plan", 8201L, 8221L, 4, null)
+                2L, new ActionPlanModels.GenerateRequest("bob-plan", 8201L, 8221L, 4, null, null)
         );
     }
 

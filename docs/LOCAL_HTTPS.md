@@ -42,13 +42,12 @@ localhost
 127.0.0.1
 ::1
 10.0.2.2
-192.168.1.159
 career.local.test
 api.career.local.test
 web.career.local.test
 ```
 
-`192.168.1.159` 已包含在默认列表中；`-IncludeLanIps` 还会加入 Windows 当前检测到的其他私有地址。
+局域网 IP 不再固定写入默认列表；`-IncludeLanIps` 会加入 Windows 当前检测到的私有地址。根目录启动器会在网络变化时自动使用这一机制刷新证书。
 
 If you use the `*.career.local.test` names, add them to your Windows hosts file:
 

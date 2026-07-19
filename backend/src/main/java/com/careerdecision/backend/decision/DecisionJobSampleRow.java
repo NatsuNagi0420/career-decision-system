@@ -4,5 +4,5 @@ import java.time.LocalDateTime;
 
 public record DecisionJobSampleRow(
         Long id, Long candidateId, Long jobId, String title, String company,
-        String city, String salaryText, String note, LocalDateTime createdAt
+        String city, String salaryText, String note, LocalDateTime reviewedAt, LocalDateTime createdAt
 ) { }

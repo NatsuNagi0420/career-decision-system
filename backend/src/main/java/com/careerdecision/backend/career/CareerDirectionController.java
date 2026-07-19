@@ -2,6 +2,8 @@ package com.careerdecision.backend.career;
 
 import com.careerdecision.backend.career.CareerDirectionModels.DirectionRequest;
 import com.careerdecision.backend.career.CareerDirectionModels.DirectionResponse;
+import com.careerdecision.backend.career.CareerDirectionJobModels.DirectionInsights;
+import com.careerdecision.backend.career.CareerDirectionJobModels.DirectionJobPage;
 import com.careerdecision.backend.common.ApiResponse;
 import com.careerdecision.backend.user.CurrentUser;
 import com.careerdecision.backend.user.UserInfo;
@@ -22,9 +24,11 @@ import java.util.List;
 @RequestMapping("/api/v1/career-directions")
 public class CareerDirectionController {
     private final CareerDirectionService service;
+    private final CareerDirectionJobService directionJobService;
 
-    public CareerDirectionController(CareerDirectionService service) {
+    public CareerDirectionController(CareerDirectionService service, CareerDirectionJobService directionJobService) {
         this.service = service;
+        this.directionJobService = directionJobService;
     }
 
     @GetMapping
@@ -39,6 +43,21 @@ public class CareerDirectionController {
     @GetMapping("/{id}")
     public ApiResponse<DirectionResponse> detail(@CurrentUser UserInfo user, @PathVariable long id) {
         return ApiResponse.success(service.detail(user.id(), id));
+    }
+
+    @GetMapping("/{id}/jobs")
+    public ApiResponse<DirectionJobPage> jobs(
+            @CurrentUser UserInfo user,
+            @PathVariable long id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        return ApiResponse.success(directionJobService.jobs(user.id(), id, page, size));
+    }
+
+    @GetMapping("/{id}/insights")
+    public ApiResponse<DirectionInsights> insights(@CurrentUser UserInfo user, @PathVariable long id) {
+        return ApiResponse.success(directionJobService.insights(user.id(), id));
     }
 
     @PostMapping

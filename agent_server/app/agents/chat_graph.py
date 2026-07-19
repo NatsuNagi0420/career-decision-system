@@ -71,6 +71,8 @@ def infer_intent(request: ChatRequest) -> str:
             "你是什么模型",
             "你用的什么模型",
             "你用的是什么模型",
+            "用的什么模型",
+            "什么模型",
             "什么大模型",
             "哪个模型",
             "哪个大模型",
@@ -132,7 +134,7 @@ def infer_intent(request: ChatRequest) -> str:
 
 def build_baseline_response(request: ChatRequest, intent: str) -> ChatResponse:
     if intent in DIRECT_INTENTS:
-        return _build_direct_response(intent)
+        return _build_direct_response(request, intent)
 
     action = default_action_for_intent(intent)
     page = request.page or "当前页面"
@@ -158,14 +160,22 @@ def build_baseline_response(request: ChatRequest, intent: str) -> ChatResponse:
     )
 
 
-def _build_direct_response(intent: str) -> ChatResponse:
+def _build_direct_response(request: ChatRequest, intent: str) -> ChatResponse:
+    identity_reply = (
+        "我是穗奈，青穗集里的 AI 职业决策助手。"
+        "我可以陪你探索职业方向、分析真实岗位，也能把你的经历和岗位要求放在一起比较。"
+    )
+    if intent == "model_identity" and _asks_about_underlying_model(request.message):
+        identity_reply += (
+            "我的底层模型会根据服务端配置变化；如果当前服务没有公开具体模型名称，我不会猜测。"
+        )
     replies = {
-        "model_identity": (
-            "我是职业决策系统中的 AI 助手，负责回答产品使用和职业决策相关问题。"
-            "具体底层模型由服务端配置决定；如果当前服务没有公开模型名称，我不会猜测。"
+        "model_identity": identity_reply,
+        "product_help": (
+            "我是穗奈。我可以说明青穗集的功能和使用路径，也可以在职业决策问题中帮你梳理选项、证据与下一步。"
+            "直接告诉我你想完成的操作即可。"
         ),
-        "product_help": ("我可以说明系统功能和使用路径，也可以在职业决策问题中帮你梳理选项、证据与下一步。直接告诉我你想完成的操作即可。"),
-        "general_chat": "你好，我是职业决策系统中的 AI 助手。你可以直接提问，也可以让我帮你梳理一个职业选择。",
+        "general_chat": "你好，我是穗奈。你可以直接提问，也可以让我陪你梳理一个职业选择。",
     }
     confidence = {"model_identity": 0.95, "product_help": 0.85, "general_chat": 0.75}
     return ChatResponse(
@@ -180,6 +190,30 @@ def _build_direct_response(intent: str) -> ChatResponse:
         uncertainties=[],
         next_step=None,
         actions=[],
+    )
+
+
+def _asks_about_underlying_model(message: str) -> bool:
+    lowered = message.strip().lower()
+    return any(
+        marker in lowered
+        for marker in (
+            "你是什么模型",
+            "你用的什么模型",
+            "你用的是什么模型",
+            "用的什么模型",
+            "什么模型",
+            "什么大模型",
+            "哪个模型",
+            "哪个大模型",
+            "基于什么模型",
+            "使用什么模型",
+            "模型名称",
+            "底层模型",
+            "what model",
+            "which model",
+            "model are you",
+        )
     )
 
 
@@ -225,13 +259,18 @@ def enhance_chat_with_llm(state: ChatState) -> dict[str, Any]:
 def chat_system_prompt(response_mode: str = "coaching") -> str:
     if response_mode == "direct":
         return (
-            "You are the AI assistant inside a career decision product. Answer the user's current question directly. "
+            "You are Suina (穗奈), the named AI career decision assistant inside Qing Sui Ji (青穗集). "
+            "Always keep this identity and answer the user's current question directly. When asked who you are, introduce yourself "
+            "as 穗奈 and briefly explain that you help users explore career directions, analyze real jobs, and compare their evidence "
+            "with job requirements. Only when asked about the underlying model, explain that it depends on server configuration and "
+            "never guess an undisclosed model name. "
             "Return only valid JSON with reply and intent. The intent must be one of model_identity, product_help, general_chat. "
             "Do not invent a model identity or claim access to personal data. Do not request evidence, uncertainty, a next step, "
             "or an app action unless the user explicitly asks for one. Do not include markdown."
         )
     return (
-        "You are a contextual career mentor inside a structured app. Return only valid JSON with: "
+        "You are Suina (穗奈), the AI career decision mentor inside Qing Sui Ji (青穗集). Keep this identity while speaking naturally "
+        "and do not repeatedly introduce yourself unless relevant. Return only valid JSON with: "
         "generationMode, modelName, confidence, responseMode, usedPersonalContext, reply, evidenceBasis, "
         "uncertainties, nextStep, actions, intent. "
         "The reply is the conclusion. Evidence must cite only supplied context. Explicitly state uncertainty and one concrete next step. "
@@ -289,9 +328,12 @@ def normalize_chat_response(response: ChatResponse, fallback: ChatResponse) -> C
         else fallback.intent
     )
     if fallback.response_mode == "direct":
+        reply = response.reply.strip() or fallback.reply
+        if intent == "model_identity" and "穗奈" not in reply:
+            reply = fallback.reply
         return response.model_copy(
             update={
-                "reply": response.reply.strip() or fallback.reply,
+                "reply": reply,
                 "response_mode": "direct",
                 "used_personal_context": False,
                 "evidence_basis": [],

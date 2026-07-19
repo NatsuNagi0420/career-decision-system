@@ -10,6 +10,8 @@ from app.config.settings import get_settings
 from app.schemas.coaching import (
     ActionCoachRequest,
     ActionCoachResponse,
+    ActionPlanPreviewRequest,
+    ActionPlanPreviewResponse,
     CandidateAssessment,
     CandidateSuggestion,
     CoachingResponse,
@@ -53,7 +55,9 @@ def _build_workflow(
                 settings=settings,
             )
             parsed = response_type.model_validate(json.loads(_extract_json_object(content)))
-            response = _normalize_response(parsed, fallback).model_copy(update={"generation_mode": "llm", "model_name": settings.llm_model})
+            response = _normalize_response(parsed, fallback, state["request"]).model_copy(
+                update={"generation_mode": "llm", "model_name": settings.llm_model}
+            )
             return {"response": response}
         except (LlmClientError, ValueError, json.JSONDecodeError) as exc:
             log_llm_fallback(workflow_name, exc)
@@ -91,10 +95,16 @@ def _extract_json_object(content: str) -> str:
     return text[start : end + 1]
 
 
-def _normalize_response(response: CoachingResponse, fallback: CoachingResponse) -> CoachingResponse:
+def _normalize_response(response: CoachingResponse, fallback: CoachingResponse, request: BaseModel) -> CoachingResponse:
+    allowed_refs = _allowed_source_refs(request, fallback)
+    evidence_basis = []
+    for item in response.evidence_basis:
+        refs = [ref for ref in item.source_refs if ref in allowed_refs]
+        if refs:
+            evidence_basis.append(item.model_copy(update={"source_refs": refs}))
     updates: dict[str, object] = {
         "conclusion": response.conclusion.strip() or fallback.conclusion,
-        "evidence_basis": response.evidence_basis or fallback.evidence_basis,
+        "evidence_basis": evidence_basis or fallback.evidence_basis,
         "counter_arguments": _strings(response.counter_arguments) or fallback.counter_arguments,
         "uncertainties": _strings(response.uncertainties) or fallback.uncertainties,
         "next_actions": response.next_actions or fallback.next_actions,
@@ -102,7 +112,11 @@ def _normalize_response(response: CoachingResponse, fallback: CoachingResponse) 
     if isinstance(response, DecisionCoachResponse) and isinstance(fallback, DecisionCoachResponse):
         updates["candidate_suggestions"] = response.candidate_suggestions[:3]
     elif isinstance(response, JobComparisonResponse) and isinstance(fallback, JobComparisonResponse):
-        updates["candidate_assessments"] = response.candidate_assessments or fallback.candidate_assessments
+        assessments = []
+        for item in response.candidate_assessments:
+            refs = [ref for ref in item.evidence_refs if ref in allowed_refs]
+            assessments.append(item.model_copy(update={"evidence_refs": refs}))
+        updates["candidate_assessments"] = assessments or fallback.candidate_assessments
     elif isinstance(response, ActionCoachResponse) and isinstance(fallback, ActionCoachResponse):
         updates["task_suggestions"] = response.task_suggestions or fallback.task_suggestions
     elif isinstance(response, WeeklyReviewCoachResponse) and isinstance(fallback, WeeklyReviewCoachResponse):
@@ -111,8 +125,141 @@ def _normalize_response(response: CoachingResponse, fallback: CoachingResponse) 
     return response.model_copy(update=updates)
 
 
+def _allowed_source_refs(request: BaseModel, fallback: CoachingResponse) -> set[str]:
+    refs = {ref for item in fallback.evidence_basis for ref in item.source_refs}
+    project = getattr(request, "project", None)
+    if project is not None:
+        refs.add(f"decision-project:{project.id}")
+        for item in project.evidence:
+            if item.id is not None:
+                refs.add(f"project-evidence:{item.id}")
+            if item.source_ref:
+                refs.add(item.source_ref)
+        for job in project.job_samples:
+            if job.job_id is not None:
+                refs.add(f"job:{job.job_id}")
+    plan = getattr(request, "plan", None)
+    if plan is not None:
+        refs.add(f"action-plan:{plan.id}")
+    review = getattr(request, "review", None)
+    if review is not None:
+        refs.add(f"weekly-review:{review.id}")
+    context = getattr(request, "decision_context", None)
+    if context is None:
+        return refs
+    refs.add("profile")
+    for item in context.personal_evidence:
+        if item.get("id") is not None:
+            refs.add(f"personal-evidence:{item['id']}")
+    for job in context.job_details:
+        if _value(job, "id") is not None:
+            refs.add(f"job:{_value(job, 'id')}")
+    for resource, prefix in ((context.project, "decision-project"), (context.plan, "action-plan"), (context.review, "weekly-review")):
+        if isinstance(resource, dict) and _value(resource, "id") is not None:
+            refs.add(f"{prefix}:{_value(resource, 'id')}")
+    return refs
+
+
 def _strings(values: list[str]) -> list[str]:
     return [value.strip() for value in values if value.strip()]
+
+
+def _value(values: dict[str, object], *keys: str):
+    for key in keys:
+        if key in values and values[key] is not None:
+            return values[key]
+    return None
+
+
+def _text(value: object) -> str:
+    return str(value).strip() if value is not None else ""
+
+
+def _context_basis(request: BaseModel) -> list[EvidenceBasis]:
+    context = getattr(request, "decision_context", None)
+    if context is None:
+        return []
+    basis: list[EvidenceBasis] = []
+    profile = context.profile
+    profile_parts = []
+    for key, label in (("major", "专业"), ("targetRole", "档案目标"), ("weeklyAvailableMinutes", "每周可用分钟")):
+        value = _value(profile, key, key[0].lower() + key[1:])
+        if value not in (None, "", []):
+            profile_parts.append(f"{label}：{value}")
+    skills = _value(profile, "skills")
+    if isinstance(skills, list) and skills:
+        profile_parts.append("已有技能：" + "、".join(_text(item) for item in skills[:8] if _text(item)))
+    if profile_parts:
+        basis.append(EvidenceBasis(statement="；".join(profile_parts), source_refs=["profile"]))
+    for item in context.personal_evidence[:5]:
+        title = _text(_value(item, "title"))
+        if not title:
+            continue
+        summary = _text(_value(item, "resultSummary", "result_summary", "description"))
+        statement = title + (f"：{summary}" if summary else "")
+        basis.append(
+            EvidenceBasis(
+                statement=statement[:1000],
+                source_refs=[f"personal-evidence:{_value(item, 'id') or 'unknown'}"],
+            )
+        )
+    for job in context.job_details[:6]:
+        job_id = _value(job, "id") or "unknown"
+        title = _text(_value(job, "title")) or "已保存岗位"
+        requirements = _value(job, "requirements")
+        requirement_text = ""
+        if isinstance(requirements, list) and requirements:
+            requirement_text = "；要求：" + "、".join(_text(item) for item in requirements[:3] if _text(item))
+        basis.append(EvidenceBasis(statement=(f"岗位：{title}{requirement_text}")[:1000], source_refs=[f"job:{job_id}"]))
+    return basis[:12]
+
+
+def _job_requirements(request: BaseModel) -> list[tuple[str, str]]:
+    context = getattr(request, "decision_context", None)
+    if context is None:
+        return []
+    requirements: list[tuple[str, str]] = []
+    seen: set[str] = set()
+    for job in context.job_details:
+        job_id = _value(job, "id") or "unknown"
+        values = _value(job, "requirements")
+        if not isinstance(values, list) or not values:
+            values = _value(job, "tags")
+        if not isinstance(values, list):
+            continue
+        for item in values:
+            text = _text(item)
+            key = text.lower()
+            if text and key not in seen:
+                seen.add(key)
+                requirements.append((text, f"job:{job_id}"))
+    return requirements[:20]
+
+
+def _known_evidence_text(request: BaseModel) -> str:
+    context = getattr(request, "decision_context", None)
+    if context is None:
+        return ""
+    values: list[str] = []
+    for key in ("skills", "certificates", "experiences"):
+        items = _value(context.profile, key)
+        if isinstance(items, list):
+            values.extend(_text(item) for item in items)
+    for item in context.personal_evidence:
+        values.extend(_text(value) for value in item.values() if isinstance(value, str))
+    return " ".join(values).lower()
+
+
+def _missing_job_requirements(request: BaseModel) -> list[tuple[str, str]]:
+    evidence = _known_evidence_text(request)
+    evidence_terms = [term.strip("，。；、,.;:/") for term in evidence.split() if len(term.strip("，。；、,.;:/")) >= 2]
+    missing = []
+    for requirement, source_ref in _job_requirements(request):
+        normalized = requirement.lower()
+        supported = normalized in evidence or any(term in normalized for term in evidence_terms)
+        if not evidence or not supported:
+            missing.append((requirement, source_ref))
+    return missing
 
 
 def _basis_from_project(request: DecisionCoachRequest | JobComparisonRequest) -> list[EvidenceBasis]:
@@ -135,7 +282,8 @@ def _basis_from_project(request: DecisionCoachRequest | JobComparisonRequest) ->
                 source_refs=[f"job:{sample.job_id or sample.id or 'unknown'}"],
             )
         )
-    return basis[:12]
+    basis.extend(_context_basis(request))
+    return basis[:20]
 
 
 def build_decision_baseline(request: DecisionCoachRequest) -> DecisionCoachResponse:
@@ -232,12 +380,21 @@ def build_comparison_baseline(request: JobComparisonRequest) -> JobComparisonRes
         score = max(1, min(5, 3 + min(1, len(supporting)) - min(1, len(opposing)))) if candidate_evidence or samples else None
         refs = [f"project-evidence:{item.id}" for item in candidate_evidence if item.id]
         refs.extend(f"job:{item.job_id}" for item in samples if item.job_id)
+        detailed_jobs = []
+        if request.decision_context is not None:
+            detailed_jobs = [
+                job for job in request.decision_context.job_details if _value(job, "candidateId", "candidate_id") == candidate.id
+            ]
+        requirement_count = sum(
+            len(values) for job in detailed_jobs if isinstance((values := _value(job, "requirements")), list)
+        )
+        requirement_note = f"，其中已提取 {requirement_count} 条结构化要求" if requirement_count else ""
         assessments.append(
             CandidateAssessment(
                 candidate_id=candidate.id or 0,
                 candidate_name=candidate.name,
                 score=score,
-                assessment=f"已关联 {len(candidate_evidence)} 条项目证据和 {len(samples)} 个真实岗位样本。",
+                assessment=f"已关联 {len(candidate_evidence)} 条项目证据和 {len(samples)} 个真实岗位样本{requirement_note}。",
                 evidence_refs=refs,
                 opposing_factors=[item.title for item in opposing[:3]]
                 or [candidate.opposing_factors or "反对证据不足，需要主动寻找不利信息。"],
@@ -273,7 +430,22 @@ def _all_tasks(request: ActionCoachRequest | WeeklyReviewCoachRequest):
 def build_action_baseline(request: ActionCoachRequest) -> ActionCoachResponse:
     plan = request.plan
     existing_titles = {task.title for task in _all_tasks(request)}
-    candidates = [
+    missing_requirements = _missing_job_requirements(request)
+    personalised: list[TaskSuggestion] = []
+    for index, (requirement, source_ref) in enumerate(missing_requirements[:2]):
+        week_no = min(max(1, index + 1), plan.duration_weeks)
+        personalised.append(
+            TaskSuggestion(
+                week_no=week_no,
+                title=f"验证岗位要求：{requirement[:42]}",
+                task_type="skill_learning" if index == 0 else "project",
+                content=f"围绕真实岗位反复出现的要求“{requirement}”完成一次学习或最小实践，并记录当前掌握程度。",
+                estimated_minutes=120 if index == 0 else 180,
+                acceptance_criteria="保留可检查的练习或成果，并写明该成果如何回应岗位要求。",
+                rationale=f"该要求来自已保存岗位，当前档案和个人证据中尚未找到直接支持（{source_ref}）。",
+            )
+        )
+    candidates = personalised + [
         TaskSuggestion(
             week_no=1,
             title="访谈一位目标方向从业者",
@@ -320,12 +492,16 @@ def build_action_baseline(request: ActionCoachRequest) -> ActionCoachResponse:
         model_name="rule-action-coach-v1",
         confidence=0.58,
         conclusion=f"围绕“{plan.target_role}”优先安排能产生岗位证据、实践成果和外部反馈的任务。",
-        evidence_basis=[
+        evidence_basis=([
             EvidenceBasis(statement=f"当前目标：{plan.target_role}", source_refs=[f"action-plan:{plan.id}"]),
             EvidenceBasis(statement=f"计划周期：{plan.duration_weeks} 周", source_refs=[f"action-plan:{plan.id}"]),
-        ],
+        ] + _context_basis(request))[:20],
         counter_arguments=["任务数量增加不等于验证质量提高，新增任务会占用既有计划时间。"],
-        uncertainties=["当前上下文不包含完整岗位技能频次，任务仍需结合真实岗位样本调整。"],
+        uncertainties=(
+            ["结构化岗位要求样本仍然有限，任务优先级需要在新增岗位后复查。"]
+            if _job_requirements(request)
+            else ["当前上下文不包含完整岗位技能频次，任务仍需结合真实岗位样本调整。"]
+        ),
         next_actions=[
             SuggestedAction(
                 action_type="create_task",
@@ -363,12 +539,13 @@ def build_review_baseline(request: WeeklyReviewCoachRequest) -> WeeklyReviewCoac
     ]
     if review.evidence_summary:
         evidence.append(EvidenceBasis(statement=review.evidence_summary, source_refs=[f"weekly-review:{review.id}"]))
+    evidence.extend(_context_basis(request))
     return WeeklyReviewCoachResponse(
         generation_mode="fallback",
         model_name="rule-weekly-review-v1",
         confidence=min(0.72, 0.4 + len(completed) * 0.05 + result_count * 0.04),
         conclusion=f"本周完成 {len(completed)} 个任务并留下 {result_count} 条成果记录，下一周应优先处理未完成任务的取舍。",
-        evidence_basis=evidence,
+        evidence_basis=evidence[:20],
         counter_arguments=["完成率不能单独说明目标方向是否正确，成果质量和新信息同样重要。"],
         uncertainties=[review.difficulties or "尚未记录具体阻碍，无法判断未完成任务是时间问题还是方向问题。"],
         next_actions=[
@@ -424,3 +601,76 @@ def coach_action(request: ActionCoachRequest) -> ActionCoachResponse:
 
 def coach_weekly_review(request: WeeklyReviewCoachRequest) -> WeeklyReviewCoachResponse:
     return weekly_review_graph.invoke({"request": request})["response"]
+
+
+def preview_action_plan(request: ActionPlanPreviewRequest) -> ActionPlanPreviewResponse:
+    """Personalise a complete rule draft while preserving a reliable fallback."""
+
+    fallback = ActionPlanPreviewResponse.model_validate(request.baseline)
+    settings = get_settings()
+    if settings.llm_provider.lower() == "mock" or not request.allow_external_model:
+        return fallback
+    try:
+        content = llm_client.complete(
+            system_prompt=_plan_preview_system_prompt(),
+            user_prompt=json.dumps(request.model_dump(mode="json", by_alias=True), ensure_ascii=False),
+            settings=settings,
+        )
+        parsed = ActionPlanPreviewResponse.model_validate(json.loads(_extract_json_object(content)))
+        return _normalize_plan_preview(parsed, fallback, request.duration_weeks).model_copy(
+            update={"generation_mode": "llm", "model_name": settings.llm_model}
+        )
+    except (LlmClientError, ValueError, json.JSONDecodeError) as exc:
+        log_llm_fallback("action_plan_preview", exc)
+        return fallback
+
+
+def _plan_preview_system_prompt() -> str:
+    schema = json.dumps(ActionPlanPreviewResponse.model_json_schema(by_alias=True), ensure_ascii=False)
+    return (
+        "你是职业行动计划设计器。输入包含后端可信解析的个人档案、个人证据、已确认目标、真实岗位职责与要求，"
+        "以及一份完整的规则基线计划。你可以改写任务使其更贴合真实能力缺口，但必须保留所有周次，"
+        "每周 1 至 4 个任务，任务总耗时不能明显超过 profile.weeklyAvailableMinutes。"
+        "每个任务必须有具体动作、耗时、验收标准、形成该任务的理由、能力缺口、岗位要求和 sourceRefs。"
+        "sourceRefs 只能使用输入中存在的 profile、personal-evidence:{id}、decision-project:{id}、job:{id}。"
+        "不能虚构经历、岗位要求、公司信息或用户已完成的成果；信息不足时沿用规则基线并写入 uncertainties。"
+        "建议只是待用户确认的草稿，不能声称已经保存或执行。只返回符合 JSON Schema 的 JSON，不要使用 Markdown。"
+        f" JSON Schema: {schema}"
+    )
+
+
+def _normalize_plan_preview(
+    response: ActionPlanPreviewResponse,
+    fallback: ActionPlanPreviewResponse,
+    duration_weeks: int,
+) -> ActionPlanPreviewResponse:
+    fallback_by_week = {week.week_no: week for week in fallback.weeks}
+    response_by_week = {week.week_no: week for week in response.weeks if 1 <= week.week_no <= duration_weeks}
+    weeks = []
+    for week_no in range(1, duration_weeks + 1):
+        baseline_week = fallback_by_week[week_no]
+        proposed = response_by_week.get(week_no)
+        if proposed is None:
+            weeks.append(baseline_week)
+            continue
+        tasks = []
+        for index, task in enumerate(proposed.tasks[:4]):
+            fallback_task = baseline_week.tasks[min(index, len(baseline_week.tasks) - 1)]
+            tasks.append(
+                task.model_copy(
+                    update={
+                        "source_refs": task.source_refs or fallback_task.source_refs,
+                        "capability_gap": task.capability_gap or fallback_task.capability_gap,
+                        "job_requirement": task.job_requirement or fallback_task.job_requirement,
+                    }
+                )
+            )
+        weeks.append(proposed.model_copy(update={"tasks": tasks or baseline_week.tasks}))
+    return response.model_copy(
+        update={
+            "overview": response.overview.strip() or fallback.overview,
+            "evidence_basis": response.evidence_basis or fallback.evidence_basis,
+            "uncertainties": _strings(response.uncertainties) or fallback.uncertainties,
+            "weeks": weeks,
+        }
+    )

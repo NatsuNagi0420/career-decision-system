@@ -99,6 +99,33 @@ class ReminderPolicyTest {
     }
 
     @Test
+    fun dailySummaryUsesNextLocalSlotAndCombinesActionableTasks() {
+        val beforeSlot = ZonedDateTime.parse("2026-07-12T08:30:00+08:00[Asia/Shanghai]")
+        val atSlot = ZonedDateTime.parse("2026-07-12T09:00:00+08:00[Asia/Shanghai]")
+
+        assertEquals(
+            ZonedDateTime.parse("2026-07-12T09:00:00+08:00[Asia/Shanghai]"),
+            ReminderPolicy.nextDailySummaryAt(beforeSlot, 9)
+        )
+        assertEquals(
+            ZonedDateTime.parse("2026-07-13T09:00:00+08:00[Asia/Shanghai]"),
+            ReminderPolicy.nextDailySummaryAt(atSlot, 9)
+        )
+
+        val content = requireNotNull(
+            ReminderPolicy.dailySummaryContent(
+                listOf(
+                    task().copy(title = "整理岗位样本"),
+                    task().copy(taskId = 602, title = "补充项目证据", status = "in_progress"),
+                    task().copy(taskId = 603, title = "已完成事项", status = "completed")
+                )
+            )
+        )
+        assertEquals("今天有 2 项行动待推进", content.title)
+        assertTrue(content.body.contains("整理岗位样本、补充项目证据"))
+    }
+
+    @Test
     fun taskCopyStatesDeadlineAndKeepsLateDeliveryBounded() {
         val dueAt = Instant.parse("2026-07-12T12:00:00Z")
         val content = ReminderPolicy.taskContent(

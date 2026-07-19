@@ -16,9 +16,11 @@ public class JobService {
     private static final int MAX_PAGE_SIZE = 50;
     private static final int MAX_RECOMMENDATION_LIMIT = 20;
     private final JobMapper jobMapper;
+    private final JobStructureService structureService;
 
-    public JobService(JobMapper jobMapper) {
+    public JobService(JobMapper jobMapper, JobStructureService structureService) {
         this.jobMapper = jobMapper;
+        this.structureService = structureService;
     }
 
     public JobPageResponse<JobSummaryResponse> search(JobSearchCriteria criteria) {
@@ -42,7 +44,12 @@ public class JobService {
             throw new BusinessException(40401, "Job not found: " + id);
         }
         List<String> tags = jobMapper.findTags(id);
-        return JobDetailResponse.from(job, tags);
+        return JobDetailResponse.from(
+                job,
+                tags,
+                structureService.items(job, jobMapper.findSkillTags(id)),
+                structureService.displayText(job)
+        );
     }
 
     public JobFacetsResponse facets() {

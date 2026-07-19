@@ -5,6 +5,10 @@ export type MagneticTargetOptions = {
   group?: string
   /** Overrides the attraction range token, in CSS pixels. */
   attractionRange?: number
+  /** Selects the visible surface whose bounds should shape the cursor. Defaults to the host. */
+  surface?: string
+  /** Overrides the visible surface's computed border radius. */
+  radius?: string
 }
 
 type MagneticElement = HTMLElement & {
@@ -17,6 +21,8 @@ const clearTargetState = (element: MagneticElement) => {
   element.removeAttribute('data-magnetic-active')
   element.removeAttribute('data-magnetic-target')
   element.removeAttribute('data-magnetic-range')
+  element.removeAttribute('data-magnetic-surface')
+  element.removeAttribute('data-magnetic-radius')
 }
 
 const registerTarget = (
@@ -31,6 +37,18 @@ const registerTarget = (
     element.dataset.magneticRange = String(Math.max(0, options.attractionRange))
   } else {
     element.removeAttribute('data-magnetic-range')
+  }
+
+  if (options?.surface?.trim()) {
+    element.dataset.magneticSurface = options.surface.trim()
+  } else {
+    element.removeAttribute('data-magnetic-surface')
+  }
+
+  if (options?.radius?.trim()) {
+    element.dataset.magneticRadius = options.radius.trim()
+  } else {
+    element.removeAttribute('data-magnetic-radius')
   }
 }
 

@@ -91,7 +91,8 @@ public interface DashboardMapper {
             FROM path_plans p
             JOIN path_plan_milestones m ON m.plan_id = p.id
             JOIN path_plan_tasks t ON t.milestone_id = m.id
-            WHERE p.user_id = #{userId} AND p.status = 'active' AND p.plan_type = 'action'
+            WHERE p.user_id = #{userId} AND p.status = 'active'
+              AND p.plan_type IN ('action', 'validation')
             """)
     ExecutionRiskSnapshot executionRisk(
             @Param("userId") long userId,

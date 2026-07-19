@@ -49,8 +49,10 @@ val CareerShapes = Shapes(
 object CareerMotionTokens {
     const val Short = 100
     const val Standard = 200
+    const val SharedAxis = 300
     const val Emphasized = 400
     const val EmphasizedLong = 500
+    const val FadeThroughIncomingScale = 0.96f
 }
 
 object CareerStateLayerTokens {

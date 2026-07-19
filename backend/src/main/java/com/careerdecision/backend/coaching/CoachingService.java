@@ -31,6 +31,7 @@ public class CoachingService {
     private final AgentServerClient agentServerClient;
     private final ObjectMapper objectMapper;
     private final UserProfileService userProfileService;
+    private final DecisionContextAssembler decisionContextAssembler;
 
     public CoachingService(
             DecisionProjectService decisionProjectService,
@@ -39,7 +40,8 @@ public class CoachingService {
             CareerDirectionService careerDirectionService,
             AgentServerClient agentServerClient,
             ObjectMapper objectMapper,
-            UserProfileService userProfileService
+            UserProfileService userProfileService,
+            DecisionContextAssembler decisionContextAssembler
     ) {
         this.decisionProjectService = decisionProjectService;
         this.actionPlanService = actionPlanService;
@@ -48,6 +50,7 @@ public class CoachingService {
         this.agentServerClient = agentServerClient;
         this.objectMapper = objectMapper;
         this.userProfileService = userProfileService;
+        this.decisionContextAssembler = decisionContextAssembler;
     }
 
     public Map<String, Object> coachDecision(UserInfo user, long projectId, AgentCoachingRequest request) {
@@ -59,6 +62,7 @@ public class CoachingService {
         Map<String, Object> payload = basePayload(user, request);
         payload.put("project", map(project));
         payload.put("available_directions", directions);
+        payload.put("decision_context", decisionContextAssembler.assemble(user, project, null, null));
         return agentServerClient.coachDecision(payload);
     }
 
@@ -66,13 +70,16 @@ public class CoachingService {
         ProjectDetail project = decisionProjectService.detail(user.id(), projectId);
         Map<String, Object> payload = basePayload(user, request);
         payload.put("project", map(project));
+        payload.put("decision_context", decisionContextAssembler.assemble(user, project, null, null));
         return agentServerClient.compareDecisionJobs(payload);
     }
 
     public Map<String, Object> coachAction(UserInfo user, long planId, AgentCoachingRequest request) {
         PlanDetail plan = actionPlanService.detail(user.id(), planId);
+        ProjectDetail project = decisionProjectService.detail(user.id(), plan.projectId());
         Map<String, Object> payload = basePayload(user, request);
         payload.put("plan", map(plan));
+        payload.put("decision_context", decisionContextAssembler.assemble(user, project, plan, null));
         return agentServerClient.coachAction(payload);
     }
 
@@ -82,6 +89,8 @@ public class CoachingService {
         Map<String, Object> payload = basePayload(user, request);
         payload.put("review", map(review));
         payload.put("plan", map(plan));
+        ProjectDetail project = decisionProjectService.detail(user.id(), plan.projectId());
+        payload.put("decision_context", decisionContextAssembler.assemble(user, project, plan, review));
         return agentServerClient.coachWeeklyReview(payload);
     }
 

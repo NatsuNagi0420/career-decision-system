@@ -8,6 +8,19 @@ class CamelModel(BaseModel):
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True, extra="ignore")
 
 
+class DecisionContext(CamelModel):
+    """Trusted context assembled by the business backend, never by the client."""
+
+    profile: dict[str, object] = Field(default_factory=dict)
+    personal_evidence: list[dict[str, object]] = Field(default_factory=list, max_length=40)
+    project: dict[str, object] = Field(default_factory=dict)
+    target: dict[str, object] | None = None
+    job_details: list[dict[str, object]] = Field(default_factory=list, max_length=20)
+    plan: dict[str, object] | None = None
+    review: dict[str, object] | None = None
+    source_policy: dict[str, object] = Field(default_factory=dict)
+
+
 class CandidateContext(CamelModel):
     id: int | None = None
     direction_id: int | None = None
@@ -79,6 +92,7 @@ class DecisionCoachRequest(CamelModel):
     allow_external_model: bool = False
     project: ProjectContext
     available_directions: list[str] = Field(default_factory=list, max_length=40)
+    decision_context: DecisionContext | None = None
 
 
 class JobComparisonRequest(CamelModel):
@@ -87,6 +101,7 @@ class JobComparisonRequest(CamelModel):
     focus: str | None = Field(default=None, max_length=1000)
     allow_external_model: bool = False
     project: ProjectContext
+    decision_context: DecisionContext | None = None
 
 
 class TaskContext(CamelModel):
@@ -128,6 +143,7 @@ class ActionCoachRequest(CamelModel):
     focus: str | None = Field(default=None, max_length=1000)
     allow_external_model: bool = False
     plan: ActionPlanContext
+    decision_context: DecisionContext | None = None
 
 
 class ReviewContext(CamelModel):
@@ -152,6 +168,7 @@ class WeeklyReviewCoachRequest(CamelModel):
     allow_external_model: bool = False
     review: ReviewContext
     plan: ActionPlanContext
+    decision_context: DecisionContext | None = None
 
 
 class EvidenceBasis(CamelModel):
@@ -248,3 +265,52 @@ class ActionCoachResponse(CoachingResponse):
 class WeeklyReviewCoachResponse(CoachingResponse):
     review_summary: str = Field(min_length=1, max_length=3000)
     adjustment_suggestions: list[TaskAdjustmentSuggestion] = Field(default_factory=list, max_length=12)
+
+
+class PlanDraftTask(CamelModel):
+    title: str = Field(min_length=1, max_length=200)
+    task_type: Literal[
+        "career_research",
+        "skill_learning",
+        "project",
+        "resume",
+        "networking",
+        "interview",
+        "application",
+        "custom",
+    ]
+    content: str = Field(min_length=1, max_length=1000)
+    estimated_minutes: int = Field(ge=5, le=10080)
+    acceptance_criteria: str = Field(min_length=1, max_length=1000)
+    rationale: str = Field(min_length=1, max_length=1000)
+    capability_gap: str | None = Field(default=None, max_length=1000)
+    job_requirement: str | None = Field(default=None, max_length=1000)
+    source_refs: list[str] = Field(default_factory=list, max_length=12)
+
+
+class PlanDraftWeek(CamelModel):
+    week_no: int = Field(ge=1, le=12)
+    goal: str = Field(min_length=1, max_length=500)
+    tasks: list[PlanDraftTask] = Field(min_length=1, max_length=4)
+
+
+class ActionPlanPreviewRequest(CamelModel):
+    request_id: str = Field(min_length=1, max_length=80)
+    user_id: str | None = Field(default=None, max_length=64)
+    focus: str | None = Field(default=None, max_length=1000)
+    allow_external_model: bool = False
+    target_role: str = Field(min_length=1, max_length=160)
+    duration_weeks: int = Field(ge=2, le=12)
+    start_date: str
+    decision_context: DecisionContext
+    baseline: dict[str, object]
+
+
+class ActionPlanPreviewResponse(CamelModel):
+    generation_mode: Literal["llm", "fallback"] = "fallback"
+    model_name: str | None = Field(default=None, max_length=120)
+    confidence: float = Field(ge=0, le=1)
+    overview: str = Field(min_length=1, max_length=5000)
+    evidence_basis: list[EvidenceBasis] = Field(min_length=1, max_length=20)
+    uncertainties: list[str] = Field(min_length=1, max_length=12)
+    weeks: list[PlanDraftWeek] = Field(min_length=2, max_length=12)

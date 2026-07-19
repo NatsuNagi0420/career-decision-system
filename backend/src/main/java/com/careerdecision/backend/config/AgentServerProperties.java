@@ -8,7 +8,7 @@ public record AgentServerProperties(
         String internalToken,
         Integer timeoutSeconds
 ) {
-    private static final int DEFAULT_TIMEOUT_SECONDS = 30;
+    private static final int DEFAULT_TIMEOUT_SECONDS = 150;
     private static final int MAX_TIMEOUT_SECONDS = 300;
 
     public int normalizedTimeoutSeconds() {

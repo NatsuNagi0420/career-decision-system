@@ -26,6 +26,7 @@ const router = createRouter({
     { path: '/weekly-reviews/new', name: 'weekly-review-new', component: () => import('@/pages/WeeklyReview.vue'), meta: { auth: true } },
     { path: '/weekly-reviews/:id', name: 'weekly-review', component: () => import('@/pages/WeeklyReview.vue'), meta: { auth: true } },
     { path: '/history', name: 'history', component: () => import('@/pages/ReportsList.vue'), meta: { auth: true } },
+    { path: '/assistant', name: 'assistant', component: () => import('@/pages/Assistant.vue'), meta: { auth: true } },
     { path: '/settings', name: 'settings', component: () => import('@/pages/Settings.vue'), meta: { auth: true } },
     { path: '/assessment/mbti', name: 'mbti-assessment', component: () => import('@/pages/MbtiAssessment.vue'), meta: { auth: true } },
     { path: '/capability-profile', redirect: '/profile?section=assessment' },

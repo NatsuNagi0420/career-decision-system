@@ -14,15 +14,20 @@ import com.careerdecision.mobile.ui.AppViewModel
 import com.careerdecision.mobile.ui.AppViewModelFactory
 import com.careerdecision.mobile.ui.CareerApp
 import com.careerdecision.mobile.ui.CareerTheme
+import com.careerdecision.mobile.ui.performance.ForegroundComposeHighRefreshRateRequest
+import com.careerdecision.mobile.ui.performance.ForegroundHighRefreshRateController
 
 class MainActivity : ComponentActivity() {
     private var requestedDestination by mutableStateOf<String?>(null)
+    private lateinit var highRefreshRateController: ForegroundHighRefreshRateController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        highRefreshRateController = ForegroundHighRefreshRateController(this)
         requestedDestination = intent.notificationDestination()
         enableEdgeToEdge()
         setContent {
+            ForegroundComposeHighRefreshRateRequest()
             CareerTheme {
                 val app = application as CareerApplication
                 val viewModel: AppViewModel = viewModel(
@@ -35,6 +40,21 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        highRefreshRateController.enable()
+    }
+
+    override fun onPause() {
+        highRefreshRateController.disable()
+        super.onPause()
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) highRefreshRateController.enable()
     }
 
     override fun onNewIntent(intent: Intent) {

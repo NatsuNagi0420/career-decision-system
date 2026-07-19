@@ -28,14 +28,15 @@ interface ReminderGateway {
     fun updatePreferences(preferences: ReminderPreferences)
     fun updateEnabled(enabled: Boolean)
     fun updateTaskLeadMinutes(minutes: Int)
+    fun updateDailySummaryHour(hour: Int)
     fun updateWeeklyReviewSchedule(dayOfWeek: DayOfWeek, hour: Int)
+    fun rescheduleAll(userId: Long, tasks: List<CachedTaskEntity>, hasActivePlan: Boolean)
     fun cancelAll(userId: Long)
 }
 
 class WorkManagerReminderGateway(
     context: Context,
-    private val clock: Clock = Clock.systemDefaultZone(),
-    private val zoneId: ZoneId = ZoneId.systemDefault()
+    private val clock: Clock = Clock.systemDefaultZone()
 ) : ReminderGateway {
     private val applicationContext = context.applicationContext
     private val workManager = WorkManager.getInstance(applicationContext)
@@ -59,6 +60,7 @@ class WorkManagerReminderGateway(
         taskSnapshots[userId] = userTasks
         val currentPreferences = preferences.value
         val now = clock.instant()
+        val zoneId = ZoneId.systemDefault()
         val schedules = if (currentPreferences.enabled) {
             userTasks.mapNotNull { task ->
                 ReminderPolicy.taskSchedule(
@@ -75,15 +77,23 @@ class WorkManagerReminderGateway(
         val previousIds = scheduledTaskIds(userId)
         (previousIds - scheduledIds).mapNotNull(String::toLongOrNull).forEach { taskId ->
             workManager.cancelUniqueWork(taskWorkName(userId, taskId))
+            notificationCenter.cancelTaskReminder(userId, taskId)
         }
         schedules.forEach { enqueueTaskReminder(it, currentPreferences.taskLeadMinutes) }
         saveScheduledTaskIds(userId, scheduledIds)
+        if (currentPreferences.enabled && userTasks.any { ReminderPolicy.isActionable(it.toReminderTask()) }) {
+            enqueueDailySummary(userId, currentPreferences)
+        } else {
+            cancelDailySummary(userId)
+        }
     }
 
     override fun scheduleWeeklyReview(userId: Long) {
         saveWeeklyUsers(weeklyUsers() + userId.toString())
         if (!preferences.value.enabled) {
             workManager.cancelUniqueWork(weeklyWorkName(userId))
+            notificationCenter.cancelWeeklyReviewReminder(userId)
+            scheduleState.edit().remove(weeklySignatureKey(userId)).apply()
             return
         }
         enqueueWeeklyReview(userId, preferences.value)
@@ -91,6 +101,8 @@ class WorkManagerReminderGateway(
 
     override fun cancelWeeklyReview(userId: Long) {
         workManager.cancelUniqueWork(weeklyWorkName(userId))
+        notificationCenter.cancelWeeklyReviewReminder(userId)
+        scheduleState.edit().remove(weeklySignatureKey(userId)).apply()
         saveWeeklyUsers(weeklyUsers() - userId.toString())
     }
 
@@ -101,9 +113,14 @@ class WorkManagerReminderGateway(
             taskEntries.forEach { (userId, tasks) -> reconcileTaskReminders(userId, tasks) }
             weeklyUsers().mapNotNull(String::toLongOrNull).forEach { enqueueWeeklyReview(it, updated) }
         } else {
-            taskEntries.forEach { (userId, _) -> cancelScheduledTasks(userId) }
+            taskEntries.forEach { (userId, _) ->
+                cancelScheduledTasks(userId)
+                cancelDailySummary(userId)
+            }
             weeklyUsers().mapNotNull(String::toLongOrNull).forEach {
                 workManager.cancelUniqueWork(weeklyWorkName(it))
+                notificationCenter.cancelWeeklyReviewReminder(it)
+                scheduleState.edit().remove(weeklySignatureKey(it)).apply()
             }
         }
     }
@@ -116,6 +133,10 @@ class WorkManagerReminderGateway(
         updatePreferences(preferences.value.copy(taskLeadMinutes = minutes))
     }
 
+    override fun updateDailySummaryHour(hour: Int) {
+        updatePreferences(preferences.value.copy(dailySummaryHour = hour))
+    }
+
     override fun updateWeeklyReviewSchedule(dayOfWeek: DayOfWeek, hour: Int) {
         updatePreferences(
             preferences.value.copy(
@@ -125,9 +146,19 @@ class WorkManagerReminderGateway(
         )
     }
 
+    override fun rescheduleAll(userId: Long, tasks: List<CachedTaskEntity>, hasActivePlan: Boolean) {
+        scheduleState.edit()
+            .remove(dailySignatureKey(userId))
+            .remove(weeklySignatureKey(userId))
+            .apply()
+        reconcileTaskReminders(userId, tasks)
+        if (hasActivePlan) scheduleWeeklyReview(userId) else cancelWeeklyReview(userId)
+    }
+
     override fun cancelAll(userId: Long) {
         taskSnapshots.remove(userId)
         cancelScheduledTasks(userId)
+        cancelDailySummary(userId)
         cancelWeeklyReview(userId)
     }
 
@@ -154,7 +185,36 @@ class WorkManagerReminderGateway(
     }
 
     @Suppress("DEPRECATION")
+    private fun enqueueDailySummary(userId: Long, currentPreferences: ReminderPreferences) {
+        val zoneId = ZoneId.systemDefault()
+        val now = clock.instant().atZone(zoneId)
+        val nextSummaryAt = ReminderPolicy.nextDailySummaryAt(now, currentPreferences.dailySummaryHour)
+        val delay = Duration.between(now, nextSummaryAt).toMillis().coerceAtLeast(0)
+        val signature = "${currentPreferences.dailySummaryHour}:${zoneId.id}"
+        val existingSignature = scheduleState.getString(dailySignatureKey(userId), null)
+        val policy = if (signature == existingSignature) {
+            ExistingPeriodicWorkPolicy.KEEP
+        } else {
+            ExistingPeriodicWorkPolicy.REPLACE
+        }
+        val request = PeriodicWorkRequestBuilder<DailyTaskSummaryWorker>(24, TimeUnit.HOURS)
+            .setInputData(
+                Data.Builder()
+                    .putLong(ReminderWorkData.USER_ID, userId)
+                    .putInt(ReminderWorkData.DAILY_SUMMARY_HOUR, currentPreferences.dailySummaryHour)
+                    .build()
+            )
+            .setInitialDelay(delay, TimeUnit.MILLISECONDS)
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
+            .addTag(dailyWorkTag(userId))
+            .build()
+        workManager.enqueueUniquePeriodicWork(dailyWorkName(userId), policy, request)
+        scheduleState.edit().putString(dailySignatureKey(userId), signature).apply()
+    }
+
+    @Suppress("DEPRECATION")
     private fun enqueueWeeklyReview(userId: Long, currentPreferences: ReminderPreferences) {
+        val zoneId = ZoneId.systemDefault()
         val now = clock.instant().atZone(zoneId)
         val nextReviewAt = ReminderPolicy.nextWeeklyReviewAt(
             now,
@@ -168,18 +228,28 @@ class WorkManagerReminderGateway(
             .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
             .addTag(weeklyWorkTag(userId))
             .build()
+        val signature = "${currentPreferences.weeklyReviewDay.value}:${currentPreferences.weeklyReviewHour}:${zoneId.id}"
+        val existingSignature = scheduleState.getString(weeklySignatureKey(userId), null)
         workManager.enqueueUniquePeriodicWork(
             weeklyWorkName(userId),
-            ExistingPeriodicWorkPolicy.REPLACE,
+            if (signature == existingSignature) ExistingPeriodicWorkPolicy.KEEP else ExistingPeriodicWorkPolicy.REPLACE,
             request
         )
+        scheduleState.edit().putString(weeklySignatureKey(userId), signature).apply()
     }
 
     private fun cancelScheduledTasks(userId: Long) {
         scheduledTaskIds(userId).mapNotNull(String::toLongOrNull).forEach { taskId ->
             workManager.cancelUniqueWork(taskWorkName(userId, taskId))
+            notificationCenter.cancelTaskReminder(userId, taskId)
         }
         saveScheduledTaskIds(userId, emptySet())
+    }
+
+    private fun cancelDailySummary(userId: Long) {
+        workManager.cancelUniqueWork(dailyWorkName(userId))
+        notificationCenter.cancelDailySummary(userId)
+        scheduleState.edit().remove(dailySignatureKey(userId)).apply()
     }
 
     private fun scheduledTaskIds(userId: Long): Set<String> =
@@ -212,8 +282,12 @@ class WorkManagerReminderGateway(
         fun taskIdsKey(userId: Long) = "task_ids_$userId"
         fun taskWorkName(userId: Long, taskId: Long) = "career-task-reminder-$userId-$taskId"
         fun taskWorkTag(userId: Long) = "career-task-reminders-$userId"
+        fun dailyWorkName(userId: Long) = "career-daily-summary-$userId"
+        fun dailyWorkTag(userId: Long) = "career-daily-summary-$userId"
         fun weeklyWorkName(userId: Long) = "career-weekly-review-$userId"
         fun weeklyWorkTag(userId: Long) = "career-weekly-review-$userId"
+        fun dailySignatureKey(userId: Long) = "daily_signature_$userId"
+        fun weeklySignatureKey(userId: Long) = "weekly_signature_$userId"
     }
 }
 
@@ -222,4 +296,5 @@ internal object ReminderWorkData {
     const val TASK_ID = "task_id"
     const val DUE_AT_MILLIS = "due_at_millis"
     const val LEAD_MINUTES = "lead_minutes"
+    const val DAILY_SUMMARY_HOUR = "daily_summary_hour"
 }

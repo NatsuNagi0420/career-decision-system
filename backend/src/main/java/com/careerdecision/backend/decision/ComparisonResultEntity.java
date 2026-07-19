@@ -11,6 +11,8 @@ public class ComparisonResultEntity {
     private String evidenceRefsJson;
     private String uncertainty;
     private String validationAction;
+    private String verdict;
+    private LocalDateTime confirmedAt;
     private LocalDateTime updatedAt;
 
     public Long getId() { return id; }
@@ -29,6 +31,10 @@ public class ComparisonResultEntity {
     public void setUncertainty(String value) { uncertainty = value; }
     public String getValidationAction() { return validationAction; }
     public void setValidationAction(String value) { validationAction = value; }
+    public String getVerdict() { return verdict; }
+    public void setVerdict(String value) { verdict = value; }
+    public LocalDateTime getConfirmedAt() { return confirmedAt; }
+    public void setConfirmedAt(LocalDateTime value) { confirmedAt = value; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime value) { updatedAt = value; }
 }

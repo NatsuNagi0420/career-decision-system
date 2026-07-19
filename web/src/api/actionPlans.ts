@@ -1,6 +1,7 @@
 import { del, get, patch, post, put } from '@/utils/request'
 
 export type TaskStatus = 'todo' | 'in_progress' | 'completed' | 'deferred' | 'skipped'
+export type PlanType = 'validation' | 'action'
 export type TaskType =
   | 'career_research'
   | 'skill_learning'
@@ -53,6 +54,7 @@ export type ActionPlanSummary = {
   projectId: number
   targetId: number
   targetRole: string
+  planType: PlanType
   status: string
   durationWeeks: number
   taskCount: number
@@ -70,11 +72,53 @@ export type ActionPlan = ActionPlanSummary & {
   weeks: ActionWeek[]
 }
 
+export type ActionPlanPreviewTask = {
+  title: string
+  taskType: TaskType
+  content: string
+  estimatedMinutes: number
+  acceptanceCriteria: string
+  rationale: string
+  capabilityGap: string | null
+  jobRequirement: string | null
+  sourceRefs: string[]
+}
+
+export type ActionPlanPreviewWeek = {
+  weekNo: number
+  goal: string
+  tasks: ActionPlanPreviewTask[]
+}
+
+export type ActionPlanEvidenceBasis = {
+  statement: string
+  sourceRefs: string[]
+}
+
+export type ActionPlanPreview = {
+  requestId: string
+  projectId: number
+  targetId: number
+  targetRole: string
+  planType: PlanType
+  overview: string
+  durationWeeks: number
+  startDate: string
+  endDate: string
+  generationMode: 'llm' | 'fallback'
+  modelName: string | null
+  confidence: number
+  evidenceBasis: ActionPlanEvidenceBasis[]
+  uncertainties: string[]
+  weeks: ActionPlanPreviewWeek[]
+}
+
 export type TodayTasks = {
   planId: number | null
   projectId: number | null
   targetId: number | null
   targetRole: string | null
+  planType: PlanType | null
   weekNo: number
   completedThisWeek: number
   totalThisWeek: number
@@ -90,7 +134,28 @@ export const generateActionPlanApi = (data: {
   targetId?: number
   durationWeeks?: number
   startDate?: string
+  planType?: PlanType
 }) => post<ActionPlan>('/action-plans/generate', data)
+export const previewActionPlanApi = (data: {
+  requestId: string
+  projectId: number
+  targetId?: number
+  durationWeeks?: number
+  startDate?: string
+  focus?: string
+  planType?: PlanType
+}) => post<ActionPlanPreview>('/action-plans/preview', data)
+export const generateConfirmedActionPlanApi = (preview: ActionPlanPreview) =>
+  post<ActionPlan>('/action-plans/generate-confirmed', {
+    requestId: preview.requestId,
+    projectId: preview.projectId,
+    targetId: preview.targetId,
+    durationWeeks: preview.durationWeeks,
+    startDate: preview.startDate,
+    planType: preview.planType,
+    overview: preview.overview,
+    weeks: preview.weeks
+  })
 export const getTodayTasksApi = () => get<TodayTasks>('/action-plans/current/today')
 export const updateActionPlanApi = (id: number, data: { overview?: string; status?: string }) =>
   patch<ActionPlan>(`/action-plans/${id}`, data)
@@ -141,7 +206,7 @@ export const reorderActionTasksApi = (planId: number, tasks: Array<{ id: number;
 export const addTaskResultApi = (
   planId: number,
   taskId: number,
-  data: { description: string; linkUrl?: string; requestId?: string }
+  data: { description: string; linkUrl?: string; saveAsEvidence?: boolean; requestId?: string }
 ) => post<ActionPlan>(`/action-plans/${planId}/tasks/${taskId}/results`, {
   ...data,
   requestId: data.requestId || `web-task-result-${crypto.randomUUID()}`

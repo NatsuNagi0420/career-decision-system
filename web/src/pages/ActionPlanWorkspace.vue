@@ -46,7 +46,7 @@ const taskForm = reactive({
   weekNo: 1, title: '', taskType: 'custom' as TaskType, content: '', dueAt: '',
   estimatedMinutes: 60, acceptanceCriteria: '', sortOrder: 0
 })
-const resultForm = reactive({ description: '', linkUrl: '' })
+const resultForm = reactive({ description: '', linkUrl: '', saveAsEvidence: false })
 const statusForm = reactive({ reason: '', deferredTo: '' })
 
 const planId = computed(() => Number(route.params.id))
@@ -116,7 +116,7 @@ const restoreTask = (task: ActionTask) => applyStatus(task, 'todo')
 const completeTask = async (task: ActionTask) => {
   if (!await applyStatus(task, 'completed')) return
   activeTask.value = task
-  Object.assign(resultForm, { description: '', linkUrl: '' })
+  Object.assign(resultForm, { description: '', linkUrl: '', saveAsEvidence: false })
   showResultDialog.value = true
 }
 
@@ -150,10 +150,11 @@ const submitResult = async () => {
   }
   plan.value = await addTaskResultApi(plan.value.id, activeTask.value.id, {
     description: resultForm.description.trim(),
-    linkUrl: resultForm.linkUrl || undefined
+    linkUrl: resultForm.linkUrl || undefined,
+    saveAsEvidence: resultForm.saveAsEvidence
   })
   showResultDialog.value = false
-  m3Message.success('成果已记录')
+  m3Message.success(resultForm.saveAsEvidence ? '成果已记录，也加入了你的个人经历' : '成果已记录')
 }
 
 const openTaskEditor = (task?: ActionTask, weekNo?: number) => {
@@ -283,18 +284,18 @@ const openWeeklyReview = () => router.push(`/weekly-reviews/new?planId=${plan.va
     <div class="action-shell">
       <header class="action-header">
         <M3IconButton class="back-button" label="返回计划列表" @click="router.push('/action-plans')"><ArrowLeft :size="19" /></M3IconButton>
-        <div><span>行动计划</span><h1>{{ plan?.targetRole || '加载中' }}</h1><p v-if="plan">{{ plan.startDate }} 至 {{ plan.endDate }} · {{ plan.durationWeeks }} 周</p></div>
-        <div v-if="plan" class="overall-progress"><strong>{{ plan.progressPercent }}%</strong><span>{{ plan.completedTaskCount }} / {{ plan.taskCount }} 个任务</span><M3LinearProgress :value="plan.progressPercent / 100" label="行动计划完成进度" /></div>
+        <div><span>{{ plan?.planType === 'validation' ? '多了解一些' : '下一步计划' }}</span><h1>{{ plan?.targetRole || '加载中' }}</h1><p v-if="plan">{{ plan.startDate }} 至 {{ plan.endDate }} · {{ plan.durationWeeks }} 周</p></div>
+        <div v-if="plan" class="overall-progress"><strong>{{ plan.progressPercent }}%</strong><span>{{ plan.completedTaskCount }} / {{ plan.taskCount }} 个任务</span><M3LinearProgress :value="plan.progressPercent / 100" label="这份计划的完成进度" /></div>
       </header>
 
       <M3Tabs class="workspace-tabs" aria-label="行动计划视图">
         <M3Tab :active="activeTab === 'week'" @click="activeTab = 'week'"><template #icon><ListChecks :size="17" /></template>本周</M3Tab>
-        <M3Tab :active="activeTab === 'all'" @click="activeTab = 'all'"><template #icon><CalendarClock :size="17" /></template>全局</M3Tab>
+        <M3Tab :active="activeTab === 'all'" @click="activeTab = 'all'"><template #icon><CalendarClock :size="17" /></template>全部安排</M3Tab>
         <M3Tab :active="activeTab === 'results'" @click="activeTab = 'results'"><template #icon><FileCheck2 :size="17" /></template>成果</M3Tab>
       </M3Tabs>
 
-      <div v-if="plan" class="coach-toolbar"><M3Button variant="outlined" type="button" :disabled="coachLoading" @click="requestActionCoach"><Sparkles :size="16" />{{ coachLoading ? '正在生成建议' : '请 AI 行动教练建议' }}</M3Button></div>
-      <AgentInsightPanel v-if="actionCoach" class="action-coach-panel" :result="actionCoach" title="行动教练建议">
+      <div v-if="plan" class="coach-toolbar"><M3Button variant="outlined" type="button" :disabled="coachLoading" @click="requestActionCoach"><Sparkles :size="16" />{{ coachLoading ? '正在帮你看看' : '请 AI 帮我看看这份计划' }}</M3Button></div>
+      <AgentInsightPanel v-if="actionCoach" class="action-coach-panel" :result="actionCoach" title="可以参考的建议">
         <div class="suggested-task-list">
           <article v-for="suggestion in actionCoach.taskSuggestions" :key="`${suggestion.weekNo}-${suggestion.title}`">
             <div><span>第 {{ suggestion.weekNo }} 周 · {{ typeLabels[suggestion.taskType] }}</span><strong>{{ suggestion.title }}</strong><p>{{ suggestion.content }}</p><small>验收：{{ suggestion.acceptanceCriteria }} · {{ suggestion.estimatedMinutes }} 分钟</small></div>
@@ -346,7 +347,7 @@ const openWeeklyReview = () => router.push(`/weekly-reviews/new?planId=${plan.va
         </section>
 
         <section v-else-if="plan" class="results-view">
-          <header><div><h2>任务成果</h2><p>项目、链接和说明会成为后续职业决策可复用的个人证据。</p></div><span>{{ allResults.length }} 条</span></header>
+          <header><div><h2>这段时间的成果</h2><p>你可以把有代表性的成果加入个人经历，以后考虑其他方向时继续使用。</p></div><span>{{ allResults.length }} 条</span></header>
           <div v-if="allResults.length" class="result-list">
             <M3Card tag="article" v-for="result in allResults" :key="result.id" class="result-row"><div class="result-week">W{{ result.weekNo }}</div><div><span>{{ result.task.title }}</span><p>{{ result.description }}</p><a v-if="result.linkUrl" :href="result.linkUrl" target="_blank" rel="noopener noreferrer">查看成果<ExternalLink :size="14" /></a></div><span>{{ result.verificationStatus === 'unverified' ? '待验证' : result.verificationStatus }}</span></M3Card>
           </div>
@@ -360,8 +361,8 @@ const openWeeklyReview = () => router.push(`/weekly-reviews/new?planId=${plan.va
       <template #actions><M3Button variant="outlined" type="button" @click="showTaskDialog = false">取消</M3Button><M3Button type="button" @click="saveTask"><Save :size="16" />保存任务</M3Button></template>
     </M3Dialog>
 
-    <M3Dialog v-model="showResultDialog" title="记录任务成果">
-      <div class="dialog-grid"><p class="dialog-note">任务已完成。没有成果也可以关闭，之后再补充。</p><label class="field-label">成果说明<M3TextArea v-model="resultForm.description"  placeholder="做了什么，得到什么结果，学到了什么"></M3TextArea></label><label class="field-label">成果链接（选填）<M3TextField v-model="resultForm.linkUrl"  type="url" placeholder="https://" /></label></div>
+    <M3Dialog v-model="showResultDialog" title="记录这次做出的成果">
+      <div class="dialog-grid"><p class="dialog-note">现在不想整理也没关系，可以稍后再补充。</p><label class="field-label">简单说说你做了什么<M3TextArea v-model="resultForm.description"  placeholder="例如：整理了 5 个岗位的共同要求，也发现自己还需要补充项目经历"></M3TextArea></label><label class="field-label">相关链接（选填）<M3TextField v-model="resultForm.linkUrl"  type="url" placeholder="https://" /></label><label class="result-evidence-option"><M3Checkbox v-model="resultForm.saveAsEvidence" label="同时加入我的个人经历" /><span><strong>同时加入我的个人经历</strong><small>以后考虑其他方向时，可以继续参考这次成果。</small></span></label></div>
       <template #actions><M3Button variant="outlined" type="button" @click="showResultDialog = false">稍后填写</M3Button><M3Button type="button" @click="submitResult">保存成果</M3Button></template>
     </M3Dialog>
 
@@ -395,6 +396,8 @@ const openWeeklyReview = () => router.push(`/weekly-reviews/new?planId=${plan.va
 .global-task-list { border-top: 1px solid var(--md-sys-color-outline-variant); }.global-task-row { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; align-items: center; gap: 12px; min-height: 58px; border-bottom: 1px solid var(--md-sys-color-outline-variant); }.status-dot { width: 8px; height: 8px; border-radius: var(--md-sys-shape-corner-full); background: var(--md-sys-color-outline-variant); }.status-dot.completed { background: var(--career-sys-color-success); }.status-dot.in_progress { background: var(--career-sys-color-info); }.status-dot.deferred { background: var(--md-sys-color-tertiary); }.global-task-row > div:nth-child(2) { display: grid; gap: 4px; }.global-task-row span { color: var(--md-sys-color-on-surface-variant); font-size: var(--md-sys-typescale-label-small-size); }.global-actions { display: flex; gap: 4px; }.destructive-icon { --md-icon-button-icon-color: var(--md-sys-color-error); }
 .results-view > header { display: flex; justify-content: space-between; gap: 20px; margin-bottom: 18px; }.results-view h2 { margin: 0; }.results-view header p { margin: 5px 0 0; color: var(--md-sys-color-on-surface-variant); }.results-view header > span { color: var(--md-sys-color-primary); font-weight: 500; }.result-list { display: grid; gap: 10px; }.result-row { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 14px; padding: 16px; }.result-week { display: inline-flex; width: 40px; height: 40px; align-items: center; justify-content: center; border-radius: var(--md-sys-shape-corner-small); background: var(--md-sys-color-surface-container); color: var(--md-sys-color-primary); font-weight: 500; }.result-row > div:nth-child(2) { display: grid; gap: 5px; }.result-row p { margin: 0; color: var(--md-sys-color-on-surface-variant); line-height: 1.5; }.result-row a { display: inline-flex; align-items: center; gap: 4px; color: var(--md-sys-color-primary); text-decoration: none; font-size: var(--md-sys-typescale-body-small-size); }.result-row > span { color: var(--md-sys-color-tertiary); font-size: var(--md-sys-typescale-label-small-size); }.empty-results { display: flex; min-height: 300px; align-items: center; justify-content: center; flex-direction: column; gap: 9px; color: var(--md-sys-color-on-surface-variant); }.empty-results span { font-size: var(--md-sys-typescale-body-small-size); }
 .dialog-grid { display: grid; gap: 16px; }.two-columns { grid-template-columns: repeat(2, minmax(0, 1fr)); }.full-column { grid-column: 1 / -1; }.small-textarea { min-height: 80px; }.dialog-note { margin: 0; color: var(--md-sys-color-on-surface-variant); line-height: 1.5; }
+.result-evidence-option { display: flex; align-items: flex-start; gap: 10px; border: 1px solid var(--md-sys-color-outline-variant); border-radius: var(--md-sys-shape-corner-small); padding: 13px; cursor: pointer; }
+.result-evidence-option > span { display: grid; gap: 3px; }.result-evidence-option small { color: var(--md-sys-color-on-surface-variant); line-height: 1.45; }
 @media (max-width: 900px) { .action-header { grid-template-columns: 48px 1fr; }.overall-progress { grid-column: 2; }.action-content { grid-template-columns: 1fr; }.week-sidebar { display: flex; overflow-x: auto; }.week-sidebar > * { min-width: 120px; }.week-sidebar > .active { border-bottom: 3px solid var(--md-sys-color-primary); border-left: 0; } }
 @media (max-width: 680px) { .action-shell { width: min(100% - 24px, 1240px); }.week-header { align-items: flex-start; flex-direction: column; }.task-card { grid-template-columns: 28px 1fr; }.task-actions { grid-column: 1 / -1; justify-content: flex-start; max-width: none; }.two-columns { grid-template-columns: 1fr; }.full-column { grid-column: auto; }.result-row { grid-template-columns: 40px 1fr; }.result-row > span { grid-column: 2; }.suggested-task-list article { align-items: stretch; flex-direction: column; } }
 </style>

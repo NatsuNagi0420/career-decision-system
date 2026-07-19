@@ -18,12 +18,27 @@ const loading = ref(true)
 const projects = ref<DecisionProjectSummary[]>([])
 
 const stageLabels: Record<string, string> = {
-  clarify: '明确问题', evidence: '整理证据', candidates: '收集候选', compare: '对比验证', target: '确定目标'
+  brief: '先说说你在考虑什么',
+  candidates: '看看有哪些选择',
+  validate: '多了解一些',
+  compare: '放在一起看看',
+  commit: '决定下一步先试什么',
+  clarify: '先说说你在考虑什么',
+  evidence: '多了解一些',
+  target: '决定下一步先试什么'
 }
 
 const statusLabels: Record<string, string> = {
-  clarifying: '正在明确问题', collecting_evidence: '正在整理证据', collecting_candidates: '正在收集候选',
-  comparing: '正在对比验证', ready_to_decide: '等待确认目标', decided: '已完成决策'
+  draft: '刚刚开始',
+  exploring: '正在多了解一些',
+  provisional: '目前想先试试',
+  verified: '已经比较了解',
+  clarifying: '刚刚开始',
+  collecting_evidence: '正在多了解一些',
+  collecting_candidates: '正在看看不同方向',
+  comparing: '正在放在一起看看',
+  ready_to_decide: '可以选择下一步了',
+  decided: '已经保存选择'
 }
 
 const load = async () => {
@@ -52,8 +67,8 @@ const archive = async (project: DecisionProjectSummary) => {
   <div class="product-page">
     <div class="product-shell">
       <header class="product-header">
-        <div><h1>决策项目</h1><p>每个项目聚焦一个具体选择，保留候选、岗位样本、证据、比较过程和最终结论。</p></div>
-        <M3Button type="button" @click="router.push('/decision-projects/new')"><Plus :size="17" />新建项目</M3Button>
+        <div><h1>我正在考虑的事情</h1><p>把每次想清楚的事情单独保存，方向、真实岗位和自己的经历都会留在原处。</p></div>
+        <M3Button type="button" @click="router.push('/decision-projects/new')"><Plus :size="17" />开始一次新的思考</M3Button>
       </header>
 
       <main class="projects-content loading-host">
@@ -64,19 +79,19 @@ const archive = async (project: DecisionProjectSummary) => {
               <span class="project-status"><CircleDot :size="15" />{{ statusLabels[project.status] || project.status }}</span>
               <div><h2>{{ project.title }}</h2><p>{{ project.question }}</p></div>
               <div class="project-metrics">
-                <span>{{ project.candidateCount }} 个候选</span><span>{{ project.jobSampleCount }} 个岗位样本</span>
-                <span v-if="project.primaryTarget">主目标：{{ project.primaryTarget }}</span>
+                <span>{{ project.candidateCount }} 个方向</span><span>{{ project.jobSampleCount }} 份真实岗位</span>
+                <span v-if="project.primaryTarget">目前先试：{{ project.primaryTarget }}</span>
               </div>
               <div class="project-footer">
-                <span>{{ stageLabels[project.currentStage] }}</span>
-                <span v-if="project.decisionDeadline"><CalendarDays :size="14" />{{ project.decisionDeadline }} 前决策</span>
+                <span>{{ stageLabels[project.currentStage] || '继续看看' }}</span>
+                <span v-if="project.decisionDeadline"><CalendarDays :size="14" />{{ project.decisionDeadline }} 前看看</span>
                 <ChevronRight :size="18" />
               </div>
             </router-link>
             <aside class="row-actions">
-              <span v-if="project.current" class="current-label">当前项目</span>
-              <M3Button v-else variant="text" @click="makeCurrent(project)">设为当前</M3Button>
-              <M3IconButton label="归档项目" @click="archive(project)"><Archive :size="16" /></M3IconButton>
+              <span v-if="project.current" class="current-label">最近在看</span>
+              <M3Button v-else variant="text" @click="makeCurrent(project)">放到最前</M3Button>
+              <M3IconButton label="收起这次思考" @click="archive(project)"><Archive :size="16" /></M3IconButton>
             </aside>
           </M3Card>
         </section>
@@ -85,7 +100,7 @@ const archive = async (project: DecisionProjectSummary) => {
           <div class="empty-icon"><CircleDot :size="28" /></div>
           <h2>从一个具体问题开始</h2>
           <p>例如“未来三个月优先准备 Java 后端还是数据分析”，而不是一次决定整个职业生涯。</p>
-          <M3Button type="button" @click="router.push('/decision-projects/new')"><Plus :size="17" />创建第一个决策项目</M3Button>
+          <M3Button type="button" @click="router.push('/decision-projects/new')"><Plus :size="17" />开始第一次思考</M3Button>
         </M3Card>
       </main>
     </div>

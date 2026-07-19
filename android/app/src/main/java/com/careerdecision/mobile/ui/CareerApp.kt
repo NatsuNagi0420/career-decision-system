@@ -1,5 +1,13 @@
 package com.careerdecision.mobile.ui
 
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
@@ -35,7 +43,9 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.NavHostController
+import androidx.navigation.navArgument
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -43,16 +53,20 @@ import androidx.navigation.compose.rememberNavController
 import com.careerdecision.mobile.CareerApplication
 import com.careerdecision.mobile.network.RequestConfig
 import com.careerdecision.mobile.notification.reminder.ReminderGateway
+import com.careerdecision.mobile.ui.design.BrandIdentity
 import com.careerdecision.mobile.ui.design.CareerIcons
 import com.careerdecision.mobile.ui.design.CareerSize
 import com.careerdecision.mobile.ui.design.CareerSpacing
 import com.careerdecision.mobile.ui.screens.GoalScreen
+import com.careerdecision.mobile.ui.screens.HistoryDetailScreen
+import com.careerdecision.mobile.ui.screens.HistoryListScreen
 import com.careerdecision.mobile.ui.screens.LoginScreen
 import com.careerdecision.mobile.ui.screens.MentorScreen
 import com.careerdecision.mobile.ui.screens.OnboardingInitialData
 import com.careerdecision.mobile.ui.screens.OnboardingScreen
 import com.careerdecision.mobile.ui.screens.ProfileScreen
 import com.careerdecision.mobile.ui.screens.TodayScreen
+import com.careerdecision.mobile.ui.theme.CareerMotionTokens
 import com.careerdecision.mobile.ui.theme.CareerPageCanvas
 
 private data class Destination(
@@ -143,9 +157,11 @@ private fun AuthenticatedApp(
     val reminderGateway = app.reminderGateway
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route ?: "today"
+    val routeBase = currentRoute.substringBefore('?')
+    val currentTopLevelRoute = if (routeBase.startsWith("profile/")) "profile" else routeBase
 
     LaunchedEffect(requestedDestination) {
-        val route = requestedDestination?.takeIf { requested -> destinations.any { it.route == requested } }
+        val route = requestedDestination?.takeIf(::isSupportedNotificationDestination)
         if (route != null) {
             navigateTopLevel(navController, route)
             onDestinationConsumed()
@@ -172,7 +188,7 @@ private fun AuthenticatedApp(
                     NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
                         destinations.forEach { destination ->
                             NavigationBarItem(
-                                selected = currentRoute == destination.route,
+                                selected = currentTopLevelRoute == destination.route,
                                 onClick = { navigateTopLevel(navController, destination.route) },
                                 icon = { Icon(destination.icon, contentDescription = destination.label) },
                                 label = { Text(destination.label) },
@@ -189,7 +205,7 @@ private fun AuthenticatedApp(
                 NavigationRail(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
                     destinations.forEach { destination ->
                         NavigationRailItem(
-                            selected = currentRoute == destination.route,
+                            selected = currentTopLevelRoute == destination.route,
                             onClick = { navigateTopLevel(navController, destination.route) },
                             icon = { Icon(destination.icon, contentDescription = destination.label) },
                             label = { Text(destination.label) },
@@ -211,16 +227,14 @@ private fun AuthenticatedApp(
                     modifier = Modifier.width(CareerSize.NavigationDrawer),
                     drawerContainerColor = MaterialTheme.colorScheme.surfaceContainer
                 ) {
-                    Text(
-                        "职途",
+                    BrandIdentity(
                         modifier = Modifier.padding(CareerSpacing.ExtraLarge),
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.primary
+                        showDescriptor = true
                     )
                     destinations.forEach { destination ->
                         NavigationDrawerItem(
                             label = { Text(destination.label) },
-                            selected = currentRoute == destination.route,
+                            selected = currentTopLevelRoute == destination.route,
                             onClick = { navigateTopLevel(navController, destination.route) },
                             icon = { Icon(destination.icon, contentDescription = null) },
                             modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
@@ -246,10 +260,26 @@ private fun CareerNavHost(
     openWeb: (String) -> Unit,
     modifier: Modifier
 ) {
-    NavHost(navController, startDestination = "today", modifier = modifier) {
-        composable("today") {
+    NavHost(
+        navController = navController,
+        startDestination = "today",
+        modifier = modifier,
+        enterTransition = { topLevelFadeThroughEnter() },
+        exitTransition = { topLevelFadeThroughExit() },
+        popEnterTransition = { topLevelFadeThroughEnter() },
+        popExitTransition = { topLevelFadeThroughExit() }
+    ) {
+        composable(
+            route = "today?taskId={taskId}&review={review}",
+            arguments = listOf(
+                navArgument("taskId") { type = NavType.LongType; defaultValue = -1L },
+                navArgument("review") { type = NavType.BoolType; defaultValue = false }
+            )
+        ) { entry ->
             TodayScreen(
                 state = state,
+                requestedTaskId = entry.arguments?.getLong("taskId")?.takeIf { it > 0 },
+                openReviewOnStart = entry.arguments?.getBoolean("review") == true,
                 onRefresh = { viewModel.refresh() },
                 onOpenWeb = { openWeb("/decision-projects") },
                 onUpdateTask = viewModel::updateTask,
@@ -270,6 +300,18 @@ private fun CareerNavHost(
                 onSend = { viewModel.sendMentorMessage(it) },
                 onRetry = { viewModel.retryMentorMessage(it) },
                 onNewConversation = { viewModel.startNewMentorConversation() },
+                onLoadHistory = { viewModel.loadMentorSessions() },
+                onOpenSession = { viewModel.openMentorSession(it) },
+                onDeleteSession = { viewModel.deleteMentorSession(it) },
+                onAction = { action ->
+                    when (action.destination) {
+                        MentorActionDestination.Today -> navigateTopLevel(navController, "today")
+                        MentorActionDestination.Goal -> navigateTopLevel(navController, "goal")
+                        MentorActionDestination.Profile -> navigateTopLevel(navController, "profile")
+                        MentorActionDestination.History -> navController.navigate("profile/history")
+                        MentorActionDestination.ExploreWeb -> openWeb("/explore")
+                    }
+                },
                 onNavigateToday = { navigateTopLevel(navController, "today") },
                 onNavigateGoal = { navigateTopLevel(navController, "goal") }
             )
@@ -283,18 +325,96 @@ private fun CareerNavHost(
                     viewModel.saveAccountProfile(displayName, school, major, grade, city, onSaved)
                 },
                 onUpdateAiConsent = { viewModel.updateExternalAiConsent(it) },
-                onOpenWeb = openWeb,
+                onOpenHistory = { navController.navigate("profile/history") },
                 onLogout = { viewModel.logout() }
+            )
+        }
+        composable(
+            route = "profile/history",
+            enterTransition = { secondarySharedAxisEnter(forward = true) },
+            exitTransition = { secondarySharedAxisExit(forward = true) },
+            popEnterTransition = { secondarySharedAxisEnter(forward = false) },
+            popExitTransition = { secondarySharedAxisExit(forward = false) }
+        ) {
+            LaunchedEffect(Unit) { viewModel.loadHistory() }
+            HistoryListScreen(
+                state = state,
+                onBack = { navController.popBackStack() },
+                onRefresh = { viewModel.loadHistory() },
+                onOpenItem = { item ->
+                    viewModel.loadHistoryDetail(item)
+                    navController.navigate("profile/history/detail")
+                }
+            )
+        }
+        composable(
+            route = "profile/history/detail",
+            enterTransition = { secondarySharedAxisEnter(forward = true) },
+            exitTransition = { secondarySharedAxisExit(forward = true) },
+            popEnterTransition = { secondarySharedAxisEnter(forward = false) },
+            popExitTransition = { secondarySharedAxisExit(forward = false) }
+        ) {
+            HistoryDetailScreen(
+                state = state,
+                onBack = { navController.popBackStack() },
+                onRetry = { viewModel.loadHistoryDetail(it) },
+                onDelete = { item ->
+                    viewModel.deleteHistoryItem(item) { navController.popBackStack() }
+                }
             )
         }
     }
 }
+
+private fun topLevelFadeThroughEnter(): EnterTransition =
+    fadeIn(
+        animationSpec = tween(
+            durationMillis = CareerMotionTokens.Standard,
+            delayMillis = CareerMotionTokens.Short / 2
+        )
+    ) + scaleIn(
+        animationSpec = tween(CareerMotionTokens.Standard),
+        initialScale = CareerMotionTokens.FadeThroughIncomingScale
+    )
+
+private fun topLevelFadeThroughExit(): ExitTransition =
+    fadeOut(animationSpec = tween(CareerMotionTokens.Short))
+
+private fun secondarySharedAxisEnter(forward: Boolean): EnterTransition =
+    fadeIn(animationSpec = tween(CareerMotionTokens.SharedAxis)) +
+        slideInHorizontally(animationSpec = tween(CareerMotionTokens.SharedAxis)) { width ->
+            if (forward) width / 4 else -width / 4
+        }
+
+private fun secondarySharedAxisExit(forward: Boolean): ExitTransition =
+    fadeOut(animationSpec = tween(CareerMotionTokens.SharedAxis)) +
+        slideOutHorizontally(animationSpec = tween(CareerMotionTokens.SharedAxis)) { width ->
+            if (forward) -width / 4 else width / 4
+        }
 
 private fun navigateTopLevel(navController: NavHostController, route: String) {
     navController.navigate(route) {
         popUpTo(navController.graph.findStartDestination().id) { saveState = true }
         launchSingleTop = true
         restoreState = true
+    }
+}
+
+private fun isSupportedNotificationDestination(value: String): Boolean {
+    val base = value.substringBefore('?')
+    if (destinations.none { it.route == base }) return false
+    if ('?' !in value) return true
+    if (base != "today") return false
+    val query = value.substringAfter('?', missingDelimiterValue = "")
+    if (query.isBlank()) return false
+    return query.split('&').all { parameter ->
+        val key = parameter.substringBefore('=')
+        val rawValue = parameter.substringAfter('=', missingDelimiterValue = "")
+        when (key) {
+            "taskId" -> rawValue.toLongOrNull()?.let { it > 0 } == true
+            "review" -> rawValue == "true" || rawValue == "false"
+            else -> false
+        }
     }
 }
 

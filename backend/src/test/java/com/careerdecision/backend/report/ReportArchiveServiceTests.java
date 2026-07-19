@@ -171,7 +171,7 @@ class ReportArchiveServiceTests {
                 ) VALUES (?, 1, ?, ?, 'primary', 'Java 后端', '已有证据更强', '岗位样本仍少', CURRENT_TIMESTAMP)
                 """, targetId, projectId, candidateId);
         actionPlanService.generate(1L, new GenerateRequest(
-                "decision-snapshot-plan-001", projectId, targetId, 4, LocalDate.of(2026, 7, 7)
+                "decision-snapshot-plan-001", projectId, targetId, 4, LocalDate.of(2026, 7, 7), null
         ));
 
         DecisionSnapshotRequest firstRequest = new DecisionSnapshotRequest("decision-snapshot-idempotent-001");
@@ -195,7 +195,7 @@ class ReportArchiveServiceTests {
                 2L, projectId, new DecisionSnapshotRequest("decision-snapshot-other-user")
         ))
                 .isInstanceOf(BusinessException.class)
-                .hasMessage("Decision project not found: " + projectId);
+                .hasMessage("没有找到这次思考，它可能已经被收起了。");
     }
 
     private ReportArchiveRequest request(String type, String title) {

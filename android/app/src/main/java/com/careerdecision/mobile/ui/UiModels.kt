@@ -47,7 +47,55 @@ data class MentorMessageUi(
     val evidence: List<String> = emptyList(),
     val uncertainties: List<String> = emptyList(),
     val nextStep: String? = null,
+    val actions: List<MentorActionUi> = emptyList(),
+    val hasActions: Boolean = false,
     val pending: Boolean = false,
     val failed: Boolean = false,
     val createdAt: String? = null
+)
+
+data class MentorActionUi(
+    val label: String,
+    val action: String,
+    val destination: MentorActionDestination
+)
+
+enum class MentorActionDestination {
+    Today,
+    Goal,
+    Profile,
+    History,
+    ExploreWeb
+}
+
+internal fun mentorActionUi(label: String, action: String): MentorActionUi? {
+    val destination = when (action) {
+        "go:dashboard", "go:action-plans", "go:path-planning" -> MentorActionDestination.Today
+        "go:decision-projects" -> MentorActionDestination.Goal
+        "go:profile", "go:resume" -> MentorActionDestination.Profile
+        "go:history", "go:career-report" -> MentorActionDestination.History
+        "go:explore", "go:jobs" -> MentorActionDestination.ExploreWeb
+        else -> return null
+    }
+    return MentorActionUi(
+        label = label.trim().ifEmpty { mentorActionFallbackLabel(destination) },
+        action = action,
+        destination = destination
+    )
+}
+
+private fun mentorActionFallbackLabel(destination: MentorActionDestination): String = when (destination) {
+    MentorActionDestination.Today -> "查看今日行动"
+    MentorActionDestination.Goal -> "查看目标"
+    MentorActionDestination.Profile -> "查看个人档案"
+    MentorActionDestination.History -> "查看历史记录"
+    MentorActionDestination.ExploreWeb -> "浏览职业与岗位"
+}
+
+data class MentorSessionUi(
+    val id: Long,
+    val title: String,
+    val preview: String,
+    val messageCount: Int,
+    val updatedAt: String?
 )

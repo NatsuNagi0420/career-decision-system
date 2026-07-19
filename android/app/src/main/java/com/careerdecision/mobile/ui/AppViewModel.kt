@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.careerdecision.mobile.data.CareerRepositoryGateway
+import com.careerdecision.mobile.data.HistoryDetail
+import com.careerdecision.mobile.data.HistoryItem
 import com.careerdecision.mobile.data.RepositorySnapshot
 import com.careerdecision.mobile.data.local.CachedGoalEntity
 import com.careerdecision.mobile.data.local.CachedTaskEntity
@@ -14,6 +16,8 @@ import com.careerdecision.mobile.network.ChatConversation
 import com.careerdecision.mobile.network.ChatDeliveryStatus
 import com.careerdecision.mobile.network.ChatMessageRole
 import com.careerdecision.mobile.network.DashboardReview
+import com.careerdecision.mobile.network.DecisionProjectDetail
+import com.careerdecision.mobile.network.PersonalEvidence
 import com.careerdecision.mobile.network.UserInfo
 import com.careerdecision.mobile.network.UserProfile
 import com.careerdecision.mobile.network.UserProfileRequest
@@ -43,13 +47,29 @@ data class AppUiState(
     val goal: CachedGoalEntity? = null,
     val tasks: List<CachedTaskEntity> = emptyList(),
     val planDetail: ActionPlanDetail? = null,
+    val decisionProjectDetail: DecisionProjectDetail? = null,
+    val personalEvidence: List<PersonalEvidence> = emptyList(),
     val milestones: List<PlanMilestoneUi> = emptyList(),
     val pendingCount: Int = 0,
     val busyTaskId: Long? = null,
     val mentorLoading: Boolean = false,
     val chatLoading: Boolean = false,
+    val mentorResponding: Boolean = false,
     val mentorSessionId: Long? = null,
+    val mentorSessionTitle: String = "新会话",
+    val mentorHistoryLoading: Boolean = false,
+    val mentorSessionDeleting: Long? = null,
+    val mentorConversationResetVersion: Long = 0,
+    val mentorSessions: List<MentorSessionUi> = emptyList(),
     val mentorMessages: List<MentorMessageUi> = emptyList(),
+    val historyLoading: Boolean = false,
+    val historyLoadFailed: Boolean = false,
+    val historyItems: List<HistoryItem> = emptyList(),
+    val historyDetailLoading: Boolean = false,
+    val historyDetailLoadFailed: Boolean = false,
+    val historyDeleting: Boolean = false,
+    val selectedHistoryItem: HistoryItem? = null,
+    val historyDetail: HistoryDetail? = null,
     val latestReview: DashboardReview? = null,
     val goalFeedbackLoading: Boolean = false,
     val goalFeedbackSubmissionVersion: Long = 0,
@@ -229,9 +249,11 @@ class AppViewModel(
     }
 
     fun sendMentorMessage(message: String) = viewModelScope.launch {
+        if (mutableState.value.mentorSessionDeleting != null) return@launch
         val cleanMessage = message.trim()
         if (cleanMessage.isBlank()) return@launch
-        mutableState.update { it.copy(chatLoading = true, error = null) }
+        val startsNewSession = mutableState.value.mentorSessionId == null
+        mutableState.update { it.copy(chatLoading = true, mentorResponding = true, error = null) }
         runApiCatching {
             repository.sendChatMessage(
                 message = cleanMessage,
@@ -246,13 +268,17 @@ class AppViewModel(
             showConversation(result.conversation, loading = false)
             mutableState.update {
                 if (result.delivered) {
-                    it.copy(chatSendAcceptedVersion = it.chatSendAcceptedVersion + 1)
+                    it.copy(
+                        chatSendAcceptedVersion = it.chatSendAcceptedVersion + 1,
+                        mentorSessionTitle = if (startsNewSession) cleanMessage.take(80) else it.mentorSessionTitle
+                    )
                 } else {
                     it.copy(notice = "消息发送失败，请先重试或开始新会话")
                 }
             }
         }.onFailure { error ->
-            handleFailure(error) { it.copy(chatLoading = false) }
+            if (handleDeletedMentorConversation(error)) return@onFailure
+            handleFailure(error) { it.copy(chatLoading = false, mentorResponding = false) }
             // Delivery failures are persisted by the repository before they are rethrown.
             // Reload the conversation so the failed message remains visible and retryable.
             if (repository.currentSession() != null) {
@@ -263,7 +289,8 @@ class AppViewModel(
     }
 
     fun retryMentorMessage(requestId: String) = viewModelScope.launch {
-        mutableState.update { it.copy(chatLoading = true, error = null) }
+        if (mutableState.value.mentorSessionDeleting != null) return@launch
+        mutableState.update { it.copy(chatLoading = true, mentorResponding = true, error = null) }
         runApiCatching { repository.retryChatMessage(requestId) }
             .onSuccess { result ->
                 showConversation(result.conversation, loading = false)
@@ -272,7 +299,8 @@ class AppViewModel(
                 }
             }
             .onFailure { error ->
-                handleFailure(error) { it.copy(chatLoading = false) }
+                if (handleDeletedMentorConversation(error)) return@onFailure
+                handleFailure(error) { it.copy(chatLoading = false, mentorResponding = false) }
                 if (repository.currentSession() != null) {
                     runApiCatching { repository.loadChatConversation() }
                         .onSuccess { conversation -> showConversation(conversation, loading = false) }
@@ -281,9 +309,193 @@ class AppViewModel(
     }
 
     fun startNewMentorConversation() = viewModelScope.launch {
+        if (mutableState.value.chatLoading || mutableState.value.mentorSessionDeleting != null) return@launch
         runApiCatching { repository.startNewChatConversation() }
-            .onSuccess { showConversation(it, loading = false) }
+            .onSuccess {
+                showConversation(it, loading = false)
+                mutableState.update { state ->
+                    state.copy(
+                        mentorSessionTitle = "新会话",
+                        mentorConversationResetVersion = state.mentorConversationResetVersion + 1,
+                        notice = "已开始新会话"
+                    )
+                }
+            }
             .onFailure { error -> handleFailure(error) }
+    }
+
+    fun loadMentorSessions() = viewModelScope.launch {
+        if (mutableState.value.mentorSessionDeleting != null) return@launch
+        mutableState.update { it.copy(mentorHistoryLoading = true, error = null) }
+        runApiCatching { repository.loadChatSessions() }
+            .onSuccess { sessions ->
+                mutableState.update { state ->
+                    val mappedSessions = sessions.map { session ->
+                        MentorSessionUi(
+                            id = session.id,
+                            title = session.title,
+                            preview = session.lastMessage.orEmpty(),
+                            messageCount = session.messageCount,
+                            updatedAt = session.updatedAt
+                        )
+                    }
+                    state.copy(
+                        mentorHistoryLoading = false,
+                        mentorSessions = mappedSessions,
+                        mentorSessionTitle = mappedSessions
+                            .firstOrNull { it.id == state.mentorSessionId }
+                            ?.title
+                            ?: state.mentorSessionTitle
+                    )
+                }
+            }
+            .onFailure { error -> handleFailure(error) { it.copy(mentorHistoryLoading = false) } }
+    }
+
+    fun openMentorSession(sessionId: Long) = viewModelScope.launch {
+        if (mutableState.value.mentorSessionDeleting != null) return@launch
+        mutableState.update { it.copy(chatLoading = true, error = null) }
+        runApiCatching { repository.openChatConversation(sessionId) }
+            .onSuccess { conversation ->
+                showConversation(conversation, loading = false)
+                val title = mutableState.value.mentorSessions
+                    .firstOrNull { it.id == sessionId }
+                    ?.title
+                    ?: "历史会话"
+                mutableState.update { it.copy(mentorSessionTitle = title) }
+            }
+            .onFailure { error ->
+                if (normalizeNetworkError(error).apiCode == 40490) {
+                    val wasCurrent = mutableState.value.mentorSessionId == sessionId
+                    if (wasCurrent) {
+                        showConversation(ChatConversation(sessionId = null, messages = emptyList()), loading = false)
+                    }
+                    mutableState.update { state ->
+                        state.copy(
+                            chatLoading = false,
+                            mentorSessions = state.mentorSessions.filterNot { it.id == sessionId },
+                            mentorSessionTitle = if (wasCurrent) "新会话" else state.mentorSessionTitle,
+                            notice = "这段会话已经删除"
+                        )
+                    }
+                } else {
+                    handleFailure(error) { it.copy(chatLoading = false) }
+                }
+            }
+    }
+
+    fun deleteMentorSession(sessionId: Long) = viewModelScope.launch {
+        if (
+            sessionId <= 0 ||
+            mutableState.value.chatLoading ||
+            mutableState.value.mentorSessionDeleting != null
+        ) return@launch
+        val wasCurrent = mutableState.value.mentorSessionId == sessionId
+        mutableState.update { it.copy(mentorSessionDeleting = sessionId, error = null) }
+        runApiCatching { repository.deleteChatSession(sessionId) }
+            .onSuccess { clearDeletedMentorSession(sessionId, wasCurrent, "会话已删除") }
+            .onFailure { error ->
+                val normalized = normalizeNetworkError(error)
+                if (normalized.apiCode == 40490) {
+                    clearDeletedMentorSession(sessionId, wasCurrent, if (wasCurrent) "这段会话已经删除，已为你开始新会话" else "这段会话已经删除")
+                } else if (normalized.cause is java.io.IOException) {
+                    mutableState.update {
+                        it.copy(
+                            mentorSessionDeleting = null,
+                            error = "连接网络后才能删除会话"
+                        )
+                    }
+                } else {
+                    handleFailure(error) { it.copy(mentorSessionDeleting = null) }
+                }
+            }
+    }
+
+    fun loadHistory() = viewModelScope.launch {
+        mutableState.update {
+            it.copy(historyLoading = true, historyLoadFailed = false, error = null)
+        }
+        runApiCatching { repository.loadHistory() }
+            .onSuccess { items ->
+                mutableState.update { state ->
+                    val selected = state.selectedHistoryItem
+                        ?.let { current -> items.firstOrNull { it.key == current.key } }
+                    state.copy(
+                        historyLoading = false,
+                        historyLoadFailed = false,
+                        historyItems = items,
+                        selectedHistoryItem = selected,
+                        historyDetail = state.historyDetail?.takeIf { selected != null }
+                    )
+                }
+            }
+            .onFailure { error ->
+                handleFailure(error) {
+                    it.copy(historyLoading = false, historyLoadFailed = true)
+                }
+            }
+    }
+
+    fun loadHistoryDetail(item: HistoryItem) {
+        mutableState.update {
+            it.copy(
+                selectedHistoryItem = item,
+                historyDetail = null,
+                historyDetailLoading = true,
+                historyDetailLoadFailed = false,
+                error = null
+            )
+        }
+        viewModelScope.launch {
+            runApiCatching { repository.loadHistoryDetail(item) }
+                .onSuccess { detail ->
+                    mutableState.update { state ->
+                        if (state.selectedHistoryItem?.key != item.key) {
+                            state
+                        } else {
+                            state.copy(
+                                selectedHistoryItem = detail.item,
+                                historyDetail = detail,
+                                historyDetailLoading = false,
+                                historyDetailLoadFailed = false
+                            )
+                        }
+                    }
+                }
+                .onFailure { error ->
+                    handleFailure(error) {
+                        if (it.selectedHistoryItem?.key == item.key) {
+                            it.copy(
+                                historyDetailLoading = false,
+                                historyDetailLoadFailed = true
+                            )
+                        } else {
+                            it
+                        }
+                    }
+                }
+        }
+    }
+
+    fun deleteHistoryItem(item: HistoryItem, onDeleted: () -> Unit = {}) = viewModelScope.launch {
+        if (mutableState.value.historyDeleting) return@launch
+        mutableState.update { it.copy(historyDeleting = true, error = null) }
+        runApiCatching { repository.deleteHistoryItem(item) }
+            .onSuccess {
+                mutableState.update { state ->
+                    state.copy(
+                        historyDeleting = false,
+                        historyItems = state.historyItems.filterNot { it.key == item.key },
+                        selectedHistoryItem = state.selectedHistoryItem?.takeUnless { it.key == item.key },
+                        historyDetail = state.historyDetail?.takeUnless { it.item.key == item.key },
+                        notice = "历史记录已删除"
+                    )
+                }
+                onDeleted()
+            }
+            .onFailure { error ->
+                handleFailure(error) { it.copy(historyDeleting = false) }
+            }
     }
 
     fun completeOnboarding(form: OnboardingForm, onSaved: () -> Unit = {}) = viewModelScope.launch {
@@ -475,6 +687,39 @@ class AppViewModel(
         mutableState.update { it.copy(notice = null, error = null) }
     }
 
+    private fun handleDeletedMentorConversation(error: Throwable): Boolean {
+        if (normalizeNetworkError(error).apiCode != 40490) return false
+        val deletedSessionId = mutableState.value.mentorSessionId
+        showConversation(ChatConversation(sessionId = null, messages = emptyList()), loading = false)
+        mutableState.update { state ->
+            state.copy(
+                mentorSessionTitle = "新会话",
+                mentorSessions = state.mentorSessions.filterNot { it.id == deletedSessionId },
+                notice = "这段会话已经删除，已为你开始新会话",
+                error = null
+            )
+        }
+        return true
+    }
+
+    private fun clearDeletedMentorSession(sessionId: Long, wasCurrent: Boolean, notice: String) {
+        mutableState.update { state ->
+            state.copy(
+                mentorSessionDeleting = null,
+                mentorSessions = state.mentorSessions.filterNot { it.id == sessionId },
+                mentorSessionTitle = if (wasCurrent) "新会话" else state.mentorSessionTitle,
+                mentorConversationResetVersion = if (wasCurrent) {
+                    state.mentorConversationResetVersion + 1
+                } else state.mentorConversationResetVersion,
+                notice = notice
+            )
+        }
+        if (wasCurrent) {
+            showConversation(ChatConversation(sessionId = null, messages = emptyList()), loading = false)
+            mutableState.update { it.copy(mentorSessionTitle = "新会话") }
+        }
+    }
+
     private fun showSnapshot(snapshot: RepositorySnapshot) {
         val currentWeek = snapshot.cache.goal?.currentWeek ?: 1
         val milestones = snapshot.planDetail?.weeks.orEmpty().map { week ->
@@ -506,6 +751,11 @@ class AppViewModel(
                 goal = snapshot.cache.goal,
                 tasks = snapshot.cache.tasks,
                 planDetail = snapshot.planDetail ?: it.planDetail,
+                decisionProjectDetail = snapshot.decisionProjectDetail
+                    ?: it.decisionProjectDetail?.takeIf { detail ->
+                        detail.id == snapshot.cache.goal?.projectId
+                    },
+                personalEvidence = snapshot.personalEvidence ?: it.personalEvidence,
                 milestones = if (snapshot.planDetail != null) milestones else it.milestones,
                 pendingCount = snapshot.cache.pendingCount,
                 latestReview = remoteReview ?: it.latestReview,
@@ -524,6 +774,9 @@ class AppViewModel(
     private fun showConversation(conversation: ChatConversation, loading: Boolean) {
         val messages = conversation.messages.map { message ->
             val response = message.response
+            val actions = response?.actions.orEmpty().mapNotNull { action ->
+                mentorActionUi(action.label, action.action)
+            }
             MentorMessageUi(
                 localId = "${message.requestId}:${message.role}",
                 requestId = message.requestId,
@@ -534,6 +787,8 @@ class AppViewModel(
                 evidence = response?.evidenceBasis.orEmpty().map { it.statement },
                 uncertainties = response?.uncertainties.orEmpty(),
                 nextStep = response?.nextStep,
+                actions = actions,
+                hasActions = actions.isNotEmpty(),
                 pending = message.role == ChatMessageRole.USER && message.deliveryStatus == ChatDeliveryStatus.PENDING,
                 failed = message.role == ChatMessageRole.USER && message.deliveryStatus == ChatDeliveryStatus.FAILED,
                 createdAt = message.createdAt.toString()
@@ -542,6 +797,7 @@ class AppViewModel(
         mutableState.update {
             it.copy(
                 chatLoading = loading,
+                mentorResponding = false,
                 mentorSessionId = conversation.sessionId,
                 mentorMessages = messages
             )

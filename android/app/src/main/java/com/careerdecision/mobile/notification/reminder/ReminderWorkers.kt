@@ -106,3 +106,71 @@ class WeeklyReviewReminderWorker(
         const val INVALID_ID = -1L
     }
 }
+
+class DailyTaskSummaryWorker(
+    appContext: Context,
+    params: WorkerParameters
+) : CoroutineWorker(appContext, params) {
+    override suspend fun doWork(): Result {
+        val userId = inputData.getLong(ReminderWorkData.USER_ID, INVALID_ID)
+        val expectedHour = inputData.getInt(ReminderWorkData.DAILY_SUMMARY_HOUR, -1)
+        if (userId == INVALID_ID || expectedHour !in 0..23) return Result.failure()
+        val app = applicationContext as? CareerApplication ?: return Result.failure()
+        if (app.repository.currentSession()?.user?.id != userId) return Result.success()
+        val preferences = app.reminderGateway.preferences.value
+        if (!preferences.enabled || preferences.dailySummaryHour != expectedHour) return Result.success()
+        if (app.reminderGateway.permissionStatus() != NotificationPermissionStatus.GRANTED) {
+            return Result.success()
+        }
+        return try {
+            val tasks = ActionDatabase.get(applicationContext).actionDao().tasks(userId).map { task ->
+                ReminderTask(
+                    taskId = task.taskId,
+                    userId = task.userId,
+                    title = task.title,
+                    status = task.status,
+                    dueAt = task.dueAt,
+                    deferredTo = task.deferredTo
+                )
+            }
+            val content = ReminderPolicy.dailySummaryContent(tasks) ?: return Result.success()
+            ReminderNotificationCenter(applicationContext).showDailySummary(userId, content)
+            Result.success()
+        } catch (error: SecurityException) {
+            Result.success()
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Exception) {
+            Result.retry()
+        }
+    }
+
+    private companion object {
+        const val INVALID_ID = -1L
+    }
+}
+
+class ReminderRescheduleWorker(
+    appContext: Context,
+    params: WorkerParameters
+) : CoroutineWorker(appContext, params) {
+    override suspend fun doWork(): Result {
+        val app = applicationContext as? CareerApplication ?: return Result.failure()
+        val userId = app.repository.currentSession()?.user?.id ?: return Result.success()
+        return try {
+            val dao = ActionDatabase.get(applicationContext).actionDao()
+            val tasks = dao.tasks(userId)
+            val goal = dao.goal(userId)
+            app.reminderGateway.rescheduleAll(
+                userId = userId,
+                tasks = tasks,
+                hasActivePlan = goal?.planId != null && goal.status == "active"
+            )
+            Result.success()
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Exception) {
+            Result.retry()
+        }
+    }
+}

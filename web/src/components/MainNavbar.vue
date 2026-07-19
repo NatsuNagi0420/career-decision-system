@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, type ComponentPublicInstance } from 'vue'
 import { useRouter } from 'vue-router'
-import { ChevronDown, History, LogOut, Moon, Settings, Sun, UserRound } from 'lucide-vue-next'
+import { ChevronDown, History, LogOut, MessageCircle, Moon, Settings, Sun, UserRound } from 'lucide-vue-next'
 import { logoutApi } from '@/api/user'
+import BrandIdentity from '@/components/BrandIdentity.vue'
 import { M3IconButton, M3MenuItem } from '@/design-system/components'
 import { m3Confirm } from '@/design-system/services/feedback'
 import { createThemeTransition } from '@/design-system/theme/themeTransition'
@@ -93,8 +94,7 @@ onUnmounted(() => {
 <template>
   <M3TopAppBar class="top-app-bar" aria-label="应用栏">
     <M3Button class="brand" variant="text" aria-label="返回工作台" @click="handleNav('/')">
-      <span class="brand-mark"><img src="/favicon.png" alt="" /></span>
-      <span class="brand-copy"><strong>职途</strong><small>职业决策与行动</small></span>
+      <BrandIdentity />
     </M3Button>
 
     <div class="top-actions">
@@ -107,7 +107,7 @@ onUnmounted(() => {
 
       <div v-else class="user-profile-wrapper">
         <M3Button ref="userMenuTrigger" class="user-profile" variant="text" :aria-label="user?.username || '账户菜单'" :aria-expanded="isDropdownOpen" aria-haspopup="menu" @click.stop="isDropdownOpen = !isDropdownOpen">
-          <img :src="user?.avatar || '/profile/defaultIcon.png'" alt="" />
+          <img :src="user?.avatar || '/profile/defaultIcon.png'" alt="" data-magnetic-preserve />
           <span class="user-profile-name">{{ user?.username }}</span>
           <ChevronDown class="user-profile-chevron" :size="18" aria-hidden="true" />
         </M3Button>
@@ -115,6 +115,7 @@ onUnmounted(() => {
         <M3Menu v-if="isDropdownOpen" class="account-menu" label="账户菜单" @close="closeAccountMenu">
           <M3MenuItem class="menu-action" @click="handleNav('/profile')"><template #icon><UserRound :size="19" /></template>个人档案</M3MenuItem>
           <M3MenuItem class="menu-action" @click="handleNav('/history')"><template #icon><History :size="19" /></template>历史记录</M3MenuItem>
+          <M3MenuItem class="menu-action" @click="handleNav('/assistant')"><template #icon><MessageCircle :size="19" /></template>穗奈助手</M3MenuItem>
           <M3MenuItem class="menu-action" @click="handleNav('/settings')"><template #icon><Settings :size="19" /></template>设置</M3MenuItem>
           <div class="menu-divider" role="separator"></div>
           <M3MenuItem class="menu-action logout-action" @click="handleLogout"><template #icon><LogOut :size="19" /></template>退出登录</M3MenuItem>
@@ -156,11 +157,6 @@ onUnmounted(() => {
   cursor: pointer;
 }
 .brand:hover { background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent); }
-.brand-mark { display: grid; width: 40px; height: 40px; place-items: center; border-radius: var(--md-sys-shape-corner-medium); background: var(--md-sys-color-primary-container); }
-.brand-mark img { width: 28px; height: 28px; object-fit: contain; }
-.brand-copy { display: grid; min-width: 0; text-align: left; }
-.brand-copy strong { font-size: var(--md-sys-typescale-title-medium-size); font-weight: 500; line-height: var(--md-sys-typescale-title-medium-line-height); }
-.brand-copy small { color: var(--md-sys-color-on-surface-variant); font-size: var(--md-sys-typescale-label-small-size); line-height: var(--md-sys-typescale-label-small-line-height); }
 
 .top-actions { display: flex; align-items: center; gap: 8px; }
 .login-action, .user-profile {
@@ -201,9 +197,11 @@ onUnmounted(() => {
 
 @media (max-width: 599px) {
   .top-app-bar { padding: 0 8px 0 12px; }
-  .brand-copy small, .user-profile-name, .user-profile-chevron { display: none; }
+  .brand :deep(.brand-identity__descriptor), .user-profile-name, .user-profile-chevron { display: none; }
   .brand { gap: 8px; padding-right: 4px; }
-  .brand-mark { width: 36px; height: 36px; }
+  .brand :deep(.brand-identity) { gap: var(--career-spacing-2); }
+  .brand :deep(.brand-identity__avatar) { width: 36px; height: 36px; }
+  .brand :deep(.brand-identity__wordmark) { width: 88px; }
   .user-profile { width: 48px; padding: 0 6px; }
   .account-menu { position: fixed; top: 60px; right: 8px; }
 }

@@ -225,7 +225,25 @@ const removeEvidence = async (id: number) => {
 }
 
 const sourceLabel: Record<string, string> = {
-  user: '用户填写', assessment: '测评', resume: '简历解析', task_result: '任务成果', ai: 'AI 推断'
+  user: '由你填写', assessment: '测评结果', resume: '简历整理', task_result: '行动成果', ai: 'AI 整理'
+}
+
+const evidenceTypeLabel: Record<string, string> = {
+  project: '项目经历',
+  skill: '技能',
+  internship: '实习 / 实践',
+  course: '课程学习',
+  certificate: '证书',
+  award: '获奖经历',
+  feedback: '他人反馈',
+  constraint: '现实情况',
+  task_result: '行动成果'
+}
+
+const credibilityLabel: Record<PersonalEvidence['credibility'], string> = {
+  high: '比较确定',
+  medium: '基本确定',
+  low: '还想确认'
 }
 
 const formatAssessmentTime = (value: string) => new Intl.DateTimeFormat('zh-CN', {
@@ -344,21 +362,26 @@ const formatAssessmentTime = (value: string) => new Intl.DateTimeFormat('zh-CN',
             <label class="field-label">最近使用时间<M3DatePicker v-model="evidenceForm.lastUsedAt" /></label>
             <label class="field-label">反馈<M3TextField v-model="evidenceForm.feedback"  placeholder="老师、同事或用户反馈" /></label>
             <label class="field-label">发生时间<M3DatePicker v-model="evidenceForm.occurredAt" /></label>
-            <label class="field-label">可信度<M3Select v-model="evidenceForm.credibility" ><option value="high">高</option><option value="medium">中</option><option value="low">低</option></M3Select></label>
+            <label class="field-label">这条信息有多确定？<M3Select v-model="evidenceForm.credibility" ><option value="high">比较确定</option><option value="medium">基本确定</option><option value="low">还想确认</option></M3Select></label>
             <div class="evidence-form-actions"><M3Button variant="outlined" type="button" @click="showEvidenceForm = false">取消</M3Button><M3Button type="submit">{{ editingEvidenceId ? '保存修改' : '添加' }}</M3Button></div>
           </form>
 
           <div v-if="evidence.length" class="evidence-list">
             <article v-for="item in evidence" :key="item.id" class="evidence-item">
-              <div class="evidence-meta"><span>{{ item.evidenceType }}</span><span>{{ sourceLabel[item.sourceType] || item.sourceType }}</span></div>
-              <strong>{{ item.title }}</strong>
-              <p v-if="item.description">{{ item.description }}</p>
-              <p v-if="item.roleName"><strong>角色：</strong>{{ item.roleName }}</p>
-              <p v-if="item.resultSummary"><strong>结果：</strong>{{ item.resultSummary }}</p>
-              <p v-if="item.proficiency"><strong>熟练度：</strong>{{ item.proficiency }}<template v-if="item.lastUsedAt"> · 最近使用 {{ item.lastUsedAt }}</template></p>
-              <p v-if="item.feedback"><strong>反馈：</strong>{{ item.feedback }}</p>
+              <div class="evidence-meta">
+                <span class="evidence-kind">{{ evidenceTypeLabel[item.evidenceType] || '其他经历' }}</span>
+                <span class="evidence-source">{{ sourceLabel[item.sourceType] || '其他来源' }}</span>
+              </div>
+              <h3 class="evidence-title">{{ item.title }}</h3>
+              <p v-if="item.description" class="evidence-description">{{ item.description }}</p>
+              <dl v-if="item.roleName || item.resultSummary || item.proficiency || item.feedback" class="evidence-details">
+                <div v-if="item.roleName"><dt>角色</dt><dd>{{ item.roleName }}</dd></div>
+                <div v-if="item.resultSummary"><dt>结果</dt><dd>{{ item.resultSummary }}</dd></div>
+                <div v-if="item.proficiency"><dt>熟练度</dt><dd>{{ item.proficiency }}<template v-if="item.lastUsedAt"> · 最近使用 {{ item.lastUsedAt }}</template></dd></div>
+                <div v-if="item.feedback"><dt>反馈</dt><dd>{{ item.feedback }}</dd></div>
+              </dl>
               <a v-if="item.linkUrl" :href="item.linkUrl" target="_blank" rel="noopener noreferrer">查看成果<ExternalLink :size="13" /></a>
-              <div class="evidence-footer"><span>可信度：{{ item.credibility }}</span><span class="evidence-actions"><M3IconButton label="编辑证据" @click="editEvidence(item)"><Pencil :size="15" /></M3IconButton><M3IconButton class="destructive-icon" label="删除证据" @click="removeEvidence(item.id)"><Trash2 :size="15" /></M3IconButton></span></div>
+              <div class="evidence-footer"><span class="evidence-certainty">可靠程度 · {{ credibilityLabel[item.credibility] }}</span><span class="evidence-actions"><M3IconButton label="编辑证据" @click="editEvidence(item)"><Pencil :size="15" /></M3IconButton><M3IconButton class="destructive-icon" label="删除证据" @click="removeEvidence(item.id)"><Trash2 :size="15" /></M3IconButton></span></div>
             </article>
           </div>
           <p v-else class="empty-note">还没有个人证据。可先记录一个课程项目或实践成果。</p>
@@ -392,17 +415,29 @@ const formatAssessmentTime = (value: string) => new Intl.DateTimeFormat('zh-CN',
 .consent-setting { display: flex; align-items: flex-start; gap: 11px; border: 1px solid var(--md-sys-color-outline-variant); border-radius: var(--md-sys-shape-corner-small); padding: 15px; cursor: pointer; }
 .consent-setting span { display: grid; gap: 5px; }
 .consent-setting small { color: var(--md-sys-color-on-surface-variant); line-height: 1.5; }
-.evidence-panel { position: sticky; top: 88px; padding: 20px; }
-.evidence-head { display: flex; justify-content: space-between; gap: 16px; }
-.evidence-form { display: grid; gap: 12px; margin-top: 18px; padding: 16px; background: var(--md-sys-color-surface-container); border-radius: var(--md-sys-shape-corner-small); }
+.evidence-panel { position: sticky; top: 88px; min-width: 0; padding: 20px; }
+.evidence-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.evidence-form { display: grid; gap: 12px; min-width: 0; margin-top: 18px; border: 1px solid var(--md-sys-color-outline-variant); border-radius: var(--md-sys-shape-corner-medium); padding: 16px; background: var(--md-sys-color-surface-container); }
 .evidence-form h3 { margin: 0; font-size: var(--md-sys-typescale-title-medium-size); }
-.evidence-form-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.evidence-form .field-label { min-width: 0; }
+.evidence-form-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 .small-textarea { min-height: 78px; }
-.evidence-list { display: grid; gap: 1px; margin-top: 18px; background: var(--md-sys-color-outline-variant); }
-.evidence-item { display: grid; gap: 7px; padding: 14px 0; background: var(--md-sys-color-surface-container-lowest); }
-.evidence-meta, .evidence-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--md-sys-color-on-surface-variant); font-size: var(--md-sys-typescale-label-small-size); }
-.evidence-item p { margin: 0; color: var(--md-sys-color-on-surface-variant); font-size: var(--md-sys-typescale-body-medium-size); line-height: 1.5; }
-.evidence-item > a { display: inline-flex; align-items: center; gap: 4px; color: var(--md-sys-color-primary); font-size: var(--md-sys-typescale-body-small-size); text-decoration: none; }
+.evidence-list { display: grid; gap: 12px; margin-top: 18px; }
+.evidence-item { display: grid; min-width: 0; gap: 10px; overflow: hidden; border: 1px solid var(--md-sys-color-outline-variant); border-radius: var(--md-sys-shape-corner-medium); padding: 15px; background: var(--md-sys-color-surface-container-low); }
+.evidence-meta, .evidence-footer { display: flex; align-items: center; gap: 8px; color: var(--md-sys-color-on-surface-variant); font-size: var(--md-sys-typescale-label-small-size); }
+.evidence-meta { flex-wrap: wrap; }
+.evidence-kind, .evidence-source { display: inline-flex; align-items: center; min-height: 24px; border-radius: var(--md-sys-shape-corner-full); padding: 2px 8px; line-height: var(--md-sys-typescale-label-small-line-height); }
+.evidence-kind { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+.evidence-source { background: var(--md-sys-color-surface-container-high); color: var(--md-sys-color-on-surface-variant); }
+.evidence-title { margin: 0; font-size: var(--md-sys-typescale-title-medium-size); line-height: var(--md-sys-typescale-title-medium-line-height); overflow-wrap: anywhere; }
+.evidence-description { margin: 0; color: var(--md-sys-color-on-surface-variant); font-size: var(--md-sys-typescale-body-medium-size); line-height: var(--md-sys-typescale-body-medium-line-height); overflow-wrap: anywhere; }
+.evidence-details { display: grid; gap: 8px; margin: 0; }
+.evidence-details > div { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 8px; }
+.evidence-details dt { color: var(--md-sys-color-on-surface-variant); font-size: var(--md-sys-typescale-label-medium-size); line-height: var(--md-sys-typescale-label-medium-line-height); }
+.evidence-details dd { min-width: 0; margin: 0; color: var(--md-sys-color-on-surface); font-size: var(--md-sys-typescale-body-medium-size); line-height: var(--md-sys-typescale-body-medium-line-height); overflow-wrap: anywhere; }
+.evidence-item > a { display: inline-flex; align-items: center; justify-self: start; gap: 4px; color: var(--md-sys-color-primary); font-size: var(--md-sys-typescale-body-small-size); line-height: var(--md-sys-typescale-body-small-line-height); text-decoration: none; }
+.evidence-footer { justify-content: space-between; margin-top: 2px; border-top: 1px solid var(--md-sys-color-outline-variant); padding-top: 10px; }
+.evidence-certainty { min-width: 0; line-height: var(--md-sys-typescale-label-small-line-height); }
 .evidence-actions { display: inline-flex; gap: 4px; }
 .destructive-icon { --md-icon-button-icon-color: var(--md-sys-color-error); }
 .empty-note { margin-top: 22px; color: var(--md-sys-color-on-surface-variant); font-size: var(--md-sys-typescale-body-medium-size); line-height: 1.6; }

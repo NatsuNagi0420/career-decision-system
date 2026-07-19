@@ -25,6 +25,11 @@ class AgentServerPropertiesTest {
     }
 
     @Test
+    void agentServerTimeoutDefaultsToLongRunningAgentBudget() {
+        assertThat(new AgentServerProperties(null, null, null).normalizedTimeoutSeconds()).isEqualTo(150);
+    }
+
+    @Test
     void agentServerTimeoutMustStayInSupportedRange() {
         assertThatThrownBy(() -> new AgentServerProperties(null, null, 0).normalizedTimeoutSeconds())
                 .isInstanceOf(IllegalArgumentException.class)

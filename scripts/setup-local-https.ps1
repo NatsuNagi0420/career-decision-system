@@ -6,7 +6,6 @@ param(
         "127.0.0.1",
         "::1",
         "10.0.2.2",
-        "192.168.1.159",
         "career.local.test",
         "api.career.local.test",
         "web.career.local.test"

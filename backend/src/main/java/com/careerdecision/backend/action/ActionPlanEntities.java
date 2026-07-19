@@ -15,6 +15,7 @@ public final class ActionPlanEntities {
         private String targetRole;
         private String overview;
         private String status;
+        private String planType;
         private Integer durationWeeks;
         private String generationRequestId;
         private Integer version;
@@ -39,6 +40,8 @@ public final class ActionPlanEntities {
         public void setOverview(String value) { overview = value; }
         public String getStatus() { return status; }
         public void setStatus(String value) { status = value; }
+        public String getPlanType() { return planType; }
+        public void setPlanType(String value) { planType = value; }
         public Integer getDurationWeeks() { return durationWeeks; }
         public void setDurationWeeks(Integer value) { durationWeeks = value; }
         public String getGenerationRequestId() { return generationRequestId; }
@@ -136,7 +139,7 @@ public final class ActionPlanEntities {
         public void setUpdatedAt(LocalDateTime value) { updatedAt = value; }
     }
 
-    public record TargetRow(Long id, Long projectId, String targetName) { }
+    public record TargetRow(Long id, Long projectId, Long candidateId, String targetName, String verificationStatus) { }
 
     public record TaskResultRow(
             Long id, String description, String linkUrl, String verificationStatus,

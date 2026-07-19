@@ -16,6 +16,8 @@ import com.careerdecision.mobile.network.ActionTask
 import com.careerdecision.mobile.network.ActionTaskResultRequest
 import com.careerdecision.mobile.network.ActionTaskStatusRequest
 import com.careerdecision.mobile.network.ApiException
+import com.careerdecision.mobile.network.ArchivedPathPlan
+import com.careerdecision.mobile.network.ArchivedResumeAnalysis
 import com.careerdecision.mobile.network.AssistantChatContext
 import com.careerdecision.mobile.network.AssistantChatRequest
 import com.careerdecision.mobile.network.AssistantChatResponse
@@ -23,13 +25,24 @@ import com.careerdecision.mobile.network.ChatConversation
 import com.careerdecision.mobile.network.ChatDeliveryStatus
 import com.careerdecision.mobile.network.ChatMessage
 import com.careerdecision.mobile.network.ChatMessageRole
+import com.careerdecision.mobile.network.ChatSessionDetail
+import com.careerdecision.mobile.network.ChatSessionDeletion
+import com.careerdecision.mobile.network.ChatSessionMessageSnapshot
+import com.careerdecision.mobile.network.ChatSessionSummary
 import com.careerdecision.mobile.network.CoachingRequest
 import com.careerdecision.mobile.network.ConfidenceFeedbackRequest
 import com.careerdecision.mobile.network.ConfidenceFeedbackResponse
 import com.careerdecision.mobile.network.DashboardResponse
 import com.careerdecision.mobile.network.DashboardProject
+import com.careerdecision.mobile.network.DecisionProjectDetail
+import com.careerdecision.mobile.network.DecisionProjectEvidence
 import com.careerdecision.mobile.network.LoginResponse
+import com.careerdecision.mobile.network.PathPlanSnapshot
+import com.careerdecision.mobile.network.PersonalEvidence
 import com.careerdecision.mobile.network.RegisterRequest
+import com.careerdecision.mobile.network.ReportPage
+import com.careerdecision.mobile.network.ReportSnapshot
+import com.careerdecision.mobile.network.ResumeAnalysisSnapshot
 import com.careerdecision.mobile.network.TodayResponse
 import com.careerdecision.mobile.network.UserInfo
 import com.careerdecision.mobile.network.UserProfile
@@ -48,6 +61,59 @@ import org.junit.Test
 import java.util.concurrent.atomic.AtomicInteger
 
 class CareerRepositoryTest {
+    @Test
+    fun refreshIncludesGoalEvidenceAndPersonalEvidenceDetails() = runTest {
+        val remote = FakeCareerRemote().apply {
+            projectDetailResponse = DecisionProjectDetail(
+                id = 101,
+                evidence = listOf(
+                    DecisionProjectEvidence(
+                        id = 801,
+                        candidateId = 301,
+                        personalEvidenceId = 901,
+                        title = "后端项目经历",
+                        detail = "完成可验证接口",
+                        sourceType = "project",
+                        sourceRef = null,
+                        credibility = "high",
+                        stance = "support",
+                        updatedAt = "2026-07-14T10:00:00"
+                    )
+                )
+            )
+            personalEvidenceResponse = listOf(
+                PersonalEvidence(
+                    id = 901,
+                    evidenceType = "project",
+                    title = "课程项目",
+                    description = "实现后端服务",
+                    roleName = "开发者",
+                    resultSummary = "通过验收",
+                    linkUrl = null,
+                    proficiency = "熟练",
+                    lastUsedAt = null,
+                    feedback = null,
+                    sourceType = "manual",
+                    sourceRefType = null,
+                    sourceRefId = null,
+                    credibility = "high",
+                    visibility = "visible",
+                    occurredAt = null,
+                    createdAt = null,
+                    updatedAt = null
+                )
+            )
+        }
+        val repository = CareerRepository(
+            FakeSessionGateway(TEST_SESSION), remote, FakeActionCache(), FakeScheduler()
+        )
+
+        val snapshot = repository.refresh()
+
+        assertEquals("后端项目经历", snapshot.decisionProjectDetail?.evidence?.single()?.title)
+        assertEquals("课程项目", snapshot.personalEvidence?.single()?.title)
+    }
+
     @Test
     fun offlineTaskAndResultAreKeptThenSyncedWithStableRequestIds() = runTest {
         val session = FakeSessionGateway(TEST_SESSION)
@@ -352,6 +418,42 @@ class CareerRepositoryTest {
     }
 
     @Test
+    fun chatHistoryCanBeListedOpenedAndContinued() = runTest {
+        val cache = FakeActionCache().apply { replace(TEST_USER.id, TODAY, PLAN) }
+        val remote = FakeCareerRemote()
+        val repository = CareerRepository(
+            FakeSessionGateway(TEST_SESSION), remote, cache, FakeScheduler()
+        )
+
+        val sessions = repository.loadChatSessions()
+        val restored = repository.openChatConversation(CHAT_SESSION_SUMMARY.id)
+        val followUp = repository.sendChatMessage("继续讨论")
+
+        assertEquals(listOf(CHAT_SESSION_SUMMARY), sessions)
+        assertEquals(CHAT_SESSION_SUMMARY.id, restored.sessionId)
+        assertEquals(2, restored.messages.size)
+        assertEquals(CHAT_SESSION_SUMMARY.id, followUp.conversation.sessionId)
+        assertEquals(CHAT_SESSION_SUMMARY.id, remote.chatRequests.single().sessionId)
+    }
+
+    @Test
+    fun deletingCurrentChatSessionClearsOnlyLocalConversation() = runTest {
+        val cache = FakeActionCache().apply { replace(TEST_USER.id, TODAY, PLAN) }
+        val remote = FakeCareerRemote()
+        val repository = CareerRepository(
+            FakeSessionGateway(TEST_SESSION), remote, cache, FakeScheduler()
+        )
+
+        repository.sendChatMessage("需要删除的测试会话")
+        repository.deleteChatSession(12001L)
+
+        assertEquals(listOf(12001L), remote.deletedChatSessionIds)
+        assertEquals(null, cache.readChat(TEST_USER.id).sessionId)
+        assertTrue(cache.readChat(TEST_USER.id).messages.isEmpty())
+        assertEquals(PLAN.id, cache.read(TEST_USER.id).goal?.planId)
+    }
+
+    @Test
     fun failedChatRetryReusesStableRequestId() = runTest {
         val cache = FakeActionCache().apply { replace(TEST_USER.id, TODAY, PLAN) }
         val remote = FakeCareerRemote().apply { failNextChat = true }
@@ -456,6 +558,140 @@ class CareerRepositoryTest {
     }
 
     @Test
+    fun historyCombinesExistingWebContractsAndSortsNewestFirst() = runTest {
+        val remote = FakeCareerRemote().apply {
+            reportPage = ReportPage(
+                items = listOf(
+                    ReportSnapshot(
+                        id = "301",
+                        decisionProjectId = 101,
+                        snapshotVersion = 2,
+                        type = "decision_snapshot",
+                        title = "后端工程师决策快照",
+                        summary = "已确认主目标",
+                        content = "{}",
+                        createdAt = "2026-07-10T08:00:00Z"
+                    )
+                ),
+                page = 0,
+                size = 50,
+                total = 1,
+                totalPages = 1
+            )
+            resumeAnalysesResponse = listOf(
+                ResumeAnalysisSnapshot(
+                    id = 401,
+                    agentRunId = null,
+                    targetRole = "后端工程师",
+                    score = 82,
+                    atsScore = 80,
+                    keywordMatch = 78,
+                    issueCount = 3,
+                    suggestionCount = 4,
+                    createdAt = "2026-07-12T09:00:00"
+                )
+            )
+            pathPlansResponse = listOf(
+                PathPlanSnapshot(
+                    id = 501,
+                    agentRunId = null,
+                    targetRole = "Java 工程师",
+                    overview = null,
+                    status = "active",
+                    milestoneCount = 3,
+                    taskCount = 8,
+                    completedTaskCount = 2,
+                    progressPercent = 25,
+                    createdAt = "2026-07-11T08:00:00Z",
+                    updatedAt = null
+                )
+            )
+        }
+        val repository = CareerRepository(
+            FakeSessionGateway(TEST_SESSION), remote, FakeActionCache(), FakeScheduler()
+        )
+
+        val history = repository.loadHistory()
+
+        assertEquals(listOf("resume-401", "path-501", "report-301"), history.map { it.key })
+        assertEquals("决策快照 v2", history.last().typeLabel)
+        assertEquals("旧版路径计划", history[1].typeLabel)
+        assertEquals("综合评分 82，发现 3 个问题。", history.first().summary)
+
+        remote.offline = true
+        assertEquals(history, repository.loadHistory())
+    }
+
+    @Test
+    fun historyDetailAndDeletionStayScopedToTheSelectedResource() = runTest {
+        val report = ReportSnapshot(
+            id = "301",
+            type = "career",
+            title = "旧职业报告",
+            summary = "旧数据",
+            content = "{\"summary\":\"旧数据\"}"
+        )
+        val resume = ArchivedResumeAnalysis(
+            id = 401,
+            agentRunId = null,
+            targetRole = "后端工程师",
+            score = 82,
+            atsScore = 80,
+            keywordMatch = 78,
+            issues = listOf("证据不足"),
+            suggestions = listOf("补充项目成果"),
+            improvedFragments = emptyList(),
+            createdAt = "2026-07-12T09:00:00"
+        )
+        val path = ArchivedPathPlan(
+            id = 501,
+            agentRunId = null,
+            targetRole = "Java 工程师",
+            overview = "旧版路径",
+            status = "active",
+            taskCount = 0,
+            completedTaskCount = 0,
+            progressPercent = 0,
+            milestones = emptyList(),
+            checkpoints = emptyList(),
+            createdAt = "2026-07-11T08:00:00Z",
+            updatedAt = null
+        )
+        val remote = FakeCareerRemote().apply {
+            reportDetails[report.id] = report
+            resumeDetails[resume.id] = resume
+            pathDetails[path.id] = path
+        }
+        val repository = CareerRepository(
+            FakeSessionGateway(TEST_SESSION), remote, FakeActionCache(), FakeScheduler()
+        )
+        val reportItem = report.toHistoryItem()
+        val resumeItem = HistoryItem(
+            "resume-401", HistoryResourceType.RESUME_ANALYSIS, "401",
+            "后端工程师简历分析", "简历分析", "分析结果", resume.createdAt
+        )
+        val pathItem = HistoryItem(
+            "path-501", HistoryResourceType.LEGACY_PATH_PLAN, "501",
+            "Java 工程师路径计划", "旧版路径计划", "旧版路径", path.createdAt
+        )
+
+        assertTrue(repository.loadHistoryDetail(reportItem) is HistoryDetail.Report)
+        assertTrue(repository.loadHistoryDetail(resumeItem) is HistoryDetail.ResumeAnalysis)
+        assertTrue(repository.loadHistoryDetail(pathItem) is HistoryDetail.LegacyPathPlan)
+        remote.offline = true
+        assertTrue(repository.loadHistoryDetail(reportItem) is HistoryDetail.Report)
+        remote.offline = false
+        repository.deleteHistoryItem(reportItem)
+        repository.deleteHistoryItem(resumeItem)
+        repository.deleteHistoryItem(pathItem)
+
+        assertEquals(listOf("301"), remote.deletedReportIds)
+        assertEquals(listOf(401L), remote.deletedResumeIds)
+        assertEquals(listOf(501L), remote.deletedPathIds)
+        assertTrue(reportItem.deletionImpact().contains("不影响当前决策项目和行动计划"))
+    }
+
+    @Test
     fun standaloneTaskResultUsesOfflineQueueWithoutChangingTaskStatus() = runTest {
         val remote = FakeCareerRemote(offline = true)
         val cache = FakeActionCache().apply { replace(TEST_USER.id, TODAY, PLAN) }
@@ -504,6 +740,8 @@ internal class FakeActionCache : ActionCache {
     private var chatSessionId: Long? = null
     private val chatMessages = mutableListOf<ChatMessage>()
     private val chatRequests = mutableMapOf<String, CachedChatRequest>()
+    private val history = mutableListOf<HistoryItem>()
+    private val historyDetails = mutableMapOf<String, HistoryDetail>()
     private var nextId = 1L
 
     override suspend fun read(userId: Long): CachedActionSnapshot {
@@ -662,11 +900,41 @@ internal class FakeActionCache : ActionCache {
         chatRequests.clear()
     }
 
+    override suspend fun replaceChat(userId: Long, conversation: ChatConversation, page: String) {
+        chatSessionId = conversation.sessionId
+        chatMessages.clear()
+        chatMessages += conversation.messages
+        chatRequests.clear()
+    }
+
+    override suspend fun readHistory(userId: Long): List<HistoryItem> = history.toList()
+
+    override suspend fun replaceHistory(userId: Long, items: List<HistoryItem>) {
+        val retainedKeys = items.mapTo(mutableSetOf(), HistoryItem::key)
+        history.clear()
+        history += items
+        historyDetails.keys.retainAll(retainedKeys)
+    }
+
+    override suspend fun readHistoryDetail(userId: Long, item: HistoryItem): HistoryDetail? =
+        historyDetails[item.key]
+
+    override suspend fun saveHistoryDetail(userId: Long, detail: HistoryDetail) {
+        historyDetails[detail.item.key] = detail
+    }
+
+    override suspend fun deleteHistoryItem(userId: Long, item: HistoryItem) {
+        history.removeAll { it.key == item.key }
+        historyDetails.remove(item.key)
+    }
+
     override suspend fun clear(userId: Long) {
         if (goal?.userId == userId) goal = null
         tasks.removeAll { it.userId == userId }
         operations.removeAll { it.userId == userId }
         resetChat(userId)
+        history.clear()
+        historyDetails.clear()
     }
 }
 
@@ -690,7 +958,19 @@ internal class FakeCareerRemote(
     val resultRequests = mutableListOf<ActionTaskResultRequest>()
     val reviewRequests = mutableListOf<WeeklyReviewRequest>()
     val chatRequests = mutableListOf<AssistantChatRequest>()
+    val deletedChatSessionIds = mutableListOf<Long>()
     val profileRequests = mutableListOf<UserProfileRequest>()
+    var reportPage = ReportPage(emptyList(), 0, 50, 0, 0)
+    var resumeAnalysesResponse = emptyList<ResumeAnalysisSnapshot>()
+    var pathPlansResponse = emptyList<PathPlanSnapshot>()
+    var projectDetailResponse: DecisionProjectDetail? = null
+    var personalEvidenceResponse: List<PersonalEvidence>? = null
+    val reportDetails = mutableMapOf<String, ReportSnapshot>()
+    val resumeDetails = mutableMapOf<Long, ArchivedResumeAnalysis>()
+    val pathDetails = mutableMapOf<Long, ArchivedPathPlan>()
+    val deletedReportIds = mutableListOf<String>()
+    val deletedResumeIds = mutableListOf<Long>()
+    val deletedPathIds = mutableListOf<Long>()
     private var taskStatus = "todo"
     private var taskVersion = TASK.version
     private val dashboardAttempts = AtomicInteger()
@@ -728,6 +1008,16 @@ internal class FakeCareerRemote(
         }
         failIfNeeded()
         return DASHBOARD.copy(today = today())
+    }
+
+    override suspend fun decisionProject(projectId: Long): DecisionProjectDetail? {
+        failIfOffline()
+        return projectDetailResponse
+    }
+
+    override suspend fun personalEvidence(): List<PersonalEvidence>? {
+        failIfOffline()
+        return personalEvidenceResponse
     }
 
     override suspend fun today(): TodayResponse {
@@ -799,6 +1089,64 @@ internal class FakeCareerRemote(
             sessionId = request.sessionId ?: 12001L,
             reply = "Reply to: ${request.message}"
         )
+    }
+
+    override suspend fun chatSessions(): List<ChatSessionSummary> = listOf(CHAT_SESSION_SUMMARY)
+
+    override suspend fun deleteChatSession(sessionId: Long): ChatSessionDeletion {
+        failIfOffline()
+        deletedChatSessionIds += sessionId
+        return ChatSessionDeletion(sessionId, deleted = true)
+    }
+
+    override suspend fun chatSession(sessionId: Long): ChatSessionDetail {
+        require(sessionId == CHAT_SESSION_DETAIL.id)
+        return CHAT_SESSION_DETAIL
+    }
+
+    override suspend fun reports(page: Int, size: Int): ReportPage {
+        failIfOffline()
+        return reportPage
+    }
+
+    override suspend fun report(id: String): ReportSnapshot {
+        failIfOffline()
+        return requireNotNull(reportDetails[id])
+    }
+
+    override suspend fun deleteReport(id: String) {
+        failIfOffline()
+        deletedReportIds += id
+    }
+
+    override suspend fun resumeAnalyses(page: Int, size: Int): List<ResumeAnalysisSnapshot> {
+        failIfOffline()
+        return resumeAnalysesResponse
+    }
+
+    override suspend fun resumeAnalysis(id: Long): ArchivedResumeAnalysis {
+        failIfOffline()
+        return requireNotNull(resumeDetails[id])
+    }
+
+    override suspend fun deleteResumeAnalysis(id: Long) {
+        failIfOffline()
+        deletedResumeIds += id
+    }
+
+    override suspend fun pathPlans(page: Int, size: Int): List<PathPlanSnapshot> {
+        failIfOffline()
+        return pathPlansResponse
+    }
+
+    override suspend fun pathPlan(id: Long): ArchivedPathPlan {
+        failIfOffline()
+        return requireNotNull(pathDetails[id])
+    }
+
+    override suspend fun deletePathPlan(id: Long) {
+        failIfOffline()
+        deletedPathIds += id
     }
 
     override suspend fun profile(): UserProfile {
@@ -875,6 +1223,42 @@ internal val CHAT_RESPONSE = AssistantChatResponse(
     generationMode = "fallback",
     confidence = 0.72,
     reply = "Start with one small validation task"
+)
+internal val CHAT_SESSION_SUMMARY = ChatSessionSummary(
+    id = 13002,
+    title = "岗位方向比较",
+    lastPage = "/android/mentor",
+    messageCount = 2,
+    lastMessage = "先做两个低成本体验任务。",
+    createdAt = "2026-07-10T09:00:00",
+    updatedAt = "2026-07-10T09:06:00"
+)
+internal val CHAT_SESSION_DETAIL = ChatSessionDetail(
+    id = CHAT_SESSION_SUMMARY.id,
+    title = CHAT_SESSION_SUMMARY.title,
+    lastPage = CHAT_SESSION_SUMMARY.lastPage,
+    createdAt = CHAT_SESSION_SUMMARY.createdAt,
+    updatedAt = CHAT_SESSION_SUMMARY.updatedAt,
+    messages = listOf(
+        ChatSessionMessageSnapshot(
+            id = 14001,
+            requestId = "history-001",
+            role = ChatMessageRole.USER,
+            content = "Java 后端和数据分析先验证哪个？",
+            createdAt = "2026-07-10T09:00:00"
+        ),
+        ChatSessionMessageSnapshot(
+            id = 14002,
+            requestId = "history-001",
+            role = ChatMessageRole.ASSISTANT,
+            content = "先做两个低成本体验任务。",
+            response = CHAT_RESPONSE.copy(
+                sessionId = CHAT_SESSION_SUMMARY.id,
+                reply = "先做两个低成本体验任务。"
+            ),
+            createdAt = "2026-07-10T09:06:00"
+        )
+    )
 )
 internal val PROFILE = UserProfile(
     userId = TEST_USER.id,

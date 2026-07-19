@@ -173,6 +173,26 @@ POST /jobs/favorites/{jobId}
 DELETE /jobs/favorites/{jobId}
 ```
 
+`GET /jobs/{id}` returns a plain-text `summary` derived from the imported JD and versioned structured arrays
+in `responsibilities`, `requirements`, `growthPath`, and `interviewFocus`. The untouched source remains in
+`jobs.description` for audit and re-extraction; HTML is not exposed as display text. Responsibility and
+requirement items are extracted from that source, while explicit education, experience, and skill facts are
+included in `requirements`. Empty arrays mean that the source JD did not contain enough evidence for that section.
+
+Stable direction/job samples and their aggregate evidence are exposed through authenticated endpoints:
+
+```text
+GET /career-directions/{directionId}/jobs?page=0&size=20
+GET /career-directions/{directionId}/insights
+```
+
+The first response is a page of `{ job, matchScore, matchSource, reviewStatus, matchReasons }` records and
+includes `mappingVersion`. The second response aggregates only that persisted sample set and includes the
+sample size, salary coverage, cities, education, experience, skills, latest source update, and the same
+mapping version. It also returns `commonRequirements`, ranked from the structured JD facts in the mapped
+sample. Clients should use these endpoints instead of reconstructing direction samples with
+temporary keyword searches.
+
 Job list query:
 
 ```text
@@ -312,6 +332,10 @@ This is an Agent-generated capability profile endpoint, not the persisted accoun
 
 ```text
 POST /chat/messages
+GET  /chat/sessions
+GET  /chat/sessions/{sessionId}
+PATCH /chat/sessions/{sessionId}
+DELETE /chat/sessions/{sessionId}
 ```
 
 Request:
@@ -338,6 +362,38 @@ The client `context` is a resource-selection envelope, not trusted career data. 
 Backend persists both sides of the conversation in `chat_sessions` and `chat_messages`. For an Agent request it loads only the authenticated session's most recent 12 user/assistant messages, truncates each history item to 1,200 characters, and excludes the current request. Clients cannot supply or replace this history through `context`.
 
 The Agent response includes `reply`, `intent`, `generationMode`, `confidence`, `evidenceBasis`, `uncertainties`, `nextStep`, and `actions`. Allowed actions include `go:dashboard`, `go:resume`, `go:action-plans`, `go:history`, `go:explore`, `go:profile`, and `go:decision-projects`; clients ignore unknown action values defensively.
+
+The session-management endpoints are additive to the existing message contract. `POST /chat/messages` keeps the request and response shape above, so existing page-level Web assistant clients continue to work without adopting session history.
+
+`GET /chat/sessions` returns an array of at most 100 active sessions, newest activity first. The `data` field is an array rather than a paged wrapper:
+
+```json
+[
+  {
+    "id": 12001,
+    "title": "方向选择讨论",
+    "lastPage": "decision-project",
+    "messageCount": 6,
+    "lastMessage": "先完成两个低成本体验任务。",
+    "createdAt": "2026-07-14T09:00:00",
+    "updatedAt": "2026-07-14T09:08:00"
+  }
+]
+```
+
+`GET /chat/sessions/{sessionId}` returns the session metadata and all persisted messages in chronological order. Each message contains `id`, nullable `requestId`, `role`, `content`, nullable `response`, and `createdAt`. For an assistant message, `response` restores the structured assistant response used by Web and Android; for a user message it is `null`.
+
+Rename an active session with:
+
+```json
+{
+  "title": "我的职业讨论"
+}
+```
+
+`PATCH /chat/sessions/{sessionId}` trims the title, enforces a non-blank maximum of 80 characters, and returns the updated session summary. `DELETE /chat/sessions/{sessionId}` permanently deletes the user-owned session and its messages, returning `{ "sessionId": 12001, "deleted": true }`. Active and previously archived sessions can be deleted; missing, already deleted, and foreign sessions return `40490` without revealing whether the identifier exists.
+
+All session endpoints derive ownership from the bearer token. Session deletion is transactional and relies on the V7 `chat_messages.session_id` cascade. A linked `chat` Agent audit row may remain only as content-free operational metadata; its prompt, response, error text, and user association are removed. Non-chat Agent audits and all other domain records are untouched. The operation is online-only at the client layer and requires no destructive schema change.
 
 ### Resume
 
@@ -568,6 +624,18 @@ POST /resumes/analyze
 POST /path-plans/generate
 ```
 
+### Specialised coaching and action-plan preview
+
+```text
+POST /coaching/decision
+POST /coaching/job-comparison
+POST /coaching/action
+POST /coaching/weekly-review
+POST /coaching/action-plan-preview
+```
+
+The business backend appends a trusted `decisionContext` to these calls. It contains only resources resolved for the authenticated user: profile, personal evidence, decision project and target, saved structured jobs, current plan, and the selected weekly review. The browser must not construct this context.
+
 The agent service returns structured JSON only. Persistence is handled by `backend`.
 
 Backend stores operational Agent call audits in `agent_runs`; saved user-facing reports, resume analyses, path plans, and chat conversations are stored by their corresponding business persistence services. Agent Server remains stateless for business storage.
@@ -592,7 +660,7 @@ All endpoints below require `Authorization: Bearer <token>` and derive the user 
 | Decision projects | `GET/POST /decision-projects`, `GET/PUT/DELETE /decision-projects/{id}` |
 | Project workflow | candidate, job-sample, evidence, criterion-result, stage, and target-confirm subresources under `/decision-projects/{id}` |
 | Target confidence | `POST /decision-projects/{id}/targets/{targetId}/confidence-feedback` |
-| Action plans | `GET /action-plans`, `POST /action-plans/generate`, `GET /action-plans/{id}` |
+| Action plans | `GET /action-plans`, `POST /action-plans/preview`, `POST /action-plans/generate-confirmed`, legacy `POST /action-plans/generate`, `GET /action-plans/{id}` |
 | Today | `GET /action-plans/current/today` |
 | Tasks and results | task CRUD, ordering, status, and result subresources under `/action-plans/{id}/tasks` |
 | Weekly reviews | `GET/PUT /weekly-reviews`, detail, submit, and confirmed adjustment endpoints |
@@ -601,7 +669,15 @@ All endpoints below require `Authorization: Bearer <token>` and derive the user 
 
 Action-plan generation, task status mutation, task result creation, weekly-review creation, target-confidence feedback, report snapshots, and confirmed batch adjustments accept a stable `requestId`. Retrying the same request must return the existing result instead of creating a duplicate.
 
-`GET /decision-projects` and `GET /decision-projects/{id}` return the aggregate `version`. First-version clients send that value as `expectedVersion` for project edits, selecting the current project, stage moves, candidate writes, job-sample writes, decision-evidence writes, criterion/result writes, and target confirmation. Delete operations, including project archiving, carry it as an `expectedVersion` query parameter. Each successful aggregate mutation increments the project version. A stale write returns HTTP `409` with code `40950`; clients reload the complete project before allowing another edit.
+The Web action-plan flow first calls `POST /action-plans/preview`. The response is a non-persisted draft with `generationMode`, `modelName`, confidence, evidence references, uncertainties, and 2–12 complete week drafts. Each proposed task includes its capability gap, referenced job requirement, rationale, time estimate, acceptance criteria, and trusted `sourceRefs`. Only an explicit `POST /action-plans/generate-confirmed` persists those weeks. Confirmation re-resolves every `sourceRef` against the authenticated user's current project, profile, personal evidence, and saved jobs; an unknown reference rejects the whole request with code `40067` and writes nothing. The original `/generate` endpoint remains available for older clients and still produces the safe rule template.
+
+Decision journey V2 stores the stages `brief`, `candidates`, `validate`, `compare`, and `commit`, and the project statuses `draft`, `exploring`, `provisional`, `verified`, and `archived`. `POST /decision-projects` accepts optional `initialCandidates`; the project, its qualitative criteria, and those initial directions are created in one transaction. `GET /decision-projects/{id}/journey` returns server-computed stage readiness, per-direction progress, whether a provisional or verified choice can be saved, and plain-language next steps.
+
+`PUT /decision-projects/{id}/comparisons` atomically saves the complete qualitative comparison page. Each result uses a `verdict` appropriate to the criterion kind and may carry an explanation, referenced experience IDs, an uncertainty, and a next action; V2 does not use numeric scores. `POST /decision-projects/{id}/targets/confirm` requires explicit confirmation and a `verificationStatus` of `provisional` or `verified`. The server alone enforces verified-upgrade conditions. Changing the primary direction returns the project to `provisional` and archives the previous short validation plan while preserving its history.
+
+`GET /decision-projects` and `GET /decision-projects/{id}` return the aggregate `version`. Clients send that value as `expectedVersion` for project edits, selecting the current project, stage moves, direction writes, job-sample writes, project-information writes, comparison writes, and target confirmation. Delete operations, including project archiving, carry it as an `expectedVersion` query parameter. Each successful aggregate mutation increments the project version. A stale write returns HTTP `409` with code `40950`; clients preserve the local draft, reload the complete project, and ask the user to try again instead of overwriting newer data.
+
+Action-plan preview and generation accept `planType=validation|action`. A provisional choice may generate a 2–4 week validation plan; only a verified choice may generate a 2–12 week action plan. Task-result creation accepts `saveAsEvidence=true`; when selected, the result is saved to personal experience and linked back to the current direction in the same transaction.
 
 Task edits and status changes also require the `version` returned by the last task read:
 

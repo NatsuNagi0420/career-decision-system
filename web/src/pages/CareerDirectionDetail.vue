@@ -8,11 +8,14 @@ import {
 import CareerVisual from '@/components/CareerVisual.vue'
 import { getCareerAsset, type CareerExperienceTask } from '@/content/careerAssets'
 import { m3Message } from '@/design-system/services/feedback'
-import { favoriteCareerDirectionApi, getCareerDirectionApi, unfavoriteCareerDirectionApi, type CareerDirection } from '@/api/careerDirections'
-import { listJobsApi, type JobInfo } from '@/api/jobs'
+import {
+  favoriteCareerDirectionApi, getCareerDirectionApi, getCareerDirectionInsightsApi,
+  unfavoriteCareerDirectionApi, type CareerDirection, type CareerDirectionInsights
+} from '@/api/careerDirections'
+import { listCareerDirectionJobsApi, type JobInfo } from '@/api/jobs'
 import { listPersonalEvidenceApi, type PersonalEvidence } from '@/api/personalEvidence'
 import { addActionTaskApi, listActionPlansApi, type ActionPlanSummary } from '@/api/actionPlans'
-import { aggregateJobs, careerJobSearchTerms, matchEvidence } from '@/utils/careerInsights'
+import { matchEvidence } from '@/utils/careerInsights'
 
 defineOptions({ name: 'CareerDirectionDetailPage' })
 
@@ -21,14 +24,32 @@ const router = useRouter()
 const loading = ref(true)
 const direction = ref<CareerDirection | null>(null)
 const jobs = ref<JobInfo[]>([])
+const insights = ref<CareerDirectionInsights | null>(null)
 const evidence = ref<PersonalEvidence[]>([])
 const plans = ref<ActionPlanSummary[]>([])
 const addingTaskId = ref<string | null>(null)
 
 const asset = computed(() => getCareerAsset(direction.value?.category))
-const aggregate = computed(() => aggregateJobs(jobs.value))
+const aggregate = computed<CareerDirectionInsights>(() => insights.value || {
+  directionId: direction.value?.id || 0,
+  directionName: direction.value?.name || '',
+  sampleCount: 0,
+  topSkills: [],
+  commonRequirements: [],
+  cities: [],
+  experienceLevels: [],
+  educationLevels: [],
+  salarySampleCount: 0,
+  salaryMin: null,
+  salaryMax: null,
+  averageSalaryMin: null,
+  averageSalaryMax: null,
+  latestSourceAt: null,
+  mappingVersion: ''
+})
 const requirements = computed(() => Array.from(new Set([
   ...(direction.value?.commonSkills || []),
+  ...aggregate.value.commonRequirements.map((item) => item.label),
   ...aggregate.value.topSkills.map((item) => item.label)
 ])).slice(0, 16))
 const evidenceMatches = computed(() => matchEvidence(requirements.value, evidence.value))
@@ -52,15 +73,14 @@ async function load() {
   try {
     const current = await getCareerDirectionApi(Number(route.params.id))
     direction.value = current
-    const searchTerms = careerJobSearchTerms(current.name, current.commonSkills)
-    const [jobResults, evidenceRows, planRows] = await Promise.all([
-      Promise.all(searchTerms.map((keyword) => listJobsApi({ keyword, page: 1, pageSize: 50 }))),
+    const [jobResult, insightResult, evidenceRows, planRows] = await Promise.all([
+      listCareerDirectionJobsApi(current.id, 1, 50),
+      getCareerDirectionInsightsApi(current.id),
       listPersonalEvidenceApi(),
       listActionPlansApi()
     ])
-    jobs.value = Array.from(
-      new Map(jobResults.flatMap((result) => result.list).map((job) => [job.id, job])).values()
-    )
+    jobs.value = jobResult.list.map((item) => item.job)
+    insights.value = insightResult
     evidence.value = evidenceRows
     plans.value = planRows
   } catch {
@@ -164,6 +184,13 @@ onMounted(load)
                 </div>
                 <p v-else>相关岗位尚未提供足够的结构化技能标签。</p>
               </article>
+              <article class="aggregate-block requirement-block">
+                <h3>高频岗位要求</h3>
+                <div v-if="aggregate.commonRequirements.length" class="frequency-list requirement-frequency">
+                  <div v-for="item in aggregate.commonRequirements" :key="item.label"><span>{{ item.label }}</span><div><i :style="{ width: `${Math.max(item.ratio, 6)}%` }"></i></div><strong>{{ item.count }} 个</strong></div>
+                </div>
+                <p v-else>相关岗位尚未提取出可聚合的任职要求，请结合岗位原文判断。</p>
+              </article>
               <article class="aggregate-block"><h3>城市分布</h3><ul><li v-for="item in aggregate.cities" :key="item.label"><span>{{ item.label }}</span><strong>{{ item.count }} 个</strong></li></ul></article>
               <article class="aggregate-block"><h3>经验要求</h3><ul><li v-for="item in aggregate.experienceLevels" :key="item.label"><span>{{ item.label }}</span><strong>{{ item.count }} 个</strong></li></ul></article>
               <article class="aggregate-block"><h3>学历要求</h3><ul><li v-for="item in aggregate.educationLevels" :key="item.label"><span>{{ item.label }}</span><strong>{{ item.count }} 个</strong></li></ul></article>
@@ -252,9 +279,10 @@ onMounted(load)
 .aggregate-block h3 { margin: 0 0 14px; font-size: var(--md-sys-typescale-title-small-size); }
 .aggregate-block ul { display: grid; gap: 9px; margin: 0; padding: 0; list-style: none; }
 .aggregate-block li { display: flex; justify-content: space-between; gap: 12px; color: var(--md-sys-color-on-surface-variant); }
-.skill-block { grid-column: 1 / -1; }
+.skill-block, .requirement-block { grid-column: 1 / -1; }
 .frequency-list { display: grid; gap: 10px; }
 .frequency-list > div { display: grid; grid-template-columns: minmax(90px, 160px) minmax(80px, 1fr) 50px; align-items: center; gap: 10px; font-size: var(--md-sys-typescale-body-small-size); }
+.requirement-frequency > div { grid-template-columns: minmax(160px, 1fr) minmax(80px, .6fr) 50px; }
 .frequency-list > div > div { height: 7px; overflow: hidden; border-radius: var(--md-sys-shape-corner-full); background: var(--md-sys-color-surface-container-highest); }
 .frequency-list i { display: block; height: 100%; border-radius: inherit; background: var(--md-sys-color-primary); }
 .frequency-list strong { text-align: right; }

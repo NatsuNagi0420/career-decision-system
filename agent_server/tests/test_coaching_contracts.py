@@ -197,3 +197,53 @@ def test_weekly_review_contract_returns_adjustments_without_applying_them() -> N
     assert data["reviewSummary"]
     assert data["adjustmentSuggestions"][0]["taskId"] == 602
     assert data["adjustmentSuggestions"][0]["status"] == "deferred"
+
+
+def test_action_plan_preview_preserves_complete_rule_draft_without_external_consent() -> None:
+    task = {
+        "title": "核对 Java 岗位要求",
+        "taskType": "career_research",
+        "content": "对照两个真实岗位提取共同要求。",
+        "estimatedMinutes": 90,
+        "acceptanceCriteria": "形成带来源的岗位要求表。",
+        "rationale": "先验证市场要求，再决定学习内容。",
+        "capabilityGap": "尚未形成岗位要求清单",
+        "jobRequirement": "Java、Spring Boot",
+        "sourceRefs": ["job:801"],
+    }
+    baseline = {
+        "generationMode": "fallback",
+        "modelName": "rule-personalized-plan-v2",
+        "confidence": 0.62,
+        "overview": "用真实岗位与个人证据制定两周验证计划。",
+        "evidenceBasis": [{"statement": "已保存 Java 后端岗位", "sourceRefs": ["job:801"]}],
+        "uncertainties": ["岗位样本仍然有限。"],
+        "weeks": [
+            {"weekNo": 1, "goal": "校准岗位要求", "tasks": [task]},
+            {"weekNo": 2, "goal": "产出并复查", "tasks": [{**task, "title": "产出 Java 能力样例"}]},
+        ],
+    }
+    response = api_post(
+        "/api/v1/coaching/action-plan-preview",
+        json={
+            "requestId": "plan-preview-contract-001",
+            "userId": "1",
+            "targetRole": "Java 后端",
+            "durationWeeks": 2,
+            "startDate": "2026-07-13",
+            "decisionContext": {
+                "profile": {"skills": ["Java"], "weeklyAvailableMinutes": 300},
+                "personalEvidence": [],
+                "project": {"id": 41},
+                "target": {"id": 51, "targetName": "Java 后端"},
+                "jobDetails": [{"id": 801, "requirements": ["Spring Boot"]}],
+            },
+            "baseline": baseline,
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert data["generationMode"] == "fallback"
+    assert [week["weekNo"] for week in data["weeks"]] == [1, 2]
+    assert all(task["sourceRefs"] for week in data["weeks"] for task in week["tasks"])

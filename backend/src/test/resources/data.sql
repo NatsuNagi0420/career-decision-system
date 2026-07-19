@@ -102,6 +102,18 @@ VALUES
   (1007, 9), (1007, 13),
   (1008, 1), (1008, 5), (1008, 14), (1008, 9);
 
+-- Represents a reviewed post-migration fact. Rule-derived facts are refreshed
+-- independently when the source JD changes.
+INSERT INTO job_requirement_items (
+  job_id, item_type, original_text, normalized_key, confidence,
+  extraction_method, extractor_version, sort_order
+)
+VALUES
+  (1005, 'requirement', '能够独立完成指标分析', '能够独立完成指标分析', 0.98,
+   'curated', 'test-fixture-v1', 0),
+  (1005, 'skill', '技能要求：SQL', 'sql', 0.99,
+   'curated', 'test-fixture-v1', 1);
+
 UPDATE jobs
 SET salary_min = 18000, salary_max = 28000, salary_period = 'month', quality_score = 82, search_text = title
 WHERE id = 1001;

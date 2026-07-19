@@ -40,6 +40,25 @@ type BackendJobPage<T> = {
   totalPages: number
 }
 
+type BackendDirectionJobItem = {
+  job: BackendJobSummary
+  matchScore: number
+  matchSource: string
+  reviewStatus: string
+  matchReasons: string[]
+}
+
+type BackendDirectionJobPage = {
+  items: BackendDirectionJobItem[]
+  page: number
+  size: number
+  totalElements: number
+  totalPages: number
+  hasNext: boolean
+  hasPrevious: boolean
+  mappingVersion: string
+}
+
 type BackendFacetItem = {
   name: string
   count: number
@@ -108,6 +127,23 @@ export type PageResult<T> = {
   pageSize: number
 }
 
+export type DirectionMappedJob = {
+  job: JobInfo
+  matchScore: number
+  matchSource: string
+  reviewStatus: string
+  matchReasons: string[]
+}
+
+export type DirectionJobResult = {
+  list: DirectionMappedJob[]
+  total: number
+  page: number
+  pageSize: number
+  totalPages: number
+  mappingVersion: string
+}
+
 export type JobRecommendAiRequest = {
   entry?: CapabilityProfileRequest
   capabilityProfile?: CapabilityProfileResponse | Record<string, unknown>
@@ -131,11 +167,6 @@ export type JobFacets = {
 
 function mapJob(job: BackendJobSummary | BackendJobDetail): JobInfo {
   const detail = job as BackendJobDetail
-  const detailLines = [
-    detail.summary,
-    ...(detail.responsibilities ?? []),
-    ...(detail.requirements ?? [])
-  ].filter(Boolean)
 
   return {
     id: job.id,
@@ -152,7 +183,10 @@ function mapJob(job: BackendJobSummary | BackendJobDetail): JobInfo {
     companySize: job.companySize || null,
     companyType: job.direction || null,
     jobCode: String(job.id),
-    jobDetails: detailLines.join('\n'),
+    // `summary` is the backend's plain-text view of the source JD. The raw
+    // imported evidence remains in the database while the UI keeps this view
+    // separate from extracted responsibilities and requirements.
+    jobDetails: detail.summary || null,
     companyDetails: '',
     jobSourceUrl: job.sourceUrl || '',
     sourcePlatform: job.sourcePlatform || null,
@@ -192,6 +226,30 @@ export const listJobsApi = async (query: JobListQuery) => {
     total: res.totalElements,
     page: res.page + 1,
     pageSize: res.size
+  }
+}
+
+/**
+ * Uses the server-owned, versioned direction mapping. Direction pages must not
+ * rebuild this relation with ad-hoc client keyword searches.
+ */
+export const listCareerDirectionJobsApi = async (
+  directionId: number,
+  page = 1,
+  pageSize = 50
+): Promise<DirectionJobResult> => {
+  const res = await request<BackendDirectionJobPage>({
+    url: `/career-directions/${directionId}/jobs`,
+    method: 'get',
+    params: { page: Math.max(page - 1, 0), size: pageSize }
+  })
+  return {
+    list: res.items.map((item) => ({ ...item, job: mapJob(item.job) })),
+    total: res.totalElements,
+    page: res.page + 1,
+    pageSize: res.size,
+    totalPages: res.totalPages,
+    mappingVersion: res.mappingVersion
   }
 }
 

@@ -15,7 +15,7 @@ import com.materialkolor.scheme.SchemeTonalSpot
 data class PresetSeedColor(val label: String, val value: String)
 
 val CareerPresetSeedColors = listOf(
-    PresetSeedColor("职途绿", DEFAULT_SEED_COLOR),
+    PresetSeedColor("青穗集品牌色", DEFAULT_SEED_COLOR),
     PresetSeedColor("远山蓝", "#2f5f8f"),
     PresetSeedColor("花楸红", "#8b4a54"),
     PresetSeedColor("鸢尾紫", "#67507e"),

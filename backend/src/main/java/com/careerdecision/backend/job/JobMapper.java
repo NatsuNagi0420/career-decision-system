@@ -162,6 +162,15 @@ public interface JobMapper {
     List<String> findTags(@Param("jobId") long jobId);
 
     @Select("""
+            SELECT tag.name
+            FROM job_tags tag
+            JOIN job_tag_rel rel ON rel.tag_id = tag.id
+            WHERE rel.job_id = #{jobId} AND tag.type = 'skill'
+            ORDER BY tag.name
+            """)
+    List<String> findSkillTags(@Param("jobId") long jobId);
+
+    @Select("""
             SELECT j.city AS name, COUNT(1) AS count
             FROM jobs j
             WHERE j.status = 'active'
@@ -233,4 +242,35 @@ public interface JobMapper {
             LIMIT #{limit}
             """)
     List<JobRecord> topActiveJobs(@Param("limit") int limit);
+
+    @Select("""
+            SELECT
+            """ + BASE_COLUMNS + """
+            FROM jobs j
+            WHERE j.status = 'active'
+            ORDER BY j.id
+            """)
+    List<JobRecord> allActiveJobs();
+
+    @Select("""
+            SELECT rel.job_id, tag.name
+            FROM job_tag_rel rel
+            JOIN job_tags tag ON tag.id = rel.tag_id
+            JOIN jobs j ON j.id = rel.job_id AND j.status = 'active'
+            ORDER BY rel.job_id, tag.type, tag.name
+            """)
+    List<JobTagRow> allActiveJobTags();
+
+    @Select("SELECT COUNT(1) FROM jobs WHERE status = 'active'")
+    long activeJobCount();
+
+    @Select("""
+            SELECT COUNT(1)
+            FROM job_tag_rel rel JOIN jobs j ON j.id = rel.job_id
+            WHERE j.status = 'active'
+            """)
+    long activeJobTagRelationCount();
+
+    @Select("SELECT MAX(updated_at) FROM jobs WHERE status = 'active'")
+    java.time.LocalDateTime latestActiveJobUpdatedAt();
 }

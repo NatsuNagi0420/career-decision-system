@@ -1,6 +1,9 @@
 package com.careerdecision.mobile.data.local
 
 import androidx.room.withTransaction
+import com.careerdecision.mobile.data.HistoryDetail
+import com.careerdecision.mobile.data.HistoryItem
+import com.careerdecision.mobile.data.HistoryResourceType
 import com.careerdecision.mobile.network.ActionPlanSummary
 import com.careerdecision.mobile.network.AssistantChatContext
 import com.careerdecision.mobile.network.AssistantChatResponse
@@ -62,6 +65,14 @@ interface ActionCache {
     suspend fun completeChatMessage(userId: Long, requestId: String, response: AssistantChatResponse)
     suspend fun failChatMessage(userId: Long, requestId: String, errorMessage: String)
     suspend fun resetChat(userId: Long)
+    suspend fun replaceChat(userId: Long, conversation: ChatConversation, page: String) {
+        throw UnsupportedOperationException("Replacing chat history is unavailable")
+    }
+    suspend fun readHistory(userId: Long): List<HistoryItem> = emptyList()
+    suspend fun replaceHistory(userId: Long, items: List<HistoryItem>) = Unit
+    suspend fun readHistoryDetail(userId: Long, item: HistoryItem): HistoryDetail? = null
+    suspend fun saveHistoryDetail(userId: Long, detail: HistoryDetail) = Unit
+    suspend fun deleteHistoryItem(userId: Long, item: HistoryItem) = Unit
     suspend fun clear(userId: Long)
 }
 
@@ -283,6 +294,89 @@ class RoomActionCache(private val database: ActionDatabase) : ActionCache {
         }
     }
 
+    override suspend fun replaceChat(userId: Long, conversation: ChatConversation, page: String) {
+        database.withTransaction {
+            dao.deleteChatMessages(userId)
+            dao.deleteChatSession(userId)
+            dao.saveChatSession(
+                CachedChatSessionEntity(
+                    userId = userId,
+                    sessionId = conversation.sessionId,
+                    page = page
+                )
+            )
+            conversation.messages.forEach { message ->
+                dao.insertChatMessage(
+                    CachedChatMessageEntity(
+                        userId = userId,
+                        requestId = message.requestId,
+                        sessionId = conversation.sessionId,
+                        role = message.role,
+                        content = message.content,
+                        deliveryStatus = ChatDeliveryStatus.SENT,
+                        page = if (message.role == ChatMessageRole.USER) page else null,
+                        contextJson = if (message.role == ChatMessageRole.USER) gson.toJson(AssistantChatContext(routePath = page)) else null,
+                        responseJson = message.response?.let(gson::toJson),
+                        errorMessage = null,
+                        createdAt = message.createdAt
+                    )
+                )
+            }
+        }
+    }
+
+    override suspend fun readHistory(userId: Long): List<HistoryItem> =
+        dao.history(userId).mapNotNull { it.toHistoryItem() }
+
+    override suspend fun replaceHistory(userId: Long, items: List<HistoryItem>) {
+        database.withTransaction {
+            val existingDetails = dao.history(userId).associate { it.resourceKey to it.detailJson }
+            dao.deleteHistory(userId)
+            if (items.isNotEmpty()) {
+                dao.saveHistory(
+                    items.take(MAX_CACHED_HISTORY_ITEMS).map { item ->
+                        item.toCachedEntity(userId, existingDetails[item.key])
+                    }
+                )
+            }
+        }
+    }
+
+    override suspend fun readHistoryDetail(userId: Long, item: HistoryItem): HistoryDetail? {
+        val entity = dao.historyItem(userId, item.key) ?: return null
+        val json = entity.detailJson ?: return null
+        return runCatching {
+            when (item.resourceType) {
+                HistoryResourceType.REPORT -> HistoryDetail.Report(
+                    item = entity.toHistoryItem() ?: item,
+                    report = gson.fromJson(json, com.careerdecision.mobile.network.ReportSnapshot::class.java)
+                )
+                HistoryResourceType.RESUME_ANALYSIS -> HistoryDetail.ResumeAnalysis(
+                    item = entity.toHistoryItem() ?: item,
+                    analysis = gson.fromJson(json, com.careerdecision.mobile.network.ArchivedResumeAnalysis::class.java)
+                )
+                HistoryResourceType.LEGACY_PATH_PLAN -> HistoryDetail.LegacyPathPlan(
+                    item = entity.toHistoryItem() ?: item,
+                    pathPlan = gson.fromJson(json, com.careerdecision.mobile.network.ArchivedPathPlan::class.java)
+                )
+            }
+        }.getOrNull()
+    }
+
+    override suspend fun saveHistoryDetail(userId: Long, detail: HistoryDetail) {
+        val item = detail.item
+        val json = when (detail) {
+            is HistoryDetail.Report -> gson.toJson(detail.report)
+            is HistoryDetail.ResumeAnalysis -> gson.toJson(detail.analysis)
+            is HistoryDetail.LegacyPathPlan -> gson.toJson(detail.pathPlan)
+        }
+        dao.saveHistoryItem(item.toCachedEntity(userId, json))
+    }
+
+    override suspend fun deleteHistoryItem(userId: Long, item: HistoryItem) {
+        dao.deleteHistoryItem(userId, item.key)
+    }
+
     override suspend fun clear(userId: Long) {
         database.withTransaction {
             dao.deleteTasks(userId)
@@ -290,12 +384,42 @@ class RoomActionCache(private val database: ActionDatabase) : ActionCache {
             dao.deletePendingForUser(userId)
             dao.deleteChatMessages(userId)
             dao.deleteChatSession(userId)
+            dao.deleteHistory(userId)
         }
     }
+
+    private fun CachedHistoryEntity.toHistoryItem(): HistoryItem? {
+        val type = runCatching { HistoryResourceType.valueOf(resourceType) }.getOrNull() ?: return null
+        return HistoryItem(
+            key = resourceKey,
+            resourceType = type,
+            id = resourceId,
+            title = title,
+            typeLabel = typeLabel,
+            summary = summary,
+            createdAt = createdAt,
+            reportType = reportType
+        )
+    }
+
+    private fun HistoryItem.toCachedEntity(userId: Long, detailJson: String?): CachedHistoryEntity =
+        CachedHistoryEntity(
+            userId = userId,
+            resourceKey = key,
+            resourceType = resourceType.name,
+            resourceId = id,
+            title = title,
+            typeLabel = typeLabel,
+            summary = summary,
+            createdAt = createdAt,
+            reportType = reportType,
+            detailJson = detailJson
+        )
 
     private fun progress(completed: Int, total: Int): Int = if (total <= 0) 0 else completed * 100 / total
 
     private companion object {
         const val DEFAULT_CHAT_PAGE = "/android/mentor"
+        const val MAX_CACHED_HISTORY_ITEMS = 150
     }
 }

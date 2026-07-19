@@ -20,7 +20,9 @@ describe('v-magnetic target registry', () => {
       props: {
         options: {
           group: 'primary-navigation',
-          attractionRange: 36
+          attractionRange: 36,
+          surface: '.indicator',
+          radius: '12px'
         }
       }
     })
@@ -29,6 +31,8 @@ describe('v-magnetic target registry', () => {
 
     expect(target.dataset.magneticTarget).toBe('primary-navigation')
     expect(target.dataset.magneticRange).toBe('36')
+    expect(target.dataset.magneticSurface).toBe('.indicator')
+    expect(target.dataset.magneticRadius).toBe('12px')
     expect(target.style.transform).toBe('')
     expect(indicator.style.transform).toBe('')
     expect(target.style.getPropertyValue('--career-magnetic-x')).toBe('')
@@ -53,6 +57,8 @@ describe('v-magnetic target registry', () => {
     await wrapper.setProps({ options: { attractionRange: Number.POSITIVE_INFINITY } })
     expect(target.dataset.magneticTarget).toBe('default')
     expect(target.dataset.magneticRange).toBeUndefined()
+    expect(target.dataset.magneticSurface).toBeUndefined()
+    expect(target.dataset.magneticRadius).toBeUndefined()
   })
 
   it('clears registration and active state when its host unmounts', () => {
@@ -61,11 +67,15 @@ describe('v-magnetic target registry', () => {
     })
     const target = wrapper.get('a').element as HTMLElement
     target.dataset.magneticActive = 'true'
+    target.dataset.magneticSurface = '.indicator'
+    target.dataset.magneticRadius = '8px'
 
     wrapper.unmount()
 
     expect(target.dataset.magneticTarget).toBeUndefined()
     expect(target.dataset.magneticRange).toBeUndefined()
     expect(target.dataset.magneticActive).toBeUndefined()
+    expect(target.dataset.magneticSurface).toBeUndefined()
+    expect(target.dataset.magneticRadius).toBeUndefined()
   })
 })

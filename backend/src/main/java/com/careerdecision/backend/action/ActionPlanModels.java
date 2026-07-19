@@ -1,5 +1,6 @@
 package com.careerdecision.backend.action;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -21,7 +22,76 @@ public final class ActionPlanModels {
             @NotNull Long projectId,
             Long targetId,
             @Min(2) @Max(12) Integer durationWeeks,
-            LocalDate startDate
+            LocalDate startDate,
+            @Pattern(regexp = "validation|action") String planType
+    ) {
+    }
+
+    public record PreviewRequest(
+            @NotBlank @Size(max = 80) String requestId,
+            @NotNull Long projectId,
+            Long targetId,
+            @Min(2) @Max(12) Integer durationWeeks,
+            LocalDate startDate,
+            @Size(max = 1000) String focus,
+            @Pattern(regexp = "validation|action") String planType
+    ) {
+    }
+
+    public record PreviewTask(
+            @NotBlank @Size(max = 200) String title,
+            @NotBlank @Pattern(regexp = "career_research|skill_learning|project|resume|networking|interview|application|custom") String taskType,
+            @NotBlank @Size(max = 1000) String content,
+            @NotNull @Min(5) @Max(10080) Integer estimatedMinutes,
+            @NotBlank @Size(max = 1000) String acceptanceCriteria,
+            @NotBlank @Size(max = 1000) String rationale,
+            @Size(max = 1000) String capabilityGap,
+            @Size(max = 1000) String jobRequirement,
+            @Size(max = 12) List<@Size(max = 160) String> sourceRefs
+    ) {
+    }
+
+    public record PreviewWeek(
+            @NotNull @Min(1) @Max(12) Integer weekNo,
+            @NotBlank @Size(max = 500) String goal,
+            @NotNull @Size(min = 1, max = 4) List<@Valid PreviewTask> tasks
+    ) {
+    }
+
+    public record PlanEvidenceBasis(
+            @NotBlank @Size(max = 1000) String statement,
+            @Size(max = 12) List<@Size(max = 160) String> sourceRefs
+    ) {
+    }
+
+    public record PlanPreview(
+            String requestId,
+            long projectId,
+            long targetId,
+            String targetRole,
+            String planType,
+            String overview,
+            int durationWeeks,
+            LocalDate startDate,
+            LocalDate endDate,
+            String generationMode,
+            String modelName,
+            double confidence,
+            List<PlanEvidenceBasis> evidenceBasis,
+            List<String> uncertainties,
+            List<PreviewWeek> weeks
+    ) {
+    }
+
+    public record ConfirmPreviewRequest(
+            @NotBlank @Size(max = 80) String requestId,
+            @NotNull Long projectId,
+            @NotNull Long targetId,
+            @NotNull @Min(2) @Max(12) Integer durationWeeks,
+            @NotNull LocalDate startDate,
+            @NotBlank @Pattern(regexp = "validation|action") String planType,
+            @NotBlank @Size(max = 5000) String overview,
+            @NotNull @Size(min = 2, max = 12) List<@Valid PreviewWeek> weeks
     ) {
     }
 
@@ -62,7 +132,8 @@ public final class ActionPlanModels {
     public record TaskResultRequest(
             @NotBlank @Size(max = 5000) String description,
             @Size(max = 1000) String linkUrl,
-            @Size(max = 80) String requestId
+            @Size(max = 80) String requestId,
+            Boolean saveAsEvidence
     ) {
     }
 
@@ -111,6 +182,7 @@ public final class ActionPlanModels {
             long projectId,
             long targetId,
             String targetRole,
+            String planType,
             String status,
             int durationWeeks,
             int taskCount,
@@ -128,6 +200,7 @@ public final class ActionPlanModels {
             long projectId,
             long targetId,
             String targetRole,
+            String planType,
             String overview,
             String status,
             int durationWeeks,
@@ -148,6 +221,7 @@ public final class ActionPlanModels {
             Long projectId,
             Long targetId,
             String targetRole,
+            String planType,
             int weekNo,
             int completedThisWeek,
             int totalThisWeek,
@@ -155,7 +229,7 @@ public final class ActionPlanModels {
             LocalDateTime serverTime
     ) {
         public static TodayResponse empty() {
-            return new TodayResponse(null, null, null, null, 0, 0, 0, List.of(), LocalDateTime.now());
+            return new TodayResponse(null, null, null, null, null, 0, 0, 0, List.of(), LocalDateTime.now());
         }
     }
 }

@@ -83,6 +83,10 @@ public class AgentServerClient {
         return post("action_coach", "/api/v1/coaching/action", payload);
     }
 
+    public Map<String, Object> previewActionPlan(Map<String, Object> payload) {
+        return post("action_plan_preview", "/api/v1/coaching/action-plan-preview", payload);
+    }
+
     public Map<String, Object> coachWeeklyReview(Map<String, Object> payload) {
         return post("weekly_review", "/api/v1/coaching/weekly-review", payload);
     }

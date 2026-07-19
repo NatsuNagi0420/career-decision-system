@@ -13,6 +13,7 @@ public class DecisionCandidateEntity {
     private String uncertainties;
     private String validationActionsJson;
     private Integer sortOrder;
+    private String exclusionReason;
     private LocalDateTime updatedAt;
 
     public Long getId() { return id; }
@@ -35,6 +36,8 @@ public class DecisionCandidateEntity {
     public void setValidationActionsJson(String value) { validationActionsJson = value; }
     public Integer getSortOrder() { return sortOrder; }
     public void setSortOrder(Integer value) { sortOrder = value; }
+    public String getExclusionReason() { return exclusionReason; }
+    public void setExclusionReason(String value) { exclusionReason = value; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime value) { updatedAt = value; }
 }

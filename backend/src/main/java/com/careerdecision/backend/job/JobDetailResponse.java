@@ -24,7 +24,12 @@ public record JobDetailResponse(
         String sourceUpdatedText,
         LocalDateTime sourceUpdatedAt
 ) {
-    static JobDetailResponse from(JobRecord job, List<String> tags) {
+    static JobDetailResponse from(
+            JobRecord job,
+            List<String> tags,
+            List<JobRequirementItem> items,
+            String displaySummary
+    ) {
         List<String> immutableTags = displayTags(job, tags);
         return new JobDetailResponse(
                 job.getId(),
@@ -36,16 +41,26 @@ public record JobDetailResponse(
                 job.getExperienceLevel(),
                 job.getEducation(),
                 immutableTags,
-                job.getDescription(),
-                List.of(),
-                List.of(),
-                List.of(),
-                List.of(),
+                displaySummary,
+                texts(items, "responsibility"),
+                texts(items, "requirement", "skill", "education", "experience", "certificate"),
+                texts(items, "growth_path"),
+                texts(items, "interview_focus"),
                 job.getSourcePlatform(),
                 job.getSourceUrl(),
                 job.getSourceUpdatedText(),
                 job.getSourceUpdatedAt()
         );
+    }
+
+    private static List<String> texts(List<JobRequirementItem> items, String... types) {
+        List<String> accepted = List.of(types);
+        return items.stream()
+                .filter(item -> accepted.contains(item.itemType()))
+                .map(JobRequirementItem::originalText)
+                .filter(value -> value != null && !value.isBlank())
+                .distinct()
+                .toList();
     }
 
     private static String location(JobRecord job) {

@@ -47,7 +47,7 @@ function resolveBackendBaseUrl() {
 export const BACKEND_BASE_URL = resolveBackendBaseUrl()
 export const API_BASE_URL = `${BACKEND_BASE_URL}/api/v1`
 
-type RetryableRequestConfig = InternalAxiosRequestConfig & {
+type RetryableRequestConfig = InternalAxiosRequestConfig & RequestConfig & {
   __careerRetried?: boolean
 }
 
@@ -71,7 +71,11 @@ function responseMessage(data: unknown) {
 
 function normalizeError(error: unknown): Error {
   if (axios.isAxiosError(error)) {
-    const message = responseMessage(error.response?.data)
+    const body = error.response?.data as Partial<ApiResponse> | undefined
+    const message = responseMessage(body)
+    if (typeof body?.code === 'number' && body.code !== 0 && body.code !== 200) {
+      return new ApiError(message, body.code, body.traceId)
+    }
     if (message && message !== 'Request failed') return new Error(message)
     if (error.code === 'ECONNABORTED') return new Error('请求超时，请稍后重试')
     if (!error.response) return new Error('网络连接失败，请检查后端服务是否运行')
@@ -148,7 +152,8 @@ service.interceptors.response.use(
     const body = response.data
     if (typeof body?.code === 'number' && body.code !== 0 && body.code !== 200) {
       const error = new ApiError(responseMessage(body), body.code, body.traceId)
-      reportError(error)
+      const config = response.config as RetryableRequestConfig
+      if (config.showError !== false) reportError(error)
       throw error
     }
     return response
@@ -179,7 +184,7 @@ service.interceptors.response.use(
     }
 
     const normalized = normalizeError(error)
-    reportError(normalized)
+    if (originalRequest?.showError !== false) reportError(normalized)
     return Promise.reject(normalized)
   }
 )

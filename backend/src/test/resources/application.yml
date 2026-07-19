@@ -22,4 +22,4 @@ career:
   agent-server:
     base-url: ${AGENT_SERVER_BASE_URL:http://127.0.0.1:8001}
     internal-token: ${AGENT_INTERNAL_TOKEN:${INTERNAL_API_TOKEN:test}}
-    timeout-seconds: ${AGENT_SERVER_TIMEOUT_SECONDS:30}
+    timeout-seconds: ${AGENT_SERVER_TIMEOUT_SECONDS:150}

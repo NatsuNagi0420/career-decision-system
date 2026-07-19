@@ -87,6 +87,26 @@ object ReminderPolicy {
         return candidate
     }
 
+    fun nextDailySummaryAt(now: ZonedDateTime, hour: Int): ZonedDateTime {
+        var candidate = now.with(LocalTime.of(hour.coerceIn(0, 23), 0))
+        if (!candidate.isAfter(now)) candidate = candidate.plusDays(1)
+        return candidate
+    }
+
+    fun dailySummaryContent(tasks: List<ReminderTask>): ReminderContent? {
+        val actionable = tasks.filter(::isActionable)
+        if (actionable.isEmpty()) return null
+        val preview = actionable.take(3).joinToString("、") { task ->
+            task.title.trim().ifEmpty { "未命名任务" }
+        }
+        val remaining = actionable.size - 3
+        val suffix = if (remaining > 0) "，另有 $remaining 项" else ""
+        return ReminderContent(
+            title = "今天有 ${actionable.size} 项行动待推进",
+            body = "$preview$suffix。先完成最重要的一项。"
+        )
+    }
+
     fun taskContent(taskTitle: String, dueAt: Instant, now: Instant, zoneId: ZoneId): ReminderContent {
         val remaining = Duration.between(now, dueAt)
         val notificationTitle = when {

@@ -28,7 +28,7 @@ public record JobSummaryResponse(
         String sourceUpdatedText,
         LocalDateTime sourceUpdatedAt
 ) {
-    static JobSummaryResponse from(JobRecord job, List<String> tags) {
+    public static JobSummaryResponse from(JobRecord job, List<String> tags) {
         List<String> displayTags = displayTags(job, tags);
         return new JobSummaryResponse(
                 job.getId(),

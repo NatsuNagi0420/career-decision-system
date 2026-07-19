@@ -64,8 +64,11 @@ Target tables:
 
 - `jobs`
 - `job_tags`
+- `job_requirement_items`
 - `job_favorites`
 - `job_targets`
+- `career_direction_job_rel`
+- `career_direction_mapping_runs`
 
 Current storage uses imported real job records from the MySQL `jobs` table and related tag tables.
 
@@ -84,6 +87,17 @@ Current storage uses imported real job records from the MySQL `jobs` table and r
 | requirements | json/text | Requirement bullets |
 | growth_path | json/text | Suggested growth path |
 | interview_focus | json/text | Interview preparation tags |
+
+`jobs.description` is always retained as the source evidence. `job_requirement_items` stores extracted
+facts as individual rows with `item_type`, `original_text`, `normalized_key`, confidence, extraction method,
+extractor version, and order. This makes rule/model extraction replaceable and auditable without rewriting
+the imported JD.
+
+`career_direction_job_rel` is the stable, versioned many-to-many mapping used by direction details and
+insights. It stores score, source (`rule`, later `model` or `manual`), rule version, review status, and match
+reasons. Runtime keyword searches remain available for free exploration but are not the source of direction
+statistics. `career_direction_mapping_runs` records the source job/tag counts and latest update used by each
+mapping version so stale mappings can be rebuilt deterministically.
 
 `job_favorites` stores a user's shortlist. `job_targets` stores the smaller set of roles the user has selected as active career targets, so reports and path plans can later default to explicit goals instead of inferring from search history.
 
@@ -152,3 +166,5 @@ Backend creates one audit row for each backend-to-Agent proxy call. The row is f
 | finished_at | datetime | End time |
 
 Sensitive fields such as `resume_text`, `message`, tokens, phone numbers, emails, authorization values, and `improved_fragments` are replaced with `[redacted]` before persistence in audit JSON and failure messages. User-facing generated results are still persisted in domain tables such as `reports`, `resume_analyses`, and `path_plans`; those tables store `agent_run_id` when clients archive a generated result that includes `agentRunId`.
+
+When a user permanently deletes an assistant session, `chat_sessions` and its `chat_messages` are removed in one transaction. A linked `chat` audit row may be retained for operational metrics only, but its input/output/error payload and `user_id` are scrubbed so it cannot reconstruct the conversation. If an audit row is referenced by another domain record, it is not altered. This cleanup never touches profile, decision-project, job, plan, or review tables.

@@ -17,10 +17,16 @@ import java.util.List;
 public class CareerDirectionService {
     private static final TypeReference<List<String>> STRING_LIST = new TypeReference<>() { };
     private final CareerDirectionMapper mapper;
+    private final CareerDirectionJobMapper directionJobMapper;
     private final ObjectMapper objectMapper;
 
-    public CareerDirectionService(CareerDirectionMapper mapper, ObjectMapper objectMapper) {
+    public CareerDirectionService(
+            CareerDirectionMapper mapper,
+            CareerDirectionJobMapper directionJobMapper,
+            ObjectMapper objectMapper
+    ) {
         this.mapper = mapper;
+        this.directionJobMapper = directionJobMapper;
         this.objectMapper = objectMapper;
     }
 
@@ -49,6 +55,7 @@ public class CareerDirectionService {
         if (mapper.update(record) == 0) {
             throw new BusinessException(40450, "Custom career direction not found: " + id);
         }
+        directionJobMapper.deleteRun(id);
         return detail(userId, id);
     }
 

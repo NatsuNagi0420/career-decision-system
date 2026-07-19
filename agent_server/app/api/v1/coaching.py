@@ -1,9 +1,11 @@
 from fastapi import APIRouter
 
-from app.agents.coaching_graph import coach_action, coach_decision, coach_weekly_review, compare_jobs
+from app.agents.coaching_graph import coach_action, coach_decision, coach_weekly_review, compare_jobs, preview_action_plan
 from app.schemas.coaching import (
     ActionCoachRequest,
     ActionCoachResponse,
+    ActionPlanPreviewRequest,
+    ActionPlanPreviewResponse,
     DecisionCoachRequest,
     DecisionCoachResponse,
     JobComparisonRequest,
@@ -29,6 +31,11 @@ async def job_comparison(request: JobComparisonRequest) -> ApiResponse[JobCompar
 @router.post("/action", response_model=ApiResponse[ActionCoachResponse])
 async def action(request: ActionCoachRequest) -> ApiResponse[ActionCoachResponse]:
     return ApiResponse.success(coach_action(request), trace_id=request.request_id)
+
+
+@router.post("/action-plan-preview", response_model=ApiResponse[ActionPlanPreviewResponse])
+async def action_plan_preview(request: ActionPlanPreviewRequest) -> ApiResponse[ActionPlanPreviewResponse]:
+    return ApiResponse.success(preview_action_plan(request), trace_id=request.request_id)
 
 
 @router.post("/weekly-review", response_model=ApiResponse[WeeklyReviewCoachResponse])

@@ -1,7 +1,7 @@
 ﻿param(
-    [ValidateSet("menu", "agent", "backend", "web", "all", "status", "stop", "stop-agent", "stop-backend", "stop-web", "exit")]
+    [ValidateSet("menu", "agent", "backend", "web", "all", "sync-ip", "status", "logs", "stop", "stop-agent", "stop-backend", "stop-web", "exit")]
     [string] $Target = "menu",
-    [string] $LanIp = "192.168.1.159",
+    [string] $LanIp = "",
     [int] $AgentPort = 8001,
     [int] $BackendPort = 8443,
     [int] $WebPort = 5173,
@@ -20,17 +20,101 @@ $AgentPython = Join-Path $AgentRoot ".venv\Scripts\python.exe"
 $BackendKeyStore = Join-Path $HttpsDir "backend-local.p12"
 $BackendKeyStoreUri = "file:" + ($BackendKeyStore -replace "\\", "/")
 $BackendDataRoot = Join-Path $BackendRoot "data_server"
+$LanIpStatePath = Join-Path $HttpsDir "active-lan-ip.txt"
+$LanIpWasProvided = -not [string]::IsNullOrWhiteSpace($LanIp)
 
-$AgentUrl = "http://127.0.0.1:$AgentPort"
-$BackendUrl = "https://${LanIp}:$BackendPort"
-$WebUrl = "https://${LanIp}:$WebPort"
+function Test-PrivateIpv4 {
+    param([string] $Address)
+
+    if ([string]::IsNullOrWhiteSpace($Address)) { return $false }
+    $ParsedAddress = $null
+    if (-not [System.Net.IPAddress]::TryParse($Address.Trim(), [ref] $ParsedAddress)) { return $false }
+    if ($ParsedAddress.AddressFamily -ne [System.Net.Sockets.AddressFamily]::InterNetwork) { return $false }
+    return $Address.Trim() -match "^(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)"
+}
+
+function Get-SavedLanIp {
+    if (-not (Test-Path $LanIpStatePath)) { return "" }
+    $SavedAddress = (Get-Content -LiteralPath $LanIpStatePath -Raw -ErrorAction SilentlyContinue).Trim()
+    if (Test-PrivateIpv4 $SavedAddress) { return $SavedAddress }
+    return ""
+}
+
+function Get-DetectedLanIps {
+    $Candidates = @()
+    $VirtualAdapterPattern = "Loopback|Virtual|VMware|Hyper-V|WSL|Docker|Meta|vEthernet|WireGuard|Tailscale|ZeroTier|VPN"
+
+    try {
+        $DefaultRoutes = @(Get-NetRoute -AddressFamily IPv4 -DestinationPrefix "0.0.0.0/0" -ErrorAction Stop |
+            Where-Object { $_.State -eq "Alive" -and $_.NextHop -ne "0.0.0.0" } |
+            Sort-Object @{ Expression = { [int] $_.RouteMetric + [int] $_.InterfaceMetric } })
+        foreach ($Route in $DefaultRoutes) {
+            $Addresses = @(Get-NetIPAddress -AddressFamily IPv4 -InterfaceIndex $Route.InterfaceIndex -ErrorAction SilentlyContinue |
+                Where-Object { $_.AddressState -eq "Preferred" -and $_.InterfaceAlias -notmatch $VirtualAdapterPattern })
+            foreach ($Address in $Addresses) {
+                if (Test-PrivateIpv4 $Address.IPAddress) { $Candidates += $Address.IPAddress }
+            }
+        }
+    } catch {
+        # 下面使用活动网卡列表回退。
+    }
+
+    if ($Candidates.Count -eq 0) {
+        try {
+            $Candidates = @(Get-NetIPConfiguration -ErrorAction Stop |
+                Where-Object { $_.IPv4Address -and $_.NetAdapter.Status -eq "Up" -and $_.InterfaceAlias -notmatch $VirtualAdapterPattern } |
+                ForEach-Object { $_.IPv4Address.IPAddress } |
+                Where-Object { Test-PrivateIpv4 $_ })
+        } catch {
+            $Candidates = @()
+        }
+    }
+
+    @($Candidates | Select-Object -Unique)
+}
+
+function Resolve-LanIp {
+    param([string] $ConfiguredAddress)
+
+    if (-not [string]::IsNullOrWhiteSpace($ConfiguredAddress)) {
+        if (-not (Test-PrivateIpv4 $ConfiguredAddress)) {
+            throw "-LanIp 必须是私有局域网 IPv4 地址，当前值：$ConfiguredAddress"
+        }
+        return $ConfiguredAddress.Trim()
+    }
+
+    $DetectedAddresses = @(Get-DetectedLanIps)
+    if ($DetectedAddresses.Count -gt 0) { return $DetectedAddresses[0] }
+
+    $SavedAddress = Get-SavedLanIp
+    if (-not [string]::IsNullOrWhiteSpace($SavedAddress)) {
+        Write-Warning "未检测到活动局域网地址，暂时使用上次地址：$SavedAddress"
+        return $SavedAddress
+    }
+
+    throw "未检测到私有局域网 IPv4 地址。请连接网络，或使用 -LanIp 手动指定。"
+}
+
+function Update-NetworkUrls {
+    $script:AgentUrl = "http://127.0.0.1:$AgentPort"
+    $script:BackendUrl = "https://${LanIp}:$BackendPort"
+    $script:WebUrl = "https://${LanIp}:$WebPort"
+}
+
+$LanIp = Resolve-LanIp $LanIp
+Update-NetworkUrls
 
 function Show-Menu {
+    Refresh-DetectedLanIp | Out-Null
     Write-Host ""
     Write-Host "========================================" -ForegroundColor Cyan
     Write-Host "职业决策系统 - 本地局域网 HTTPS 调试启动器" -ForegroundColor Cyan
     Write-Host "========================================" -ForegroundColor Cyan
-    Write-Host "当前固定局域网 IP: $LanIp"
+    Write-Host "当前局域网 IP: $LanIp"
+    $SavedAddress = Get-SavedLanIp
+    if (-not [string]::IsNullOrWhiteSpace($SavedAddress) -and $SavedAddress -ne $LanIp) {
+        Write-Host "上次同步 IP: $SavedAddress（检测到网络变化）" -ForegroundColor Yellow
+    }
     Write-Host "后端地址: $BackendUrl"
     Write-Host "Web 地址 : $WebUrl"
     Write-Host "Agent地址: $AgentUrl"
@@ -40,12 +124,14 @@ function Show-Menu {
     Write-Host "1. 只启动 Agent 层"
     Write-Host "2. 启动 Agent + 后端"
     Write-Host "3. 启动 Agent + 后端 + Web"
-    Write-Host "4. 查看运行状态"
-    Write-Host "5. 停止全部服务"
-    Write-Host "6. 只停止 Web"
-    Write-Host "7. 只停止后端"
-    Write-Host "8. 只停止 Agent"
-    Write-Host "9. 退出"
+    Write-Host "4. 检测并同步局域网 IP"
+    Write-Host "5. 查看运行状态"
+    Write-Host "6. 查看最近日志"
+    Write-Host "7. 只停止 Web"
+    Write-Host "8. 只停止后端"
+    Write-Host "9. 只停止 Agent"
+    Write-Host "10. 停止全部服务"
+    Write-Host "0. 退出启动器"
     Write-Host ""
 
     $Choice = Read-Host "请选择 [默认 3]"
@@ -54,17 +140,21 @@ function Show-Menu {
         "1" { return "agent" }
         "2" { return "backend" }
         "3" { return "web" }
-        "4" { return "status" }
-        "5" { return "stop" }
-        "6" { return "stop-web" }
-        "7" { return "stop-backend" }
-        "8" { return "stop-agent" }
-        "9" { return "exit" }
+        "4" { return "sync-ip" }
+        "5" { return "status" }
+        "6" { return "logs" }
+        "7" { return "stop-web" }
+        "8" { return "stop-backend" }
+        "9" { return "stop-agent" }
+        "10" { return "stop" }
+        "0" { return "exit" }
         "agent" { return "agent" }
         "backend" { return "backend" }
         "web" { return "web" }
         "all" { return "web" }
+        "sync-ip" { return "sync-ip" }
         "status" { return "status" }
+        "logs" { return "logs" }
         "stop" { return "stop" }
         "stop-web" { return "stop-web" }
         "stop-backend" { return "stop-backend" }
@@ -192,10 +282,73 @@ function Get-PortProcessIds {
     @($ProcessIds | Sort-Object -Unique)
 }
 
-function Get-ChildProcessIds {
-    param([int[]] $ParentProcessIds)
+function Get-ProcessParentRowsFromCounters {
+    $RowsByInstance = @{}
+    try {
+        $CounterResult = Get-Counter `
+            -Counter @("\Process(*)\ID Process", "\Process(*)\Creating Process ID") `
+            -ErrorAction SilentlyContinue
+        foreach ($Sample in @($CounterResult.CounterSamples)) {
+            if ($null -eq $Sample -or $Sample.Status -ne 0) { continue }
 
-    $AllProcesses = @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue)
+            $Match = [regex]::Match(
+                [string] $Sample.Path,
+                "(?i)\\process\((?<instance>[^)]+)\)\\(?<counter>id process|creating process id)$"
+            )
+            if (-not $Match.Success) { continue }
+
+            $Instance = $Match.Groups["instance"].Value
+            if (-not $RowsByInstance.ContainsKey($Instance)) {
+                $RowsByInstance[$Instance] = [ordered]@{
+                    ProcessId = 0
+                    ParentProcessId = 0
+                }
+            }
+
+            $Value = [int] $Sample.CookedValue
+            if ($Match.Groups["counter"].Value -ieq "id process") {
+                $RowsByInstance[$Instance].ProcessId = $Value
+            } else {
+                $RowsByInstance[$Instance].ParentProcessId = $Value
+            }
+        }
+    } catch {
+        return @()
+    }
+
+    @($RowsByInstance.Values |
+        Where-Object { $_.ProcessId -gt 0 } |
+        ForEach-Object { [PSCustomObject] $_ })
+}
+
+function Test-ServiceChildProcess {
+    param(
+        [int] $ProcessId,
+        [int] $Port
+    )
+
+    $Process = Get-Process -Id $ProcessId -ErrorAction SilentlyContinue
+    if (-not $Process) { return $false }
+
+    if ($Port -eq $AgentPort) { return $Process.ProcessName -in @("python", "pythonw") }
+    if ($Port -eq $WebPort) { return $Process.ProcessName -in @("node", "nodejs") }
+    if ($Port -eq $BackendPort) { return $Process.ProcessName -eq "java" }
+    return $true
+}
+
+function Get-ChildProcessIds {
+    param(
+        [int[]] $ParentProcessIds,
+        [int] $Port = 0
+    )
+
+    $AllProcesses = @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
+        Select-Object ProcessId, ParentProcessId)
+    if ($AllProcesses.Count -eq 0) {
+        # Uvicorn workers can retain an inherited socket after the reload parent exits.
+        # Performance counters preserve parent PIDs when CIM is unavailable.
+        $AllProcesses = @(Get-ProcessParentRowsFromCounters)
+    }
     $Queue = New-Object System.Collections.Queue
     $Seen = @{}
     $Children = @()
@@ -212,9 +365,12 @@ function Get-ChildProcessIds {
         foreach ($Process in $AllProcesses | Where-Object { $_.ParentProcessId -eq $CurrentProcessId }) {
             $ProcessIdText = [string] $Process.ProcessId
             if (-not $Seen.ContainsKey($ProcessIdText)) {
-                $Children += [int] $Process.ProcessId
-                $Queue.Enqueue([int] $Process.ProcessId)
+                $ChildProcessId = [int] $Process.ProcessId
+                $Queue.Enqueue($ChildProcessId)
                 $Seen[$ProcessIdText] = $true
+                if (Test-ServiceChildProcess $ChildProcessId $Port) {
+                    $Children += $ChildProcessId
+                }
             }
         }
     }
@@ -307,6 +463,11 @@ function Show-Status {
     Write-Host "========================================" -ForegroundColor Cyan
     Write-Host "当前运行状态" -ForegroundColor Cyan
     Write-Host "========================================" -ForegroundColor Cyan
+    $SavedAddress = Get-SavedLanIp
+    if (-not [string]::IsNullOrWhiteSpace($SavedAddress) -and $SavedAddress -ne $LanIp) {
+        Write-Host "检测到网络变化：已同步 $SavedAddress，当前 $LanIp。请执行 .\start-dev.bat sync-ip。" -ForegroundColor Yellow
+        Write-Host ""
+    }
 
     foreach ($Service in Get-ServiceDefinitions) {
         $Port = [int] $Service.Port
@@ -340,6 +501,8 @@ function Show-Status {
     Write-Host ""
     Write-Host "常用命令：" -ForegroundColor Cyan
     Write-Host "  .\start-dev.bat status       查看状态"
+    Write-Host "  .\start-dev.bat sync-ip      检测并同步局域网 IP"
+    Write-Host "  .\start-dev.bat logs         查看最近错误日志"
     Write-Host "  .\start-dev.bat stop         停止全部"
     Write-Host "  .\start-dev.bat stop-web     只停止 Web"
     Write-Host "  .\start-dev.bat stop-backend 只停止后端"
@@ -365,8 +528,12 @@ function Stop-ProcessTree {
 
     $Process = Get-Process -Id $TargetProcessId -ErrorAction SilentlyContinue
     if ($Process) {
-        Stop-Process -Id $TargetProcessId -Force -ErrorAction SilentlyContinue
-        return $true
+        try {
+            Stop-Process -Id $TargetProcessId -Force -ErrorAction Stop
+            return $true
+        } catch {
+            return $false
+        }
     }
 
     return $false
@@ -389,12 +556,12 @@ function Stop-Port {
 
         $HadListener = $true
         $BaseProcessIds = @(@($ProcessIds) + @(Get-KnownDevProcessIds $Port)) | Sort-Object -Unique
-        $TargetProcessIds = @(@($BaseProcessIds) + @(Get-ChildProcessIds $BaseProcessIds)) | Sort-Object -Unique
+        $TargetProcessIds = @(@($BaseProcessIds) + @(Get-ChildProcessIds $BaseProcessIds $Port)) | Sort-Object -Unique
         foreach ($TargetProcessId in $TargetProcessIds) {
             if (Stop-ProcessTree $TargetProcessId) {
                 Write-Host "已停止端口 $Port 的进程 PID=$TargetProcessId" -ForegroundColor Yellow
             } elseif ($Attempt -eq 1) {
-                Write-Host "端口 $Port 的监听 PID=$TargetProcessId 已不存在，继续检查子进程。" -ForegroundColor DarkGray
+                Write-Host "未能直接停止 PID=$TargetProcessId（进程可能已退出或当前权限不足），继续检查关联进程。" -ForegroundColor DarkGray
             }
         }
 
@@ -404,7 +571,7 @@ function Stop-Port {
     $Remaining = Get-PortProcessIds $Port
     if ($Remaining.Count -gt 0) {
         $FinalBaseProcessIds = @(@($Remaining) + @(Get-KnownDevProcessIds $Port)) | Sort-Object -Unique
-        $FinalTargetProcessIds = @(@($FinalBaseProcessIds) + @(Get-ChildProcessIds $FinalBaseProcessIds)) | Sort-Object -Unique
+        $FinalTargetProcessIds = @(@($FinalBaseProcessIds) + @(Get-ChildProcessIds $FinalBaseProcessIds $Port)) | Sort-Object -Unique
         foreach ($FinalTargetProcessId in $FinalTargetProcessIds) {
             if (Stop-ProcessTree $FinalTargetProcessId) {
                 Write-Host "已停止端口 $Port 的进程 PID=$FinalTargetProcessId" -ForegroundColor Yellow
@@ -439,17 +606,189 @@ function Stop-AllServices {
     Stop-ServicePort "Agent" $AgentPort
 }
 
-function Assert-HttpsFiles {
-    $Missing = @(
+function Ensure-LocalEnvFile {
+    param(
+        [string] $Path,
+        [string] $ExamplePath
+    )
+
+    if (Test-Path $Path) { return }
+    if (-not (Test-Path $ExamplePath)) { throw "找不到本地配置模板：$ExamplePath" }
+    Copy-Item -LiteralPath $ExamplePath -Destination $Path
+    Write-Host "已从模板创建本地配置：$Path" -ForegroundColor Yellow
+}
+
+function Set-EnvFileValue {
+    param(
+        [string] $Path,
+        [string] $Name,
+        [string] $Value
+    )
+
+    $Original = [System.IO.File]::ReadAllText($Path)
+    $Pattern = "(?m)^[\t ]*" + [regex]::Escape($Name) + "[\t ]*=.*$"
+    $Replacement = "$Name=$Value"
+    if ([regex]::IsMatch($Original, $Pattern)) {
+        $Updated = [regex]::Replace($Original, $Pattern, $Replacement, 1)
+    } else {
+        $Separator = if ($Original.EndsWith("`n") -or $Original.Length -eq 0) { "" } else { "`r`n" }
+        $Updated = $Original + $Separator + $Replacement + "`r`n"
+    }
+
+    if ($Updated -ceq $Original) { return $false }
+
+    $TemporaryPath = "$Path.tmp"
+    $Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+    [System.IO.File]::WriteAllText($TemporaryPath, $Updated, $Utf8NoBom)
+    Move-Item -LiteralPath $TemporaryPath -Destination $Path -Force
+    return $true
+}
+
+function Refresh-DetectedLanIp {
+    if ($LanIpWasProvided) { return $false }
+    $DetectedAddresses = @(Get-DetectedLanIps)
+    if ($DetectedAddresses.Count -eq 0) {
+        Write-Warning "未重新检测到活动局域网地址，继续使用：$LanIp"
+        return $false
+    }
+
+    $DetectedAddress = $DetectedAddresses[0]
+    if ($DetectedAddress -eq $LanIp) { return $false }
+
+    $PreviousAddress = $LanIp
+    $script:LanIp = $DetectedAddress
+    Update-NetworkUrls
+    Write-Host "检测到局域网 IP 变化：$PreviousAddress -> $LanIp" -ForegroundColor Yellow
+    return $true
+}
+
+function Ensure-HttpsFilesForLanIp {
+    param([string] $PreviouslySyncedAddress)
+
+    $RequiredFiles = @(
         Join-Path $HttpsDir "local-cert.pem"
         Join-Path $HttpsDir "local-key.pem"
         Join-Path $HttpsDir "backend-local.p12"
-    ) | Where-Object { -not (Test-Path $_) }
+    )
+    $MissingFiles = @($RequiredFiles | Where-Object { -not (Test-Path $_) })
+    $NeedsRefresh = $MissingFiles.Count -gt 0 -or $PreviouslySyncedAddress -ne $LanIp
+    if (-not $NeedsRefresh) { return $false }
 
-    if ($Missing.Count -gt 0) {
-        Write-Host "缺少本地 HTTPS 证书。请先运行：" -ForegroundColor Yellow
-        Write-Host "powershell -ExecutionPolicy Bypass -File .\scripts\setup-local-https.ps1 -ExtraHosts $LanIp"
-        throw "缺少证书文件：$($Missing -join ', ')"
+    $SetupScript = Join-Path $PSScriptRoot "setup-local-https.ps1"
+    if (-not (Test-Path $SetupScript)) { throw "找不到 HTTPS 配置脚本：$SetupScript" }
+
+    if ($MissingFiles.Count -gt 0) {
+        Write-Host "缺少本地 HTTPS 证书，正在自动生成。" -ForegroundColor Yellow
+    } else {
+        Write-Host "当前证书未记录局域网 IP $LanIp，正在重新生成。" -ForegroundColor Yellow
+    }
+
+    & $SetupScript -ExtraHosts @($LanIp) -IncludeLanIps | Out-Host
+    if ($LASTEXITCODE -ne 0) { throw "本地 HTTPS 证书生成失败。" }
+
+    $StillMissing = @($RequiredFiles | Where-Object { -not (Test-Path $_) })
+    if ($StillMissing.Count -gt 0) { throw "HTTPS 证书生成后仍缺少文件：$($StillMissing -join ', ')" }
+    return $true
+}
+
+function Sync-LocalNetworkConfiguration {
+    $PreviouslySyncedAddress = Get-SavedLanIp
+    $AgentEnvPath = Join-Path $AgentRoot ".env"
+    $WebEnvPath = Join-Path $WebRoot ".env"
+    Ensure-LocalEnvFile $AgentEnvPath (Join-Path $AgentRoot ".env.example")
+    Ensure-LocalEnvFile $WebEnvPath (Join-Path $WebRoot ".env.example")
+
+    $AgentChanged = Set-EnvFileValue $AgentEnvPath "BACKEND_BASE_URL" $BackendUrl
+    $WebChanged = Set-EnvFileValue $WebEnvPath "VITE_BACKEND_BASE_URL" $BackendUrl
+    $CertificateRefreshed = Ensure-HttpsFilesForLanIp $PreviouslySyncedAddress
+
+    New-Item -ItemType Directory -Force -Path $HttpsDir | Out-Null
+    $Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+    [System.IO.File]::WriteAllText($LanIpStatePath, "$LanIp`r`n", $Utf8NoBom)
+
+    $AddressChanged = -not [string]::IsNullOrWhiteSpace($PreviouslySyncedAddress) -and $PreviouslySyncedAddress -ne $LanIp
+    $ConfigChanged = $AgentChanged -or $WebChanged
+    Write-Host ""
+    Write-Host "本地网络配置已同步：" -ForegroundColor Green
+    Write-Host "  局域网 IP: $LanIp"
+    Write-Host "  Agent BACKEND_BASE_URL: $BackendUrl"
+    Write-Host "  Web VITE_BACKEND_BASE_URL: $BackendUrl"
+    Write-Host "  后端 CORS: https://localhost:$WebPort, https://127.0.0.1:$WebPort, $WebUrl"
+    if ($CertificateRefreshed) { Write-Host "  HTTPS 证书: 已按当前 IP 刷新" }
+
+    [PSCustomObject]@{
+        AddressChanged = $AddressChanged
+        ConfigChanged = $ConfigChanged
+        CertificateRefreshed = $CertificateRefreshed
+        RequiresRestart = $AddressChanged -or $ConfigChanged -or $CertificateRefreshed
+        PreviousAddress = $PreviouslySyncedAddress
+        CurrentAddress = $LanIp
+    }
+}
+
+function Test-AnyServiceRunning {
+    return (Test-PortOpen $AgentPort) -or (Test-PortOpen $BackendPort) -or (Test-PortOpen $WebPort)
+}
+
+function Prepare-NetworkForStart {
+    Refresh-DetectedLanIp | Out-Null
+    $SyncResult = Sync-LocalNetworkConfiguration
+    if ($SyncResult.RequiresRestart -and (Test-AnyServiceRunning)) {
+        Write-Host "本地网络配置已变化，正在停止旧地址下的服务后重新启动。" -ForegroundColor Yellow
+        Stop-AllServices
+    }
+}
+
+function Show-RecentLogFile {
+    param(
+        [string] $Label,
+        [string] $Path,
+        [int] $Lines = 40
+    )
+
+    Write-Host ""
+    Write-Host "--- $Label ---" -ForegroundColor Cyan
+    if (-not (Test-Path $Path)) {
+        Write-Host "暂无日志：$Path" -ForegroundColor DarkGray
+        return
+    }
+    Get-Content -LiteralPath $Path -Tail $Lines -Encoding UTF8
+}
+
+function Show-AllRecentLogs {
+    Show-RecentLogFile "Agent 标准错误" (Join-Path $LogDir "agent-dev.err.log") 25
+    Show-RecentLogFile "后端标准错误" (Join-Path $LogDir "backend-dev.err.log") 25
+    Show-RecentLogFile "Web 标准错误" (Join-Path $LogDir "web-dev.err.log") 25
+}
+
+function Show-LogMenu {
+    while ($true) {
+        Write-Host ""
+        Write-Host "========================================" -ForegroundColor Cyan
+        Write-Host "最近运行日志" -ForegroundColor Cyan
+        Write-Host "========================================" -ForegroundColor Cyan
+        Write-Host "1. Agent 输出"
+        Write-Host "2. Agent 错误"
+        Write-Host "3. 后端输出"
+        Write-Host "4. 后端错误"
+        Write-Host "5. Web 输出"
+        Write-Host "6. Web 错误"
+        Write-Host "7. 汇总最近错误"
+        Write-Host "0. 返回主菜单"
+        $Choice = (Read-Host "请选择 [默认 7]").Trim()
+        if ([string]::IsNullOrWhiteSpace($Choice)) { $Choice = "7" }
+        switch ($Choice) {
+            "1" { Show-RecentLogFile "Agent 输出" (Join-Path $LogDir "agent-dev.out.log") }
+            "2" { Show-RecentLogFile "Agent 错误" (Join-Path $LogDir "agent-dev.err.log") }
+            "3" { Show-RecentLogFile "后端输出" (Join-Path $LogDir "backend-dev.out.log") }
+            "4" { Show-RecentLogFile "后端错误" (Join-Path $LogDir "backend-dev.err.log") }
+            "5" { Show-RecentLogFile "Web 输出" (Join-Path $LogDir "web-dev.out.log") }
+            "6" { Show-RecentLogFile "Web 错误" (Join-Path $LogDir "web-dev.err.log") }
+            "7" { Show-AllRecentLogs }
+            "0" { return }
+            default { Write-Host "无效选项：$Choice" -ForegroundColor Yellow }
+        }
+        if ($Choice -ne "0") { Read-Host "按 Enter 返回日志菜单" | Out-Null }
     }
 }
 
@@ -550,8 +889,8 @@ function Show-Success {
     Write-Host "Web 地址 : $WebUrl"
     Write-Host "Agent地址: $AgentUrl"
     Write-Host ""
-    Write-Host "重要：关闭这个启动菜单窗口不会停止服务，服务会继续在后台运行。" -ForegroundColor Yellow
-    Write-Host "停止方式：重新运行 .\start-dev.bat，选择停止选项；或直接执行 .\start-dev.bat stop。" -ForegroundColor Yellow
+    Write-Host "服务在后台运行；返回主菜单后可以继续查看状态、日志或停止服务。" -ForegroundColor Yellow
+    Write-Host "关闭启动器窗口不会停止服务，也可以执行 .\start-dev.bat stop。" -ForegroundColor Yellow
     Write-Host ""
     Write-Host "Android 真机 debug 包构建命令：" -ForegroundColor Cyan
     Write-Host "cd android"
@@ -561,41 +900,113 @@ function Show-Success {
     Write-Host "日志目录：$LogDir"
 }
 
-if ($Target -eq "menu") { $Target = Show-Menu }
-if ($Target -eq "exit") { return }
+function Start-SelectedServices {
+    param([string] $SelectedTarget)
 
-if ($Target -eq "status") {
+    Prepare-NetworkForStart
+    Start-Agent
+    if ($SelectedTarget -in @("backend", "web", "all")) { Start-Backend }
+    if ($SelectedTarget -in @("web", "all")) { Start-Web }
+    Show-Success
     Show-Status
-    return
 }
 
-if ($Target -eq "stop") {
+function Sync-NetworkFromMenu {
+    Refresh-DetectedLanIp | Out-Null
+    $AgentWasRunning = Test-PortOpen $AgentPort
+    $BackendWasRunning = Test-PortOpen $BackendPort
+    $WebWasRunning = Test-PortOpen $WebPort
+    $SyncResult = Sync-LocalNetworkConfiguration
+
+    if (-not $SyncResult.RequiresRestart -or -not ($AgentWasRunning -or $BackendWasRunning -or $WebWasRunning)) {
+        Show-Status
+        return
+    }
+
+    Write-Host "当前已有服务运行，配置变化需要重启后才能生效。" -ForegroundColor Yellow
+    $RestartChoice = Read-Host "是否按原运行层级立即重启？[Y/n]"
+    if (-not [string]::IsNullOrWhiteSpace($RestartChoice) -and $RestartChoice.Trim().ToLowerInvariant() -ne "y") {
+        Write-Host "已保留现有进程；下次启动服务时会使用新地址。" -ForegroundColor Yellow
+        Show-Status
+        return
+    }
+
     Stop-AllServices
+    if ($WebWasRunning) {
+        Start-Agent
+        Start-Backend
+        Start-Web
+        Show-Success
+    } elseif ($BackendWasRunning) {
+        Start-Agent
+        Start-Backend
+        Show-Success
+    } elseif ($AgentWasRunning) {
+        Start-Agent
+        Show-Success
+    }
     Show-Status
+}
+
+function Invoke-TargetAction {
+    param(
+        [string] $SelectedTarget,
+        [bool] $Interactive
+    )
+
+    switch ($SelectedTarget) {
+        "exit" { return }
+        "status" { Show-Status; return }
+        "logs" {
+            if ($Interactive) { Show-LogMenu } else { Show-AllRecentLogs }
+            return
+        }
+        "sync-ip" {
+            if ($Interactive) {
+                Sync-NetworkFromMenu
+            } else {
+                Refresh-DetectedLanIp | Out-Null
+                $SyncResult = Sync-LocalNetworkConfiguration
+                if ($SyncResult.RequiresRestart -and (Test-AnyServiceRunning)) {
+                    Write-Warning "网络配置已更新；已有服务仍需执行 start-dev.bat stop 后重新启动。"
+                }
+            }
+            return
+        }
+        "stop" { Stop-AllServices; Show-Status; return }
+        "stop-web" { Stop-ServicePort "Web" $WebPort; Show-Status; return }
+        "stop-backend" { Stop-ServicePort "后端" $BackendPort; Show-Status; return }
+        "stop-agent" { Stop-ServicePort "Agent" $AgentPort; Show-Status; return }
+        "agent" { Start-SelectedServices "agent"; return }
+        "backend" { Start-SelectedServices "backend"; return }
+        "web" { Start-SelectedServices "web"; return }
+        "all" { Start-SelectedServices "all"; return }
+        default { throw "不支持的启动目标：$SelectedTarget" }
+    }
+}
+
+if ($Target -ne "menu") {
+    Invoke-TargetAction $Target $false
     return
 }
 
-if ($Target -eq "stop-web") {
-    Stop-ServicePort "Web" $WebPort
-    Show-Status
-    return
-}
+while ($true) {
+    $SelectedTarget = Show-Menu
+    if ($SelectedTarget -eq "exit") {
+        Write-Host "已退出启动器，后台服务保持当前状态。" -ForegroundColor DarkGray
+        break
+    }
 
-if ($Target -eq "stop-backend") {
-    Stop-ServicePort "后端" $BackendPort
-    Show-Status
-    return
-}
+    try {
+        Invoke-TargetAction $SelectedTarget $true
+    } catch {
+        Write-Host ""
+        Write-Host "[ERROR] $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "可在主菜单选择“查看最近日志”获取更多信息。" -ForegroundColor Yellow
+    }
 
-if ($Target -eq "stop-agent") {
-    Stop-ServicePort "Agent" $AgentPort
-    Show-Status
-    return
+    if ($SelectedTarget -ne "logs") {
+        Write-Host ""
+        Read-Host "按 Enter 返回主菜单" | Out-Null
+    }
 }
-
-Assert-HttpsFiles
-Start-Agent
-if ($Target -in @("backend", "web", "all")) { Start-Backend }
-if ($Target -in @("web", "all")) { Start-Web }
-Show-Success
-Show-Status

@@ -55,6 +55,28 @@ def test_chat_direct_intents_do_not_use_coaching_structure(monkeypatch, message,
     assert response.actions == []
 
 
+def test_identity_reply_uses_suina_persona_without_unprompted_model_details(monkeypatch):
+    monkeypatch.setattr(chat_graph, "get_settings", lambda: Settings(llm_provider="mock"))
+
+    response = chat_graph.answer_chat(request_payload("你是谁？"))
+
+    assert response.intent == "model_identity"
+    assert "穗奈" in response.reply
+    assert "青穗集" in response.reply
+    assert "真实岗位" in response.reply
+    assert "底层模型" not in response.reply
+
+
+def test_model_question_keeps_suina_persona_and_explains_server_configuration(monkeypatch):
+    monkeypatch.setattr(chat_graph, "get_settings", lambda: Settings(llm_provider="mock"))
+
+    response = chat_graph.answer_chat(request_payload("你是谁，用的什么模型？"))
+
+    assert "穗奈" in response.reply
+    assert "服务端配置" in response.reply
+    assert "不会猜测" in response.reply
+
+
 def test_direct_llm_prompt_omits_personal_context(monkeypatch):
     prompts: list[tuple[str, str]] = []
 
@@ -77,7 +99,9 @@ def test_direct_llm_prompt_omits_personal_context(monkeypatch):
     response = chat_graph.answer_chat(request)
 
     assert prompts
-    _, user_prompt = prompts[0]
+    system_prompt, user_prompt = prompts[0]
+    assert "Suina (穗奈)" in system_prompt
+    assert "Qing Sui Ji (青穗集)" in system_prompt
     assert "private-target" not in user_prompt
     assert "private-history" not in user_prompt
     assert '"context"' not in user_prompt
@@ -85,6 +109,24 @@ def test_direct_llm_prompt_omits_personal_context(monkeypatch):
     assert response.response_mode == "direct"
     assert response.used_personal_context is False
     assert response.actions == []
+
+
+def test_model_identity_falls_back_to_branded_reply_when_llm_drops_persona(monkeypatch):
+    def fake_complete(system_prompt, user_prompt, settings, transport=None):
+        return json.dumps({"reply": "我是系统中的 AI 助手。", "intent": "model_identity"})
+
+    monkeypatch.setattr(
+        chat_graph,
+        "get_settings",
+        lambda: Settings(llm_provider="openai_compatible", llm_api_key="test-key", llm_model="career-model"),
+    )
+    monkeypatch.setattr(chat_graph.llm_client, "complete", fake_complete)
+
+    response = chat_graph.answer_chat(request_payload("你是谁？"))
+
+    assert response.generation_mode == "llm"
+    assert "穗奈" in response.reply
+    assert "青穗集" in response.reply
 
 
 def test_coaching_llm_prompt_retains_personal_context(monkeypatch):

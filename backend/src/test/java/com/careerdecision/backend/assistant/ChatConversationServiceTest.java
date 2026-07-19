@@ -81,4 +81,155 @@ class ChatConversationServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .hasMessage("requestId belongs to another chat session.");
     }
+
+    @Test
+    void deletingSessionRemovesMessagesAndRedactsUnreferencedChatAudit() {
+        jdbcTemplate.update("""
+                INSERT INTO agent_runs (
+                  id, request_id, user_id, agent_type, model_name, status,
+                  input_json, output_json, error_message, latency_ms
+                ) VALUES (91001, 'chat-delete-audit-001', 1, 'chat', 'test-model', 'success',
+                          '{"private":"question"}', '{"private":"answer"}', 'private error', 12)
+                """);
+
+        PreparedConversation conversation = service.prepare(
+                1L, null, "/assistant", "chat-delete-session-001", "private question"
+        );
+        service.complete(
+                1L, conversation.sessionId(), conversation.requestId(), "/assistant",
+                Map.of("reply", "private answer", "agentRunId", 91001L)
+        );
+
+        service.deleteSession(1L, conversation.sessionId());
+
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT COUNT(1) FROM chat_sessions WHERE id = ?", Integer.class, conversation.sessionId()
+        )).isZero();
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT COUNT(1) FROM chat_messages WHERE session_id = ?", Integer.class, conversation.sessionId()
+        )).isZero();
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT input_json FROM agent_runs WHERE id = 91001", String.class
+        )).isEqualTo("{\"deleted\":true,\"reason\":\"chat_session_deleted\"}");
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT output_json FROM agent_runs WHERE id = 91001", String.class
+        )).isEqualTo("{\"deleted\":true,\"reason\":\"chat_session_deleted\"}");
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT error_message FROM agent_runs WHERE id = 91001", String.class
+        )).isNull();
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT user_id FROM agent_runs WHERE id = 91001", Long.class
+        )).isNull();
+    }
+    @Test
+    void lateCompletionAfterDeletionScrubsDetachedAuditAndDoesNotRestoreMessage() {
+        PreparedConversation conversation = service.prepare(
+                1L, null, "/assistant", "chat-delete-late-001", "late question"
+        );
+        service.deleteSession(1L, conversation.sessionId());
+        jdbcTemplate.update("""
+                INSERT INTO agent_runs (
+                  id, request_id, user_id, agent_type, model_name, status,
+                  input_json, output_json, error_message, latency_ms
+                ) VALUES (91003, 'chat-delete-late-001', 1, 'chat', 'test-model', 'success',
+                          '{"late":"input"}', '{"late":"output"}', NULL, 20)
+                """);
+
+        assertThat(service.complete(
+                1L, conversation.sessionId(), conversation.requestId(), "/assistant",
+                Map.of("reply", "late answer", "agentRunId", 91003L)
+        )).isFalse();
+
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT input_json FROM agent_runs WHERE id = 91003", String.class
+        )).isEqualTo("{\"deleted\":true,\"reason\":\"chat_session_deleted\"}");
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT user_id FROM agent_runs WHERE id = 91003", Long.class
+        )).isNull();
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT COUNT(1) FROM chat_messages WHERE session_id = ?", Integer.class, conversation.sessionId()
+        )).isZero();
+    }
+    @Test
+    void deletingSessionDoesNotRedactAuditLinkedToBusinessArtifact() {
+        jdbcTemplate.update("""
+                INSERT INTO agent_runs (
+                  id, request_id, user_id, agent_type, model_name, status,
+                  input_json, output_json, error_message, latency_ms
+                ) VALUES (91002, 'chat-delete-linked-audit-001', 1, 'chat', 'test-model', 'success',
+                          '{"kept":"input"}', '{"kept":"output"}', NULL, 8)
+                """);
+        jdbcTemplate.update("""
+                INSERT INTO path_plans (id, user_id, agent_run_id, target_role)
+                VALUES (91002, 1, 91002, 'Linked plan')
+                """);
+        PreparedConversation conversation = service.prepare(
+                1L, null, "/assistant", "chat-delete-linked-audit-001", "linked question"
+        );
+        service.complete(
+                1L, conversation.sessionId(), conversation.requestId(), "/assistant",
+                Map.of("reply", "linked answer", "agentRunId", 91002L)
+        );
+
+        service.deleteSession(1L, conversation.sessionId());
+
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT input_json FROM agent_runs WHERE id = 91002", String.class
+        )).isEqualTo("{\"kept\":\"input\"}");
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT user_id FROM agent_runs WHERE id = 91002", Long.class
+        )).isEqualTo(1L);
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT COUNT(1) FROM path_plans WHERE id = 91002", Integer.class
+        )).isOne();
+    }
+    @Test
+    void previouslyArchivedSessionCanBePermanentlyDeletedOnlyOnce() {
+        PreparedConversation conversation = service.prepare(
+                1L, null, "/assistant", "chat-delete-archived-001", "archived question"
+        );
+        jdbcTemplate.update(
+                "UPDATE chat_sessions SET status = 'archived' WHERE id = ?",
+                conversation.sessionId()
+        );
+
+        service.deleteSession(1L, conversation.sessionId());
+
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT COUNT(1) FROM chat_sessions WHERE id = ?", Integer.class, conversation.sessionId()
+        )).isZero();
+        assertThatThrownBy(() -> service.deleteSession(1L, conversation.sessionId()))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage("Chat session not found: " + conversation.sessionId());
+    }
+    @Test
+    void sessionHistoryCanBeListedRestoredRenamedAndDeleted() {
+        PreparedConversation conversation = service.prepare(
+                1L, null, "/android/mentor", "chat-history-001", "帮我比较两个方向"
+        );
+        service.complete(
+                1L, conversation.sessionId(), conversation.requestId(), "/android/mentor",
+                Map.of("reply", "先统一比较维度。", "generationMode", "llm", "confidence", 0.88)
+        );
+
+        assertThat(service.listSessions(1L))
+                .anySatisfy(item -> {
+                    assertThat(item.id()).isEqualTo(conversation.sessionId());
+                    assertThat(item.messageCount()).isEqualTo(2);
+                    assertThat(item.lastMessage()).isEqualTo("先统一比较维度。");
+                });
+
+        var detail = service.getSession(1L, conversation.sessionId());
+        assertThat(detail.messages()).hasSize(2);
+        assertThat(detail.messages().get(1).response()).containsEntry("generationMode", "llm");
+        assertThat(detail.messages().get(1).response()).containsEntry("evidenceBasis", java.util.List.of());
+        assertThat(detail.messages().get(1).response()).containsEntry("uncertainties", java.util.List.of());
+
+        assertThat(service.renameSession(1L, conversation.sessionId(), "方向选择讨论").title())
+                .isEqualTo("方向选择讨论");
+        service.deleteSession(1L, conversation.sessionId());
+        assertThat(service.listSessions(1L)).noneMatch(item -> item.id() == conversation.sessionId());
+        assertThatThrownBy(() -> service.getSession(1L, conversation.sessionId()))
+                .isInstanceOf(BusinessException.class);
+    }
 }

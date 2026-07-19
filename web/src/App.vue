@@ -20,7 +20,7 @@
         </Transition>
       </RouterView>
     </div>
-    <AiAssistant v-if="!isStandalonePage" />
+    <AiAssistant v-if="showFloatingAssistant" />
     <M3SnackbarHost />
     <M3ConfirmHost />
   </div>
@@ -38,4 +38,5 @@ const themeStore = useThemeStore()
 
 const route = useRoute()
 const isStandalonePage = computed(() => ['/login', '/onboarding'].includes(route.path))
+const showFloatingAssistant = computed(() => !isStandalonePage.value && route.path !== '/assistant')
 </script>

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -54,13 +55,17 @@ private val submittedReviewStatuses = setOf("submitted", "adjustments_applied")
 @Composable
 fun TodayScreen(
     state: AppUiState,
+    requestedTaskId: Long? = null,
+    openReviewOnStart: Boolean = false,
     onRefresh: () -> Unit,
     onOpenWeb: () -> Unit,
     onUpdateTask: (CachedTaskEntity, String, String?, String?, String?, String?) -> Unit,
     onAddResult: (CachedTaskEntity, String, String?) -> Unit,
     onSubmitReview: (String, String?, String?, Int?, String, String?) -> Unit
 ) {
+    val listState = rememberLazyListState()
     var selectedTaskId by rememberSaveable { mutableStateOf<Long?>(null) }
+    var highlightedTaskId by rememberSaveable(requestedTaskId) { mutableStateOf(requestedTaskId) }
     var dialogModeName by rememberSaveable { mutableStateOf<String?>(null) }
     var showReviewDialog by rememberSaveable { mutableStateOf(false) }
     var reviewVersionAtOpen by rememberSaveable { mutableLongStateOf(state.reviewSubmissionVersion) }
@@ -97,8 +102,34 @@ fun TodayScreen(
             dialogModeName = null
         }
     }
+    LaunchedEffect(requestedTaskId, actionableTasks, recentHandledTasks) {
+        val taskId = requestedTaskId ?: return@LaunchedEffect
+        highlightedTaskId = taskId
+        val statusItemCount = if (!state.online || state.pendingCount > 0) 1 else 0
+        val progressItemCount = if (goal?.planId != null) 1 else 0
+        val actionableStart = 2 + statusItemCount + progressItemCount
+        val actionableIndex = actionableTasks.indexOfFirst { it.taskId == taskId }
+        val targetIndex = if (actionableIndex >= 0) {
+            actionableStart + actionableIndex
+        } else {
+            val recentIndex = recentHandledTasks.indexOfFirst { it.taskId == taskId }
+            if (recentIndex >= 0) {
+                actionableStart + (if (actionableTasks.isEmpty()) 1 else actionableTasks.size) + 1 + recentIndex
+            } else {
+                -1
+            }
+        }
+        if (targetIndex >= 0) listState.animateScrollToItem(targetIndex)
+    }
+    LaunchedEffect(openReviewOnStart, goal?.planId) {
+        if (openReviewOnStart && goal?.planId != null && !currentReviewSubmitted && !currentReviewPending) {
+            reviewVersionAtOpen = state.reviewSubmissionVersion
+            showReviewDialog = true
+        }
+    }
 
     LazyColumn(
+        state = listState,
         modifier = Modifier.fillMaxSize(),
         contentPadding = androidx.compose.foundation.layout.PaddingValues(
             horizontal = CareerSpacing.PageHorizontal,
@@ -178,6 +209,7 @@ fun TodayScreen(
                 TaskCard(
                     task = task,
                     primary = index == 0,
+                    highlighted = highlightedTaskId == task.taskId,
                     busy = state.busyTaskId == task.taskId,
                     onStart = { onUpdateTask(task, "in_progress", null, null, null, null) },
                     onComplete = {
@@ -215,6 +247,7 @@ fun TodayScreen(
             itemsIndexed(recentHandledTasks, key = { _, task -> "recent-${task.taskId}" }) { _, task ->
                 RecentTaskCard(
                     task = task,
+                    highlighted = highlightedTaskId == task.taskId,
                     busy = state.busyTaskId == task.taskId,
                     onRestore = { onUpdateTask(task, "todo", null, null, null, null) }
                 )
@@ -301,6 +334,7 @@ fun TodayScreen(
 private fun TaskCard(
     task: CachedTaskEntity,
     primary: Boolean,
+    highlighted: Boolean,
     busy: Boolean,
     onStart: () -> Unit,
     onComplete: () -> Unit,
@@ -309,10 +343,16 @@ private fun TaskCard(
     onSkip: () -> Unit,
     onRestore: () -> Unit
 ) {
-    M3Card(emphasized = primary) {
+    M3Card(emphasized = primary || highlighted) {
         Row(verticalAlignment = Alignment.Top) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(CareerSpacing.ExtraSmall)) {
-                if (primary) {
+                if (highlighted) {
+                    Text(
+                        "提醒任务 · ${taskStatusLabel(task.status)}",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                } else if (primary) {
                     Text(
                         "今日主任务 · ${taskStatusLabel(task.status)}",
                         style = MaterialTheme.typography.labelLarge,
@@ -397,10 +437,11 @@ private fun TaskCard(
 @Composable
 private fun RecentTaskCard(
     task: CachedTaskEntity,
+    highlighted: Boolean,
     busy: Boolean,
     onRestore: () -> Unit
 ) {
-    M3Card {
+    M3Card(emphasized = highlighted) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,

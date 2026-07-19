@@ -11,7 +11,7 @@
 
 - `web/`：完整决策工作区，Vue 3 + TypeScript。
 - `android/`：今日行动端，Kotlin + Jetpack Compose + Room + WorkManager。
-- `backend/`：业务数据与权限，Spring Boot + MyBatis + Flyway（B1/V2-V7）。
+- `backend/`：业务数据与权限，Spring Boot + MyBatis + Flyway（B1/V2-V9）。
 - `agent_server/`：结构化 AI 工作流，FastAPI + LangGraph + Pydantic。
 
 Web 和 Android 只访问后端；后端通过内部令牌访问 Agent。Agent 不直接写业务数据库。
@@ -22,11 +22,11 @@ Web 和 Android 只访问后端；后端通过内部令牌访问 Agent。Agent �
 
 ```text
 Agent  http://127.0.0.1:8001
-后端   https://192.168.1.159:8443
-Web    https://192.168.1.159:5173
+后端   https://当前局域网IP:8443
+Web    https://当前局域网IP:5173
 ```
 
-首次运行先生成并信任本地证书：
+启动器会自动检测默认网卡的私有 IPv4，同步 `agent_server/.env` 与 `web/.env` 中的本地地址，并在 IP 变化时刷新 HTTPS 证书。也可以手动准备证书：
 
 ```powershell
 .\scripts\setup-local-https.ps1
@@ -38,7 +38,7 @@ Web    https://192.168.1.159:5173
 .\scripts\start-dev.ps1 -Target all
 ```
 
-启动器会在后台运行服务。关闭菜单窗口不会停止服务；重新打开启动器并选择“查看运行状态”或“停止全部服务”。
+启动器会在后台运行服务，完成操作后持续返回主菜单，可继续查看状态、最近日志或停止服务；只有选择“退出启动器”才结束菜单。关闭菜单窗口不会停止已经启动的服务。
 
 ## 质量门禁
 
@@ -48,10 +48,10 @@ Web    https://192.168.1.159:5173
 
 默认执行：
 
-- 后端执行 116 项（115 通过，1 条有编号的平台例外）；
-- Agent 88 条测试和 Ruff，其中含 32 条固定教练评测；
-- Web 类型检查、119 条单测、生产构建、8 条 1440px/360px Playwright 检查；
-- Android 24 条 Repository/ViewModel/离线同步测试、Debug/Release 构建；
+- 后端执行 128 项（127 通过，1 条有编号的平台例外）；
+- Agent 102 条测试和 Ruff，其中含 32 条固定教练评测；
+- Web 类型检查、97 条单测、生产构建、四个规范视口共 100 项 Playwright 检查；
+- Android 94 条单测、Debug/Release 构建和 Lint；
 - PowerShell 语法、乱码、统一请求层、HTTPS 和明文流量策略扫描。
 
 运行真实局域网 HTTPS 链路：

@@ -129,6 +129,158 @@ class DesignComplianceTest {
         assertTrue("The bundled Debug certificate must be a CA certificate", certificate.basicConstraints >= 0)
     }
 
+    @Test
+    fun productionBrandNameIsQingsuijiEverywhere() {
+        val root = androidRoot()
+        val checkedFiles = productionKotlinFiles(root) +
+            listOf(root.resolve("app/src/main/AndroidManifest.xml")) +
+            xmlFiles(root.resolve("app/src/main/res/values"))
+        val staleBrandReferences = checkedFiles
+            .filter { path -> read(path).contains(LEGACY_BRAND_NAME) }
+            .map(root::relativize)
+
+        assertTrue(
+            "The legacy brand name '$LEGACY_BRAND_NAME' must not remain in production UI/resources:\n" +
+                staleBrandReferences.joinToString("\n"),
+            staleBrandReferences.isEmpty()
+        )
+
+        val manifest = DocumentBuilderFactory.newInstance().apply {
+            isNamespaceAware = true
+        }.newDocumentBuilder().parse(root.resolve("app/src/main/AndroidManifest.xml").toFile())
+        val application = manifest.getElementsByTagName("application").item(0)
+        val label = application.attributes
+            .getNamedItemNS(ANDROID_XML_NAMESPACE, "label")
+            ?.nodeValue
+        val resolvedLabel = when {
+            label == null -> null
+            label.startsWith("@string/") -> stringResource(root, label.substringAfter("@string/"))
+            else -> label
+        }
+
+        assertEquals("The installed app label must use the approved brand", BRAND_NAME, resolvedLabel)
+    }
+
+    @Test
+    fun assistantStateAssetsMatchTheWebCatalog() {
+        val androidRoot = androidRoot()
+        val repositoryRoot = androidRoot.parent
+        val androidScript = read(androidRoot.resolve("scripts/prepare_brand_assets.py"))
+        val webScript = read(repositoryRoot.resolve("web/scripts/prepare_brand_assets.py"))
+        val androidStateSources = assistantStateSources(androidScript)
+        val webStateSources = assistantStateSources(webScript)
+
+        assertEquals(
+            "Android and Web must derive every assistant state from the same approved source image",
+            webStateSources,
+            androidStateSources
+        )
+        assertEquals(EXPECTED_ASSISTANT_STATES, androidStateSources.keys)
+
+        val visuals = read(
+            androidRoot.resolve(
+                "app/src/main/java/com/careerdecision/mobile/ui/design/BrandVisuals.kt"
+            )
+        )
+        EXPECTED_ASSISTANT_STATES.forEach { state ->
+            val resourceName = "suina_assistant_$state"
+            assertTrue(
+                "AssistantVisualState must expose $resourceName",
+                visuals.contains("R.drawable.$resourceName")
+            )
+            assertTrue(
+                "$resourceName must be packaged as an Android drawable",
+                Files.isRegularFile(
+                    androidRoot.resolve("app/src/main/res/drawable-nodpi/$resourceName.webp")
+                )
+            )
+        }
+    }
+
+    @Test
+    fun launcherUsesTheApprovedSuinaAvatar() {
+        val root = androidRoot()
+        val manifest = read(root.resolve("app/src/main/AndroidManifest.xml"))
+        assertTrue(manifest, manifest.contains("android:icon=\"@mipmap/ic_launcher\""))
+
+        val foreground = read(root.resolve("app/src/main/res/drawable/ic_launcher_foreground.xml"))
+        assertTrue(
+            "The adaptive launcher foreground must use the approved standard avatar",
+            foreground.contains("@drawable/suina_avatar")
+        )
+        assertTrue(
+            "The standard avatar derivative must be packaged",
+            Files.isRegularFile(root.resolve("app/src/main/res/drawable-nodpi/suina_avatar.webp"))
+        )
+        assertFalse(
+            "The legacy chart launcher icon must not return",
+            Files.exists(root.resolve("app/src/main/res/drawable/ic_launcher.xml"))
+        )
+
+        val adaptiveIcon = read(root.resolve("app/src/main/res/mipmap-anydpi/ic_launcher.xml"))
+        assertTrue(adaptiveIcon, adaptiveIcon.contains("@drawable/ic_launcher_foreground"))
+        assertTrue(adaptiveIcon, adaptiveIcon.contains("@drawable/ic_launcher_monochrome"))
+
+        val assetScript = read(root.resolve("scripts/prepare_brand_assets.py"))
+        assertTrue(
+            "Launcher assets must remain reproducible from the approved standard portrait",
+            assetScript.contains("BgSub_穗奈标准头像v1.0.png")
+        )
+    }
+
+    @Test
+    fun sensitiveProfileActionsRequireConfirmationAndPendingWorkBlocksLogout() {
+        val root = androidRoot()
+        val profile = read(
+            root.resolve(
+                "app/src/main/java/com/careerdecision/mobile/ui/screens/ProfileScreen.kt"
+            )
+        )
+
+        assertTrue(profile, profile.contains("onClick = { showResetThemeDialog = true }"))
+        assertTrue(profile, profile.contains("title = \"恢复默认主题？\""))
+        assertTrue(profile, profile.contains("账号与业务数据不受影响"))
+        assertTrue(profile, profile.contains("LogoutDialogMode.PendingOnline"))
+        assertTrue(profile, profile.contains("LogoutDialogMode.PendingOffline"))
+        assertTrue(profile, profile.contains("请先完成同步"))
+    }
+
+    @Test
+    fun authenticationAndTopLevelNavigationUseProjectMotionTokens() {
+        val root = androidRoot()
+        val login = read(
+            root.resolve(
+                "app/src/main/java/com/careerdecision/mobile/ui/screens/LoginScreen.kt"
+            )
+        )
+        val app = read(root.resolve("app/src/main/java/com/careerdecision/mobile/ui/CareerApp.kt"))
+
+        assertTrue(login, login.contains("AnimatedContent"))
+        assertTrue(login, login.contains("SizeTransform"))
+        assertFalse(login, login.contains("RegisterOnlyField"))
+        assertTrue(login, login.contains("CareerMotionTokens.Standard"))
+        assertTrue(app, app.contains("topLevelFadeThroughEnter"))
+        assertTrue(app, app.contains("topLevelFadeThroughExit"))
+        assertTrue(app, app.contains("CareerMotionTokens.Standard"))
+    }
+
+    @Test
+    fun dynamicColorSettingsExposeSemanticPreviewsAndSeparateImageActions() {
+        val root = androidRoot()
+        val profile = read(
+            root.resolve(
+                "app/src/main/java/com/careerdecision/mobile/ui/screens/ProfileScreen.kt"
+            )
+        )
+
+        assertTrue(profile, profile.contains("M3ThemePalettePreview"))
+        assertTrue(profile, profile.contains("M3SeedSchemeChoice"))
+        assertTrue(profile, profile.contains("ImageSelectionPurpose.PaletteOnly"))
+        assertTrue(profile, profile.contains("ImageSelectionPurpose.BackgroundAndPalette"))
+        assertTrue(profile, profile.contains("仅应用配色"))
+        assertTrue(profile, profile.contains("ThemeColorSource.SYSTEM"))
+    }
+
     private fun androidRoot(): Path {
         var candidate = Paths.get(System.getProperty("user.dir")).toAbsolutePath().normalize()
         while (true) {
@@ -157,10 +309,52 @@ class DesignComplianceTest {
         return files.sortedBy(Path::toString)
     }
 
+    private fun xmlFiles(directory: Path): List<Path> {
+        if (!Files.isDirectory(directory)) return emptyList()
+        val files = mutableListOf<Path>()
+        Files.walk(directory).use { stream ->
+            stream.filter { path -> Files.isRegularFile(path) && path.toString().endsWith(".xml") }
+                .forEach(files::add)
+        }
+        return files.sortedBy(Path::toString)
+    }
+
+    private fun stringResource(root: Path, name: String): String? {
+        val valuesDirectory = root.resolve("app/src/main/res/values")
+        for (file in xmlFiles(valuesDirectory)) {
+            val document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(file.toFile())
+            val strings = document.getElementsByTagName("string")
+            for (index in 0 until strings.length) {
+                val element = strings.item(index)
+                if (element.attributes?.getNamedItem("name")?.nodeValue == name) {
+                    return element.textContent
+                }
+            }
+        }
+        return null
+    }
+
+    private fun assistantStateSources(script: String): Map<String, String> =
+        assistantSourceEntry.findAll(script)
+            .associate { match -> match.groupValues[1] to match.groupValues[2] }
+
     private fun read(path: Path): String = Files.readAllBytes(path).toString(Charsets.UTF_8)
 
     private companion object {
         const val ANDROID_XML_NAMESPACE = "http://schemas.android.com/apk/res/android"
+        const val BRAND_NAME = "青穗集"
+        const val LEGACY_BRAND_NAME = "职途"
+
+        val EXPECTED_ASSISTANT_STATES = linkedSetOf(
+            "default",
+            "listening",
+            "thinking",
+            "explaining",
+            "concerned",
+            "warning",
+            "encouraging",
+            "success"
+        )
 
         // Keep Text and MaterialTheme as the two direct M3 primitives that screens may use.
         // Interactive controls and containers belong in M3Components.kt.
@@ -211,5 +405,6 @@ class DesignComplianceTest {
             "(?m)^\\s*import\\s+(?:android\\.graphics\\.Color|androidx\\.compose\\.ui\\.graphics\\.Color)|(?<![A-Za-z0-9_])(?:Color|parseColor)\\s*\\("
         )
         val materialIconsDependency = Regex("(?i)(?:material-icons|androidx\\.compose\\.material\\s*:\\s*material(?:\\W|$))")
+        val assistantSourceEntry = Regex("\\\"([a-z]+)\\\"\\s*:\\s*\\\"(BgSub_[^\\\"]+\\.png)\\\"")
     }
 }

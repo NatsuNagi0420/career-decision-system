@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import jakarta.validation.Valid;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -16,15 +17,37 @@ public final class DecisionProjectModels {
     }
 
     public record ProjectRequest(
-            @NotBlank @Size(max = 160) String title,
+            @Size(max = 160) String title,
             @NotBlank @Size(max = 500) String question,
             LocalDate decisionDeadline,
             @Size(max = 5000) String background,
             @Size(max = 5000) String triggerReason,
-            @Size(max = 12) List<@Size(max = 100) String> priorities,
-            @Size(max = 12) List<@Size(max = 160) String> mustHaves,
-            @Size(max = 12) List<@Size(max = 160) String> dealBreakers,
+            @Size(max = 4) List<@Size(max = 100) String> priorities,
+            @Size(max = 5) List<@Size(max = 160) String> mustHaves,
+            @Size(max = 5) List<@Size(max = 160) String> dealBreakers,
+            @Size(max = 5) List<@Valid InitialCandidateRequest> initialCandidates,
             @Min(0) Integer expectedVersion
+    ) {
+        public ProjectRequest(
+                String title,
+                String question,
+                LocalDate decisionDeadline,
+                String background,
+                String triggerReason,
+                List<String> priorities,
+                List<String> mustHaves,
+                List<String> dealBreakers,
+                Integer expectedVersion
+        ) {
+            this(title, question, decisionDeadline, background, triggerReason, priorities,
+                    mustHaves, dealBreakers, null, expectedVersion);
+        }
+    }
+
+    public record InitialCandidateRequest(
+            Long directionId,
+            @NotBlank @Size(max = 120) String name,
+            @Size(max = 20) String sourceType
     ) {
     }
 
@@ -63,8 +86,23 @@ public final class DecisionProjectModels {
             @Size(max = 160) String sourceRef,
             @Size(max = 20) String credibility,
             @Size(max = 20) String stance,
+            Boolean syncToProfile,
             @Min(0) Integer expectedVersion
     ) {
+        public EvidenceRequest(
+                Long candidateId,
+                Long personalEvidenceId,
+                String title,
+                String detail,
+                String sourceType,
+                String sourceRef,
+                String credibility,
+                String stance,
+                Integer expectedVersion
+        ) {
+            this(candidateId, personalEvidenceId, title, detail, sourceType, sourceRef,
+                    credibility, stance, false, expectedVersion);
+        }
     }
 
     public record CriterionRequest(
@@ -86,6 +124,24 @@ public final class DecisionProjectModels {
     ) {
     }
 
+    public record BatchComparisonItemRequest(
+            @NotNull Long criterionId,
+            @NotNull Long candidateId,
+            @NotBlank @Pattern(regexp = "meets|partial|does_not_meet|unknown|not_found|needs_attention|present|good_fit|trade_off|poor_fit") String verdict,
+            @Size(max = 5000) String assessment,
+            @Size(max = 20) List<Long> evidenceIds,
+            @Size(max = 2000) String uncertainty,
+            @Size(max = 2000) String validationAction,
+            Boolean confirmed
+    ) {
+    }
+
+    public record BatchComparisonRequest(
+            @NotNull @Size(min = 1, max = 100) List<@Valid BatchComparisonItemRequest> results,
+            @Min(0) Integer expectedVersion
+    ) {
+    }
+
     public record TargetConfirmationRequest(
             @NotNull Long primaryCandidateId,
             Long backupCandidateId,
@@ -93,8 +149,22 @@ public final class DecisionProjectModels {
             @Size(max = 5000) String mainRisks,
             LocalDate reviewDate,
             @NotNull Boolean confirmed,
+            @Pattern(regexp = "provisional|verified") String verificationStatus,
+            @Size(max = 5000) String overrideReason,
             @Min(0) Integer expectedVersion
     ) {
+        public TargetConfirmationRequest(
+                Long primaryCandidateId,
+                Long backupCandidateId,
+                String decisionReason,
+                String mainRisks,
+                LocalDate reviewDate,
+                Boolean confirmed,
+                Integer expectedVersion
+        ) {
+            this(primaryCandidateId, backupCandidateId, decisionReason, mainRisks, reviewDate,
+                    confirmed, null, null, expectedVersion);
+        }
     }
 
     public record ConfidenceFeedbackRequest(
@@ -155,6 +225,7 @@ public final class DecisionProjectModels {
             String city,
             String salaryText,
             String note,
+            LocalDateTime reviewedAt,
             LocalDateTime createdAt
     ) {
     }
@@ -181,6 +252,8 @@ public final class DecisionProjectModels {
             List<Long> evidenceIds,
             String uncertainty,
             String validationAction,
+            String verdict,
+            LocalDateTime confirmedAt,
             LocalDateTime updatedAt
     ) {
     }
@@ -192,6 +265,8 @@ public final class DecisionProjectModels {
             String description,
             int importance,
             int sortOrder,
+            String criterionKind,
+            String sourceType,
             List<ComparisonResultResponse> results
     ) {
     }
@@ -204,6 +279,9 @@ public final class DecisionProjectModels {
             String decisionReason,
             String mainRisks,
             LocalDate reviewDate,
+            String verificationStatus,
+            LocalDateTime verifiedAt,
+            String overrideReason,
             LocalDateTime confirmedAt
     ) {
     }
@@ -227,9 +305,41 @@ public final class DecisionProjectModels {
             List<EvidenceResponse> evidence,
             List<CriterionResponse> criteria,
             List<TargetResponse> targets,
+            int flowVersion,
+            LocalDateTime comparisonReviewedAt,
             LocalDateTime decidedAt,
             LocalDateTime createdAt,
             LocalDateTime updatedAt
+    ) {
+    }
+
+    public record CandidateJourney(
+            long candidateId,
+            String state,
+            int evidenceCount,
+            int jobSampleCount,
+            int comparisonCount,
+            List<String> remainingItems
+    ) {
+    }
+
+    public record JourneyStage(
+            String code,
+            boolean ready,
+            boolean complete,
+            List<String> remainingItems
+    ) {
+    }
+
+    public record JourneyResponse(
+            long projectId,
+            String currentStage,
+            String projectStatus,
+            boolean canSaveProvisional,
+            boolean canVerify,
+            List<JourneyStage> stages,
+            List<CandidateJourney> candidates,
+            List<String> nextSteps
     ) {
     }
 }

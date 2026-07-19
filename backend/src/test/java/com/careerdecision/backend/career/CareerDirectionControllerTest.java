@@ -23,6 +23,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @Sql(statements = {
+        "DELETE FROM career_direction_job_rel",
+        "DELETE FROM career_direction_mapping_runs",
         "DELETE FROM career_direction_favorites",
         "DELETE FROM career_directions WHERE owner_user_id IS NOT NULL"
 })
@@ -80,5 +82,42 @@ class CareerDirectionControllerTest {
         mockMvc.perform(delete("/api/v1/career-directions/1")
                         .header(HttpHeaders.AUTHORIZATION, AUTH))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void directionJobsUsePersistedVersionedMapping() throws Exception {
+        mockMvc.perform(get("/api/v1/career-directions/1/jobs")
+                        .header(HttpHeaders.AUTHORIZATION, AUTH)
+                        .queryParam("page", "0")
+                        .queryParam("size", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.items.length()", greaterThanOrEqualTo(1)))
+                .andExpect(jsonPath("$.data.items[0].job.id", is(1002)))
+                .andExpect(jsonPath("$.data.items[0].matchScore", greaterThanOrEqualTo(60)))
+                .andExpect(jsonPath("$.data.items[0].matchReasons.length()", greaterThanOrEqualTo(1)))
+                .andExpect(jsonPath("$.data.mappingVersion", is("direction-rule-v1")));
+
+        mockMvc.perform(get("/api/v1/career-directions/1/jobs")
+                        .header(HttpHeaders.AUTHORIZATION, AUTH)
+                        .queryParam("page", "0")
+                        .queryParam("size", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.items[0].job.id", is(1002)))
+                .andExpect(jsonPath("$.data.mappingVersion", is("direction-rule-v1")));
+    }
+
+    @Test
+    void directionInsightsAggregateOnlyMappedRealJobs() throws Exception {
+        mockMvc.perform(get("/api/v1/career-directions/2/insights")
+                        .header(HttpHeaders.AUTHORIZATION, AUTH))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.directionId", is(2)))
+                .andExpect(jsonPath("$.data.directionName", is("数据分析")))
+                .andExpect(jsonPath("$.data.sampleSize", greaterThanOrEqualTo(1)))
+                .andExpect(jsonPath("$.data.salary.sampleSize", greaterThanOrEqualTo(1)))
+                .andExpect(jsonPath("$.data.skills[*].name", org.hamcrest.Matchers.hasItem("SQL")))
+                .andExpect(jsonPath("$.data.commonRequirements[*].name",
+                        org.hamcrest.Matchers.hasItem("能够独立完成指标分析")))
+                .andExpect(jsonPath("$.data.mappingVersion", is("direction-rule-v1")));
     }
 }

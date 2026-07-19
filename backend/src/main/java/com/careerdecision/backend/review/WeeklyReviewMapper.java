@@ -14,7 +14,8 @@ import java.util.List;
 public interface WeeklyReviewMapper {
     @Select("""
             SELECT decision_project_id FROM path_plans
-            WHERE id = #{planId} AND user_id = #{userId} AND plan_type = 'action'
+            WHERE id = #{planId} AND user_id = #{userId}
+              AND plan_type IN ('action', 'validation')
               AND status <> 'archived' LIMIT 1
             """)
     Long findOwnedProjectId(@Param("userId") long userId, @Param("planId") long planId);

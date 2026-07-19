@@ -2,7 +2,7 @@ import json
 
 from app.agents import coaching_graph
 from app.config.settings import Settings
-from app.schemas.coaching import DecisionCoachRequest
+from app.schemas.coaching import ActionPlanPreviewRequest, DecisionCoachRequest
 from app.services.llm_client import LlmClientError
 from tests.test_coaching_contracts import project_payload
 
@@ -25,7 +25,9 @@ def valid_llm_response() -> str:
         {
             "confidence": 0.78,
             "conclusion": "Java 后端已有一条项目证据，但两个方向都还需要实践验证。",
-            "evidenceBasis": [{"statement": "Java 后端已有课程 API 项目", "sourceRefs": ["project:course-api"]}],
+            "evidenceBasis": [
+                {"statement": "Java 后端已有课程 API 项目", "sourceRefs": ["project:course-api", "job:999999"]}
+            ],
             "counterArguments": ["Java 后端的并发与部署证据不足"],
             "uncertainties": ["数据分析方向尚无完整项目"],
             "nextActions": [
@@ -56,6 +58,7 @@ def test_decision_coach_uses_valid_llm_output(monkeypatch) -> None:
     assert response.model_name == "career-model"
     assert response.confidence == 0.78
     assert "Java 后端" in response.conclusion
+    assert response.evidence_basis[0].source_refs == ["project:course-api"]
 
 
 def test_decision_coach_does_not_call_external_model_without_consent(monkeypatch) -> None:
@@ -126,3 +129,62 @@ def test_fallback_log_does_not_include_private_focus(monkeypatch, caplog) -> Non
     assert "不要泄露这段私密备注" not in caplog.text
     assert "provider failed" not in caplog.text
     assert any(getattr(record, "workflow", None) == "decision_coach" for record in caplog.records)
+
+
+def test_action_plan_preview_uses_llm_but_preserves_missing_week_sources(monkeypatch) -> None:
+    task = {
+        "title": "核对岗位要求",
+        "taskType": "career_research",
+        "content": "核对真实岗位。",
+        "estimatedMinutes": 90,
+        "acceptanceCriteria": "形成要求清单。",
+        "rationale": "避免凭职位名称制定计划。",
+        "capabilityGap": "要求尚未校准",
+        "jobRequirement": "Spring Boot",
+        "sourceRefs": ["job:801"],
+    }
+    baseline = {
+        "generationMode": "fallback",
+        "modelName": "rule-personalized-plan-v2",
+        "confidence": 0.6,
+        "overview": "规则计划",
+        "evidenceBasis": [{"statement": "真实岗位要求", "sourceRefs": ["job:801"]}],
+        "uncertainties": ["样本有限"],
+        "weeks": [
+            {"weekNo": 1, "goal": "校准", "tasks": [task]},
+            {"weekNo": 2, "goal": "验证", "tasks": [{**task, "title": "完成能力样例"}]},
+        ],
+    }
+    request = ActionPlanPreviewRequest.model_validate(
+        {
+            "requestId": "plan-preview-llm-1",
+            "allowExternalModel": True,
+            "targetRole": "Java 后端",
+            "durationWeeks": 2,
+            "startDate": "2026-07-13",
+            "decisionContext": {"profile": {}, "project": {}, "jobDetails": [{"id": 801}]},
+            "baseline": baseline,
+        }
+    )
+    llm_response = {
+        **baseline,
+        "overview": "结合 Spring Boot 缺口生成的个性化计划",
+        "weeks": [
+            {"weekNo": 1, "goal": "校准岗位", "tasks": [{**task, "sourceRefs": []}]},
+            # Deliberately omit week two; normalisation must restore the complete skeleton.
+            {"weekNo": 1, "goal": "重复周次", "tasks": [task]},
+        ],
+    }
+    monkeypatch.setattr(
+        coaching_graph,
+        "get_settings",
+        lambda: Settings(llm_provider="openai_compatible", llm_api_key="test-key", llm_model="career-model"),
+    )
+    monkeypatch.setattr(coaching_graph.llm_client, "complete", lambda **kwargs: json.dumps(llm_response, ensure_ascii=False))
+
+    response = coaching_graph.preview_action_plan(request)
+
+    assert response.generation_mode == "llm"
+    assert response.model_name == "career-model"
+    assert [week.week_no for week in response.weeks] == [1, 2]
+    assert response.weeks[0].tasks[0].source_refs == ["job:801"]

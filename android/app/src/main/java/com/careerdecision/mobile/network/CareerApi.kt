@@ -198,14 +198,17 @@ data class ReportArchiveRequest(
 
 data class ReportSnapshot(
     val id: String,
-    val userId: String,
+    val userId: String? = null,
+    val decisionProjectId: Long? = null,
     val agentRunId: Long? = null,
+    val snapshotVersion: Int? = null,
+    val generationRequestId: String? = null,
     val type: String,
     val title: String,
     val summary: String,
     val content: String,
-    val createdAt: String?,
-    val updatedAt: String?
+    val createdAt: String? = null,
+    val updatedAt: String? = null
 )
 
 data class ReportPage(
@@ -366,6 +369,14 @@ interface CareerApi {
     @GET("dashboard")
     suspend fun dashboard(): ApiEnvelope<DashboardResponse>
 
+    @GET("decision-projects/{projectId}")
+    suspend fun decisionProject(
+        @Path("projectId") projectId: Long
+    ): ApiEnvelope<DecisionProjectDetail>
+
+    @GET("personal-evidence")
+    suspend fun personalEvidence(): ApiEnvelope<List<PersonalEvidence>>
+
     @GET("action-plans")
     suspend fun actionPlans(): ApiEnvelope<List<ActionPlanSummary>>
 
@@ -397,6 +408,15 @@ interface CareerApi {
 
     @POST("chat/messages")
     suspend fun sendChatMessage(@Body request: AssistantChatRequest): ApiEnvelope<AssistantChatResponse>
+
+    @GET("chat/sessions")
+    suspend fun chatSessions(): ApiEnvelope<List<ChatSessionSummary>>
+
+    @GET("chat/sessions/{sessionId}")
+    suspend fun chatSession(@Path("sessionId") sessionId: Long): ApiEnvelope<ChatSessionDetail>
+
+    @DELETE("chat/sessions/{sessionId}")
+    suspend fun deleteChatSession(@Path("sessionId") sessionId: Long): ApiEnvelope<ChatSessionDeletion>
 
     @POST("decision-projects/{projectId}/targets/{targetId}/confidence-feedback")
     suspend fun submitConfidenceFeedback(
@@ -552,7 +572,9 @@ object CareerApiFactory {
             .writeTimeout(RequestConfig.WRITE_TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .addInterceptor { chain ->
                 val request = withClientHeaders(chain.request(), tokenProvider())
-                chain.proceed(request)
+                chain.withReadTimeout(
+                    requestReadTimeoutSeconds(request.url.encodedPath).toInt(), TimeUnit.SECONDS
+                ).proceed(request)
             }
 
         if (RequestConfig.HTTP_LOG_LEVEL != HttpLoggingInterceptor.Level.NONE) {

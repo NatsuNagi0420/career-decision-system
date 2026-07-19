@@ -105,6 +105,17 @@ class ImageSeedExtractor(context: Context) {
         }
     }
 
+    fun discardPreparedCandidate(): Boolean {
+        val names = listOf(
+            "android-background-candidate.webp",
+            "android-background-candidate.tmp"
+        )
+        return names.all { name ->
+            val file = File(backgroundDirectory, name)
+            !file.exists() || file.delete()
+        }
+    }
+
     fun persistReadPermission(uri: Uri): Result<Unit> = runCatching {
         resolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
     }

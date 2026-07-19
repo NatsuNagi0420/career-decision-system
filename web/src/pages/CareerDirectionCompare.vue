@@ -8,17 +8,16 @@ import {
 import CareerVisual from '@/components/CareerVisual.vue'
 import { getCareerAsset, type CareerAsset } from '@/content/careerAssets'
 import { m3Message } from '@/design-system/services/feedback'
-import { getCareerDirectionApi, type CareerDirection } from '@/api/careerDirections'
-import { listJobsApi, type JobInfo } from '@/api/jobs'
+import {
+  getCareerDirectionApi, getCareerDirectionInsightsApi,
+  type CareerDirection, type CareerDirectionInsights
+} from '@/api/careerDirections'
 import { listPersonalEvidenceApi, type PersonalEvidence } from '@/api/personalEvidence'
 import {
   addDecisionCandidateApi, getDecisionProjectApi, listDecisionProjectsApi,
   type DecisionProjectSummary
 } from '@/api/decisionProjects'
-import {
-  aggregateJobs, careerJobSearchTerms, matchEvidence,
-  type EvidenceRequirementMatch, type JobAggregate
-} from '@/utils/careerInsights'
+import { matchEvidence, type EvidenceRequirementMatch } from '@/utils/careerInsights'
 
 defineOptions({ name: 'CareerDirectionComparePage' })
 
@@ -26,8 +25,7 @@ type CompareMode = 'overview' | 'jobs' | 'evidence'
 type ComparisonItem = {
   direction: CareerDirection
   asset: CareerAsset
-  jobs: JobInfo[]
-  aggregate: JobAggregate
+  aggregate: CareerDirectionInsights
   matches: EvidenceRequirementMatch[]
 }
 type ComparisonRow = {
@@ -50,11 +48,7 @@ const savingProject = ref(false)
 
 const columnStyle = computed(() => ({ '--compare-count': Math.max(items.value.length, 2) }))
 
-function uniqueJobs(results: Array<{ list: JobInfo[] }>) {
-  return Array.from(new Map(results.flatMap((result) => result.list).map((job) => [job.id, job])).values())
-}
-
-function formatSalary(aggregate: JobAggregate) {
+function formatSalary(aggregate: CareerDirectionInsights) {
   const format = (value: number | null) => value == null ? '未知' : value >= 1000 ? `${Math.round(value / 1000)}k` : String(value)
   return aggregate.salarySampleCount ? `${format(aggregate.salaryMin)} - ${format(aggregate.salaryMax)}` : '样本未提供结构化薪资'
 }
@@ -85,6 +79,7 @@ const comparisonRows = computed<ComparisonRow[]>(() => {
       { label: '相关岗位样本', presentation: 'metric', values: items.value.map((item) => [`${item.aggregate.sampleCount} 个`]) },
       { label: '薪资样本范围', presentation: 'metric', values: items.value.map((item) => [formatSalary(item.aggregate)]) },
       { label: '高频技能', presentation: 'list', values: items.value.map((item) => item.aggregate.topSkills.map((row) => `${row.label} · ${row.count} 个样本`)) },
+      { label: '高频岗位要求', presentation: 'list', values: items.value.map((item) => item.aggregate.commonRequirements.map((row) => `${row.label} · ${row.count} 个样本`)) },
       { label: '城市分布', presentation: 'list', values: items.value.map((item) => item.aggregate.cities.map((row) => `${row.label} · ${row.count} 个`)) },
       { label: '经验要求', presentation: 'list', values: items.value.map((item) => item.aggregate.experienceLevels.map((row) => `${row.label} · ${row.count} 个`)) },
       { label: '学历要求', presentation: 'list', values: items.value.map((item) => item.aggregate.educationLevels.map((row) => `${row.label} · ${row.count} 个`)) },
@@ -148,18 +143,15 @@ async function load() {
     targetProjectId.value = projectRows.find((project) => project.current)?.id || projectRows[0]?.id || null
 
     items.value = await Promise.all(directions.map(async (direction) => {
-      const terms = careerJobSearchTerms(direction.name, direction.commonSkills)
-      const results = await Promise.all(terms.map((keyword) => listJobsApi({ keyword, page: 1, pageSize: 50 })))
-      const jobs = uniqueJobs(results)
-      const aggregate = aggregateJobs(jobs)
+      const aggregate = await getCareerDirectionInsightsApi(direction.id)
       const requirements = Array.from(new Set([
         ...direction.commonSkills,
+        ...aggregate.commonRequirements.map((row) => row.label),
         ...aggregate.topSkills.map((row) => row.label)
       ])).slice(0, 16)
       return {
         direction,
         asset: getCareerAsset(direction.category),
-        jobs,
         aggregate,
         matches: matchEvidence(requirements, evidenceRows)
       }

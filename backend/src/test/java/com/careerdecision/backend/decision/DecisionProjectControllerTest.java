@@ -173,11 +173,11 @@ class DecisionProjectControllerTest {
         performJson(patch("/api/v1/decision-projects/{id}/stage", projectId)
                 .header(HttpHeaders.AUTHORIZATION, AUTH)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"stage\":\"evidence\"}"));
+                .content("{\"stage\":\"candidates\"}"));
         performJson(patch("/api/v1/decision-projects/{id}/stage", projectId)
                 .header(HttpHeaders.AUTHORIZATION, AUTH)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"stage\":\"candidates\"}"));
+                .content("{\"stage\":\"validate\"}"));
         performJson(patch("/api/v1/decision-projects/{id}/stage", projectId)
                 .header(HttpHeaders.AUTHORIZATION, AUTH)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -194,37 +194,41 @@ class DecisionProjectControllerTest {
                 .andExpect(jsonPath("$.code", is(40054)));
 
         JsonNode compared = performJson(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
-                .put("/api/v1/decision-projects/{id}/criteria/{criterionId}/results", projectId, criterionId)
+                .put("/api/v1/decision-projects/{id}/comparisons", projectId)
                 .header(HttpHeaders.AUTHORIZATION, AUTH)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                         {
-                          "candidateId": %d,
-                          "score": 4,
-                          "assessment": "已有可说明的项目证据",
-                          "evidenceIds": [%d],
-                          "uncertainty": "项目复杂度有限",
-                          "validationAction": "再完成一个含并发场景的项目"
+                          "results": [
+                            {
+                              "criterionId": %d,
+                              "candidateId": %d,
+                              "verdict": "meets",
+                              "assessment": "已有可说明的项目经历",
+                              "evidenceIds": [%d],
+                              "uncertainty": "项目复杂度有限",
+                              "validationAction": "再完成一个含并发场景的项目",
+                              "confirmed": true
+                            },
+                            {
+                              "criterionId": %d,
+                              "candidateId": %d,
+                              "verdict": "partial",
+                              "assessment": "已有 SQL 基础，但实践深度有限",
+                              "evidenceIds": [%d],
+                              "uncertainty": "统计基础尚未看清楚",
+                              "validationAction": "完成一次真实数据分析",
+                              "confirmed": true
+                            }
+                          ]
                         }
-                        """.formatted(backendCandidateId, evidenceId)));
+                        """.formatted(
+                                criterionId, backendCandidateId, evidenceId,
+                                criterionId, dataCandidateId, backupEvidenceId
+                        )));
         org.assertj.core.api.Assertions.assertThat(
-                compared.path("data").path("criteria").get(1).path("results").get(0).path("score").asInt()
-        ).isEqualTo(4);
-
-        performJson(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
-                .put("/api/v1/decision-projects/{id}/criteria/{criterionId}/results", projectId, criterionId)
-                .header(HttpHeaders.AUTHORIZATION, AUTH)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""
-                        {
-                          "candidateId": %d,
-                          "score": 3,
-                          "assessment": "已有 SQL 基础，但实践深度有限",
-                          "evidenceIds": [%d],
-                          "uncertainty": "统计基础尚未验证",
-                          "validationAction": "完成一次真实数据分析"
-                        }
-                        """.formatted(dataCandidateId, backupEvidenceId)));
+                compared.path("data").path("criteria").get(1).path("results").get(0).path("verdict").asText()
+        ).isEqualTo("meets");
 
         JsonNode decided = performJson(post("/api/v1/decision-projects/{id}/targets/confirm", projectId)
                 .header(HttpHeaders.AUTHORIZATION, AUTH)
@@ -236,10 +240,12 @@ class DecisionProjectControllerTest {
                           "decisionReason": "已有证据更强，先用四周计划继续验证。",
                           "mainRisks": "系统基础和岗位样本仍不足。",
                           "reviewDate": "2026-08-15",
+                          "verificationStatus": "provisional",
                           "confirmed": true
                         }
                         """.formatted(backendCandidateId, dataCandidateId)));
-        org.assertj.core.api.Assertions.assertThat(decided.path("data").path("status").asText()).isEqualTo("decided");
+        org.assertj.core.api.Assertions.assertThat(decided.path("data").path("status").asText()).isEqualTo("provisional");
+        org.assertj.core.api.Assertions.assertThat(decided.path("data").path("currentStage").asText()).isEqualTo("commit");
         org.assertj.core.api.Assertions.assertThat(decided.path("data").path("targets")).hasSize(2);
         org.assertj.core.api.Assertions.assertThat(decided.path("data").path("targets").get(0).path("targetType").asText())
                 .isEqualTo("primary");
@@ -324,6 +330,23 @@ class DecisionProjectControllerTest {
                         .content("{\"name\":\"第六个候选\"}"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code", is(40953)));
+
+        Long removedCandidateId = jdbcTemplate.queryForObject(
+                "SELECT MIN(id) FROM decision_candidates WHERE project_id = ? AND status = 'active'",
+                Long.class,
+                projectId
+        );
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                        .delete("/api/v1/decision-projects/{id}/candidates/{candidateId}", projectId, removedCandidateId)
+                        .queryParam("reason", "目前更想先了解其他方向")
+                        .header(HttpHeaders.AUTHORIZATION, AUTH))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code", is(0)));
+        org.assertj.core.api.Assertions.assertThat(jdbcTemplate.queryForObject(
+                "SELECT exclusion_reason FROM decision_candidates WHERE id = ?",
+                String.class,
+                removedCandidateId
+        )).isEqualTo("目前更想先了解其他方向");
     }
 
     @Test
@@ -421,6 +444,239 @@ class DecisionProjectControllerTest {
                         .header(HttpHeaders.AUTHORIZATION, AUTH))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code", is(40456)));
+    }
+
+    @Test
+    void v2JourneyCreatesInitialChoicesAndSavesQualitativeComparisonAsOneDraft() throws Exception {
+        JsonNode project = performJson(post("/api/v1/decision-projects")
+                .header(HttpHeaders.AUTHORIZATION, AUTH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                          "question": "未来三个月先试试 Java 后端还是数据分析？",
+                          "decisionDeadline": "2026-09-01",
+                          "priorities": ["成长空间"],
+                          "initialCandidates": [
+                            {"directionId": 1, "name": "Java 后端", "sourceType": "profile"},
+                            {"directionId": 2, "name": "数据分析", "sourceType": "profile"}
+                          ]
+                        }
+                        """));
+        long projectId = project.path("data").path("id").asLong();
+        long primaryId = project.path("data").path("candidates").get(0).path("id").asLong();
+        long backupId = project.path("data").path("candidates").get(1).path("id").asLong();
+        long criterionId = project.path("data").path("criteria").get(0).path("id").asLong();
+
+        org.assertj.core.api.Assertions.assertThat(project.path("data").path("title").asText())
+                .isEqualTo("未来三个月先试试 Java 后端还是数据分析");
+        org.assertj.core.api.Assertions.assertThat(project.path("data").path("flowVersion").asInt()).isEqualTo(2);
+        org.assertj.core.api.Assertions.assertThat(project.path("data").path("status").asText()).isEqualTo("draft");
+        org.assertj.core.api.Assertions.assertThat(project.path("data").path("currentStage").asText()).isEqualTo("brief");
+
+        JsonNode beforeComparison = performJson(get("/api/v1/decision-projects/{id}/journey", projectId)
+                .header(HttpHeaders.AUTHORIZATION, AUTH));
+        org.assertj.core.api.Assertions.assertThat(beforeComparison.path("data").path("stages").get(0)
+                .path("complete").asBoolean()).isTrue();
+        org.assertj.core.api.Assertions.assertThat(beforeComparison.path("data").path("stages").get(1)
+                .path("complete").asBoolean()).isTrue();
+        org.assertj.core.api.Assertions.assertThat(beforeComparison.path("data")
+                .path("canSaveProvisional").asBoolean()).isFalse();
+
+        JsonNode compared = performJson(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                .put("/api/v1/decision-projects/{id}/comparisons", projectId)
+                .header(HttpHeaders.AUTHORIZATION, AUTH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                          "results": [
+                            {
+                              "criterionId": %d,
+                              "candidateId": %d,
+                              "verdict": "good_fit",
+                              "assessment": "已有一些相关基础"
+                            },
+                            {
+                              "criterionId": %d,
+                              "candidateId": %d,
+                              "verdict": "trade_off",
+                              "assessment": "需要再体验一次真实任务"
+                            }
+                          ]
+                        }
+                        """.formatted(criterionId, primaryId, criterionId, backupId)));
+        org.assertj.core.api.Assertions.assertThat(compared.path("data").path("comparisonReviewedAt").isTextual())
+                .isTrue();
+        org.assertj.core.api.Assertions.assertThat(compared.path("data").path("criteria").get(0)
+                .path("results").get(0).path("score").isNull()).isTrue();
+
+        JsonNode journey = performJson(get("/api/v1/decision-projects/{id}/journey", projectId)
+                .header(HttpHeaders.AUTHORIZATION, AUTH));
+        org.assertj.core.api.Assertions.assertThat(journey.path("data")
+                .path("canSaveProvisional").asBoolean()).isTrue();
+
+        JsonNode provisional = performJson(post("/api/v1/decision-projects/{id}/targets/confirm", projectId)
+                .header(HttpHeaders.AUTHORIZATION, AUTH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                          "primaryCandidateId": %d,
+                          "backupCandidateId": %d,
+                          "decisionReason": "先用四周时间体验 Java 后端",
+                          "reviewDate": "2026-08-15",
+                          "confirmed": true,
+                          "verificationStatus": "provisional"
+                        }
+                        """.formatted(primaryId, backupId)));
+        org.assertj.core.api.Assertions.assertThat(provisional.path("data").path("status").asText())
+                .isEqualTo("provisional");
+        org.assertj.core.api.Assertions.assertThat(provisional.path("data").path("currentStage").asText())
+                .isEqualTo("commit");
+        org.assertj.core.api.Assertions.assertThat(provisional.path("data").path("targets").get(0)
+                .path("verificationStatus").asText()).isEqualTo("provisional");
+
+        long provisionalTargetId = provisional.path("data").path("targets").get(0).path("id").asLong();
+        jdbcTemplate.update("""
+                INSERT INTO path_plans (
+                  user_id, decision_project_id, decision_target_id, plan_type, duration_weeks,
+                  generation_request_id, target_role, overview, status
+                ) VALUES (1, ?, ?, 'validation', 4, 'change-direction-plan', 'Java 后端', '继续了解', 'active')
+                """, projectId, provisionalTargetId);
+
+        JsonNode changed = performJson(post("/api/v1/decision-projects/{id}/targets/confirm", projectId)
+                .header(HttpHeaders.AUTHORIZATION, AUTH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                          "primaryCandidateId": %d,
+                          "backupCandidateId": %d,
+                          "decisionReason": "新信息让我想先试试数据分析",
+                          "reviewDate": "2026-08-29",
+                          "confirmed": true,
+                          "verificationStatus": "verified"
+                        }
+                        """.formatted(backupId, primaryId)));
+        org.assertj.core.api.Assertions.assertThat(changed.path("data").path("status").asText())
+                .isEqualTo("provisional");
+        org.assertj.core.api.Assertions.assertThat(changed.path("data").path("targets").get(0)
+                .path("candidateId").asLong()).isEqualTo(backupId);
+        org.assertj.core.api.Assertions.assertThat(changed.path("data").path("targets").get(0)
+                .path("verificationStatus").asText()).isEqualTo("provisional");
+        org.assertj.core.api.Assertions.assertThat(jdbcTemplate.queryForObject(
+                "SELECT status FROM path_plans WHERE generation_request_id = 'change-direction-plan'",
+                String.class
+        )).isEqualTo("archived");
+        org.assertj.core.api.Assertions.assertThat(jdbcTemplate.queryForObject(
+                "SELECT decision_target_id FROM path_plans WHERE generation_request_id = 'change-direction-plan'",
+                Long.class
+        )).isNull();
+    }
+
+    @Test
+    void verifiedTargetRequiresTheUsersTopThreePrioritiesInsteadOfSystemCriteria() throws Exception {
+        JsonNode project = performJson(post("/api/v1/decision-projects")
+                .header(HttpHeaders.AUTHORIZATION, AUTH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                          "question": "先试 Java 后端还是数据分析？",
+                          "decisionDeadline": "2026-09-01",
+                          "priorities": ["成长空间", "实习机会", "作品积累", "收入预期"],
+                          "mustHaves": ["三个月内可以开始实践"],
+                          "dealBreakers": ["完全没有真实岗位"],
+                          "initialCandidates": [
+                            {"directionId": 1, "name": "Java 后端", "sourceType": "profile"},
+                            {"directionId": 2, "name": "数据分析", "sourceType": "profile"}
+                          ]
+                        }
+                        """));
+        long projectId = project.path("data").path("id").asLong();
+        long primaryId = project.path("data").path("candidates").get(0).path("id").asLong();
+        long backupId = project.path("data").path("candidates").get(1).path("id").asLong();
+
+        jdbcTemplate.update("""
+                INSERT INTO decision_project_job_samples (project_id, candidate_id, job_id, reviewed_at)
+                VALUES (?, ?, 1002, CURRENT_TIMESTAMP), (?, ?, 1005, CURRENT_TIMESTAMP)
+                """, projectId, primaryId, projectId, backupId);
+        jdbcTemplate.update("""
+                INSERT INTO decision_evidence (
+                  project_id, candidate_id, title, detail, source_type, credibility, stance
+                ) VALUES (?, ?, '后端项目经历', '完成过可运行项目', 'user', 'high', 'support'),
+                         (?, ?, '数据分析经历', '完成过真实数据练习', 'user', 'high', 'support')
+                """, projectId, primaryId, projectId, backupId);
+
+        List<Long> mustHaveIds = jdbcTemplate.queryForList("""
+                SELECT id FROM comparison_criteria
+                WHERE project_id = ? AND criterion_kind = 'must_have'
+                """, Long.class, projectId);
+        List<Long> dealBreakerIds = jdbcTemplate.queryForList("""
+                SELECT id FROM comparison_criteria
+                WHERE project_id = ? AND criterion_kind = 'deal_breaker'
+                """, Long.class, projectId);
+        List<Long> priorityIds = jdbcTemplate.queryForList("""
+                SELECT id FROM comparison_criteria
+                WHERE project_id = ? AND criterion_kind = 'priority' AND source_type = 'brief'
+                ORDER BY importance DESC, sort_order ASC
+                """, Long.class, projectId);
+
+        for (long candidateId : List.of(primaryId, backupId)) {
+            for (long criterionId : mustHaveIds) {
+                insertConfirmedVerdict(criterionId, candidateId, "meets");
+            }
+            for (long criterionId : dealBreakerIds) {
+                insertConfirmedVerdict(criterionId, candidateId, "not_found");
+            }
+            insertConfirmedVerdict(priorityIds.get(0), candidateId, "good_fit");
+            insertConfirmedVerdict(priorityIds.get(1), candidateId, "trade_off");
+        }
+        jdbcTemplate.update("""
+                UPDATE decision_projects SET comparison_reviewed_at = CURRENT_TIMESTAMP WHERE id = ?
+                """, projectId);
+
+        mockMvc.perform(post("/api/v1/decision-projects/{id}/targets/confirm", projectId)
+                        .header(HttpHeaders.AUTHORIZATION, AUTH)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "primaryCandidateId": %d,
+                                  "backupCandidateId": %d,
+                                  "decisionReason": "两边都看过后，先从后端开始",
+                                  "reviewDate": "2026-08-20",
+                                  "confirmed": true,
+                                  "verificationStatus": "verified"
+                                }
+                                """.formatted(primaryId, backupId)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code", is(40958)));
+
+        for (long candidateId : List.of(primaryId, backupId)) {
+            insertConfirmedVerdict(priorityIds.get(2), candidateId, "good_fit");
+        }
+
+        JsonNode verified = performJson(post("/api/v1/decision-projects/{id}/targets/confirm", projectId)
+                .header(HttpHeaders.AUTHORIZATION, AUTH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                          "primaryCandidateId": %d,
+                          "backupCandidateId": %d,
+                          "decisionReason": "两边都看过后，先从后端开始",
+                          "reviewDate": "2026-08-20",
+                          "confirmed": true,
+                          "verificationStatus": "verified"
+                        }
+                        """.formatted(primaryId, backupId)));
+        org.assertj.core.api.Assertions.assertThat(verified.path("data").path("status").asText())
+                .isEqualTo("verified");
+        org.assertj.core.api.Assertions.assertThat(verified.path("data").path("targets").get(0)
+                .path("verificationStatus").asText()).isEqualTo("verified");
+    }
+
+    private void insertConfirmedVerdict(long criterionId, long candidateId, String verdict) {
+        jdbcTemplate.update("""
+                INSERT INTO comparison_results (
+                  criterion_id, candidate_id, verdict, assessment, evidence_refs_json, confirmed_at
+                ) VALUES (?, ?, ?, '已经看过', '[]', CURRENT_TIMESTAMP)
+                """, criterionId, candidateId, verdict);
     }
 
     private JsonNode performJson(org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder request)

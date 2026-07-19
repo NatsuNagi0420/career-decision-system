@@ -12,6 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -103,10 +104,22 @@ class JobControllerTest {
                 .andExpect(jsonPath("$.data.education", is("本科及以上")))
                 .andExpect(jsonPath("$.data.experienceLevel", is("3-5年")))
                 .andExpect(jsonPath("$.data.sourcePlatform", is("seed")))
-                .andExpect(jsonPath("$.data.responsibilities", hasSize(0)))
-                .andExpect(jsonPath("$.data.requirements", hasSize(0)))
+                .andExpect(jsonPath("$.data.responsibilities", hasItem("建设职业决策系统业务后端。")))
+                .andExpect(jsonPath("$.data.requirements.length()", greaterThan(2)))
+                .andExpect(jsonPath("$.data.requirements", hasItem("学历要求：本科及以上")))
+                .andExpect(jsonPath("$.data.requirements", hasItem("经验要求：3-5年")))
+                .andExpect(jsonPath("$.data.requirements", hasItem("技能要求：Java")))
                 .andExpect(jsonPath("$.data.growthPath", hasSize(0)))
                 .andExpect(jsonPath("$.data.interviewFocus", hasSize(0)));
+    }
+
+    @Test
+    void detailKeepsReviewedFactsAndAlsoRefreshesRuleFacts() throws Exception {
+        mockMvc.perform(get("/api/v1/jobs/{id}", 1005L))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.requirements", hasItem("能够独立完成指标分析")))
+                .andExpect(jsonPath("$.data.requirements", hasItem("学历要求：本科及以上")))
+                .andExpect(jsonPath("$.data.requirements", hasItem("技能要求：SQL")));
     }
 
     @Test

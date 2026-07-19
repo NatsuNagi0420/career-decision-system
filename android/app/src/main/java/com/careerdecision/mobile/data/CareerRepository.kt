@@ -14,21 +14,30 @@ import com.careerdecision.mobile.network.AssistantChatContext
 import com.careerdecision.mobile.network.AssistantChatRequest
 import com.careerdecision.mobile.network.ChatConversation
 import com.careerdecision.mobile.network.ChatDeliveryStatus
+import com.careerdecision.mobile.network.ChatMessage
 import com.careerdecision.mobile.network.ChatMessageRole
 import com.careerdecision.mobile.network.ChatSendResult
+import com.careerdecision.mobile.network.ChatSessionSummary
 import com.careerdecision.mobile.network.CoachingRequest
 import com.careerdecision.mobile.network.ConfidenceFeedbackRequest
 import com.careerdecision.mobile.network.DashboardResponse
+import com.careerdecision.mobile.network.DecisionProjectDetail
 import com.careerdecision.mobile.network.RegisterRequest
+import com.careerdecision.mobile.network.PersonalEvidence
 import com.careerdecision.mobile.network.UserInfo
 import com.careerdecision.mobile.network.UserProfile
 import com.careerdecision.mobile.network.UserProfileRequest
 import com.careerdecision.mobile.network.WeeklyReviewRequest
 import com.careerdecision.mobile.network.normalizeNetworkError
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.async
+import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.time.Instant
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.ZoneId
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
@@ -38,7 +47,9 @@ data class RepositorySnapshot(
     val dashboard: DashboardResponse? = null,
     val online: Boolean,
     val fullProfile: UserProfile? = null,
-    val planDetail: ActionPlanDetail? = null
+    val planDetail: ActionPlanDetail? = null,
+    val decisionProjectDetail: DecisionProjectDetail? = null,
+    val personalEvidence: List<PersonalEvidence>? = null
 )
 
 data class MutationResult(
@@ -96,6 +107,16 @@ interface CareerRepositoryGateway {
     ): ChatSendResult
     suspend fun retryChatMessage(requestId: String): ChatSendResult
     suspend fun startNewChatConversation(): ChatConversation
+    suspend fun loadChatSessions(): List<ChatSessionSummary> = emptyList()
+    suspend fun openChatConversation(sessionId: Long): ChatConversation =
+        throw UnsupportedOperationException("Chat session history is unavailable")
+    suspend fun deleteChatSession(sessionId: Long)
+    suspend fun loadHistory(): List<HistoryItem> = emptyList()
+    suspend fun loadHistoryDetail(item: HistoryItem): HistoryDetail =
+        throw UnsupportedOperationException("History detail is unavailable")
+    suspend fun deleteHistoryItem(item: HistoryItem) {
+        throw UnsupportedOperationException("History deletion is unavailable")
+    }
     suspend fun submitGoalConfidence(
         projectId: Long,
         targetId: Long,
@@ -199,6 +220,18 @@ class CareerRepository(
             ?: plans.firstOrNull()
         val profile = authenticated { remote.profile() }
         val planDetail = plan?.let { authenticated { remote.actionPlan(it.id) } }
+        val projectId = dashboard.currentProject?.id ?: today.projectId ?: plan?.projectId
+        val (decisionProjectDetail, personalEvidence) = supervisorScope {
+            val projectDetailRequest = async {
+                projectId?.let { currentProjectId ->
+                    optionalGoalDetail { remote.decisionProject(currentProjectId) }
+                }
+            }
+            val personalEvidenceRequest = async {
+                optionalGoalDetail { remote.personalEvidence() }
+            }
+            projectDetailRequest.await() to personalEvidenceRequest.await()
+        }
         cache.replace(current.user.id, today, plan, dashboard.currentProject)
         return RepositorySnapshot(
             user = current.user,
@@ -206,7 +239,9 @@ class CareerRepository(
             dashboard = dashboard,
             online = true,
             fullProfile = profile,
-            planDetail = planDetail
+            planDetail = planDetail,
+            decisionProjectDetail = decisionProjectDetail,
+            personalEvidence = personalEvidence
         )
     }
 
@@ -487,6 +522,148 @@ class CareerRepository(
         cache.readChat(current.user.id)
     }
 
+    override suspend fun loadChatSessions(): List<ChatSessionSummary> {
+        requireSession()
+        return authenticated { remote.chatSessions() }
+    }
+
+    override suspend fun openChatConversation(sessionId: Long): ChatConversation = chatMutex.withLock {
+        val current = requireSession()
+        require(sessionId > 0) { "会话标识无效" }
+        val detail = try {
+            authenticated { remote.chatSession(sessionId) }
+        } catch (error: Throwable) {
+            if (error is CancellationException) throw error
+            val normalized = normalizeNetworkError(error)
+            if (normalized.isChatSessionNotFound() && cache.readChat(current.user.id).sessionId == sessionId) {
+                cache.resetChat(current.user.id)
+            }
+            throw normalized
+        }
+        val conversation = ChatConversation(
+            sessionId = detail.id,
+            messages = detail.messages.map { message ->
+                ChatMessage(
+                    requestId = message.requestId ?: "history-${detail.id}-${message.id}-${message.role}",
+                    role = message.role,
+                    content = message.content,
+                    deliveryStatus = ChatDeliveryStatus.SENT,
+                    response = message.response,
+                    errorMessage = null,
+                    createdAt = message.createdAt.toEpochMillis()
+                )
+            }
+        )
+        cache.replaceChat(
+            current.user.id,
+            conversation,
+            detail.lastPage ?: CareerRepositoryGateway.DEFAULT_CHAT_PAGE
+        )
+        conversation
+    }
+
+    override suspend fun deleteChatSession(sessionId: Long) = chatMutex.withLock {
+        val current = requireSession()
+        require(sessionId > 0) { "会话标识无效" }
+        try {
+            val deletion = authenticated { remote.deleteChatSession(sessionId) }
+            if (!deletion.deleted || deletion.sessionId != sessionId) {
+                throw ApiException("这次还没有删除成功，请再试一次")
+            }
+        } catch (error: Throwable) {
+            if (error is CancellationException) throw error
+            val normalized = normalizeNetworkError(error)
+            // A stale history item may already have been removed on another
+            // device. Clear the local copy as well, then let the UI show the
+            // non-sensitive "already gone" state.
+            if (normalized.isChatSessionNotFound()) {
+                val cached = cache.readChat(current.user.id)
+                if (cached.sessionId == sessionId) cache.resetChat(current.user.id)
+            }
+            throw normalized
+        }
+        // The mobile cache stores only the currently opened conversation. It
+        // must be cleared only when the deleted server session is that one;
+        // deleting another history item must not disturb the current draft.
+        if (cache.readChat(current.user.id).sessionId == sessionId) {
+            cache.resetChat(current.user.id)
+        }
+    }
+
+    override suspend fun loadHistory(): List<HistoryItem> = supervisorScope {
+        val current = requireSession()
+        try {
+            val reports = async {
+                authenticated { remote.reports(page = 0, size = HISTORY_PAGE_SIZE) }
+            }
+            val resumeAnalyses = async {
+                authenticated { remote.resumeAnalyses(page = 0, size = HISTORY_PAGE_SIZE) }
+            }
+            val pathPlans = async {
+                authenticated { remote.pathPlans(page = 0, size = HISTORY_PAGE_SIZE) }
+            }
+
+            val items = buildList {
+                addAll(reports.await().items.map { it.toHistoryItem() })
+                addAll(resumeAnalyses.await().map { it.toHistoryItem() })
+                addAll(pathPlans.await().map { it.toHistoryItem() })
+            }.sortedByDescending { historyTimestamp(it.createdAt) }
+            cache.replaceHistory(current.user.id, items)
+            items
+        } catch (error: Throwable) {
+            if (error is CancellationException) throw error
+            val cached = if (session?.user?.id == current.user.id) {
+                cache.readHistory(current.user.id)
+                    .sortedByDescending { historyTimestamp(it.createdAt) }
+            } else {
+                emptyList()
+            }
+            cached.ifEmpty { throw error }
+        }
+    }
+
+    override suspend fun loadHistoryDetail(item: HistoryItem): HistoryDetail {
+        val current = requireSession()
+        return try {
+            val detail = when (item.resourceType) {
+                HistoryResourceType.REPORT -> {
+                    val report = authenticated { remote.report(item.id) }
+                    HistoryDetail.Report(report.toHistoryItem(), report)
+                }
+                HistoryResourceType.RESUME_ANALYSIS -> HistoryDetail.ResumeAnalysis(
+                    item = item,
+                    analysis = authenticated { remote.resumeAnalysis(item.requireNumericId()) }
+                )
+                HistoryResourceType.LEGACY_PATH_PLAN -> HistoryDetail.LegacyPathPlan(
+                    item = item,
+                    pathPlan = authenticated { remote.pathPlan(item.requireNumericId()) }
+                )
+            }
+            cache.saveHistoryDetail(current.user.id, detail)
+            detail
+        } catch (error: Throwable) {
+            if (error is CancellationException) throw error
+            val cached = if (session?.user?.id == current.user.id) {
+                cache.readHistoryDetail(current.user.id, item)
+            } else {
+                null
+            }
+            cached ?: throw error
+        }
+    }
+
+    override suspend fun deleteHistoryItem(item: HistoryItem) {
+        val current = requireSession()
+        when (item.resourceType) {
+            HistoryResourceType.REPORT -> authenticated { remote.deleteReport(item.id) }
+            HistoryResourceType.RESUME_ANALYSIS ->
+                authenticated { remote.deleteResumeAnalysis(item.requireNumericId()) }
+            HistoryResourceType.LEGACY_PATH_PLAN ->
+                authenticated { remote.deletePathPlan(item.requireNumericId()) }
+        }
+        cache.deleteHistoryItem(current.user.id, item)
+    }
+
     override suspend fun submitGoalConfidence(
         projectId: Long,
         targetId: Long,
@@ -601,6 +778,15 @@ class CareerRepository(
         }
     }
 
+    /** Goal enrichment must not make the already-usable action loop unavailable. */
+    private suspend fun <T> optionalGoalDetail(block: suspend () -> T?): T? = try {
+        authenticated { block() }
+    } catch (error: CancellationException) {
+        throw error
+    } catch (_: Throwable) {
+        null
+    }
+
     private suspend fun refreshOrCached(): RepositorySnapshot = try {
         refresh()
     } catch (error: CancellationException) {
@@ -628,6 +814,10 @@ class CareerRepository(
         } catch (error: Throwable) {
             if (error is CancellationException) throw error
             val normalized = normalizeNetworkError(error)
+            if (normalized.isChatSessionNotFound()) {
+                cache.resetChat(userId)
+                throw normalized
+            }
             cache.failChatMessage(
                 userId,
                 request.requestId,
@@ -706,18 +896,44 @@ class CareerRepository(
     }
 
     private fun ApiException.isUnauthorized(): Boolean = httpStatus == 401 || apiCode == 401
+    private fun ApiException.isChatSessionNotFound(): Boolean =
+        apiCode == CHAT_SESSION_NOT_FOUND_CODE
     private fun ApiException.isRetryableChatFailure(): Boolean =
         !isUnauthorized() && (httpStatus == null || httpStatus == 408 || httpStatus == 429 || httpStatus >= 500)
     private fun SessionSnapshot.sameCredentialsAs(other: SessionSnapshot): Boolean =
         token == other.token && refreshToken == other.refreshToken && user.id == other.user.id
     private fun operationId(kind: String): String = "android-$kind-${UUID.randomUUID()}"
+    private fun String?.toEpochMillis(): Long {
+        if (this.isNullOrBlank()) return System.currentTimeMillis()
+        return runCatching {
+            java.time.LocalDateTime.parse(this)
+                .atZone(java.time.ZoneId.systemDefault())
+                .toInstant()
+                .toEpochMilli()
+        }.getOrElse { System.currentTimeMillis() }
+    }
+
+    private fun HistoryItem.requireNumericId(): Long = id.toLongOrNull()?.takeIf { it > 0 }
+        ?: throw IllegalArgumentException("历史记录标识无效")
+
+    private fun historyTimestamp(value: String?): Long {
+        if (value.isNullOrBlank()) return Long.MIN_VALUE
+        return runCatching { Instant.parse(value).toEpochMilli() }
+            .recoverCatching { OffsetDateTime.parse(value).toInstant().toEpochMilli() }
+            .recoverCatching {
+                LocalDateTime.parse(value).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            }
+            .getOrDefault(Long.MIN_VALUE)
+    }
 
     private companion object {
         const val OPERATION_STATUS = "task_status"
         const val OPERATION_RESULT = "task_result"
         const val OPERATION_CONFIDENCE = "target_confidence"
         const val OPERATION_REVIEW = "weekly_review"
+        const val HISTORY_PAGE_SIZE = 50
         const val TASK_CONFLICT_CODE = 40962
+        const val CHAT_SESSION_NOT_FOUND_CODE = 40490
         val TASK_STATUSES = setOf("todo", "in_progress", "completed", "deferred", "skipped")
         val CONFIDENCE_TRENDS = setOf("increased", "stable", "decreased")
     }

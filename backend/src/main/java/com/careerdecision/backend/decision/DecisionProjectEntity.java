@@ -18,6 +18,8 @@ public class DecisionProjectEntity {
     private String currentStage;
     private Integer isCurrent;
     private Integer version;
+    private Integer flowVersion;
+    private LocalDateTime comparisonReviewedAt;
     private Integer candidateCount;
     private Integer jobSampleCount;
     private String primaryTarget;
@@ -53,6 +55,10 @@ public class DecisionProjectEntity {
     public void setIsCurrent(Integer value) { isCurrent = value; }
     public Integer getVersion() { return version; }
     public void setVersion(Integer value) { version = value; }
+    public Integer getFlowVersion() { return flowVersion; }
+    public void setFlowVersion(Integer value) { flowVersion = value; }
+    public LocalDateTime getComparisonReviewedAt() { return comparisonReviewedAt; }
+    public void setComparisonReviewedAt(LocalDateTime value) { comparisonReviewedAt = value; }
     public Integer getCandidateCount() { return candidateCount; }
     public void setCandidateCount(Integer value) { candidateCount = value; }
     public Integer getJobSampleCount() { return jobSampleCount; }

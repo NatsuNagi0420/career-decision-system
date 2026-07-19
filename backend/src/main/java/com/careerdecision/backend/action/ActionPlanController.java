@@ -1,10 +1,13 @@
 package com.careerdecision.backend.action;
 
 import com.careerdecision.backend.action.ActionPlanModels.GenerateRequest;
+import com.careerdecision.backend.action.ActionPlanModels.ConfirmPreviewRequest;
 import com.careerdecision.backend.action.ActionPlanModels.PlanDetail;
+import com.careerdecision.backend.action.ActionPlanModels.PlanPreview;
 import com.careerdecision.backend.action.ActionPlanModels.PlanSummary;
 import com.careerdecision.backend.action.ActionPlanModels.PlanUpdateRequest;
 import com.careerdecision.backend.action.ActionPlanModels.ReorderRequest;
+import com.careerdecision.backend.action.ActionPlanModels.PreviewRequest;
 import com.careerdecision.backend.action.ActionPlanModels.TaskRequest;
 import com.careerdecision.backend.action.ActionPlanModels.TaskResultRequest;
 import com.careerdecision.backend.action.ActionPlanModels.TaskStatusRequest;
@@ -47,6 +50,22 @@ public class ActionPlanController {
             @Valid @RequestBody GenerateRequest request
     ) {
         return ApiResponse.success(service.generate(user.id(), request));
+    }
+
+    @PostMapping("/preview")
+    public ApiResponse<PlanPreview> preview(
+            @CurrentUser UserInfo user,
+            @Valid @RequestBody PreviewRequest request
+    ) {
+        return ApiResponse.success(service.preview(user, request), request.requestId());
+    }
+
+    @PostMapping("/generate-confirmed")
+    public ApiResponse<PlanDetail> generateConfirmed(
+            @CurrentUser UserInfo user,
+            @Valid @RequestBody ConfirmPreviewRequest request
+    ) {
+        return ApiResponse.success(service.generateConfirmed(user, request), request.requestId());
     }
 
     @GetMapping("/current/today")

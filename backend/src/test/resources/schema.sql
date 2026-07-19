@@ -16,6 +16,8 @@ DROP TABLE IF EXISTS decision_project_job_samples;
 DROP TABLE IF EXISTS decision_candidates;
 DROP TABLE IF EXISTS decision_projects;
 DROP TABLE IF EXISTS personal_evidence;
+DROP TABLE IF EXISTS career_direction_mapping_runs;
+DROP TABLE IF EXISTS career_direction_job_rel;
 DROP TABLE IF EXISTS career_direction_favorites;
 DROP TABLE IF EXISTS career_directions;
 DROP TABLE IF EXISTS chat_messages;
@@ -23,6 +25,7 @@ DROP TABLE IF EXISTS chat_sessions;
 DROP TABLE IF EXISTS agent_runs;
 DROP TABLE IF EXISTS job_targets;
 DROP TABLE IF EXISTS job_favorites;
+DROP TABLE IF EXISTS job_requirement_items;
 DROP TABLE IF EXISTS job_tag_rel;
 DROP TABLE IF EXISTS job_tags;
 DROP TABLE IF EXISTS jobs;
@@ -213,6 +216,22 @@ CREATE TABLE job_tag_rel (
   PRIMARY KEY (job_id, tag_id)
 );
 
+CREATE TABLE job_requirement_items (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  job_id BIGINT NOT NULL,
+  item_type VARCHAR(40) NOT NULL,
+  original_text VARCHAR(1000) NOT NULL,
+  normalized_key VARCHAR(255) NOT NULL,
+  confidence DECIMAL(5,4) NOT NULL DEFAULT 0.8000,
+  extraction_method VARCHAR(30) NOT NULL DEFAULT 'rule',
+  extractor_version VARCHAR(40) NOT NULL,
+  sort_order INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT uk_job_requirement_item UNIQUE (job_id, item_type, normalized_key),
+  CONSTRAINT fk_job_requirement_items_job FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE
+);
+
 CREATE TABLE job_favorites (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   user_id BIGINT NOT NULL,
@@ -304,6 +323,32 @@ CREATE TABLE career_direction_favorites (
   CONSTRAINT fk_direction_favorites_direction FOREIGN KEY (direction_id) REFERENCES career_directions(id) ON DELETE CASCADE
 );
 
+CREATE TABLE career_direction_job_rel (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  direction_id BIGINT NOT NULL,
+  job_id BIGINT NOT NULL,
+  match_score DECIMAL(5,2) NOT NULL,
+  match_source VARCHAR(30) NOT NULL DEFAULT 'rule',
+  rule_version VARCHAR(40) NOT NULL,
+  review_status VARCHAR(20) NOT NULL DEFAULT 'pending',
+  match_reasons_json CLOB NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT uk_direction_job_mapping UNIQUE (direction_id, job_id),
+  CONSTRAINT fk_direction_job_mapping_direction FOREIGN KEY (direction_id) REFERENCES career_directions(id) ON DELETE CASCADE,
+  CONSTRAINT fk_direction_job_mapping_job FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE
+);
+
+CREATE TABLE career_direction_mapping_runs (
+  direction_id BIGINT PRIMARY KEY,
+  rule_version VARCHAR(40) NOT NULL,
+  source_job_count BIGINT NOT NULL,
+  source_tag_relation_count BIGINT NOT NULL,
+  latest_job_updated_at TIMESTAMP NULL,
+  generated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_direction_mapping_runs_direction FOREIGN KEY (direction_id) REFERENCES career_directions(id) ON DELETE CASCADE
+);
+
 CREATE TABLE personal_evidence (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   user_id BIGINT NOT NULL,
@@ -344,6 +389,8 @@ CREATE TABLE decision_projects (
   decided_at TIMESTAMP NULL,
   archived_at TIMESTAMP NULL,
   version INT NOT NULL DEFAULT 1,
+  flow_version INT NOT NULL DEFAULT 1,
+  comparison_reviewed_at TIMESTAMP NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_decision_projects_user FOREIGN KEY (user_id) REFERENCES users(id)
@@ -360,6 +407,7 @@ CREATE TABLE decision_candidates (
   uncertainties CLOB NULL,
   validation_actions_json CLOB NULL,
   status VARCHAR(20) NOT NULL DEFAULT 'active',
+  exclusion_reason CLOB NULL,
   sort_order INT NOT NULL DEFAULT 0,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -374,6 +422,7 @@ CREATE TABLE decision_project_job_samples (
   candidate_id BIGINT NOT NULL,
   job_id BIGINT NOT NULL,
   note VARCHAR(500) NULL,
+  reviewed_at TIMESTAMP NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT uk_project_job_samples_project_job UNIQUE (project_id, job_id),
   CONSTRAINT fk_project_job_samples_project FOREIGN KEY (project_id) REFERENCES decision_projects(id) ON DELETE CASCADE,
@@ -404,8 +453,10 @@ CREATE TABLE comparison_criteria (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   project_id BIGINT NOT NULL,
   code VARCHAR(40) NOT NULL,
-  name VARCHAR(80) NOT NULL,
+  name VARCHAR(160) NOT NULL,
   description VARCHAR(500) NULL,
+  criterion_kind VARCHAR(24) NOT NULL DEFAULT 'legacy',
+  source_type VARCHAR(24) NOT NULL DEFAULT 'system',
   importance TINYINT NOT NULL DEFAULT 3,
   sort_order INT NOT NULL DEFAULT 0,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -419,10 +470,12 @@ CREATE TABLE comparison_results (
   criterion_id BIGINT NOT NULL,
   candidate_id BIGINT NOT NULL,
   score TINYINT NULL,
+  verdict VARCHAR(24) NULL,
   assessment CLOB NULL,
   evidence_refs_json CLOB NULL,
   uncertainty CLOB NULL,
   validation_action CLOB NULL,
+  confirmed_at TIMESTAMP NULL,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT uk_comparison_results_criterion_candidate UNIQUE (criterion_id, candidate_id),
   CONSTRAINT fk_comparison_results_criterion FOREIGN KEY (criterion_id) REFERENCES comparison_criteria(id) ON DELETE CASCADE,
@@ -439,6 +492,9 @@ CREATE TABLE decision_targets (
   decision_reason CLOB NOT NULL,
   main_risks CLOB NULL,
   review_date DATE NULL,
+  verification_status VARCHAR(20) NOT NULL DEFAULT 'verified',
+  verified_at TIMESTAMP NULL,
+  override_reason CLOB NULL,
   confirmed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

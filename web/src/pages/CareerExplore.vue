@@ -583,6 +583,17 @@ const saveCustomDirection = async () => {
                 </div>
               </section>
               <p v-if="sourceWarning(selectedJob)" class="source-warning"><TriangleAlert :size="17" />{{ sourceWarning(selectedJob) }}</p>
+              <section v-if="selectedJob.responsibilities?.length || selectedJob.requirements?.length" class="structured-jd" aria-label="结构化岗位信息">
+                <article v-if="selectedJob.responsibilities?.length">
+                  <h3>岗位职责</h3>
+                  <ol><li v-for="item in selectedJob.responsibilities" :key="item">{{ item }}</li></ol>
+                </article>
+                <article v-if="selectedJob.requirements?.length">
+                  <h3>任职要求</h3>
+                  <ol><li v-for="item in selectedJob.requirements" :key="item">{{ item }}</li></ol>
+                </article>
+              </section>
+              <p v-else class="structure-pending"><TriangleAlert :size="16" />该岗位尚未完成结构化，仅展示来源原文，暂不据此给出确定性能力判断。</p>
               <section class="match-breakdown">
                 <h3>个人证据匹配</h3>
                 <div class="match-groups">
@@ -757,6 +768,12 @@ const saveCustomDirection = async () => {
 .source-details time, .source-details strong { font-weight: 500; text-align: right; }
 .source-warning { display: flex; align-items: flex-start; gap: 8px; margin: 16px 0 0; border-left: 3px solid var(--md-sys-color-tertiary); background: var(--md-sys-color-tertiary-container); padding: 11px 12px; color: var(--md-sys-color-on-tertiary-container); font-size: var(--md-sys-typescale-body-small-size); line-height: 1.5; }
 .source-warning svg { flex: none; margin-top: 1px; }
+.structured-jd { display: grid; gap: 18px; border-top: 1px solid var(--md-sys-color-outline-variant); padding-top: 18px; }
+.structured-jd article { min-width: 0; }
+.structured-jd h3 { margin: 0 0 9px; font-size: var(--md-sys-typescale-title-small-size); }
+.structured-jd ol { display: grid; gap: 7px; margin: 0; padding-left: 21px; color: var(--md-sys-color-on-surface-variant); line-height: 1.55; }
+.structure-pending { display: flex; align-items: flex-start; gap: 8px; border-left: 3px solid var(--md-sys-color-tertiary); background: var(--md-sys-color-tertiary-container); padding: 10px 12px; color: var(--md-sys-color-on-tertiary-container); font-size: var(--md-sys-typescale-body-small-size); line-height: 1.5; }
+.structure-pending svg { flex: none; margin-top: 2px; }
 .job-copy { max-height: 240px; overflow-y: auto; white-space: pre-line; color: var(--md-sys-color-on-surface-variant); font-size: var(--md-sys-typescale-body-medium-size); line-height: 1.65; }
 .match-breakdown { border-top: 1px solid var(--md-sys-color-outline-variant); padding-top: 18px; }
 .match-groups { display: grid; gap: 13px; }

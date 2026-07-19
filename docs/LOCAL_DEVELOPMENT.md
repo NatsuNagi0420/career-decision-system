@@ -1,11 +1,11 @@
 # 本地开发
 
-## 固定调试地址
+## 局域网调试地址
 
 ```text
 Agent  http://127.0.0.1:8001
-后端   https://192.168.1.159:8443
-Web    https://192.168.1.159:5173
+后端   https://当前局域网IP:8443
+Web    https://当前局域网IP:5173
 ```
 
 Agent 只被同一台电脑上的后端调用，因此保留回环 HTTP；学生端、Web 和 Android 到后端的通信必须使用 HTTPS。
@@ -26,10 +26,10 @@ cd ..\web
 npm install
 ```
 
-证书默认包含 `192.168.1.159`。IP 变化时重新生成：
+根目录启动器会自动检测默认路由对应的私有 IPv4。IP 变化时，选择“检测并同步局域网 IP”即可更新本地 `.env`、运行时 CORS 和 HTTPS 证书。也可以手动重新生成：
 
 ```powershell
-.\scripts\setup-local-https.ps1 -ExtraHosts "YOUR_NEW_LAN_IP"
+.\scripts\setup-local-https.ps1 -IncludeLanIps
 ```
 
 ## 必要配置
@@ -67,10 +67,12 @@ INTERNAL_API_TOKEN=change-me
 .\scripts\start-dev.ps1 -Target all
 ```
 
-也可以双击 `start-dev.bat`。菜单支持 Agent、后端、Web 分层启动、状态查看和分别停止。服务在后台运行，关闭菜单窗口不会停止服务。
+也可以双击 `start-dev.bat`。菜单支持 Agent、后端、Web 分层启动、IP 同步、状态、最近日志和分别停止。每次操作后都会返回主菜单，只有选择“退出启动器”才结束；服务在后台运行，关闭菜单窗口不会停止服务。
 
 ```powershell
 .\scripts\start-dev.ps1 -Target status
+.\scripts\start-dev.ps1 -Target sync-ip
+.\scripts\start-dev.ps1 -Target logs
 .\scripts\start-dev.ps1 -Target stop
 ```
 
@@ -81,7 +83,7 @@ INTERNAL_API_TOKEN=change-me
 唯一后端地址入口是 `web/src/utils/request.ts`，本地覆盖写在 `web/.env`：
 
 ```text
-VITE_BACKEND_BASE_URL=https://192.168.1.159:8443
+VITE_BACKEND_BASE_URL=https://当前局域网IP:8443
 VITE_DEV_HTTPS=true
 ```
 
@@ -107,7 +109,7 @@ agent_server/.env.openai-compatible.example
 
 将其内容写入未提交的 `agent_server/.env`，填写真实 `LLM_MODEL`、`LLM_BASE_URL` 和 `LLM_API_KEY`。密钥不得写入源码、日志或提交记录。
 
-根目录启动器不会覆盖 `.env` 中的模型配置。修改配置后需要执行 `.\start-dev.bat stop-agent`，再重新启动所需链路；`.\start-dev.bat status` 会显示 Agent 当前实际使用的提供方。进程级环境变量仍会按标准优先级覆盖 `.env`。
+根目录启动器只会精确更新 `agent_server/.env` 的 `BACKEND_BASE_URL`，不会改写模型、API Key、Token 或其他 `.env` 配置。修改模型配置后需要执行 `.\start-dev.bat stop-agent`，再重新启动所需链路；`.\start-dev.bat status` 会显示 Agent 当前实际使用的提供方。进程级环境变量仍会按标准优先级覆盖 `.env`。
 
 真实模型端到端验收会创建测试账号，只发起一次外部模型调用，并验证用户撤回授权后立即回到规则降级：
 
@@ -132,6 +134,15 @@ agent_server/.env.openai-compatible.example
 ```
 
 脚本把备份写入 Git 已忽略的 `backups/`，恢复到随机命名的临时数据库，逐表比较精确行数后删除临时库。它不会覆盖或删除当前 `career_decision_system`。非默认安装位置可通过 `-MySqlPath`、`-MySqlDumpPath` 或 `MYSQL_BIN_DIR` 指定；数据库凭据优先读取 `DB_USERNAME` 和 `DB_PASSWORD`。
+
+决策旅程 V2 不继续使用旧项目数据。完成备份并启动一次后端、确认 Flyway V10 已应用后，可以只清理 `flow_version < 2` 的旧项目及其派生计划：
+
+```powershell
+.\scripts\reset-decision-v1.ps1 -Environment local -ConfirmReset -WhatIf
+.\scripts\reset-decision-v1.ps1 -Environment local -ConfirmReset
+```
+
+脚本只允许连接本机数据库，且必须同时提供环境名和显式确认；它会保留用户资料、个人经历、职业方向和真实岗位。先运行 `-WhatIf` 查看目标，确认数据库名称和连接信息无误后再执行第二条命令。
 
 ## 学生试点指标
 

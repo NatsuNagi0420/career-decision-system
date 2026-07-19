@@ -1,6 +1,7 @@
 package com.careerdecision.mobile.ui
 
 import com.careerdecision.mobile.data.CareerRepository
+import com.careerdecision.mobile.data.CHAT_RESPONSE
 import com.careerdecision.mobile.data.FakeActionCache
 import com.careerdecision.mobile.data.FakeCareerRemote
 import com.careerdecision.mobile.data.FakeScheduler
@@ -14,14 +15,18 @@ import com.careerdecision.mobile.data.CareerRemoteDataSource
 import com.careerdecision.mobile.network.ApiException
 import com.careerdecision.mobile.network.AssistantChatRequest
 import com.careerdecision.mobile.network.AssistantChatResponse
+import com.careerdecision.mobile.network.AssistantChatAction
+import com.careerdecision.mobile.network.ChatSessionDeletion
 import com.careerdecision.mobile.network.DashboardReview
 import com.careerdecision.mobile.network.LoginResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.Assert.assertEquals
@@ -242,6 +247,147 @@ class AppViewModelTest {
 
         assertEquals(1L, viewModel.state.value.chatSendAcceptedVersion)
         assertTrue(viewModel.state.value.mentorMessages.none { it.failed })
+    }
+
+    @Test
+    fun mentorShowsThinkingUntilReplyAndCarriesReplyActionsIntoUiState() = runTest {
+        val cache = FakeActionCache().apply { replace(TEST_USER.id, TODAY, PLAN) }
+        val responseGate = CompletableDeferred<Unit>()
+        val baseRemote = FakeCareerRemote()
+        val remote = object : CareerRemoteDataSource by baseRemote {
+            override suspend fun sendChatMessage(request: AssistantChatRequest): AssistantChatResponse {
+                responseGate.await()
+                return CHAT_RESPONSE.copy(
+                    sessionId = request.sessionId ?: CHAT_RESPONSE.sessionId,
+                    reply = "先完成一个最小验证动作",
+                    confidence = 0.9,
+                    actions = listOf(
+                        AssistantChatAction("查看行动计划", "go:action-plans")
+                    )
+                )
+            }
+        }
+        val repository = CareerRepository(
+            FakeSessionGateway(TEST_SESSION), remote, cache, FakeScheduler()
+        )
+        val viewModel = AppViewModel(repository)
+        advanceUntilIdle()
+
+        viewModel.sendMentorMessage("下一步做什么")
+        runCurrent()
+
+        assertTrue("The thinking portrait must remain active while awaiting the reply", viewModel.state.value.mentorResponding)
+
+        responseGate.complete(Unit)
+        advanceUntilIdle()
+
+        val reply = viewModel.state.value.mentorMessages.last { it.role == "assistant" }
+        assertTrue("Reply actions must reach the visual-state mapper", reply.hasActions)
+        assertFalse(viewModel.state.value.mentorResponding)
+    }
+
+    @Test
+    fun sendingToADeletedSessionStartsFreshWithoutLosingTheDraftSignal() = runTest {
+        val cache = FakeActionCache().apply { replace(TEST_USER.id, TODAY, PLAN) }
+        val baseRemote = FakeCareerRemote()
+        var sessionDeleted = false
+        val remote = object : CareerRemoteDataSource by baseRemote {
+            override suspend fun sendChatMessage(request: AssistantChatRequest): AssistantChatResponse {
+                if (sessionDeleted && request.sessionId != null) {
+                    throw ApiException("Resource not found.", apiCode = 40490, httpStatus = 404)
+                }
+                return baseRemote.sendChatMessage(request)
+            }
+        }
+        val repository = CareerRepository(
+            FakeSessionGateway(TEST_SESSION), remote, cache, FakeScheduler()
+        )
+        val viewModel = AppViewModel(repository)
+        advanceUntilIdle()
+        viewModel.sendMentorMessage("先建立一段会话")
+        advanceUntilIdle()
+        sessionDeleted = true
+
+        viewModel.sendMentorMessage("这条内容需要保留在输入框")
+        advanceUntilIdle()
+
+        assertNull(viewModel.state.value.mentorSessionId)
+        assertTrue(viewModel.state.value.mentorMessages.isEmpty())
+        assertEquals(1L, viewModel.state.value.chatSendAcceptedVersion)
+        assertEquals(0L, viewModel.state.value.mentorConversationResetVersion)
+        assertTrue(viewModel.state.value.notice?.contains("已经删除") == true)
+        assertNull(viewModel.state.value.error)
+    }
+
+    @Test
+    fun deletingCurrentMentorSessionClearsMessagesOnlyAfterServerSuccess() = runTest {
+        val cache = FakeActionCache().apply { replace(TEST_USER.id, TODAY, PLAN) }
+        val remote = FakeCareerRemote()
+        val repository = CareerRepository(
+            FakeSessionGateway(TEST_SESSION), remote, cache, FakeScheduler()
+        )
+        val viewModel = AppViewModel(repository)
+        advanceUntilIdle()
+        viewModel.sendMentorMessage("这段会话稍后删除")
+        advanceUntilIdle()
+
+        viewModel.deleteMentorSession(12001L)
+        advanceUntilIdle()
+
+        assertNull(viewModel.state.value.mentorSessionId)
+        assertTrue(viewModel.state.value.mentorMessages.isEmpty())
+        assertEquals(1L, viewModel.state.value.mentorConversationResetVersion)
+        assertNull(viewModel.state.value.mentorSessionDeleting)
+        assertEquals(listOf(12001L), remote.deletedChatSessionIds)
+    }
+
+    @Test
+    fun alreadyDeletedMentorSessionIsRemovedFromStaleLocalState() = runTest {
+        val cache = FakeActionCache().apply { replace(TEST_USER.id, TODAY, PLAN) }
+        val baseRemote = FakeCareerRemote()
+        val remote = object : CareerRemoteDataSource by baseRemote {
+            override suspend fun deleteChatSession(sessionId: Long): ChatSessionDeletion {
+                throw ApiException("Resource not found.", apiCode = 40490, httpStatus = 404)
+            }
+        }
+        val repository = CareerRepository(
+            FakeSessionGateway(TEST_SESSION), remote, cache, FakeScheduler()
+        )
+        val viewModel = AppViewModel(repository)
+        advanceUntilIdle()
+        viewModel.sendMentorMessage("另一台设备已经删除")
+        advanceUntilIdle()
+
+        viewModel.deleteMentorSession(12001L)
+        advanceUntilIdle()
+
+        assertNull(viewModel.state.value.mentorSessionId)
+        assertTrue(viewModel.state.value.mentorMessages.isEmpty())
+        assertTrue(viewModel.state.value.notice?.contains("已经删除") == true)
+        assertNull(viewModel.state.value.error)
+    }
+
+    @Test
+    fun offlineMentorDeletionKeepsConversationAvailableForRetry() = runTest {
+        val cache = FakeActionCache().apply { replace(TEST_USER.id, TODAY, PLAN) }
+        val remote = FakeCareerRemote()
+        val repository = CareerRepository(
+            FakeSessionGateway(TEST_SESSION), remote, cache, FakeScheduler()
+        )
+        val viewModel = AppViewModel(repository)
+        advanceUntilIdle()
+        viewModel.sendMentorMessage("离线时不要假删除")
+        advanceUntilIdle()
+        remote.offline = true
+
+        viewModel.deleteMentorSession(12001L)
+        advanceUntilIdle()
+
+        assertEquals(12001L, viewModel.state.value.mentorSessionId)
+        assertTrue(viewModel.state.value.mentorMessages.isNotEmpty())
+        assertNull(viewModel.state.value.mentorSessionDeleting)
+        assertTrue(viewModel.state.value.error?.isNotBlank() == true)
+        assertTrue(remote.deletedChatSessionIds.isEmpty())
     }
 
     @Test

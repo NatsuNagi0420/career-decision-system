@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Adaptive icons use a 108dp canvas. Keeping the approved avatar inside the
+    central 76dp preserves the face and wheat-path hair clip across launcher
+    masks while still leaving room for the platform parallax treatment.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:bottom="16dp"
+        android:drawable="@drawable/suina_avatar"
+        android:left="16dp"
+        android:right="16dp"
+        android:top="16dp" />
+</layer-list>

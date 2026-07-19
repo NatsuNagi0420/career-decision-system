@@ -67,6 +67,40 @@ data class ChatSendResult(
     val delivered: Boolean
 )
 
+data class ChatSessionSummary(
+    val id: Long,
+    val title: String,
+    val lastPage: String? = null,
+    val messageCount: Int = 0,
+    val lastMessage: String? = null,
+    val createdAt: String? = null,
+    val updatedAt: String? = null
+)
+
+data class ChatSessionMessageSnapshot(
+    val id: Long,
+    val requestId: String? = null,
+    val role: String,
+    val content: String,
+    val response: AssistantChatResponse? = null,
+    val createdAt: String? = null
+)
+
+data class ChatSessionDetail(
+    val id: Long,
+    val title: String,
+    val lastPage: String? = null,
+    val createdAt: String? = null,
+    val updatedAt: String? = null,
+    val messages: List<ChatSessionMessageSnapshot> = emptyList()
+)
+
+/** Result returned after a chat session and all of its messages are deleted. */
+data class ChatSessionDeletion(
+    val sessionId: Long,
+    val deleted: Boolean
+)
+
 object ChatMessageRole {
     const val USER = "user"
     const val ASSISTANT = "assistant"

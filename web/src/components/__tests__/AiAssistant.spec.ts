@@ -4,6 +4,7 @@ import AiAssistant from '../AiAssistant.vue'
 import type { AssistantChatResponse } from '@/api/assistant'
 
 const assistantChatApi = vi.hoisted(() => vi.fn())
+const deleteAssistantSessionApi = vi.hoisted(() => vi.fn())
 const route = vi.hoisted(() => ({
   path: '/',
   fullPath: '/',
@@ -13,10 +14,22 @@ const route = vi.hoisted(() => ({
 const push = vi.hoisted(() => vi.fn())
 let wrapper: VueWrapper | undefined
 
-vi.mock('@/api/assistant', () => ({ assistantChatApi }))
+vi.mock('@/api/assistant', () => ({ assistantChatApi, deleteAssistantSessionApi }))
 vi.mock('vue-router', () => ({
   useRoute: () => route,
   useRouter: () => ({ push })
+}))
+
+const confirm = vi.hoisted(() => vi.fn())
+const m3Message = vi.hoisted(() => ({
+  success: vi.fn(),
+  info: vi.fn(),
+  error: vi.fn()
+}))
+vi.mock('@/design-system/services/feedback', () => ({
+  M3ConfirmCancelledError: class M3ConfirmCancelledError extends Error {},
+  m3Confirm: confirm,
+  m3Message
 }))
 
 const baseResponse = (overrides: Partial<AssistantChatResponse> = {}): AssistantChatResponse => ({
@@ -91,6 +104,8 @@ describe('AiAssistant response presentation', () => {
     route.params = {}
     route.query = {}
     assistantChatApi.mockReset()
+    deleteAssistantSessionApi.mockReset().mockResolvedValue({ sessionId: 1, deleted: true })
+    confirm.mockReset().mockResolvedValue(undefined)
     push.mockReset()
   })
 
@@ -119,6 +134,7 @@ describe('AiAssistant response presentation', () => {
     expect(response?.querySelector('.next-step')).toBeNull()
     expect(response?.textContent).not.toContain('当前页面提供了相关上下文')
     expect(response?.querySelector('.response-actions')).toBeNull()
+    expect(response?.closest('.mentor-message-row')?.querySelector('[data-assistant-state]')?.getAttribute('data-assistant-state')).toBe('concerned')
   })
 
   it('keeps coaching evidence collapsed until requested', async () => {
@@ -145,5 +161,53 @@ describe('AiAssistant response presentation', () => {
     expect(details?.open).toBe(true)
     expect(details?.textContent).toContain('当前页面提供了相关上下文')
     expect(details?.textContent).toContain('仍需要更多现实反馈')
+  })
+
+  it('deletes the current floating assistant session after confirmation', async () => {
+    assistantChatApi.mockResolvedValue(baseResponse({ sessionId: 21 }))
+    mountAssistant()
+    await openAssistant()
+    await submitQuestion()
+
+    const deleteButton = document.body.querySelector<HTMLButtonElement>('button[aria-label="删除会话"]')
+    expect(deleteButton).not.toBeNull()
+    deleteButton?.click()
+    await flushPromises()
+
+    expect(confirm).toHaveBeenCalledWith(
+      expect.stringContaining('无法恢复'),
+      '删除会话',
+      expect.objectContaining({ confirmButtonText: '删除会话' })
+    )
+    expect(deleteAssistantSessionApi).toHaveBeenCalledWith(21)
+    expect(document.body.querySelector('button[aria-label="删除会话"]')).toBeNull()
+  })
+  it('switches the assistant portrait for listening, thinking and response states', async () => {
+    let resolveResponse!: (value: AssistantChatResponse) => void
+    assistantChatApi.mockReturnValue(new Promise<AssistantChatResponse>((resolve) => {
+      resolveResponse = resolve
+    }))
+    mountAssistant()
+    await openAssistant()
+
+    const input = document.body.querySelector<HTMLTextAreaElement>('.mentor-input-field')
+    input?.dispatchEvent(new FocusEvent('focus'))
+    await flushPromises()
+    expect(document.body.querySelector('.mentor-title [data-assistant-state]')?.getAttribute('data-assistant-state')).toBe('listening')
+
+    document.body.querySelector<HTMLButtonElement>('.quick-questions button')?.click()
+    await Promise.resolve()
+    expect(document.body.querySelector('.pending')?.closest('.mentor-message-row')?.querySelector('[data-assistant-state]')?.getAttribute('data-assistant-state')).toBe('thinking')
+
+    resolveResponse(baseResponse({
+      confidence: 0.9,
+      uncertainties: [],
+      nextStep: null,
+      actions: []
+    }))
+    await flushPromises()
+    await flushPromises()
+    const response = document.body.querySelector<HTMLElement>('.mentor-message[data-response-mode="coaching"]')
+    expect(response?.closest('.mentor-message-row')?.querySelector('[data-assistant-state]')?.getAttribute('data-assistant-state')).toBe('explaining')
   })
 })

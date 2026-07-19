@@ -2,12 +2,14 @@ package com.careerdecision.backend.decision;
 
 import com.careerdecision.backend.common.ApiResponse;
 import com.careerdecision.backend.decision.DecisionProjectModels.CandidateRequest;
+import com.careerdecision.backend.decision.DecisionProjectModels.BatchComparisonRequest;
 import com.careerdecision.backend.decision.DecisionProjectModels.ComparisonRequest;
 import com.careerdecision.backend.decision.DecisionProjectModels.ConfidenceFeedbackRequest;
 import com.careerdecision.backend.decision.DecisionProjectModels.ConfidenceFeedbackResponse;
 import com.careerdecision.backend.decision.DecisionProjectModels.CriterionRequest;
 import com.careerdecision.backend.decision.DecisionProjectModels.EvidenceRequest;
 import com.careerdecision.backend.decision.DecisionProjectModels.JobSampleRequest;
+import com.careerdecision.backend.decision.DecisionProjectModels.JourneyResponse;
 import com.careerdecision.backend.decision.DecisionProjectModels.ProjectDetail;
 import com.careerdecision.backend.decision.DecisionProjectModels.ProjectRequest;
 import com.careerdecision.backend.decision.DecisionProjectModels.ProjectSummary;
@@ -18,6 +20,7 @@ import com.careerdecision.backend.user.CurrentUser;
 import com.careerdecision.backend.user.UserInfo;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -55,6 +58,11 @@ public class DecisionProjectController {
     @GetMapping("/{projectId}")
     public ApiResponse<ProjectDetail> detail(@CurrentUser UserInfo user, @PathVariable long projectId) {
         return ApiResponse.success(service.detail(user.id(), projectId));
+    }
+
+    @GetMapping("/{projectId}/journey")
+    public ApiResponse<JourneyResponse> journey(@CurrentUser UserInfo user, @PathVariable long projectId) {
+        return ApiResponse.success(service.journey(user.id(), projectId));
     }
 
     @PutMapping("/{projectId}")
@@ -120,10 +128,11 @@ public class DecisionProjectController {
             @CurrentUser UserInfo user,
             @PathVariable long projectId,
             @PathVariable long candidateId,
+            @RequestParam(required = false) @Size(max = 5000) String reason,
             @RequestParam(required = false) Integer expectedVersion
     ) {
         return ApiResponse.success(service.removeCandidate(
-                user.id(), projectId, candidateId, expectedVersion
+                user.id(), projectId, candidateId, reason, expectedVersion
         ));
     }
 
@@ -218,6 +227,15 @@ public class DecisionProjectController {
             @Valid @RequestBody ComparisonRequest request
     ) {
         return ApiResponse.success(service.saveComparison(user.id(), projectId, criterionId, request));
+    }
+
+    @PutMapping("/{projectId}/comparisons")
+    public ApiResponse<ProjectDetail> saveComparisons(
+            @CurrentUser UserInfo user,
+            @PathVariable long projectId,
+            @Valid @RequestBody BatchComparisonRequest request
+    ) {
+        return ApiResponse.success(service.saveComparisons(user.id(), projectId, request));
     }
 
     @PostMapping("/{projectId}/targets/confirm")

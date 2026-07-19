@@ -122,6 +122,28 @@ data class CachedChatMessageEntity(
     val createdAt: Long = System.currentTimeMillis()
 )
 
+@Entity(
+    tableName = "cached_history",
+    primaryKeys = ["userId", "resourceKey"],
+    indices = [
+        Index(value = ["userId", "createdAt"]),
+        Index(value = ["userId", "resourceType"])
+    ]
+)
+data class CachedHistoryEntity(
+    val userId: Long,
+    val resourceKey: String,
+    val resourceType: String,
+    val resourceId: String,
+    val title: String,
+    val typeLabel: String,
+    val summary: String,
+    val createdAt: String?,
+    val reportType: String?,
+    val detailJson: String?,
+    val cachedAt: Long = System.currentTimeMillis()
+)
+
 @Dao
 interface ActionDao {
     @Query("SELECT * FROM cached_goals WHERE userId = :userId LIMIT 1")
@@ -192,6 +214,24 @@ interface ActionDao {
     @Query("DELETE FROM cached_chat_sessions WHERE userId = :userId")
     suspend fun deleteChatSession(userId: Long)
 
+    @Query("SELECT * FROM cached_history WHERE userId = :userId ORDER BY cachedAt DESC")
+    suspend fun history(userId: Long): List<CachedHistoryEntity>
+
+    @Query("SELECT * FROM cached_history WHERE userId = :userId AND resourceKey = :resourceKey LIMIT 1")
+    suspend fun historyItem(userId: Long, resourceKey: String): CachedHistoryEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun saveHistory(items: List<CachedHistoryEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun saveHistoryItem(item: CachedHistoryEntity)
+
+    @Query("DELETE FROM cached_history WHERE userId = :userId AND resourceKey = :resourceKey")
+    suspend fun deleteHistoryItem(userId: Long, resourceKey: String)
+
+    @Query("DELETE FROM cached_history WHERE userId = :userId")
+    suspend fun deleteHistory(userId: Long)
+
     @Query("DELETE FROM cached_goals WHERE userId = :userId")
     suspend fun deleteGoal(userId: Long)
 
@@ -205,9 +245,10 @@ interface ActionDao {
         CachedTaskEntity::class,
         PendingOperationEntity::class,
         CachedChatSessionEntity::class,
-        CachedChatMessageEntity::class
+        CachedChatMessageEntity::class,
+        CachedHistoryEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = true
 )
 abstract class ActionDatabase : RoomDatabase() {
@@ -286,12 +327,48 @@ abstract class ActionDatabase : RoomDatabase() {
             }
         }
 
+        private val migration4To5 = object : Migration(4, 5) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS cached_history (
+                      userId INTEGER NOT NULL,
+                      resourceKey TEXT NOT NULL,
+                      resourceType TEXT NOT NULL,
+                      resourceId TEXT NOT NULL,
+                      title TEXT NOT NULL,
+                      typeLabel TEXT NOT NULL,
+                      summary TEXT NOT NULL,
+                      createdAt TEXT,
+                      reportType TEXT,
+                      detailJson TEXT,
+                      cachedAt INTEGER NOT NULL,
+                      PRIMARY KEY(userId, resourceKey)
+                    )
+                    """.trimIndent()
+                )
+                database.execSQL(
+                    "CREATE INDEX IF NOT EXISTS index_cached_history_userId_createdAt " +
+                        "ON cached_history (userId, createdAt)"
+                )
+                database.execSQL(
+                    "CREATE INDEX IF NOT EXISTS index_cached_history_userId_resourceType " +
+                        "ON cached_history (userId, resourceType)"
+                )
+            }
+        }
+
         fun get(context: Context): ActionDatabase = instance ?: synchronized(this) {
             instance ?: Room.databaseBuilder(
                 context.applicationContext,
                 ActionDatabase::class.java,
                 "career_action.db"
-            ).addMigrations(migration1To2, migration2To3, migration3To4).build().also { instance = it }
+            ).addMigrations(
+                migration1To2,
+                migration2To3,
+                migration3To4,
+                migration4To5
+            ).build().also { instance = it }
         }
     }
 }

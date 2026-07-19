@@ -38,12 +38,12 @@ const stateContent: Record<DashboardData['state'], { eyebrow: string; title: str
   ready_to_explore: {
     eyebrow: '建立第一个问题',
     title: '开始一次职业决策',
-    description: '把正在纠结的问题建成项目，再逐步补充候选方向和真实岗位证据。'
+    description: '把正在纠结的问题记下来，再逐步看看不同方向、真实岗位和自己的经历。'
   },
   exploring: {
     eyebrow: '决策进行中',
     title: '继续验证当前选择',
-    description: '回到项目补齐候选、比较依据和验证动作，证据足够后再确认目标。'
+    description: '回到这次思考，继续看看不同方向、真实岗位和自己的经历；了解得更清楚后，再决定下一步先试什么。'
   },
   decided: {
     eyebrow: '目标已确认',
@@ -60,6 +60,17 @@ const stateContent: Record<DashboardData['state'], { eyebrow: string; title: str
     title: '用结果修正下一周',
     description: '整理本周成果、阻碍和信心变化，再决定哪些任务需要调整。'
   }
+}
+
+const projectStageLabels: Record<string, string> = {
+  brief: '先说说你在考虑什么',
+  candidates: '看看有哪些选择',
+  validate: '多了解一些',
+  compare: '放在一起看看',
+  commit: '决定下一步先试什么',
+  clarify: '先说说你在考虑什么',
+  evidence: '多了解一些',
+  target: '决定下一步先试什么'
 }
 
 const currentContent = computed(() => dashboard.value ? stateContent[dashboard.value.state] : null)
@@ -145,17 +156,17 @@ onMounted(loadDashboard)
           <section class="dashboard-section">
             <div class="section-heading">
               <div><BriefcaseBusiness :size="18" /><h2>当前决策</h2></div>
-              <span v-if="currentProject">{{ currentProject.candidateCount }} 个候选</span>
+              <span v-if="currentProject">{{ currentProject.candidateCount }} 个方向</span>
             </div>
             <M3Card tag="div" v-if="currentProject" class="project-summary">
-              <span class="stage-label">{{ currentProject.currentStage }}</span>
+              <span class="stage-label">{{ projectStageLabels[currentProject.currentStage] || '继续看看' }}</span>
               <h3>{{ currentProject.title }}</h3>
               <p>{{ currentProject.question }}</p>
-              <dl>
-                <div><dt>主目标</dt><dd>{{ currentProject.primaryTarget || '尚未确认' }}</dd></div>
-                <div><dt>岗位样本</dt><dd>{{ currentProject.jobSampleCount }} 个</dd></div>
-                <div><dt>待验证</dt><dd>{{ currentProject.openQuestionCount || 0 }} 项</dd></div>
-                <div><dt>成果证据</dt><dd>{{ currentProject.resultCount || 0 }} 个</dd></div>
+              <dl aria-label="当前决策概况">
+                <div><dt>目前想先试</dt><dd>{{ currentProject.primaryTarget || '还没有确认' }}</dd></div>
+                <div><dt>看过的岗位</dt><dd>{{ currentProject.jobSampleCount }} 份</dd></div>
+                <div><dt>还想了解</dt><dd>{{ currentProject.openQuestionCount || 0 }} 项</dd></div>
+                <div><dt>已有成果</dt><dd>{{ currentProject.resultCount || 0 }} 项</dd></div>
               </dl>
               <div v-if="dashboard.latestAgentAdvice" class="agent-note"><Sparkles :size="15" /><div><strong>最近 AI 建议</strong><p>{{ dashboard.latestAgentAdvice.conclusion }}</p></div></div>
             </M3Card>
@@ -219,20 +230,20 @@ onMounted(loadDashboard)
 .secondary-entry { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; margin-top: 12px; color: var(--md-sys-color-on-surface-variant); font-size: var(--md-sys-typescale-body-small-size); }
 .secondary-entry a { display: inline-flex; align-items: center; gap: 5px; color: var(--md-sys-color-primary); text-decoration: none; }
 .dashboard-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; margin-top: 34px; }
-.dashboard-section { min-width: 0; }
+.dashboard-section { display: grid; grid-template-rows: auto minmax(246px, 1fr); min-width: 0; }
 .section-heading, .section-heading > div { display: flex; align-items: center; justify-content: space-between; gap: 9px; }
 .section-heading { margin-bottom: 12px; }
 .section-heading h2 { margin: 0; font-size: var(--md-sys-typescale-title-medium-size); }
 .section-heading svg { color: var(--md-sys-color-primary); }
 .section-heading > span { color: var(--md-sys-color-on-surface-variant); font-size: var(--md-sys-typescale-body-small-size); }
 .project-summary, .week-summary { min-height: 246px; padding: 22px; }
-.stage-label { color: var(--md-sys-color-primary); font-size: var(--md-sys-typescale-label-small-size); font-weight: 500; }
-.project-summary h3 { margin: 8px 0; font-size: var(--md-sys-typescale-title-large-size); }
-.project-summary > p { min-height: 48px; margin: 0 0 20px; color: var(--md-sys-color-on-surface-variant); line-height: 1.55; }
-.project-summary dl { display: grid; gap: 1px; margin: 0; background: var(--md-sys-color-outline-variant); }
-.project-summary dl div { display: grid; grid-template-columns: 80px 1fr; gap: 12px; padding: 10px 0; background: var(--md-sys-color-surface-container-lowest); font-size: var(--md-sys-typescale-body-medium-size); }
-.project-summary dt { color: var(--md-sys-color-on-surface-variant); }
-.project-summary dd { margin: 0; font-weight: 500; }
+.stage-label { display: block; color: var(--md-sys-color-primary); font-size: var(--md-sys-typescale-label-small-size); font-weight: 500; line-height: var(--md-sys-typescale-label-small-line-height); }
+.project-summary h3 { margin: 11px 0 12px; font-size: var(--md-sys-typescale-title-large-size); line-height: 1.35; }
+.project-summary > p { min-height: 48px; margin: 0; color: var(--md-sys-color-on-surface-variant); line-height: var(--md-sys-typescale-body-large-line-height); }
+.project-summary dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 20px 0 0; }
+.project-summary dl div { display: grid; align-content: center; gap: 5px; min-width: 0; min-height: 64px; border-radius: var(--md-sys-shape-corner-small); background: color-mix(in srgb, var(--md-sys-color-primary) 5%, var(--md-sys-color-surface-container-high)); padding: 11px 13px; }
+.project-summary dt { color: var(--md-sys-color-on-surface-variant); font-size: var(--md-sys-typescale-label-medium-size); }
+.project-summary dd { min-width: 0; margin: 0; overflow-wrap: anywhere; font-size: var(--md-sys-typescale-body-large-size); font-weight: 500; }
 .agent-note { display: flex; align-items: flex-start; gap: 8px; margin-top: 15px; border-top: 1px solid var(--md-sys-color-outline-variant); padding-top: 12px; color: var(--md-sys-color-primary); }
 .agent-note div { min-width: 0; }
 .agent-note strong { font-size: var(--md-sys-typescale-label-small-size); }
@@ -258,5 +269,5 @@ onMounted(loadDashboard)
 .risk-strip ul { grid-column: 1; display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 0; padding-left: 20px; color: var(--md-sys-color-on-surface-variant); font-size: var(--md-sys-typescale-body-small-size); }
 .risk-strip > a { grid-column: 2; grid-row: 1 / span 2; align-self: center; color: var(--md-sys-color-primary); font-size: var(--md-sys-typescale-body-small-size); text-decoration: none; white-space: nowrap; }
 @media (max-width: 820px) { .primary-next { grid-template-columns: 48px 1fr; } .primary-command { grid-column: 1 / -1; width: 100%; } .dashboard-grid { grid-template-columns: 1fr; } .risk-strip { grid-template-columns: 1fr; } .risk-strip ul, .risk-strip > a { grid-column: auto; grid-row: auto; } }
-@media (max-width: 560px) { .dashboard-header { align-items: flex-start; flex-direction: column; } .dashboard-header h1 { font-size: var(--md-sys-typescale-headline-small-size); } .primary-next { grid-template-columns: 1fr; padding: 20px; } .primary-command { grid-column: auto; } .error-state { align-items: stretch; flex-direction: column; } }
+@media (max-width: 560px) { .dashboard-header { align-items: flex-start; flex-direction: column; } .dashboard-header h1 { font-size: var(--md-sys-typescale-headline-small-size); } .primary-next { grid-template-columns: 1fr; padding: 20px; } .primary-command { grid-column: auto; } .error-state { align-items: stretch; flex-direction: column; } .project-summary dl { grid-template-columns: 1fr; } }
 </style>

@@ -50,6 +50,49 @@ data class DashboardReview(
     val updatedAt: String?
 )
 
+data class DecisionProjectEvidence(
+    val id: Long,
+    val candidateId: Long?,
+    val personalEvidenceId: Long?,
+    val title: String,
+    val detail: String?,
+    val sourceType: String?,
+    val sourceRef: String?,
+    val credibility: String?,
+    val stance: String?,
+    val updatedAt: String?
+)
+
+/**
+ * Android currently needs only the evidence section from a decision project.
+ * Gson safely ignores the remaining project fields returned by the backend.
+ */
+data class DecisionProjectDetail(
+    val id: Long,
+    val evidence: List<DecisionProjectEvidence> = emptyList()
+)
+
+data class PersonalEvidence(
+    val id: Long,
+    val evidenceType: String,
+    val title: String,
+    val description: String?,
+    val roleName: String?,
+    val resultSummary: String?,
+    val linkUrl: String?,
+    val proficiency: String?,
+    val lastUsedAt: String?,
+    val feedback: String?,
+    val sourceType: String?,
+    val sourceRefType: String?,
+    val sourceRefId: Long?,
+    val credibility: String?,
+    val visibility: String?,
+    val occurredAt: String?,
+    val createdAt: String?,
+    val updatedAt: String?
+)
+
 data class ActionTaskResult(
     val id: Long,
     val description: String,

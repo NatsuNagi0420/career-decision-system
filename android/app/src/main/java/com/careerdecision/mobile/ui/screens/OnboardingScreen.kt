@@ -30,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import com.careerdecision.mobile.CareerValidators
 import com.careerdecision.mobile.data.local.OnboardingDraft
 import com.careerdecision.mobile.data.local.OnboardingDraftStore
+import com.careerdecision.mobile.ui.design.BrandIdentity
 import com.careerdecision.mobile.ui.design.CareerSize
 import com.careerdecision.mobile.ui.design.CareerSpacing
 import com.careerdecision.mobile.ui.design.M3Button
@@ -121,7 +122,7 @@ fun OnboardingScreen(
                 .padding(horizontal = CareerSpacing.PageHorizontal, vertical = CareerSpacing.PageVertical),
             verticalArrangement = Arrangement.spacedBy(CareerSpacing.Large)
         ) {
-            Text("职途", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
+            BrandIdentity(showAvatar = false, showDescriptor = false, compact = true)
             Column(verticalArrangement = Arrangement.spacedBy(CareerSpacing.Small)) {
                 Text("$step / 3", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                 Text(

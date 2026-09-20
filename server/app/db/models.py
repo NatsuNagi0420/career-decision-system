@@ -143,7 +143,10 @@ class Event(Base):
 
 class Artifact(Base):
     __tablename__ = "artifacts"
-    __table_args__: ClassVar[tuple] = (Index("ix_artifact_user_type", "user_id", "artifact_type"),)
+    __table_args__: ClassVar[tuple] = (
+        Index("ix_artifact_user_type", "user_id", "artifact_type"),
+        Index("ix_artifacts_supersedes_id", "supersedes_id"),
+    )
 
     id: Mapped[str] = mapped_column(String(32), primary_key=True, default=new_id)
     run_id: Mapped[str] = mapped_column(ForeignKey("agent_runs.id", ondelete="CASCADE"), nullable=False, index=True)
@@ -161,6 +164,13 @@ class Artifact(Base):
 
     version: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     __mapper_args__: ClassVar[dict] = {"version_id_col": version}
+    #: The logical version chain, which `version` is not: `version` is an optimistic lock
+    #: that counts UPDATEs to one row, while a recomputed conclusion is a *new* row that
+    #: points back at the one it replaced. Without this, "why did the answer change"
+    #: has no answer — the old content is overwritten in place.
+    supersedes_id: Mapped[str | None] = mapped_column(
+        ForeignKey("artifacts.id", ondelete="SET NULL"), nullable=True
+    )
 
     created_at: Mapped[datetime] = mapped_column(Timestamp, nullable=False, default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(Timestamp, nullable=False, default=utcnow, onupdate=utcnow)

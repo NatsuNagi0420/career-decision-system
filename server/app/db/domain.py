@@ -255,17 +255,37 @@ class ComparisonCriterion(Base):
 
 
 class ComparisonResult(Base):
+    """One cell of one round of the matrix.
+
+    Versioned on purpose: `round_no` is how a conclusion is allowed to move without
+    erasing the previous one, which is the difference between "the system updated its
+    answer" and "the system silently rewrote history". A cell's supporting and
+    opposing evidence are separate columns because the question a student asks is
+    never "what is the score" but "what spoke for it, what spoke against it, and what
+    is still missing" — the last being `verdict="missing"` with both lists empty and
+    the reason in `note`.
+    """
+
     __tablename__ = "comparison_results"
-    __table_args__: ClassVar[tuple] = (UniqueConstraint("project_id", "criterion_id", "candidate_id", name="uq_comparison_cell"),)
+    __table_args__: ClassVar[tuple] = (
+        UniqueConstraint("project_id", "criterion_id", "candidate_id", "round_no", name="uq_comparison_cell_round"),
+        UniqueConstraint("request_id", name="uq_comparison_request"),
+    )
 
     id: Mapped[str] = mapped_column(String(32), primary_key=True, default=new_id)
     project_id: Mapped[str] = mapped_column(ForeignKey("decision_projects.id", ondelete="CASCADE"), nullable=False, index=True)
     criterion_id: Mapped[str] = mapped_column(ForeignKey("comparison_criteria.id", ondelete="CASCADE"), nullable=False)
     candidate_id: Mapped[str] = mapped_column(ForeignKey("decision_candidates.id", ondelete="CASCADE"), nullable=False)
+    round_no: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    #: Composed per cell from the proposal that wrote it, so a replayed approval meets
+    #: the same idempotency wall the other writers do.
+    request_id: Mapped[str] = mapped_column(String(160), nullable=False)
     score: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    #: supported | partial | missing | contradicted
     verdict: Mapped[str | None] = mapped_column(String(24), nullable=True)
     note: Mapped[str] = mapped_column(Text, nullable=False, default="")
     evidence_refs: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    counter_refs: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
     run_id: Mapped[str | None] = mapped_column(ForeignKey("agent_runs.id", ondelete="SET NULL"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(Timestamp, nullable=False, default=utcnow)
 

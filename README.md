@@ -1,117 +1,88 @@
-# 职业决策系统
+# 青穗集 · 职业决策 Agent（v2）
 
-面向大学生的职业决策与行动产品。第一版闭环为：
+面向大学生与初入职场者的**证据驱动职业决策**产品。用户带着一个模糊的职业困惑进来，Agent（穗奈）在授权与代码约束内自主查资料、整理结论、提出写入并等用户确认，并且**跨会话记住自己承诺的下一步**。
+
+产品目标与本阶段范围的唯一权威表述见 [`docs/v2/PROJECT_GOAL.md`](docs/v2/PROJECT_GOAL.md)。
+
+## 一句话架构
+
+**一个 Python 进程拥有全部服务端能力，一个 React 壳只负责呈现与交互。**
 
 ```text
-个人档案 -> 决策项目 -> 候选职业 -> 岗位验证
--> 确定目标 -> 4 周行动计划 -> 任务成果 -> 每周复盘
+React (Vite, 5173)  ──/api──►  FastAPI + LangGraph (8100)  ──►  MySQL career_v2   业务事实
+                                   │                              （Alembic 迁移）
+                                   ├──►  SQLite var/checkpoints.sqlite   可恢复执行状态
+                                   └──►  OpenAI-compatible 模型（deepseek-flash 等）
 ```
 
-## 四层结构
+- 没有 Java 后端、没有 Android 客户端、没有独立的 Agent 服务。v1 的四层结构已于 2026-09-19 整体删除，历史文档归档在 `docs/v1-历史/`。
+- 浏览器与 Python 服务同源（Vite 代理 `/api`、`/healthz`），因此不需要 CORS。
 
-- `web/`：完整决策工作区，Vue 3 + TypeScript。
-- `android/`：今日行动端，Kotlin + Jetpack Compose + Room + WorkManager。
-- `backend/`：业务数据与权限，Spring Boot + MyBatis + Flyway（B1/V2-V9）。
-- `agent_server/`：结构化 AI 工作流，FastAPI + LangGraph + Pydantic。
+## 核心对象
 
-Web 和 Android 只访问后端；后端通过内部令牌访问 Agent。Agent 不直接写业务数据库。
+| 对象 | 含义 | 为什么存在 |
+| --- | --- | --- |
+| `Run` / `Step` | 一次推进及其步骤 | 任务可恢复、可审计 |
+| `Event` | 只追加的事件流，`(run_id, seq)` 唯一 | SSE 断线后从最后序号续传，重放不重复 |
+| `Artifact` | 成果物，带 `data_coverage` / `is_provisional` / 逐字引文 | 结论必须能回指原句 |
+| `Proposal` + `Approval` | 想写入什么 + 人是否批准 | 重要业务写入必须过人 |
+| `Obligation` | Agent 对自己的下一步承诺 | 推进权在 Agent 手上，跨会话不失忆 |
+
+公理是：**模型决定下一步做什么，代码决定能不能做**。风险分级 R0–R3 写在 `CapabilitySpec` 里，R2/R3 一律需要审批，R3 不允许携带写入——这些由校验器强制，不靠提示词自觉。
 
 ## 本地启动
 
-局域网调试强制使用 HTTPS：
+前置：Python 3.12–3.13、Node 20+、一个可连的 MySQL（只允许写库名以 `career_v2` 开头的库，迁移会主动拒绝其他目标）。
+
+```powershell
+# 1) 服务端
+cd server
+uv sync --extra dev
+copy .env.example .env       # 填 DB_URL；LLM_PROVIDER=mock 可完全离线跑通
+.venv\Scripts\python.exe -m alembic upgrade head
+.venv\Scripts\python.exe scripts\import_catalog.py   # 载入职业方向/岗位目录
+.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8100
+
+# 2) 前端（另开终端）
+cd web
+npm ci
+npm run dev                  # http://127.0.0.1:5173
+```
+
+注册账号时勾选"同意把决策上下文交给云端模型处理"才会调用真实模型；不勾选则走确定性路径，并在结果上明确标注依据有限。真实模型配置见 `server/.env.example` 的 `LLM_*` 项。
+
+## 一条命令验证全部
+
+```powershell
+powershell -File scripts\verify.ps1          # 含真实 MySQL 测试库，约 7 分钟
+powershell -File scripts\verify.ps1 -Quick   # 跳过 pytest
+```
+
+它依次跑：ruff、能力与契约完整性（`server/scripts/validate.py` 14 项）、Alembic 漂移检查、pytest、`tsc --noEmit`、vitest、生产构建，并给出逐项结论。
+
+`validate.py` 里有几条是**跨语言契约**：后端帧类型集合必须等于前端 `FrameKind`、每种帧都要有序列化样本、能力链不能通向没有实现的能力。这类不一致以前靠人眼发现。
+
+## 测试与评测的边界
+
+- `server/tests/` 用真实 MySQL（`career_v2_test`）+ `ScriptedProvider`，覆盖结构、权限、审批、事件与承诺，**不调用真实模型**。
+- 真实模型的质量门禁还没有。这是当前最大的一块欠账，列为 P3，见 `docs/v2/PROJECT_GOAL.md` 第五节"目标五"。
+
+## 文档
+
+| 位置 | 内容 |
+| --- | --- |
+| `docs/v2/PROJECT_GOAL.md` | 项目目标、验收标准、P0–P4 优先级、明确不做的事 |
+| `docs/v2/AI_NATIVE_ARCHITECTURE.md` | AI 原生公理、对象模型、事件与审批契约、§11 试点与运维约定 |
+| `docs/v2/AGENT_CAPABILITY_MAP.md` | 能力地图与**逐里程碑落地记录**（含实测发现的缺陷） |
+| `docs/v1-历史/` | v1 四层架构时期的规格与计划，仅供追溯，**不描述当前系统** |
+| `docs/品牌形象/` | 品牌与穗奈 IP 素材（`BgSub_*` 为透明底） |
+
+## 目录
 
 ```text
-Agent  http://127.0.0.1:8001
-后端   https://当前局域网IP:8443
-Web    https://当前局域网IP:5173
+server/   FastAPI + LangGraph 服务：API、鉴权、能力注册表、工具、事件、审批、承诺
+web/      React 19 + Vite 应用壳：对话流、成果物、确认门、对象层侧栏
+spikes/   一次性技术验证（模型行为、checkpoint 一致性），结论已并入文档
+scripts/  verify.ps1（唯一验证入口）与品牌素材生成
+docs/     v2 现行文档 + v1 历史归档
 ```
-
-启动器会自动检测默认网卡的私有 IPv4，同步 `agent_server/.env` 与 `web/.env` 中的本地地址，并在 IP 变化时刷新 HTTPS 证书。也可以手动准备证书：
-
-```powershell
-.\scripts\setup-local-https.ps1
-```
-
-随后双击根目录 `start-dev.bat`，或运行：
-
-```powershell
-.\scripts\start-dev.ps1 -Target all
-```
-
-启动器会在后台运行服务，完成操作后持续返回主菜单，可继续查看状态、最近日志或停止服务；只有选择“退出启动器”才结束菜单。关闭菜单窗口不会停止已经启动的服务。
-
-## 质量门禁
-
-```powershell
-.\scripts\verify-all.ps1
-```
-
-默认执行：
-
-- 后端执行 128 项（127 通过，1 条有编号的平台例外）；
-- Agent 102 条测试和 Ruff，其中含 32 条固定教练评测；
-- Web 类型检查、97 条单测、生产构建、四个规范视口共 100 项 Playwright 检查；
-- Android 94 条单测、Debug/Release 构建和 Lint；
-- PowerShell 语法、乱码、统一请求层、HTTPS 和明文流量策略扫描。
-
-运行真实局域网 HTTPS 链路：
-
-```powershell
-.\scripts\verify-all.ps1 -IncludeRuntimeSmoke
-```
-
-对当前 MySQL 做全量备份，并恢复到随机临时库逐表核对：
-
-```powershell
-.\scripts\verify-db-backup.ps1
-```
-
-备份保存在 Git 已忽略的 `backups/`，临时恢复库在核对后自动删除。
-
-真实学生试点结束后，按匿名账号前缀生成量化验收报告：
-
-```powershell
-.\scripts\report-pilot-metrics.ps1 -CohortPrefix "pilot26" -RequireAcceptance
-```
-
-报告保存在 Git 已忽略的 `pilot-results/`，不会包含用户名、联系方式、项目正文或聊天内容。
-
-配置 `agent_server/.env` 并重启 Agent 后，执行一次真实 OpenAI-compatible 调用和授权撤回降级验收：
-
-```powershell
-.\scripts\verify-all.ps1 -IncludeRealModelSmoke
-```
-
-该命令可能产生一次模型调用费用；普通 `verify-all.ps1` 不会调用外部模型。
-
-真机基础烟测：
-
-```powershell
-.\scripts\smoke-android.ps1
-```
-
-真机登录、完成任务和成果同步：
-
-```powershell
-.\scripts\smoke-android.ps1 `
-  -Username "your_test_user" `
-  -Password "your_test_password" `
-  -RequireAuthenticatedFlow
-```
-
-Android 真机必须安装 `.local-https\mkcert-rootCA.pem` 作为本地调试 CA。
-
-## 当前边界
-
-代码侧迭代 1 至 7 已完成；迭代 8 的评测、配置模板和烟测已完成。真实模型调用、Android 真机跨端同步以及 10 至 15 名学生试点仍需外部设备、密钥和参与者，不能用自动化结果代替。
-
-## 关键文档
-
-- `项目需求文档.md`：第一版产品需求。
-- `第一版实施计划.md`：八个迭代及当前状态。
-- `docs/ARCHITECTURE.md`：系统边界和数据流。
-- `docs/LOCAL_DEVELOPMENT.md`：本地配置与启动。
-- `docs/LOCAL_HTTPS.md`：证书与真机 HTTPS。
-- `docs/PRIVACY_AND_AI_CONSENT.md`：外部 AI 授权、最小数据和日志边界。
-- `docs/学生试点方案.md`：试点任务、指标和访谈提纲。
-- `docs/TEST_EXCEPTIONS.md`：有编号的测试平台例外。

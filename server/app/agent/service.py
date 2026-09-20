@@ -12,7 +12,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload, selectinload, sessionmaker
 
 from app.agent.approvals import ApprovalRepository
-from app.agent.events import EventLog, RunStarted
+from app.agent.events import EventLog, RunFailed, RunStarted
 from app.agent.graph import AgentDeps, build_agent_graph
 from app.agent.obligations import ObligationRepository
 from app.agent.state import RunState
@@ -37,6 +37,62 @@ from app.tools.base import ToolRegistry
 
 class NotOwner(LookupError):
     pass
+
+
+#: How long a run may sit without any progress before we call it dead. One model call
+#: times out at `llm_timeout_seconds` (60s) and the step ceiling bounds how many there
+#: can be, so a row untouched for this long is not slow — nobody is driving it.
+STALE_RUN_AFTER = timedelta(minutes=15)
+
+
+def reconcile_stale_runs(
+    session_factory: sessionmaker[Session],
+    events: EventLog,
+    *,
+    stale_after: timedelta = STALE_RUN_AFTER,
+    reason: str = "这一步之后再没有往下走",
+) -> list[str]:
+    """Close runs that still claim to be working while nothing is working on them.
+
+    A process that dies mid-run leaves `status="created"` with `finished_at` null
+    forever, and the feed then keeps showing a task "in progress" that nobody will
+    ever finish — 目标四's "不允许永久停留" case. There is no `running` status in this
+    schema: `created` *is* the in-flight marker, which is why the sweep keys off it.
+
+    `awaiting_approval` is excluded on purpose: that state is held by a person, and
+    letting it lapse is the approval expiry's job, not this one's.
+
+    At startup the window is zero, because a fresh process has nothing of its own in
+    flight — every `created` row it finds belongs to the one that just died.
+    """
+    cutoff = utcnow() - stale_after
+    closed: list[str] = []
+    with session_factory() as session:
+        stalled = session.scalars(
+            select(Run).where(Run.status == "created", Run.updated_at < cutoff).order_by(Run.created_at)
+        ).all()
+        for run in stalled:
+            run.status = "failed"
+            run.error = f"restart: {reason}，已按失败收尾。可以从头再发起一次；已经确认过的写入不会重复。"
+            run.finished_at = utcnow()
+            events.append(
+                session,
+                run,
+                RunFailed(
+                    run_id=run.id,
+                    thread_id=run.thread_id,
+                    seq=0,
+                    event_id="",
+                    occurred_at=utcnow(),
+                    kind="run_failed",
+                    error=run.error,
+                ),
+            )
+            closed.append(run.id)
+        session.commit()
+    for run_id in closed:
+        events.announce(run_id)
+    return closed
 
 
 @dataclass

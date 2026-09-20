@@ -619,3 +619,56 @@ MySQL 的 DDL 不进事务，这条这次真撞上了：迁移里 `create_index`
 ### 门禁
 
 树静止后 `powershell -File scripts/verify.ps1`（日志 `server/var/verify-p15.log`）。新增/改动测试：`server/tests/test_next_cycle.py`（3 例：重排的能力确有读矩阵的工具且两端字段名一致、下一周期任务落在已有计划上且 `get_plan` 读得回、新任务的结果要么被读回要么留下承诺）；`test_gateway.py` 加 4 例（JSON 后带尾巴只调一次 provider、真的没有对象时仍走修复、空内容重试且预算翻倍 `[2000, 4000]`、升档停在硬顶 `[10000, 12000]` 后再失败就报错）；`test_domain_tools.py` 的计划写入用例改成两条 `plan_tasks` 并断言标题里的"等 2 条"。
+
+## 24. P2 开局：三张"列在表里、代码里没人读"的上限，和一次真的重启（2026-09-20）
+
+目标四（任务可靠生命周期）第一次被逐条对着代码核对，而不是按"我们已经有 Run/Step/Event"来估。核对结果和 §22 那次是同一类缺陷，只是这次藏在一张有人读的表里。
+
+### 上限早就在 `agent_runs` 上，只是没有人读
+
+`max_steps`（默认 8）、`token_budget`（默认 40000）、`reasoning_tokens` 三列一直存在，`steps_used` 每次模型调用都自增、也上报给前端——但 **`app/` 里没有任何一处把它们拿去比较**（`grep max_steps / token_budget` 只命中 `models.py` 的列定义）。所以账面上一切正常，实际上唯一的环是 `max_rounds`：模型只要肯继续要工具，就能一路花到超过自己声明的预算。
+
+`graph.py` 现在有了 `_ceiling()`，两条上限对应两种结局，故意不一样：
+
+| 撞上 | 行为 | 为什么 |
+| --- | --- | --- |
+| 步数用完 | 停止再取工具，**仍然出结论**，并把"是停手停的"写进 synthesize 的 prompt，要求它把没验到的部分放进 `uncertainties` | 边界是代码定的，但让人拿到一份诚实的降级结论比拿到一个错误更有用 |
+| token 用完 | 连最后那次 `synthesize` 也不花，直接以 `budget` 阶段失败 | 最后一次也是花钱；用不存在的预算写出来的东西就是编 |
+
+`spent` 只算 `prompt + completion`，**故意不加 `reasoning_tokens`**：§23 量到失败帧里思考数缺数、`completion` 也偏小，加进去会在有数的帧上双重计、在缺数的帧上照样漏。这是把已知测量缺陷写进代码，而不是假装它不存在。
+
+**负向验证**（这次先做再写文档）：把 `_ceiling()` 临时改成永远返回空，两条新测试当场红——`assert 3 == 2`（守卫没了就多花一次模型）、以及另一条烧到 `scripted provider exhausted`（超预算后一路花到脚本见底）。"新测试第一次就绿"在这里不算证据。
+
+### 重启对账：`running` 这个状态值根本不存在
+
+目标四写的是"服务重启后不允许 Run 永久停留在 `running`"。实测 `career_v2` 的 `agent_runs`：distinct status 只有 **completed / failed / awaiting_approval / cancelled**，全 `app/` 也没有 `"running"` 这个字面量。也就是说 **`created` 就是在飞标记**——行生下来是这个值，只有 graph 收尾或挂起才会改。进程死在半路，行就永远停在 `created`，feed 一直显示"进行中"，谁也不会再去动它。
+
+`service.reconcile_stale_runs()`：把 `status='created'` 且 `updated_at` 老于窗口的行判为 `failed`，错误写 `restart:` 前缀 + 具体阶段，并补一条 `run_failed` 事件（不然开着页面的人只看到一个永远转圈的进度条）。`awaiting_approval` **不扫**：那是人手里攥着的状态，让它过期是 #41 审批过期的活，在这儿收掉等于替人把待办删了。
+
+`main.py` 两个调用点，窗口不一样是刻意的：
+
+- 启动时 `stale_after=0`——新进程自己没有在做的事，看到的每个 `created` 都是上一个进程留下的；
+- 运行期每 60 秒扫一次，窗口 15 分钟——这才是真正的"任务超时"，而且量的是**无进展时长**，不是墙钟总长（等审批的三天不该算成超时）。单次模型调用 60 秒超时 + 步数上限，决定了 15 分钟绝不可能是"还在慢慢跑"。
+
+### 重启实测（真进程、真库、真 kill）
+
+插入一条 `status=created` 的孤儿行（`5fb218a5…`，`finished_at=None`）→ `taskkill //PID 46580 //F //T`（8100 上我自己起的 uvicorn）→ 1 秒后服务起来 → 再读：
+
+```text
+status='failed' finished_at=set
+error='restart: 上次进程退出时它还停在这一步，已按失败收尾。可以从头再发起一次；已经确认过的写入不会重复。'
+events: [('run_failed', 'restart: 上次进程退出时它还停在这一步…')]
+runs still claiming to work: []
+```
+
+"已经确认过的写入不会重复"这句不是安慰话：幂等键在 `Proposal.request_id`／`TaskResult.request_id`／`WeeklyReview` 唯一约束上（§19–§21），重跑撞的是同一堵墙。
+
+### 边界与未做（诚实项）
+
+- 启动零窗口依赖**单进程部署**（本机 uvicorn、无 `--reload`）。多 worker 时它会误杀别人正在跑的 run，届时必须换成 lease/心跳列——这条留给真实试点前，不在闭环里先建。
+- 上限是 run 级的：`max_steps` 与 `token_budget` 仍是模型默认值，没有按能力区分。要不要给判断型能力更高的预算，属于评测题（P3"每能力 token/成本"），不在这次里拍脑袋定。
+- `llm_timeout_seconds` 只管单次调用；进程被强杀时的半截 SSE 流重连、事件 seq 并发安全、多标签页重复提交仍未动（#44/#45）。
+
+### 测试
+
+`server/tests/test_run_ceilings.py`（3 例：步数用完仍出结论且少花一次调用、token 用完以 budget 失败且不落成果物、有预算时一切照常）、`server/tests/test_stale_runs.py`（4 例：孤儿被判失败且阶段进时间线、等人批准的不动、刚有进展的不动、启动零窗口连两秒前的孤儿也不留）。ruff 干净，7 例全绿。

@@ -188,6 +188,39 @@ def record_usage(deps: AgentDeps, run_id: str, usage: Usage, model: str, thinkin
     )
 
 
+def _ceiling(deps: AgentDeps, run_id: str) -> tuple[str, str]:
+    """Which per-run ceiling the next model call would cross, and what to say about it.
+
+    `max_steps` and `token_budget` sit on every run row, and until now nothing read
+    them: the loop was bounded only by `max_rounds`, so a run could keep asking for
+    tools and spend past the budget it declares. Reasoning tokens are deliberately
+    left out of `spent` — §23 measured that a truncated frame reports `思考=0` and a
+    small `completion`, so adding the two would double-count on the calls that got
+    their numbers and under-count on the ones that didn't.
+
+    Returns ("", "") while there is room.
+    """
+    session = deps.session_factory()
+    try:
+        run = session.get(Run, run_id)
+        if run is None:
+            return "", ""
+        spent = run.prompt_tokens + run.completion_tokens
+        if spent >= run.token_budget:
+            return "tokens", (
+                f"budget: 这次任务的 token 预算 {run.token_budget} 已经用尽（实际 {spent}），"
+                "程序不再调用模型。已经跑完的步骤都还在时间线里，可以重新发起一次接着做。"
+            )
+        if run.steps_used >= run.max_steps:
+            return "steps", (
+                f"【系统提示】这次任务的步数上限 {run.max_steps} 已用完，工具不再执行。"
+                "请只基于上面已经给出的事实下结论，并把因为停手而没验证到的部分写进 uncertainties。"
+            )
+        return "", ""
+    finally:
+        session.close()
+
+
 def _frame(deps: AgentDeps, run_id: str, cls: type[BaseModel], **fields: Any) -> BaseModel:
     """Envelope values are placeholders here; EventLog overwrites them with the
     authoritative seq/event_id from the row it inserts."""
@@ -256,6 +289,14 @@ def domain_gate(deps: AgentDeps, state: RunState) -> RunState:
 
 async def select_action(deps: AgentDeps, state: RunState) -> RunState:
     rounds = int(state.get("rounds_used") or 0)
+    ceiling, note = _ceiling(deps, state["run_id"])
+    if ceiling == "tokens":
+        return fail(deps, state, note)
+    if ceiling == "steps":
+        # Stopping the gathering loop is the boundary; concluding anyway is the point.
+        # The person gets an answer built from what was already read, and the note
+        # tells the model to name what it could not verify rather than fill the gap.
+        return {"pending_tool_calls": [], "budget_note": note}
     step_id = open_step(deps, state["run_id"], "plan", "select_action")
     budget = max(PLANNER_MIN_TOKENS, deps.capability.max_tokens)
     try:
@@ -449,6 +490,11 @@ def streamed_conclusion(buffer: str) -> str:
 
 async def synthesize(deps: AgentDeps, state: RunState) -> RunState:
     facts = state.get("tool_facts") or {}
+    ceiling, note = _ceiling(deps, state["run_id"])
+    if ceiling == "tokens":
+        # The last call is also a call. Failing here is honest; answering from a
+        # budget that no longer exists is how a run starts inventing things.
+        return fail(deps, state, note)
     step_id = open_step(deps, state["run_id"], "synthesize", "draft_digest")
     user_prompt = (
         f"用户目标：{state.get('goal')}\n"
@@ -473,6 +519,8 @@ async def synthesize(deps: AgentDeps, state: RunState) -> RunState:
         # review was asked for as if it were a digest. What differs now belongs to
         # the capability, where the integrity checks can see it.
         user_prompt += f"{deps.capability.synthesis_notes}\n"
+    if state.get("budget_note"):
+        user_prompt += f"{state['budget_note']}\n"
     try:
         answer = _AnswerStream(deps.events, state["run_id"])
 

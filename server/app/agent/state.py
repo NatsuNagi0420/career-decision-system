@@ -45,5 +45,9 @@ class RunState(TypedDict, total=False):
     obligation_id: str
 
     usage: dict[str, int]
+    #: Set when the run's own step ceiling cut off further tool calls. It travels to
+    #: the model as an instruction, so a stopped run still reports what it could not
+    #: verify instead of reading like a complete answer.
+    budget_note: str
     status: str
     errors: Annotated[list[str], operator.add]

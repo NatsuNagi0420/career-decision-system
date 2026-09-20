@@ -264,14 +264,28 @@ class RunService:
                 task.completed_at = utcnow()
                 task.plan.touch()
             project_id = task.plan.project_id
+            title = task.title
             session.commit()
             session.refresh(result)
             busy = session.scalar(
                 select(Run.id).where(Run.project_id == project_id, Run.finished_at.is_(None)).limit(1)
             )
         if busy is not None:
-            # One open run per project already sees the new row; a second would only
-            # duplicate the same proposal for the user to decide twice.
+            # One open run per project; a second would only duplicate the same proposal
+            # for the user to decide twice. Deferring is not dropping though — that run
+            # may already be past the step where it reads the plan, so the new account is
+            # promised forward as an obligation and stays visible until it is read.
+            with self._factory() as session:
+                session.add(
+                    Obligation(
+                        user_id=user.id,
+                        run_id=busy,
+                        project_id=project_id,
+                        capability_id="evidence_collect",
+                        intent=f"读回任务「{title}」新交回的结果，整理成证据并说明它改变了哪个判断。",
+                    )
+                )
+                session.commit()
             return {"result_id": result.id, "task_id": task.id, "deferred_to_run": busy}, None
         run = self.create_run(
             user,

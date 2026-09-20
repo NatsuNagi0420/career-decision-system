@@ -16,6 +16,7 @@ from app.agent.events import EventLog
 from app.agent.service import GraphRegistry, RunService
 from app.capabilities.registry import get_capability
 from app.config import Settings
+from app.db.domain import ActionPlan, DecisionProject, PlanTask, TaskResult
 from app.db.models import Approval, Artifact, Event, Note, Proposal, Run, User
 from app.llm.gateway import Gateway, ScriptedProvider
 from app.tools.base import ToolRegistry
@@ -143,6 +144,56 @@ async def test_run_interrupts_waits_and_then_writes_the_row(session_factory, set
             assert note.request_id == stored.request_id
             assert artifact.status == "committed"
             assert stored.status == "applied"
+
+
+async def test_a_run_reads_the_project_it_belongs_to(session_factory, settings, tmp_path, owner) -> None:
+    """Measured live, and the reason this is code's job: the model called
+    `get_plan(project_id="default")`, every scoped tool answered "no data", and the run
+    concluded — honestly, and wrongly — that the project held no evidence at all. A run
+    is already bound to one decision project, so it answers for that one."""
+    with session_factory() as session:
+        project = DecisionProject(user_id=owner.id, title="分析还是后端", question="我更适合哪个方向")
+        session.add(project)
+        session.flush()
+        plan = ActionPlan(
+            project_id=project.id, user_id=owner.id, title="四周验证", generation_request_id="bind-plan"
+        )
+        session.add(plan)
+        session.flush()
+        task = PlanTask(plan_id=plan.id, user_id=owner.id, title="投 5 份并记录回复", week_no=1)
+        session.add(task)
+        session.flush()  # ids exist only after a flush, and task_results points at one
+        session.add(
+            TaskResult(
+                task_id=task.id, user_id=owner.id, body="投了 5 份，2 个已读不回", request_id="bind-result"
+            )
+        )
+        session.commit()
+        project_id, task_id = project.id, task.id
+
+    script = [
+        tool_payload("get_plan", {"project_id": "default"}),
+        text_payload("读到了他交回的账"),
+        digest_payload("先看他交回的回复率", actions=["记录：再补两份 JD"], quote="投了 5 份，2 个已读不回"),
+    ]
+    async with build_service(
+        settings, session_factory, script, tmp_path / "cp.sqlite", capability_ids=("evidence_collect",)
+    ) as (service, _):
+        run = service.create_run(
+            owner, "把这条结果整理成证据", capability_id="evidence_collect", project_id=project_id
+        )
+        await service.start(run, allow_external_ai=True)
+
+    with session_factory() as session:
+        call = next(
+            event
+            for event in session.scalars(select(Event).where(Event.run_id == run.id).order_by(Event.seq))
+            if event.kind == "tool_call" and event.payload.get("name") == "get_plan"
+        )
+    assert call.payload["arguments"]["project_id"] == project_id
+    # The read that matters: the person's own task row came back, so the account in it
+    # can reach the conclusion instead of being remembered by the model.
+    assert {"table": "plan_tasks", "id": task_id} in call.payload["source_refs"]
 
 
 async def test_rejection_writes_nothing_but_still_records_the_decision(session_factory, settings, tmp_path, owner) -> None:

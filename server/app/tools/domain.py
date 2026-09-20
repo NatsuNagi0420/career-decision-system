@@ -499,7 +499,7 @@ class GetPlan(Tool):
                                 # able to read what it was woken for. A task marked done
                                 # with no account under it is a claim, not evidence.
                                 "results": [
-                                    {"body": item.body, "link": item.link, "at": item.created_at.isoformat()}
+                                    {"id": item.id, "body": item.body, "link": item.link, "at": item.created_at.isoformat()}
                                     for item in task.results
                                 ],
                             }

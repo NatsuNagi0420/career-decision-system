@@ -91,7 +91,11 @@ CAPABILITIES: tuple[CapabilitySpec, ...] = (
         description="针对不确定项设计验证动作，并把带逐字引文的证据归档进项目。",
         status="implemented",
         required_context=["user", "project"],
-        tools=["get_evidence", "list_candidates", "get_job_samples", "get_requirement_items"],
+        # `get_plan` is here because of the wake-up path: submitting a task result starts
+        # an evidence_collect run whose whole job is that account, and without the tool
+        # that returns it the run reads only JDs, finds nothing to cite, and proposes
+        # nothing — the loop stops at the submission.
+        tools=["get_evidence", "get_plan", "list_candidates", "get_job_samples", "get_requirement_items"],
         artifact_type="EvidencePlan",
         proposal_types=["collect_evidence"],
         risk_tier="R2",

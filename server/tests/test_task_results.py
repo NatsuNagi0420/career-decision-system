@@ -13,9 +13,11 @@ from fastapi.testclient import TestClient
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, sessionmaker
 
+from app.agent.executors import apply_executor, build_proposal
+from app.capabilities.registry import get_capability
 from app.config import Settings
-from app.db.domain import ActionPlan, DecisionProject, PlanTask, TaskResult
-from app.db.models import Run, User
+from app.db.domain import ActionPlan, DecisionProject, EvidenceItem, PlanTask, TaskResult
+from app.db.models import Artifact, Obligation, Proposal, Run, User
 from app.main import create_app
 from app.tools.domain import GetPlan
 from tests.support import call_tool
@@ -102,6 +104,137 @@ def test_a_submission_wakes_the_agent_that_turns_it_into_evidence(client, assign
         assert run.project_id == assignment["project_id"]
 
 
+def _collect_proposal(session: Session, run: Run, proposed: dict) -> Proposal | None:
+    """The proposal a synthesis answer would leave behind, before anyone approves it."""
+    artifact = Artifact(
+        run_id=run.id,
+        user_id=run.user_id,
+        artifact_type="EvidenceDigest",
+        title="证据整理",
+        source_refs=[],
+    )
+    session.add(artifact)
+    session.flush()
+    return build_proposal(
+        get_capability("evidence_collect"),
+        run,
+        artifact,
+        {"conclusion": "先看回覆率", "next_actions": [], "proposed": proposed},
+    )
+
+
+def test_the_woken_capability_can_read_what_woke_it() -> None:
+    """Seen live: the run a submission starts called every tool it was given — and none
+    of them returns the submission. It found nothing to cite, proposed nothing, and the
+    loop died at the person's own report. A capability must be handed the tool that
+    surfaces whatever it was woken for."""
+    capability = get_capability("evidence_collect")
+    assert "get_plan" in capability.tools
+
+
+def archive(session_factory: sessionmaker[Session], run_id: str, proposed: dict) -> tuple[dict, str]:
+    """Run the write the approval card would run: build the proposal from what the
+    model synthesised, then apply its executor."""
+    with session_factory() as session:
+        run = session.get(Run, run_id)
+        proposal = _collect_proposal(session, run, proposed)
+        assert proposal is not None and proposal.status == "pending"
+        session.add(proposal)
+        session.flush()
+        outcome = apply_executor(session, run, session.get(Proposal, proposal.id))
+        # Commit, or the row disappears when this session closes and the assertion in
+        # the test reads an empty table.
+        session.commit()
+        return outcome, proposal.id
+
+
+def test_archiving_a_result_keeps_their_words_and_points_at_their_row(client, assignment, session_factory) -> None:
+    """P1-2: the model chooses which account is worth archiving; it does not get to
+    restate it. The quote is read back off the row, so a conclusion citing this evidence
+    opens onto what the person actually typed."""
+    body = submit(client, assignment, request_id="req-arch-1").json()
+    outcome, _ = archive(
+        session_factory,
+        body["run_id"],
+        {
+            "statement": "数据分析岗投出去的回覆很少",
+            "quote": "他投了五份，几乎都没回（这是模型的转述）",
+            "kind": "evidence",
+            "result_id": body["result_id"],
+        },
+    )
+    with session_factory() as session:
+        item = session.get(EvidenceItem, outcome["evidence_id"])
+        assert item.quote == WORDS
+        # The model filed this as kind="evidence"; what a row came from is code's call.
+        assert item.kind == "action_result"
+        assert item.source_ref == {"table": "task_results", "id": body["result_id"]}
+
+
+def test_archiving_a_fabricated_or_borrowed_result_id_is_refused(client, assignment, session_factory) -> None:
+    """A citation that cannot be opened is worse than none: it makes an unbacked claim
+    look sourced. So an id that is missing, or belongs to someone else, fails the write."""
+    body = submit(client, assignment, request_id="req-arch-2").json()
+    register(client, "peeker")
+
+    with session_factory() as session:
+        stranger = session.scalar(select(User).where(User.username == "peeker"))
+        stolen = TaskResult(
+            task_id=assignment["task_id"],
+            user_id=stranger.id,
+            body="别人交回的经历",
+            request_id="req-stranger",
+        )
+        session.add(stolen)
+        session.commit()
+        stolen_id = stolen.id
+
+    synthesis = {"statement": "想引用一条记录", "result_id": "0" * 32}
+    with pytest.raises(LookupError):
+        archive(session_factory, body["run_id"], synthesis)
+
+    with pytest.raises(LookupError):
+        archive(session_factory, body["run_id"], {"statement": "想引用一条记录", "result_id": stolen_id})
+
+    with session_factory() as session:
+        # Neither attempt left a row behind: a failed write must not look like a source.
+        assert session.scalar(
+            select(func.count()).select_from(EvidenceItem).where(EvidenceItem.project_id == assignment["project_id"])
+        ) == 0
+
+
+def test_reapproving_the_same_archive_writes_one_row(client, assignment, session_factory) -> None:
+    body = submit(client, assignment, request_id="req-arch-3").json()
+    first, proposal_id = archive(
+        session_factory,
+        body["run_id"],
+        {"statement": "回覆率低是共同信号", "result_id": body["result_id"]},
+    )
+    with session_factory() as session:
+        run = session.get(Run, body["run_id"])
+        again = apply_executor(session, run, session.get(Proposal, proposal_id))
+        assert again["evidence_id"] == first["evidence_id"]
+        rows = session.scalar(
+            select(func.count())
+            .select_from(EvidenceItem)
+            .where(EvidenceItem.project_id == assignment["project_id"])
+        )
+        assert rows == 1
+
+
+def test_an_archive_with_nothing_to_open_is_flagged_not_offered(client, assignment, session_factory) -> None:
+    """Seen live: with the tools returning no sources the model still proposed an
+    evidence row, and the one row the earlier version had written carried an empty
+    quote and an empty source_ref. A card asking someone to approve a blank paper
+    trail is worse than no card, so the schema refuses it before the feed renders."""
+    body = submit(client, assignment, request_id="req-arch-4").json()
+    with session_factory() as session:
+        run = session.get(Run, body["run_id"])
+        proposal = _collect_proposal(session, run, {"statement": "他觉得自己不适合频繁沟通"})
+        assert proposal is not None and proposal.status == "unsupported"
+        assert "无法回溯" in proposal.error
+
+
 def test_the_wake_up_coalesces_into_the_run_already_open(client, assignment, session_factory) -> None:
     """Two submissions, one waiting agent. A second run would only ask the same
     question twice on the approval card."""
@@ -119,6 +252,15 @@ def test_the_wake_up_coalesces_into_the_run_already_open(client, assignment, ses
 
     body = submit(client, assignment, request_id="req-0003").json()
     assert body["run_id"] is None and body["deferred_to_run"]
+    # Deferring must not be dropping: that run may already be past the step where it
+    # reads the plan, so the account is promised forward or it leaves the loop silently.
+    with session_factory() as session:
+        owed = session.scalar(
+            select(Obligation).where(
+                Obligation.run_id == body["deferred_to_run"], Obligation.capability_id == "evidence_collect"
+            )
+        )
+        assert owed is not None and owed.status == "open" and "投 5 份" in owed.intent
 
 
 def test_a_second_click_states_the_same_fact_once(client, assignment, session_factory) -> None:

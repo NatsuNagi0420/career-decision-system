@@ -66,9 +66,9 @@
 → 每周复盘 → 更新比较结论与不确定项 → 生成下一周期行动计划
 ```
 
-第 1–9 环节已完成（2026-09-20 补上"用户执行任务并提交结果"，记录见 `AGENT_CAPABILITY_MAP.md` §19）。**本阶段最重要的工作是补齐后四个环节**：结果转化为证据、每周复盘、比较结果更新、下一周期计划生成。只有这部分完成，项目才从"能生成职业分析"升级为"能持续推进职业决策"。
+第 1–10 环节已完成（2026-09-20 补上第 9"用户执行任务并提交结果"与第 10"结果整理为新证据"，记录见 `AGENT_CAPABILITY_MAP.md` §19、§20）。**本阶段最重要的工作是补齐后三个环节**：每周复盘、比较结果更新、下一周期计划生成。只有这部分完成，项目才从"能生成职业分析"升级为"能持续推进职业决策"。
 
-2026-09-20 实测了一件事，它把后五个环节的性质改写了：**表已经建好，但没有人写它们**。`task_results`、`comparison_criteria`、`comparison_results`、`weekly_reviews` 四张表在 `app/` 里的引用数分别是 **0 / 0 / 0 / 1**（那 1 处只是能力注册表里一个 `status="planned"` 的名字），而 `evidence_items` 已经有 10 处读写。（2026-09-20 更新：`task_results` 已经接上读写——提交、幂等、唤醒 run、工具可读、feed 可列；剩下三张仍是死的。）同时 `is_valid_obligation_target()` 只接受 `implemented` 能力，所以 `action_plan` 永远无法承诺周复盘——指向它的承诺被静默丢弃。
+2026-09-20 实测了一件事，它把后五个环节的性质改写了：**表已经建好，但没有人写它们**。`task_results`、`comparison_criteria`、`comparison_results`、`weekly_reviews` 四张表在 `app/` 里的引用数分别是 **0 / 0 / 0 / 1**（那 1 处只是能力注册表里一个 `status="planned"` 的名字），而 `evidence_items` 已经有 10 处读写。（2026-09-20 更新：`task_results` 已经接上读写——提交、幂等、唤醒 run、工具可读、feed 可列；`evidence_items` 现在由执行器从 `task_results` 取原话写入，第 9→10 环节闭合；`comparison_criteria`、`comparison_results`、`weekly_reviews` 三张仍是死的。）同时 `is_valid_obligation_target()` 只接受 `implemented` 能力，所以 `action_plan` 永远无法承诺周复盘——指向它的承诺被静默丢弃。
 
 这意味着 P1 不是"设计并新建一套复盘功能"，而是**给已有的死表接上动词**，且必须按依赖顺序：先让用户能提交结果（用户自己的动作，走鉴权 REST 而不是 Proposal），再让 Agent 把结果归档成证据（`EvidenceItem.quote` 存用户原话，R2 需审批），然后才可能把 `weekly_review` 转成 `implemented`（R3：模型起草、人终局确认），最后带新证据重算比较并建立成果物版本链（`Artifact.version` 是乐观锁计数，不是逻辑版本，版本链需另加自引用列）。
 
@@ -112,7 +112,8 @@
 
 **P1 补齐决策闭环**：任务结果提交 → 结果证据化 → 每周复盘能力 → 比较矩阵重算 → 依新证据更新结论 → 下一周任务生成 → Artifact 版本关系 → 用户对复盘结果的确认。
 完成判据：一个用户能真正完成一次"计划—行动—复盘—调整"。
-✅ **2026-09-20 第 1 项「任务结果提交」已完成**：`POST /api/v1/tasks/{id}/results`（原样存用户的话、`request_id` 幂等、越权 404）+ 前端"行动清单"，提交即唤醒 `evidence_collect` run。真模型 + 浏览器实测：提交后 run 自己起来跑完 8 步并给出 R2 归档提案。第 2–8 项按依赖顺序待做。
+✅ **2026-09-20 第 1 项「任务结果提交」已完成**：`POST /api/v1/tasks/{id}/results`（原样存用户的话、`request_id` 幂等、越权 404）+ 前端"行动清单"，提交即唤醒 `evidence_collect` run。真模型 + 浏览器实测：提交后 run 自己起来跑完 8 步并给出 R2 归档提案。
+✅ **2026-09-20 第 2 项「任务结果证据化」已完成**：`collect_evidence` 提案带 `result_id`，执行器按那一行取用户原话落 `EvidenceItem`（`kind=action_result`、`source_ref` 指向 `task_results`），无出处的证据在建卡阶段就被判 `unsupported`。真模型实测归档成功、引文逐字一致。顺带修掉两个更基本的瞎点：`evidence_collect` 拿不到 `get_plan`（被结果唤醒的 run 读不到那条结果）、`project_id` 由模型给（它传了 `"default"`，于是整条证据能力一直在读空库）。第 3–8 项按依赖顺序待做。
 
 **P2 提高运行可靠性**：同步 DB 操作阻塞事件循环；进程内后台任务中断；服务重启后的 Run 恢复；审批超时调度；Run 取消与重试；事件并发序号安全；多标签页重复操作；模型调用超时与成本预算；运行日志与错误监控。
 完成判据：不再只适合单用户本地演示，可支撑小规模真实试点。

@@ -412,4 +412,48 @@ M0–M4 之后剩下的根本缺口不是能力数量，而是**没有人持有�
 
 真模型侧的顺带证据：这次提交唤醒的 run 跑了 8 步，产出 **R2 提案"归档一条证据：广州数据分析入门岗 JD 硬性要求（第 1 批）"**，理由原文是"这份结果只覆盖到 1 个岗位（job_id 5），不是任务要求的 3 个…样本数不足，所以「广州数据分析入门岗的硬性要求长什么样」这个判断还不能成立，只能先记成单岗位快照"——第 10 环节（结果→证据）的提案形状已经自己长出来了，P1-2 要做的只是给它一个能落 `EvidenceItem` 的执行器。
 
-门禁：`tsc --noEmit` 干净、`vitest` 20 passed、`vite build` 41 modules、`ruff check scripts app tests` 全绿、`pytest tests/test_task_results.py` 8 passed；全量 `scripts/verify.ps1` 见下条记录。
+门禁：`scripts/verify.ps1` 七项全 PASS（ruff / 契约完整性 / alembic drift / pytest / tsc / vitest 20 / vite build 41 modules），提交 `917476c`。注意 verify.ps1 的汇总块只打 PASS/FAIL 不打测试数，而后台输出文件会截掉头部——想引用具体条数得单独跑一次并留 `tail`。
+
+## 20. P1-2：结果证据化，以及它暴露的两个结构性瞎点（2026-09-20）
+
+第 10 环节（结果→证据）本来预计要写一条新链路，实际执行器早就在了（`collect_evidence` → `EvidenceItem`，`request_id` 幂等）。真正要补的是**引用链**，而补的时候用真模型连跑三轮，抓到两个看代码看不出来的洞。
+
+### 先补引用链：模型只挑，不复述
+
+- `get_plan` 把 `results[].id` 暴露出来（不暴露就没有可引用的东西），`CollectEvidencePayload` 新增 `result_id`。
+- 执行器看到 `result_id` 就去 `task_results` 取那一行：先查它属于这个用户、属于这个项目（否则 `LookupError`，一条都写不下去），然后把 `quote` **换成那行的原话**、`source_ref` 换成 `{"table": "task_results", "id": ...}`、`kind` 从默认的 `job_signal` 改成 `action_result`。模型可以选择交回哪一条，不能改写它——归档出来的引文与它在页面上打的字逐字相同。
+- 重复批准同一条提案仍只落一行（幂等沿用 `request_id`）。
+
+### 洞一：唤醒它的东西，它读不到
+
+`evidence_collect` 的工具表里没有 `get_plan`。也就是说：提交结果把 run 叫起来，goal 写着"把它整理成证据"，而这个 run **没有任何工具能读到"它"**。它只能去翻 JD，翻不到就什么都不提。加一行工具 + 一条 `test_the_woken_capability_can_read_what_woke_it`（"能力必须拿到它被唤醒所依据的那个工具"）。
+
+### 洞二：项目 id 竟然由模型决定
+
+真模型日志里 `get_plan / list_candidates / get_evidence` 全部 `arguments={"project_id": "default"}`、全部 0 来源，覆盖度 25、`write_withheld`，理由写得头头是道（"一点证据都没有"）——**诚实，但是错的**。`user_id` 一直是代码注入的，`project_id` 却照收模型给的字符串，这个不对称让整条证据能力在演示路径上一直是瞎子。改成 run 已绑定哪个项目就读哪个（`run_tools` 里覆写，并把 `project_rebound` 记进 trace，给 P3 的"工具调用正确率"当计数），配 `test_a_run_reads_the_project_it_belongs_to`。
+
+修完同一份脚本的前后对比（真模型，同一个 demo 项目）：
+
+| | 修前 | 修后 |
+| --- | --- | --- |
+| get_plan 来源 | 0 | 4 |
+| get_evidence / requirement_items | 0 | 1 / 6+20 |
+| EvidencePlan 覆盖度 | 25 · 依据不足 | 100 · 非临时 |
+| 提案 | 无（`write_withheld`） | R2「归档一条证据」，走完审批 |
+
+修后那一轮真模型跑完整链路（`server/var/live_p12b.py`，日志 `var/live-p12d.log`）：卡片上写的还是模型的转述，落库以后 `evidence_items.quote` 变成"第三次的账：我照着 JD 补了一周 SQL 练习，做完 3 道窗口函数题…"——与他在行动清单里交回的那段**逐字相同**，`source_ref` 指向 `task_results` 那一行。模型这次挑的是上一条交回的结果而不是最新那条（它有权挑），`supports` / `does_not_support` 两个字段被 schema 丢掉没有落库——那是 P1-4 比较矩阵要接的形。它同时把 `kind` 写成 `"evidence"`：一行证据的来源是代码说了算，现在引用了 `task_results` 就一律记 `action_result`。
+
+### 浏览器里把后半段也跑了一遍
+
+在行动清单里交回第 2 周任务的结果（"用 Kaggle 的泰坦尼克数据集做完一个小分析…6 小时，其中 4 小时在洗数据"）→ 唤醒的 run 读了计划（含他此前交回的全部三段），产出的不是一句复述，而是**跨他自己的两条记录做对照**："清洗占掉绝大部分时间，而你自述的高能量时刻在表达结论"，并明确写下"这只改变了对日常内容和兴趣落点的判断，没有改变先做哪条路这个主问题——那一侧证据仍不足"。卡片上出现"引自你交回的结果（写入时用你的原话）"；采纳之后库里两行证据 `verbatim_match=true`（`quote` 与 `task_results.body` 逐字相等）。
+
+顺手撞到的一条判据实测：那张旧会话里遗留的待确认卡，点"采纳并写入"返回 **409**（审批已过期），界面把它显示成失败文本而不是"已写入"——"已过期审批不能继续执行 / 执行失败不得显示为成功"两条在真界面上成立。（这条提示是英文 "approval is no longer pending"，中文文案待收口。）
+
+### 顺带收口的两处
+
+- **没有出处的证据不再进确认门**：库里存着一行 `quote=""`、`source_ref={}` 的"证据"，是校验之前写进去的——而且 `get_evidence` 会把它当来源喂给后面每一个 run（这轮日志里 `get_evidence → 1 个来源` 就是它）。现在 `CollectEvidencePayload` 用 `model_validator` 要求 quote / source_ref / result_id 至少有一个，否则提案在建卡阶段就是 `unsupported`：让人批准一条打不开的空证据，比不提更糟。那行脏数据已由 `var/drop_unsourced_evidence.py` 删掉（删前整行导出到 `var/deleted-evidence.json`）。
+- **卡片说清最后写的是谁的话**：`DecisionCard` 的字段表补 `result_id` → "引自你交回的结果（写入时用你的原话）"，否则人看到的是模型的转述，容易以为批准的就是那句转述。
+
+### 门禁
+
+树静止后重跑 `powershell -File scripts/verify.ps1`，七项全 PASS（日志 `server/var/verify-p12b.log`）：ruff、能力与契约完整性（14 条，0 failed）、`alembic check` 无漂移、全量 pytest（真 MySQL `career_v2_test`，含本轮新增的 `test_the_woken_capability_can_read_what_woke_it` / `test_an_archive_with_nothing_to_open_is_flagged_not_offered` / `test_a_run_reads_the_project_it_belongs_to`）、`tsc --noEmit`、vitest（2 文件 20 例）、`vite build`（41 模块）。门禁只打印 PASS/FAIL 不打印用例数，所以 pytest 的条数以日志为准。

@@ -309,6 +309,16 @@ async def run_tools(deps: AgentDeps, state: RunState) -> RunState:
             arguments = dict(call.get("arguments") or {})
             tool = deps.tools.get(name)
             allowed = name in deps.capability.tools
+            rebound = False
+            if allowed and run.project_id and tool is not None and "project_id" in tool.args_model.model_fields:
+                # A run is already bound to one decision project, so the model does not get
+                # to choose which one it reads — same reason `user_id` is injected below
+                # rather than asked for. Measured: it passed project_id="default", every
+                # scoped tool answered "no data", and the run concluded (honestly, and
+                # wrongly) that the project had no evidence at all.
+                rebound = arguments.get("project_id") != run.project_id
+                if rebound:
+                    arguments["project_id"] = run.project_id
 
             if call.get("parse_error"):
                 reason = f"arguments were not valid JSON: {call['parse_error']}"
@@ -326,7 +336,12 @@ async def run_tools(deps: AgentDeps, state: RunState) -> RunState:
                 result_content = result.content(tool.max_output_chars)
                 truncated, refs = result.truncated, result.source_refs
                 facts[name] = result.payload
-                trace.append({"name": name, "ok": result.ok, "truncated": truncated, "source_refs": refs})
+                observed = {"name": name, "ok": result.ok, "truncated": truncated, "source_refs": refs}
+                if rebound:
+                    # Worth counting in the evals: the model asked to read a project that
+                    # isn't this run's, and code answered with the one it is.
+                    observed["project_rebound"] = True
+                trace.append(observed)
                 emit(
                     deps, run_id,
                     _frame(deps, run_id, ToolCallFinished, kind="tool_call", step_id=step_id, name=name,
@@ -435,6 +450,9 @@ async def synthesize(deps: AgentDeps, state: RunState) -> RunState:
         "只基于上述事实整理。没有依据的部分写进 uncertainties，不要补数字或经历。\n"
         "如果你想推进一次写入，把它放进 proposed 字段（例如 name/statement/title/body），"
         "由程序校验并交给人确认；不确定就不填，不要编造字段。\n"
+        "把用户交回的任务结果归档成证据时，proposed 里带 result_id（get_plan 返回的 "
+        "results[].id）：程序会用那条记录里他的原话替换你写的 quote，"
+        "你只负责挑哪一条值得归档、以及它支持或推翻哪个判断。\n"
         "evidence_basis 里的 quote 必须是工具返回内容中面向人的那句原话"
         "（岗位描述、要求条目、记录正文），不是整个响应体；"
         "如果某条事实只存在于结构化字段里，就把该字段的可读值抄成 quote，"

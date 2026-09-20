@@ -16,7 +16,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field, ValidationError, model_validator
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -29,6 +29,7 @@ from app.db.domain import (
     EvidenceItem,
     PlanTask,
     ProfileFact,
+    TaskResult,
     UserProfile,
 )
 from app.db.models import Artifact, Note, Proposal, Run
@@ -50,7 +51,24 @@ class CollectEvidencePayload(BaseModel):
     kind: str = Field(default="job_signal", max_length=32)
     candidate_id: str | None = Field(default=None, max_length=32)
     candidate_name: str | None = Field(default=None, max_length=120)
+    #: Cites the row the person's own account came from. Without it an archived
+    #: "they did X" claim is only as good as the model's memory of the tool output.
+    result_id: str | None = Field(default=None, max_length=32)
     source_ref: dict[str, Any] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def _must_be_citable(self) -> CollectEvidencePayload:
+        """An archived "evidence" with nothing to open is the worst possible outcome:
+        it gives an unbacked claim a legitimate-looking paper trail. Refusing it here
+        means the proposal is flagged unsupported instead of becoming a card that asks
+        the person to approve junk.
+
+        `result_id` counts as the trail, and is stronger than the other two: the
+        executor re-reads the quote off that row rather than trusting this one.
+        """
+        if not self.quote.strip() and not self.source_ref and not self.result_id:
+            raise ValueError("证据必须有原句 quote、来源 source_ref 或 result_id，否则无法回溯")
+        return self
 
 
 class CreateDecisionProjectPayload(BaseModel):
@@ -158,14 +176,36 @@ def _collect_evidence(session: Session, run: Run, proposal: Proposal) -> dict[st
         )
         candidate_id = match.id if match else None
 
+    kind = payload.kind
+    quote = payload.quote
+    source_ref = dict(payload.source_ref or {})
+    if payload.result_id:
+        # The person's account counts as evidence only if the row behind it is theirs
+        # and belongs to this project — and the quote is taken from that row, not from
+        # what the model recalls of it. It may choose which account to cite, never
+        # rewrite one.
+        result = session.get(TaskResult, payload.result_id)
+        task = session.get(PlanTask, result.task_id) if result is not None else None
+        plan = session.get(ActionPlan, task.plan_id) if task is not None else None
+        if result is None or result.user_id != proposal.user_id or task is None or task.user_id != proposal.user_id:
+            raise LookupError("task result not visible to this user")
+        if plan is None or plan.project_id != project.id:
+            raise LookupError("task result belongs to another project")
+        quote = result.body
+        source_ref = {"table": "task_results", "id": result.id}
+        # `kind` records where a row came from, so a citation of the person's own account
+        # is an action result whatever label the model put on it. Measured live: it filed
+        # one as kind="evidence", which inventories as a third source type.
+        kind = "action_result"
+
     item = EvidenceItem(
         user_id=proposal.user_id,
         project_id=project.id,
         candidate_id=candidate_id,
-        kind=payload.kind,
+        kind=kind,
         statement=payload.statement,
-        quote=payload.quote,
-        source_ref=payload.source_ref,
+        quote=quote,
+        source_ref=source_ref,
         source="agent",
         created_by_run_id=run.id,
         request_id=proposal.request_id,

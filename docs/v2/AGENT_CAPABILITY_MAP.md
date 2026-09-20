@@ -365,3 +365,32 @@ M0–M4 之后剩下的根本缺口不是能力数量，而是**没有人持有�
 全部受既有的 `prefers-reduced-motion: reduce` 总闸管辖（`*` 把 animation/transition 压到 1ms）。
 
 **没动效的地方是有意的**：流式正文每个 delta 都在变，若套 `Swap` 会每帧重启动画——所以 `<LiveAnswer>` 明确排除。实测：各元素 `animation-name` 分别为 swap-in / face-in / unfold / item-in，`interpolateSize=allow-keywords`，feed 与 dock 左缘仍是单值 984 / 1048（动效没引入位移），无横向溢出、控制台无报错；vitest 20 全过、build 成功（CSS 46.6KB）。
+
+## 18. P0：工程与项目定义收口（2026-09-20）
+
+四层 v1 残留（`backend/` `agent_server/` `android/` `SQL脚本/` + 12 个 ps1 + `start-dev.bat`）删除，22 份 v1 文档移入 `docs/v1-历史/`；整个 v2 重写首次入库（两个 commit）；README 按当前单进程架构重写；新增 `scripts/verify.ps1` 作为唯一验证入口；`PROJECT_GOAL.md` 落定目标与不做清单。
+
+**两处只有查 git 才会发现的坑**：
+
+1. `.gitignore` 原来只写了 `agent_server/**/__pycache__/`，对 `server/` 没有任何规则——100 个 `.pyc` 差一点进库。改成全局 `__pycache__/` + `*.py[cod]`。
+2. `git add -A` 会连 `参考开源项目/` 一起暂存，实测 **约 31,000 个文件**（HEAD 里 tracked 数为 0，即纯外部仓库）。提交前 `git reset` 掉并把该目录写进 ignore。同批清掉的还有 `web/vite.config.js` 和 `web/tsconfig.tsbuildinfo` 两个编译产物——前者正是 Vite 优先解析 `.js` 的那个坑，删掉后重跑 build 仍然成功，证明它是死文件。
+
+**迁移方式确实已经统一**（Alembic 单一机制），但 P0 的验收句"任何开发者根据 README 都能启动当前系统"实测**不成立**：全新库上 `alembic upgrade head` 直接死在 `pymysql.err.OperationalError (1049, Unknown database)`。修在代码而不是文档里——`app/db/base.ensure_database()` 在迁移前建库，用比 `assert_safe_target` 更严的 `^career_v2[A-Za-z0-9_]*$`（库名要拼进 DDL，不能参数绑定），只连服务器不选库地下 `CREATE DATABASE IF NOT EXISTS … CHARACTER SET utf8mb4`。迁移与 `conftest` 各调一次。实测：把 `DB_URL` 指到不存在的 `career_v2_p0probe` → 建库 + 6 个 revision 全跑完 + 排序规则与生产一致（`utf8mb4_0900_ai_ci`），随后删掉该探针库，`career_db` / `career_decision_system` 两个 v1 库未受影响。
+
+`ruff` 门禁从 `app tests scripts` 扩到含 `migrations`，并对 `migrations/versions/*` 容忍 Alembic 自动生成的样板 import——否则"加了迁移就跳过 lint"这个洞会一直留着。
+
+### P1 的现状不是"没有表"，是"表是死的"
+
+按 symbol 统计模型在 `app/` 里的引用（不含自身定义）：
+
+| 对象 | 引用数 | 含义 |
+| --- | --- | --- |
+| `TaskResult` | **0** | 用户提交任务结果的表存在，但没有任何代码写入或读出——提交这个动作在产品里不存在 |
+| `ComparisonResult` | **0** | 比较矩阵只活在 Artifact 的 JSON 里，`comparison_criteria/results` 两张表是空的 |
+| `WeeklyReview` | 1 | 只在 registry 里作为 `status="planned"` 的能力名出现，没有 executor |
+| `PlanTask` | 3 | 只在批准计划时写，之后没人按周/按到期读它 |
+| `EvidenceItem` | 10 | 读（tools/domain）和写（executors）都通了 |
+
+能力侧的对应事实：`is_valid_obligation_target()` 要求 `status == "implemented"`，所以 `weekly_review` 现在**不可能**被承诺——`action_plan` 一旦指向它就静默丢弃（registry 里那条注释就是上次修这个 bug 时留下的）。
+
+所以 P1 的真实工作量是"把死表接上动词"，顺序按依赖走：**提交结果（用户动作，走 REST 不走 Proposal）→ 结果归档为证据（R2，`EvidenceItem.quote` 存用户原话）→ 周复盘能力 implemented（R3，模型起草、人终局确认）→ 带新证据重算比较 → Artifact 版本链**。`Artifact.version` 是 SQLAlchemy 的乐观锁计数，不是逻辑版本，所以版本链要加自引用列（如 `supersedes_id`），这是一次真迁移。

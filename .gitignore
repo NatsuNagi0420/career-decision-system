@@ -20,6 +20,7 @@ dist/
 .vite/
 playwright-report/
 test-results/
+*.tsbuildinfo
 
 # Local secrets and local state. `.env.example` files are tracked; `.env` never is.
 .env

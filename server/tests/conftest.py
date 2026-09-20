@@ -30,9 +30,9 @@ def settings(tmp_path_factory: pytest.TempPathFactory) -> Settings:
 
 @pytest.fixture(scope="session")
 def engine(settings: Settings) -> Iterator[Engine]:
-    from app.db.base import assert_safe_target
+    from app.db.base import ensure_database
 
-    assert_safe_target(settings.db_url)
+    ensure_database(settings.db_url)
     built = build_engine(settings.db_url)
     Base.metadata.drop_all(built)
     Base.metadata.create_all(built)

@@ -32,14 +32,14 @@ React (Vite, 5173)  ──/api──►  FastAPI + LangGraph (8100)  ──►  
 
 ## 本地启动
 
-前置：Python 3.12–3.13、Node 20+、一个可连的 MySQL（只允许写库名以 `career_v2` 开头的库，迁移会主动拒绝其他目标）。
+前置：Python 3.12–3.13、Node 20+、一个可连的 MySQL 8。迁移会自己建库，但只允许建/写库名以 `career_v2` 开头的库，其他目标一律被 `assert_safe_target` 拒绝。
 
 ```powershell
 # 1) 服务端
 cd server
 uv sync --extra dev
 copy .env.example .env       # 填 DB_URL；LLM_PROVIDER=mock 可完全离线跑通
-.venv\Scripts\python.exe -m alembic upgrade head
+.venv\Scripts\python.exe -m alembic upgrade head   # 库不存在时先 CREATE DATABASE career_v2
 .venv\Scripts\python.exe scripts\import_catalog.py   # 载入职业方向/岗位目录
 .venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8100
 
@@ -64,8 +64,9 @@ powershell -File scripts\verify.ps1 -Quick   # 跳过 pytest
 
 ## 测试与评测的边界
 
-- `server/tests/` 用真实 MySQL（`career_v2_test`）+ `ScriptedProvider`，覆盖结构、权限、审批、事件与承诺，**不调用真实模型**。
+- `server/tests/` 用真实 MySQL（`career_v2_test`，缺失时同样自动建库）+ `ScriptedProvider`，覆盖结构、权限、审批、事件与承诺，**不调用真实模型**。
 - 真实模型的质量门禁还没有。这是当前最大的一块欠账，列为 P3，见 `docs/v2/PROJECT_GOAL.md` 第五节"目标五"。
+- **不要同时开两个 pytest 会话**：它们共享 `career_v2_test`，`TRUNCATE` 会互相打断。
 
 ## 文档
 
@@ -81,8 +82,10 @@ powershell -File scripts\verify.ps1 -Quick   # 跳过 pytest
 
 ```text
 server/   FastAPI + LangGraph 服务：API、鉴权、能力注册表、工具、事件、审批、承诺
+  scripts/   validate.py（契约校验）、import_catalog.py（职业目录）、brand_assets.py（品牌素材切图）、demo_e2e.py
 web/      React 19 + Vite 应用壳：对话流、成果物、确认门、对象层侧栏
 spikes/   一次性技术验证（模型行为、checkpoint 一致性），结论已并入文档
-scripts/  verify.ps1（唯一验证入口）与品牌素材生成
-docs/     v2 现行文档 + v1 历史归档
+scripts/  verify.ps1 —— 唯一验证入口
+docs/     v2 现行文档 + v1 历史归档 + 品牌形象素材
+参考开源项目/  只读研究材料，不入库、不参与构建，其自带的 AGENTS.md 不适用于本项目
 ```

@@ -4,13 +4,17 @@ import re
 from collections.abc import Iterator
 from contextlib import contextmanager
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, make_url
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.config import get_settings
 
 _PROTECTED_DB = re.compile(r"^career_v2")
+# `assert_safe_target` only checks the prefix, which is enough for connecting but not
+# for DDL: the name below is interpolated into a CREATE statement, where it cannot be
+# bound as a parameter.
+_CREATABLE_DB = re.compile(r"^career_v2[A-Za-z0-9_]*$")
 
 
 def parse_db_name(url: str) -> str:
@@ -23,6 +27,26 @@ def assert_safe_target(url: str) -> None:
     name = parse_db_name(url)
     if not _PROTECTED_DB.match(name):
         raise RuntimeError(f"refusing to operate on database `{name}`; only career_v2* is allowed")
+
+
+def ensure_database(url: str) -> None:
+    """Create the target database when it does not exist yet.
+
+    Without this a fresh clone cannot follow the README: the first `alembic upgrade
+    head` dies on MySQL 1049 "Unknown database".
+    """
+    assert_safe_target(url)
+    name = parse_db_name(url)
+    if not _CREATABLE_DB.match(name):
+        raise RuntimeError(f"refusing to create database `{name}`")
+    # `_replace` is SQLAlchemy's sanctioned way to blank a URL element.
+    server_url = make_url(url)._replace(database=None)
+    engine = create_engine(server_url, isolation_level="AUTOCOMMIT", future=True)
+    try:
+        with engine.connect() as conn:
+            conn.exec_driver_sql(f"CREATE DATABASE IF NOT EXISTS `{name}` CHARACTER SET utf8mb4")
+    finally:
+        engine.dispose()
 
 
 def build_engine(url: str) -> Engine:

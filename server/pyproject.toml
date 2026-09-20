@@ -42,6 +42,11 @@ select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
 # intentional, not a typo to flag.
 ignore = ["B008", "RUF001", "RUF002", "RUF003"]
 
+[tool.ruff.lint.per-file-ignores]
+# Alembic stamps `import sqlalchemy as sa` and the mysql dialect into every revision
+# whether the body uses them or not. Lint the logic, tolerate the boilerplate.
+"migrations/versions/*" = ["F401", "RUF100"]
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]

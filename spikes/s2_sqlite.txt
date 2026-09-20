@@ -1,0 +1,69 @@
+[S2] saver=sqlite
+phase-a state: {'steps': ['preload'], 'approved': None}
+interrupt surfaced: True
+checkpoint persisted: True id: 1f1b41d3-c321-6b78-8001-2f5346efa569
+hard-exiting now to simulate process death
+[S2] saver=sqlite
+new process found checkpoint: True id: 1f1b41d3-c321-6b78-8001-2f5346efa569
+final steps: ['preload', 'gate', 'finalize'] | approved: True
+PASS-no-node-redo-after-restart: True | duplicated: []
+[S2] saver=sqlite
+
+===== tables =====
+n/a for sqlite saver (single file)
+
+===== conformance =====
+
+  ====================================================
+    Checkpointer Validation: sqlite-saver
+  ====================================================
+    BASE CAPABILITIES
+      ✅ delete_thread        
+      ✅ get_tuple            
+      ✅ list                 
+      ✅ put                  
+      ✅ put_writes           
+
+    EXTENDED CAPABILITIES
+      ⊘  copy_thread          (not implemented)
+      ⊘  delete_for_runs      (not implemented)
+      ⊘  prune                (not implemented)
+
+    Result: FULL (5/5)
+  ====================================================
+
+  passed_all() -> True
+  passed_all_base() -> True
+
+===== interrupt-a =====
+interrupt-a child exit code: 0 (0 expected for interrupt-a; it hard-exits)
+
+===== interrupt-b =====
+interrupt-b child exit code: 0 (0 expected for interrupt-a; it hard-exits)
+
+===== concurrency =====
+Traceback (most recent call last):
+  File "D:\Project\career-decision-system\spikes\s2_mysql_checkpointer.py", line 293, in <module>
+    main()
+  File "D:\Project\career-decision-system\spikes\s2_mysql_checkpointer.py", line 283, in main
+    raise SystemExit(asyncio.run(orchestrate(cfg)))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Project\career-decision-system\agent_server\.venv\Lib\asyncio\runners.py", line 195, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "D:\Project\career-decision-system\agent_server\.venv\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Project\career-decision-system\agent_server\.venv\Lib\asyncio\base_events.py", line 691, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "D:\Project\career-decision-system\spikes\s2_mysql_checkpointer.py", line 262, in orchestrate
+    await MODES[step](cfg)
+  File "D:\Project\career-decision-system\spikes\s2_mysql_checkpointer.py", line 221, in run_concurrency
+    graph = g.compile(checkpointer=saver)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Project\career-decision-system\spikes\.venv\Lib\site-packages\langgraph\graph\state.py", line 1261, in compile
+    self.validate(
+  File "D:\Project\career-decision-system\spikes\.venv\Lib\site-packages\langgraph\graph\state.py", line 1143, in validate
+    raise ValueError(
+ValueError: Graph must have an entrypoint: add at least one edge from START to another node

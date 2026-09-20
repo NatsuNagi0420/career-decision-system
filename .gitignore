@@ -1,39 +1,49 @@
+# Editors and OS
 .idea/
 .vscode/
 .DS_Store
 Thumbs.db
 
-# Python
-agent_server/.venv/
-agent_server/__pycache__/
-agent_server/**/__pycache__/
-agent_server/**/*.pyc
-agent_server/.pytest_cache/
-agent_server/.ruff_cache/
-agent_server/.env
-
-# Java
-backend/target/
-backend/.mvn/wrapper/maven-wrapper.jar
+# Python — the v2 server is the only Python service; the rule is global on purpose so
+# a new package can never leak its bytecode.
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.venv/
+venv/
 
 # Node
-web/node_modules/
-web/dist/
-web/.env
-web/.vite/
-web/playwright-report/
-web/test-results/
+node_modules/
+dist/
+.vite/
+playwright-report/
+test-results/
 
-# Android
-android/.gradle/
-android/build/
-android/**/build/
-android/local.properties
+# Local secrets and local state. `.env.example` files are tracked; `.env` never is.
+.env
+.env.local
+*.pem
 
-# Local uploads and generated files
+# Generated at runtime, never authored
 logs/
 uploads/
 backups/
 pilot-results/
 .local-https/
+server/var/
 *.log
+*.sqlite
+*.sqlite-journal
+.last_run_id
+
+# Scratch produced by shell mistakes on Windows (a literal "%SystemDrive%" directory)
+%SystemDrive%/
+
+# Vendored third-party reference repos (read-only study material, ~31k files).
+# They are not part of this product and carry their own licenses.
+参考开源项目/
+
+# Scratch: unzipped .docx review material
+.docx-review-*/

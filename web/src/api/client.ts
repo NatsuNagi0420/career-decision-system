@@ -85,6 +85,22 @@ export const api = {
       body: JSON.stringify(input),
     }),
   snapshot: (runId: string) => request<Snapshot>(`/api/v1/runs/${runId}`),
+  /** The person's own account of what they did. No approval gate here: the gate
+   *  belongs on the archiving write that follows, not on their own words. */
+  submitTaskResult: (taskId: string, body: string, link: string) =>
+    request<{ result_id: string; task_id: string; run_id: string | null; duplicate?: boolean }>(
+      `/api/v1/tasks/${taskId}/results`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          body,
+          link: link || null,
+          // Client-generated so a double click lands exactly one row.
+          request_id:
+            crypto.randomUUID?.() ?? `req-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`,
+        }),
+      },
+    ),
   decide: (runId: string, approvalId: string, approved: boolean, feedback: string) =>
     request<{ accepted: boolean }>(`/api/v1/runs/${runId}/approvals/${approvalId}/decision`, {
       method: "POST",
@@ -162,11 +178,33 @@ export interface ArtifactEntry {
   source_refs: Array<Record<string, unknown>>;
 }
 
+export interface TaskResultEntry {
+  id: string;
+  /** Verbatim: this is what an evidence row later quotes. */
+  body: string;
+  link: string | null;
+  at: string;
+}
+
+export interface TaskEntry {
+  id: string;
+  project_id: string;
+  plan_id: string;
+  title: string;
+  expected_output: string;
+  week_no: number;
+  kind: string;
+  status: string;
+  due_date: string | null;
+  results: TaskResultEntry[];
+}
+
 export interface Feed {
   runs: RunEntry[];
   projects: ProjectEntry[];
   artifacts: ArtifactEntry[];
   obligations: ObligationEntry[];
+  tasks: TaskEntry[];
   pending_approvals: Array<{ id: string; run_id: string; proposal_id: string; expires_at: string | null }>;
 }
 

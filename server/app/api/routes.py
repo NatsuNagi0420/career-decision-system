@@ -42,6 +42,13 @@ class ApprovalDecision(BaseModel):
     feedback: str | None = Field(default=None, max_length=2000)
 
 
+class TaskResultCreate(BaseModel):
+    body: str = Field(min_length=2, max_length=4000)
+    link: str | None = Field(default=None, max_length=500)
+    #: The client generates this so a double click lands once.
+    request_id: str = Field(min_length=8, max_length=80)
+
+
 def _auth(request: Request) -> AuthRepository:
     return request.app.state.auth
 
@@ -151,6 +158,36 @@ def abandon_obligation(
         return _runs(request).abandon_obligation(user, obligation_id)
     except NotOwner as exc:
         raise HTTPException(status_code=404, detail="obligation not found") from exc
+
+
+@router.post("/tasks/{task_id}/results", status_code=201)
+async def submit_task_result(
+    task_id: str,
+    payload: TaskResultCreate,
+    request: Request,
+    user: User = Depends(current_user),
+) -> dict[str, Any]:
+    """The person reports what actually happened.
+
+    No Proposal here on purpose: this is their own account of their own week, and
+    confirming it back to them would point the approval gate at the wrong party. The
+    write that does need a human is the one it triggers — the agent proposing to archive
+    these words as evidence.
+    """
+    service = _runs(request)
+    try:
+        outcome, run = service.submit_task_result(
+            user,
+            task_id,
+            body=payload.body,
+            link=payload.link,
+            request_id=payload.request_id,
+        )
+    except NotOwner as exc:
+        raise HTTPException(status_code=404, detail="task not found") from exc
+    if run is not None:
+        _spawn(request, service.start(run, allow_external_ai=user.allows_external_ai))
+    return {**outcome, "run_id": run.id if run else None}
 
 
 @router.post("/runs", status_code=202)

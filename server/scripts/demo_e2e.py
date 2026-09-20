@@ -101,6 +101,12 @@ def narrate(frame: dict) -> None:
         log(kind, frame.get("status") or frame.get("error"))
 
 
+def persisted_seqs(frames: list[dict]) -> list[int]:
+    """Only durable events carry a seq. The transient delta channel is rendered, not
+    replayed, so it must not enter the resume cursor or the continuity check."""
+    return [frame["seq"] for frame in frames if "seq" in frame]
+
+
 class Demo:
     def __init__(self, client: httpx.AsyncClient, headers: dict[str, str]) -> None:
         self.client = client
@@ -133,7 +139,7 @@ class Demo:
             )
             decided.raise_for_status()
             log("decision", "采纳")
-            resume_from = max(frame["seq"] for frame in frames)
+            resume_from = max(persisted_seqs(frames))
             more, _ = await read_stream(self.client, run_id, self.headers, seconds=120, after_seq=resume_from)
             frames.extend(more)
 
@@ -170,7 +176,7 @@ class Demo:
             "产出成果物（A6 前置）": "artifact_created" in kinds,
             "确认门按写入等级出现（A5 前置）": ("approval_required" in kinds) == expects_gate,
             "有终态事件且 seq 连续": (kinds[-1] in {"run_completed", "run_failed"} if kinds else False)
-            and [frame["seq"] for frame in frames] == list(range(len(frames))),
+            and persisted_seqs(frames) == list(range(len(persisted_seqs(frames)))),
         }
         print("\n验收")
         for name, ok in checks.items():

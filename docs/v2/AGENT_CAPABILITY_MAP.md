@@ -394,3 +394,22 @@ M0–M4 之后剩下的根本缺口不是能力数量，而是**没有人持有�
 能力侧的对应事实：`is_valid_obligation_target()` 要求 `status == "implemented"`，所以 `weekly_review` 现在**不可能**被承诺——`action_plan` 一旦指向它就静默丢弃（registry 里那条注释就是上次修这个 bug 时留下的）。
 
 所以 P1 的真实工作量是"把死表接上动词"，顺序按依赖走：**提交结果（用户动作，走 REST 不走 Proposal）→ 结果归档为证据（R2，`EvidenceItem.quote` 存用户原话）→ 周复盘能力 implemented（R3，模型起草、人终局确认）→ 带新证据重算比较 → Artifact 版本链**。`Artifact.version` 是 SQLAlchemy 的乐观锁计数，不是逻辑版本，所以版本链要加自引用列（如 `supersedes_id`），这是一次真迁移。
+
+## 19. P1-1：任务结果提交（2026-09-20）
+
+`TaskResult` 的引用数从 **0** 变成有读有写。闭环第 9 环节（用户做完事回来交账）第一次真的存在。
+
+**为什么不走 Proposal**：这是用户对自己生活的陈述。让他"采纳并写入"自己刚打的那段话，是把确认门指错了对象——确认门要拦的是**随后**那一步业务写入（把这段话归档成证据），不是他的原话本身。所以 `POST /api/v1/tasks/{task_id}/results` 直接落 `TaskResult`，`body` 原样存（将来 `EvidenceItem.quote` 要能逐字对上），`request_id` 由前端生成，双击只落一行（二次提交返回 201 + `duplicate: true`）。别人的 task → 404，不承认存在。
+
+**提交会自己把 agent 叫醒**：起一个 `evidence_collect` run，`entry_point="task_result"`，goal 里带任务标题；同一项目已有未结束 run 时不再起第二个，返回 `deferred_to_run`（限速只作用于系统自发，这里是用户动作触发的，但并发仍然不允许）。唤醒的 run 不能是瞎子——`get_plan` 现在把每条 task 的 `results` 原句带出来，`source_refs` 追加 `plan_tasks` 行；`feed` 增加 `tasks`（含 results），这是任务 id 唯一能对外的地方。
+
+**前端 `TaskDeck`（行动清单）**挂在时间线之后、确认卡之前：待办在前、已交回的用引用块把原话贴出来（左侧竖线 = 这是人说的话，不是模型的话），可"再补一条"。
+
+### 实测抓到的两个缺陷（都不是看代码能看出来的）
+
+1. **提交后卡片还写着"未交回"**。`taskSubmitted` 走了 `openRun()`，而 `openRun` 只在后续帧（artifact/approval/终态）才刷 feed——提交后的 6 秒里对象层已经变了，界面还停在旧快照。改成提交后**无条件** `refreshFeed()`，跟"要不要跟着跑"是两件事。刷新页面后两条原话、链接、已交回状态都在，第三条仍是未交回。
+2. **`scripts/demo_e2e.py` 被 M11-2 打断了**。瞬时 delta 帧没有 `seq`，脚本在 `max(frame["seq"] for frame in frames)` 上 `KeyError: 'seq'`——续跑游标和 seq 连续性检查都该只数耐久事件，新增 `persisted_seqs()`。这个脚本是 P3 评测和 P4 试点的入口，坏在手里两周没人发现，因为 verify.ps1 不跑它（要烧真 token）。
+
+真模型侧的顺带证据：这次提交唤醒的 run 跑了 8 步，产出 **R2 提案"归档一条证据：广州数据分析入门岗 JD 硬性要求（第 1 批）"**，理由原文是"这份结果只覆盖到 1 个岗位（job_id 5），不是任务要求的 3 个…样本数不足，所以「广州数据分析入门岗的硬性要求长什么样」这个判断还不能成立，只能先记成单岗位快照"——第 10 环节（结果→证据）的提案形状已经自己长出来了，P1-2 要做的只是给它一个能落 `EvidenceItem` 的执行器。
+
+门禁：`tsc --noEmit` 干净、`vitest` 20 passed、`vite build` 41 modules、`ruff check scripts app tests` 全绿、`pytest tests/test_task_results.py` 8 passed；全量 `scripts/verify.ps1` 见下条记录。

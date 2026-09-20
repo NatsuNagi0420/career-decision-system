@@ -1187,6 +1187,133 @@ details[open] .thought__chev {
   font: 600 16px/24px var(--md-font);
 }
 
+/* ── 行动清单：agent 承诺过的任务，和人已交回的结果 ── */
+.tasks {
+  width: 100%;
+  max-width: var(--agent-w);
+  padding: var(--sp-lg);
+  border-radius: var(--r-3xl);
+  border: 1px solid var(--md-outline-variant);
+  background: var(--md-surface-low);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-md);
+  animation: swap-in 320ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+.tasks__head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-sm);
+}
+
+.tasks__head h3,
+.tasks__head p {
+  margin: 0;
+}
+
+.tasks__icon {
+  background: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
+}
+
+.tasks__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-sm);
+}
+
+.task {
+  padding: var(--sp-md);
+  border-radius: var(--r-2xl);
+  border: 1px solid var(--md-outline-variant);
+  background: var(--md-surface-lowest);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-sm);
+  animation: card-in 420ms cubic-bezier(0.2, 0, 0, 1) both;
+  animation-delay: calc(var(--i) * 45ms);
+}
+
+.task--done {
+  background: transparent;
+  border-style: dashed;
+}
+
+.task__row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-sm);
+  flex-wrap: wrap;
+}
+
+.task__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-weight: 500;
+}
+
+.task__aim {
+  margin: 0;
+  color: var(--md-outline);
+  font: 400 13px/19px var(--md-font);
+}
+
+.task__results {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-xs);
+}
+
+/* The person's words, unedited: this quote is what an evidence row points at. */
+.task__quote {
+  margin: 0;
+  padding: var(--sp-sm) var(--sp-md);
+  border-left: 3px solid var(--md-primary);
+  border-radius: 0 var(--r-2xl) var(--r-2xl) 0;
+  background: var(--md-surface-low);
+  font: 400 14px/22px var(--md-font);
+  white-space: pre-wrap;
+}
+
+.task__link {
+  display: inline-block;
+  margin-top: 2px;
+  color: var(--md-primary);
+  font: 500 12px/18px var(--md-font);
+  overflow-wrap: anywhere;
+}
+
+.task__btn {
+  align-self: flex-start;
+}
+
+.task__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-sm);
+  animation: card-in 260ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+.task__form textarea {
+  min-height: 84px;
+}
+
+.tasks__error {
+  margin: 0;
+  padding: var(--sp-sm) var(--sp-md);
+  border-radius: var(--r-2xl);
+  background: var(--md-error-container);
+  color: var(--md-on-error-container);
+  font: 500 13px/19px var(--md-font);
+}
+
 .decision dl {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);

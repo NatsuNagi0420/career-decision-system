@@ -495,6 +495,13 @@ class GetPlan(Tool):
                                 "kind": task.kind,
                                 "status": task.status,
                                 "expected_output": task.expected_output,
+                                # Verbatim, because a run woken by a submission must be
+                                # able to read what it was woken for. A task marked done
+                                # with no account under it is a claim, not evidence.
+                                "results": [
+                                    {"body": item.body, "link": item.link, "at": item.created_at.isoformat()}
+                                    for item in task.results
+                                ],
                             }
                             for task in plan.tasks
                         ],
@@ -502,7 +509,13 @@ class GetPlan(Tool):
                     for plan in plans
                 ],
             },
-            source_refs=[{"table": "action_plans", "id": plan.id} for plan in plans],
+            source_refs=[{"table": "action_plans", "id": plan.id} for plan in plans]
+            + [
+                {"table": "plan_tasks", "id": task.id}
+                for plan in plans
+                for task in plan.tasks
+                if task.results
+            ],
         )
 
 

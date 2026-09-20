@@ -18,6 +18,7 @@ import { EvidenceDrawer } from "./components/EvidenceDrawer";
 import { Login } from "./components/Login";
 import { Ms } from "./components/Ms";
 import { Swap } from "./components/Swap";
+import { TaskDeck } from "./components/TaskDeck";
 import { Timeline } from "./components/Timeline";
 import { emptyState, groupTrace, reduceFrame, type Frame, type ShellState, type TraceGroup } from "./state/frames";
 
@@ -318,6 +319,23 @@ function WorkbenchShell({ onSignedOut }: Props) {
     return ids.length ? artifactsById[ids[ids.length - 1]] : null;
   }, [artifactsById]);
   const evidenceCount = evidenceLines(latest).length;
+  // Tasks are scoped to one project: a 4-week plan from a finished question would
+  // otherwise sit in the deck asking to be discharged again.
+  const focusProject = project ?? feed?.projects[0]?.id ?? null;
+  const focusTasks = (feed?.tasks ?? []).filter((entry) => entry.project_id === focusProject);
+
+  const taskSubmitted = useCallback(
+    (woken: string | null) => {
+      // The deck has to show the words the person just typed, immediately: their own
+      // submission is an object, not a line in a transcript that may not have streamed
+      // yet. Following the woken run is a separate question from refreshing.
+      void refreshFeed();
+      if (woken && woken !== runId) {
+        openRun(woken);
+      }
+    },
+    [openRun, refreshFeed, runId],
+  );
 
   const signOut = () => {
     tokenStore.clear();
@@ -652,6 +670,8 @@ function WorkbenchShell({ onSignedOut }: Props) {
               onContinue={continueObligation}
               onRunAction={(text) => void launch({ goal: text, capability_id: chosen, project_id: project })}
             />
+
+            <TaskDeck tasks={focusTasks} onSubmitted={taskSubmitted} />
 
             {awaiting ? (
               <DecisionCard

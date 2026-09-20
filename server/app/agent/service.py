@@ -8,7 +8,7 @@ from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import Command
 from sqlalchemy import func, select
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import Session, joinedload, selectinload, sessionmaker
 
 from app.agent.approvals import ApprovalRepository
 from app.agent.events import EventLog, RunStarted
@@ -18,7 +18,7 @@ from app.agent.state import RunState
 from app.capabilities.registry import get_capability
 from app.capabilities.spec import CapabilitySpec
 from app.config import Settings
-from app.db.domain import DecisionCandidate, DecisionProject
+from app.db.domain import ActionPlan, DecisionCandidate, DecisionProject, PlanTask, TaskResult
 from app.db.models import Approval, Artifact, Obligation, Proposal, Run, User, new_id, utcnow
 from app.llm.gateway import Gateway
 from app.tools.base import ToolRegistry
@@ -224,6 +224,64 @@ class RunService:
         with self._factory() as session:
             return [_artifact_json(a) for a in session.scalars(select(Artifact).where(Artifact.run_id == run.id))]
 
+    def submit_task_result(
+        self,
+        user: User,
+        task_id: str,
+        *,
+        body: str,
+        link: str | None,
+        request_id: str,
+    ) -> tuple[dict[str, Any], Run | None]:
+        """Record what the person actually did, and wake the agent to fold it in.
+
+        Deliberately not a Proposal: this is the user's own account of their life, and
+        asking them to approve their own words would be the confirmation gate pointed at
+        the wrong party. What does need a human is the write that follows — the agent
+        proposes archiving it as evidence, and the approval gate lives there.
+
+        The run comes back unstarted so the caller can spawn it the same way /runs does.
+        """
+        with self._factory() as session:
+            task = session.get(PlanTask, task_id)
+            if task is None or task.user_id != user.id:
+                raise NotOwner(task_id)
+            repeated = session.scalar(select(TaskResult).where(TaskResult.request_id == request_id))
+            if repeated is not None:
+                # A second click is the same statement about the same week. Recording it
+                # twice would let one effort count as two pieces of evidence.
+                return {"result_id": repeated.id, "task_id": task.id, "duplicate": True}, None
+            result = TaskResult(
+                task_id=task.id,
+                user_id=user.id,
+                body=body.strip(),
+                link=link.strip() if link else None,
+                request_id=request_id,
+            )
+            session.add(result)
+            if task.status != "done":
+                task.status = "done"
+                task.completed_at = utcnow()
+                task.plan.touch()
+            project_id = task.plan.project_id
+            session.commit()
+            session.refresh(result)
+            busy = session.scalar(
+                select(Run.id).where(Run.project_id == project_id, Run.finished_at.is_(None)).limit(1)
+            )
+        if busy is not None:
+            # One open run per project already sees the new row; a second would only
+            # duplicate the same proposal for the user to decide twice.
+            return {"result_id": result.id, "task_id": task.id, "deferred_to_run": busy}, None
+        run = self.create_run(
+            user,
+            goal=f"任务「{task.title}」有了新结果。把它整理成证据，并说明它改变了哪个判断、为什么。",
+            capability_id="evidence_collect",
+            entry_point="task_result",
+            project_id=project_id,
+        )
+        return {"result_id": result.id, "task_id": task.id}, run
+
     def feed(self, user: User) -> dict[str, Any]:
         """The object layer: what the agent has promised, produced, and is waiting on,
         read independently of any single run.
@@ -277,11 +335,24 @@ class RunService:
                     .order_by(Approval.created_at.desc())
                 )
             )
+            # Tasks belong to the object layer, not to the transcript that wrote them:
+            # this is the only place a person can see what they were asked to go do, and
+            # the only source of the task id they submit a result against.
+            tasks = list(
+                session.scalars(
+                    select(PlanTask)
+                    .join(ActionPlan, PlanTask.plan_id == ActionPlan.id)
+                    .where(ActionPlan.project_id.in_([project.id for project in projects]))
+                    .options(joinedload(PlanTask.plan), selectinload(PlanTask.results))
+                    .order_by(PlanTask.week_no, PlanTask.ordinal)
+                )
+            )
             return {
                 "runs": [_run_json(run) for run in runs],
                 "projects": [_project_json(project, counts.get(project.id, 0)) for project in projects],
                 "artifacts": [_artifact_json(artifact) for artifact in artifacts],
                 "obligations": [_obligation_json(obligation) for obligation in obligations],
+                "tasks": [_task_json(task) for task in tasks],
                 "pending_approvals": [
                     {"id": approval.id, "run_id": approval.run_id, "proposal_id": approval.proposal_id,
                      "expires_at": approval.expires_at.isoformat() if approval.expires_at else None}
@@ -423,6 +494,25 @@ def _obligation_json(obligation: Obligation) -> dict[str, Any]:
         "created_at": obligation.created_at.isoformat() if obligation.created_at else None,
         # The shell needs this to explain why a listed promise will not start itself.
         "startable": ObligationRepository.startable(obligation),
+    }
+
+
+def _task_json(task: PlanTask) -> dict[str, Any]:
+    return {
+        "id": task.id,
+        "project_id": task.plan.project_id,
+        "plan_id": task.plan_id,
+        "title": task.title,
+        "expected_output": task.expected_output,
+        "week_no": task.week_no,
+        "kind": task.kind,
+        "status": task.status,
+        "due_date": task.due_date.isoformat() if task.due_date else None,
+        # The person's own words, kept verbatim so a later conclusion can point at them.
+        "results": [
+            {"id": item.id, "body": item.body, "link": item.link, "at": item.created_at.isoformat()}
+            for item in task.results
+        ],
     }
 
 

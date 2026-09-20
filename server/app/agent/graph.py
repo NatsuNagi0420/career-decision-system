@@ -20,7 +20,7 @@ import re
 import time
 from dataclasses import dataclass, field
 from datetime import timedelta
-from typing import Any
+from typing import Any, Literal
 
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import interrupt
@@ -96,6 +96,13 @@ class DigestDraft(BaseModel):
     next_actions: list[str] = Field(default_factory=list)
     proposed: dict[str, Any] = Field(default_factory=dict)
     next_step: NextStep = Field(default_factory=NextStep)
+    #: Only `weekly_review` fills these. They exist so the trend is a value the
+    #: confirmation card can show, edit and store — not a phrase buried in prose that
+    #: nobody can compare across weeks, which is what a shared digest shape otherwise
+    #: turns a review into.
+    confidence_trend: Literal["up", "flat", "down"] | None = None
+    confidence_reason: str = ""
+    next_focus: str = ""
 
 
 @dataclass
@@ -461,6 +468,11 @@ async def synthesize(deps: AgentDeps, state: RunState) -> RunState:
         f"{sorted(_obligation_targets(deps))}，intent 一句话说清「去做什么、拿什么回来」，"
         "确实没有可承诺的下一步就留空（不要为了填而编）。\n"
     )
+    if deps.capability.synthesis_notes:
+        # Every capability used to be drafted with the same instructions, so a week
+        # review was asked for as if it were a digest. What differs now belongs to
+        # the capability, where the integrity checks can see it.
+        user_prompt += f"{deps.capability.synthesis_notes}\n"
     try:
         answer = _AnswerStream(deps.events, state["run_id"])
 

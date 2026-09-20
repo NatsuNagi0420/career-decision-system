@@ -26,9 +26,13 @@ interface Props {
   streaming: { answer: string; reasoning: string } | null;
   busy: boolean;
   hasProjectTarget: boolean;
+  /** The week a review would close under. Only the weekly review card uses it. */
+  projectId: string | null;
   onContinue: (obligation: ObligationEntry) => void;
   onAbandon: (obligation: ObligationEntry) => void;
   onRunAction: (goal: string) => void;
+  /** The person filed this week's review: the record exists now, so the feed is stale. */
+  onReviewFiled: () => void;
   /** Puts a follow-up into the composer without sending it — the person still words it. */
   onAsk: (text: string) => void;
 }
@@ -112,9 +116,11 @@ export function Timeline({
   streaming,
   busy,
   hasProjectTarget,
+  projectId,
   onContinue,
   onAbandon,
   onRunAction,
+  onReviewFiled,
   onAsk,
 }: Props) {
   const units = planTurns(coalesce(groupTrace(items)));
@@ -171,12 +177,14 @@ export function Timeline({
             live={live}
             model={model}
             obligation={unit.item.obligationId ? obligations[unit.item.obligationId] : undefined}
+            projectId={projectId}
             steps={steps}
             tag={capabilityNames[unit.item.capabilityId ?? ""] ?? null}
             usage={usage}
             onAbandon={onAbandon}
             onAsk={onAsk}
             onContinue={onContinue}
+            onReviewFiled={onReviewFiled}
             onRunAction={onRunAction}
           />
         );
@@ -254,9 +262,11 @@ function AgentTurn({
   steps,
   usage,
   hasProjectTarget,
+  projectId,
   onContinue,
   onAbandon,
   onRunAction,
+  onReviewFiled,
   onAsk,
 }: {
   item: TimelineItem;
@@ -271,9 +281,11 @@ function AgentTurn({
   steps: number;
   usage: Usage | null;
   hasProjectTarget: boolean;
+  projectId: string | null;
   onContinue: (obligation: ObligationEntry) => void;
   onAbandon: (obligation: ObligationEntry) => void;
   onRunAction: (goal: string) => void;
+  onReviewFiled: () => void;
   onAsk: (text: string) => void;
 }) {
   const promise = item.kind === "obligation_created";
@@ -317,7 +329,15 @@ function AgentTurn({
         {item.kind === "artifact_created" ? (
           artifact ? (
             <>
-              <ArtifactCard artifact={artifact} model={model} steps={steps} usage={usage} onRunAction={onRunAction} />
+              <ArtifactCard
+                artifact={artifact}
+                model={model}
+                projectId={projectId}
+                steps={steps}
+                usage={usage}
+                onFiled={onReviewFiled}
+                onRunAction={onRunAction}
+              />
               <FollowUps artifact={artifact} goal={goal} onAsk={onAsk} />
             </>
           ) : (

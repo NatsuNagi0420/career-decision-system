@@ -65,9 +65,10 @@ def test_capabilities_expose_what_is_actually_wired(client: TestClient) -> None:
         "evidence_collect",
         "compare_decide",
         "action_plan",
+        "weekly_review",
     }
     # Nothing the agent cannot actually finish may be advertised as live.
-    assert "weekly_review" not in implemented and "resume_build" not in implemented
+    assert "resume_build" not in implemented
 
 
 def test_consent_can_be_granted_and_revoked(client: TestClient) -> None:

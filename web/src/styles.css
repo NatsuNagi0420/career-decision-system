@@ -1314,6 +1314,143 @@ details[open] .thought__chev {
   font: 500 13px/19px var(--md-font);
 }
 
+/* ── 本周复盘：穗奈起草，只有本人能写进去 ── */
+.wreview {
+  width: 100%;
+  max-width: var(--agent-w);
+  padding: var(--sp-lg);
+  border-radius: var(--r-3xl);
+  border: 1px solid var(--md-outline-variant);
+  background: var(--md-surface-low);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-md);
+  animation: swap-in 320ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+/* Filed means closed: the card stays in the thread as the record's shape, not as a form. */
+.wreview--done {
+  border-style: dashed;
+  background: transparent;
+}
+
+.wreview__head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-sm);
+}
+
+.wreview__head h3,
+.wreview__head p {
+  margin: 0;
+}
+
+.wreview__icon {
+  background: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
+}
+
+.wreview__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-xs);
+}
+
+.wreview__label {
+  color: var(--md-on-surface-variant);
+  font: 600 12px/16px var(--md-font);
+  letter-spacing: 0.5px;
+}
+
+.wreview__field textarea,
+.wreview__field input {
+  width: 100%;
+  padding: 10px var(--sp-md);
+  border: 1px solid var(--md-outline-variant);
+  border-radius: var(--r-2xl);
+  background: var(--md-surface-lowest);
+  outline: none;
+  font: 400 14px/20px var(--md-font);
+}
+
+.wreview__field textarea:focus,
+.wreview__field input:focus {
+  border-color: var(--md-primary);
+}
+
+.wreview__field textarea {
+  min-height: 132px;
+  resize: vertical;
+}
+
+.wreview__field textarea:disabled,
+.wreview__field input:disabled {
+  background: var(--md-surface-container);
+  color: var(--md-on-surface-variant);
+}
+
+.wreview__field .seg__btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.wreview__date {
+  align-self: flex-start;
+  max-width: 200px;
+}
+
+.wreview__cites {
+  border-radius: var(--r-2xl);
+  border: 1px solid var(--md-outline-variant);
+  background: var(--md-surface-lowest);
+}
+
+.wreview__cites summary {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-xs);
+  padding: var(--sp-sm) var(--sp-md);
+  color: var(--md-on-surface-variant);
+  font: 600 12px/16px var(--md-font);
+  letter-spacing: 0.5px;
+  cursor: pointer;
+}
+
+.wreview__cites ul {
+  list-style: none;
+  margin: 0;
+  padding: 0 var(--sp-md) var(--sp-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-sm);
+}
+
+.wreview__cites li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-left: var(--sp-md);
+  border-left: 3px solid var(--md-primary);
+}
+
+.wreview__cite {
+  font: 400 14px/22px var(--md-font);
+  white-space: pre-wrap;
+}
+
+/* Above the button, never in a tooltip: whose write this is. */
+.wreview__claim {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-xs);
+  margin: 0;
+  padding: var(--sp-sm) var(--sp-md);
+  border-radius: var(--r-2xl);
+  background: var(--md-primary-fixed);
+  color: var(--md-on-primary-fixed);
+  font: 600 13px/19px var(--md-font);
+}
+
 .decision dl {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);

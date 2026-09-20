@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 from collections.abc import AsyncIterator
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
@@ -46,6 +46,19 @@ class TaskResultCreate(BaseModel):
     body: str = Field(min_length=2, max_length=4000)
     link: str | None = Field(default=None, max_length=500)
     #: The client generates this so a double click lands once.
+    request_id: str = Field(min_length=8, max_length=80)
+
+
+class WeeklyReviewConfirm(BaseModel):
+    #: Monday of the week being closed. Validated as text at the boundary so a malformed
+    #: date answers 422 here instead of surfacing as a 500 from the date parser.
+    week_start: str = Field(pattern=r"^\d{4}-\d{2}-\d{2}$")
+    body: str = Field(min_length=2, max_length=4000)
+    confidence_trend: Literal["up", "flat", "down"]
+    confidence_reason: str = Field(default="", max_length=2000)
+    next_focus: str = Field(default="", max_length=2000)
+    #: The run whose draft this confirmation is reacting to.
+    source_run_id: str | None = Field(default=None, max_length=32)
     request_id: str = Field(min_length=8, max_length=80)
 
 
@@ -188,6 +201,39 @@ async def submit_task_result(
     if run is not None:
         _spawn(request, service.start(run, allow_external_ai=user.allows_external_ai))
     return {**outcome, "run_id": run.id if run else None}
+
+
+@router.post("/projects/{project_id}/weekly-review", status_code=201)
+async def confirm_weekly_review(
+    project_id: str,
+    payload: WeeklyReviewConfirm,
+    request: Request,
+    user: User = Depends(current_user),
+) -> dict[str, Any]:
+    """The person closes the week. The agent may draft it, never file it.
+
+    `weekly_review` is R3, and applying an approved R3 proposal is what the graph
+    deliberately fails on — so the one write that turns a draft into this week's
+    record sits here, behind the session, with nothing between it and a human click.
+    """
+    service = _runs(request)
+    try:
+        outcome = service.confirm_weekly_review(
+            user,
+            project_id,
+            week_start=payload.week_start,
+            body=payload.body,
+            confidence_trend=payload.confidence_trend,
+            confidence_reason=payload.confidence_reason,
+            next_focus=payload.next_focus,
+            request_id=payload.request_id,
+            source_run_id=payload.source_run_id,
+        )
+    except NotOwner as exc:
+        raise HTTPException(status_code=404, detail="项目不存在") from exc
+    if outcome.get("week_conflict"):
+        raise HTTPException(status_code=409, detail="这一周已经有一条复盘，先修订那条，不要再开一周")
+    return outcome
 
 
 @router.post("/runs", status_code=202)

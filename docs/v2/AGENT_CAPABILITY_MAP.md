@@ -457,3 +457,46 @@ M0–M4 之后剩下的根本缺口不是能力数量，而是**没有人持有�
 ### 门禁
 
 树静止后重跑 `powershell -File scripts/verify.ps1`，七项全 PASS（日志 `server/var/verify-p12b.log`）：ruff、能力与契约完整性（14 条，0 failed）、`alembic check` 无漂移、全量 pytest（真 MySQL `career_v2_test`，含本轮新增的 `test_the_woken_capability_can_read_what_woke_it` / `test_an_archive_with_nothing_to_open_is_flagged_not_offered` / `test_a_run_reads_the_project_it_belongs_to`）、`tsc --noEmit`、vitest（2 文件 20 例）、`vite build`（41 模块）。门禁只打印 PASS/FAIL 不打印用例数，所以 pytest 的条数以日志为准。
+
+## 21. P1-3：周复盘落表，以及"写完必须有人读"这条纪律（2026-09-20）
+
+闭环第 11 环节（每周复盘）与目标三的第 8 项（人对复盘结果的确认）。这一环的难点不在模型能不能写一段总结，而在**谁有权结束一周**。
+
+### 结构已经把答案定死了
+
+- `weekly_review` 是 R3：`spec.py` 禁止 R3 声明 `proposal_types`，`graph.py` 又对"被批准的 R3 提案"主动判 `failed`。所以 Agent 只能产出 `WeeklyReviewDraft` 成果物，落库必须走人点的 REST：`POST /api/v1/projects/{id}/weekly-review`（`app/api/routes.py:206` → `RunService.confirm_weekly_review`）。
+- 幂等两层：`request_id` 由前端生成，重复点击返回同一个 `review_id` + `duplicate: true`；`uq_review_user_week` 是"一人一周一条"，另一个项目来开同一周直接 409（中文文案），不静默改、不另开一周。
+- 落库时 `run_id` 指向起草它的那个 run：这条复盘将来能被读回"当时是谁的话让它变成这样"。
+
+### 提前堵掉 P1-2 那个瞎点
+
+第 20 节量到的教训是"写了没人读=死路"。所以这一环同时补读路径：新增只读工具 `get_reviews`（`app/tools/domain.py`，返回本项目已确认的逐周复盘 + `{table: weekly_reviews}` 来源），并挂进 `weekly_review`（看趋势）、`compare_decide`（改结论）、`action_plan`（排下周）。三个能力各一条断言，见 `test_the_capabilities_after_a_review_are_given_the_tool_to_read_it`。
+
+`DigestDraft` 是所有能力共用的起草形状，但复盘和摘要要说的不是一回事：`CapabilitySpec` 新增 `synthesis_notes`（逐项对账、trend 只能 up/flat/down 且要给理由、不许提 proposed），由 `synthesize` 拼进 prompt；复盘的三个字段（`confidence_trend/reason/next_focus`）进 `DigestDraft`，这样界面能编辑、能落库，而不是让趋势烂在散文里。
+
+### 真实模型第一次就把预算问题炸出来了
+
+`var/live_p13.py` 第一轮：**没有产出成果物**，run 以 `run_failed` 结束，原因是 `synthesize: model exhausted max_tokens on reasoning without emitting content`——`thinking="on"` + `max_tokens=2000`，推理把预算吃光，一个字的内容都没回来（§14-S1 的老坑，这次是新能力自己撞上）。系统没有把它伪装成"复盘已生成"，这条就是目标四要的"失败阶段可见"。处置：`weekly_review.max_tokens` 提到 4000（判断型能力要衡量整周，不是关掉 thinking）。
+
+### 第二轮实测（真实模型 + 真实夹具数据）
+
+| 环节 | 结果 |
+| --- | --- |
+| 周复盘 run 读到的 | `get_plan → 4 条来源`、`get_evidence → 2 条来源`、`get_reviews → 0 条来源`（此时库里确实还没有复盘） |
+| 成果物 | `WeeklyReviewDraft`，覆盖度 100、非临时，**proposals = 0**（R3 没有自己落任何东西），run `completed` |
+| 草稿质量 | 逐条对账"说了要做什么 / 实际交回什么"，并明写"JD 硬性要求清单没有交回""作品链接或截图没有交回"；`fact_check` 造数 0 条 |
+| 不确定性表达 | 趋势判 `flat`，理由是"不是稳，是这次没有可比基线，且本周记录给出的信号方向不一致"——它用 `get_reviews` 的空结果说明了为什么不敢报 `up` |
+| 人确认 | `201`，复盘行 `run_id` 指回起草 run；同 `request_id` 再点 → `201 duplicate: true`，`review_id` 不变 |
+| 下一环读回 | 随后起的 `compare_decide` run 里 `get_reviews → 1 条来源`，`source_refs = {table: weekly_reviews, id: 4644f9fc…}` |
+
+第 11→12 环节就此接上：本周的账，改变了下一次比较的输入。日志在 `server/var/live-p13b.log`（第一轮失败那份是 `live-p13.log`，保留着，因为它记录的是系统正确的失败行为）。
+
+### 顺带
+
+界面上 `WeeklyReviewCard` 把草稿全部字段预填且可改，按钮写"确认并写入本周复盘"，并明说这一步 Agent 不能替人做；`409/404` 直接显示服务端中文 `detail`。两条旧 tripwire 随之更新：`test_api.py` 的 implemented 集合加入 `weekly_review`（`resume_build` 仍是"不许宣称能用"），`test_obligations.py` 把 `weekly_review` 从"不可承诺目标"列表里移出——它现在是一个真的下一步。
+
+### 界面实测与门禁
+
+浏览器实测（`demo_21235` 真账号 + 真模型草稿）：卡片写明"草稿只是草稿：库里还没有这一周，下面每一栏都能改"和"这一步穗奈做不了：写入本周复盘的只能是你"，并列出"草稿引了 7 句原话"；把起始日改成上一周后点确认，卡片转为"已写入本周复盘"，库里随之多出 `2026-09-14` 那行（`request_id` 是前端生成的 UUID，`run_id` 同样指回起草 run）。
+
+树静止后 `powershell -File scripts/verify.ps1` 七项全 PASS（日志 `server/var/verify-p13.log`）：ruff、能力与契约完整性 14 条、`alembic check` 无漂移、全量 pytest、`tsc --noEmit`、vitest（3 文件 24 例）、`vite build`。新增测试见 `server/tests/test_weekly_reviews.py`（8 例：原样落库且不经任何提案、重复确认幂等、跨项目同周 409、他人项目 404、日期格式在边界就被拒、写进去的能被下一个 run 读回、三个后续能力确有 `get_reviews`、R3 转 implemented 后仍不许自带写权限）与 `test_run_lifecycle.py::test_a_week_is_reviewed_by_the_run_but_closed_by_a_human`。

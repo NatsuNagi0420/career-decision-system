@@ -43,6 +43,11 @@ class CapabilitySpec(BaseModel):
     min_data_coverage: int = 40
 
     thinking: Thinking = "on"  # governs the judgement node; the planner always runs without thinking
+    #: What the drafting node must do differently for this capability. The synthesis
+    #: prompt is otherwise one string shared by every capability, which meant a
+    #: capability with a different job (a week review cites the week's own accounts;
+    #: a comparison scores a matrix) got the same instructions as a digest.
+    synthesis_notes: str = ""
     #: deepseek-flash bills reasoning tokens out of max_tokens; anything lower can
     #: return empty content and be mistaken for a silent model.
     max_tokens: int = 2000

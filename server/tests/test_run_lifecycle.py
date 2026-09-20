@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.agent.approvals import ApprovalRepository
@@ -16,7 +16,7 @@ from app.agent.events import EventLog
 from app.agent.service import GraphRegistry, RunService
 from app.capabilities.registry import get_capability
 from app.config import Settings
-from app.db.domain import ActionPlan, DecisionProject, PlanTask, TaskResult
+from app.db.domain import ActionPlan, DecisionProject, PlanTask, TaskResult, WeeklyReview
 from app.db.models import Approval, Artifact, Event, Note, Proposal, Run, User
 from app.llm.gateway import Gateway, ScriptedProvider
 from app.tools.base import ToolRegistry
@@ -194,6 +194,57 @@ async def test_a_run_reads_the_project_it_belongs_to(session_factory, settings, 
     # The read that matters: the person's own task row came back, so the account in it
     # can reach the conclusion instead of being remembered by the model.
     assert {"table": "plan_tasks", "id": task_id} in call.payload["source_refs"]
+
+
+async def test_a_week_is_reviewed_by_the_run_but_closed_by_a_human(
+    session_factory, settings, tmp_path, owner
+) -> None:
+    """P1-3: `weekly_review` is live and still not agent-executable.
+
+    The run reads the week, drafts a `WeeklyReviewDraft` and stops there — no Proposal,
+    no approval, nothing in `weekly_reviews`. The terminal write belongs to the
+    confirmation endpoint (tests/test_weekly_reviews.py), which is the whole point of
+    the R3 tier: a model draft may end a period only after a person says it did.
+    """
+    with session_factory() as session:
+        project = DecisionProject(user_id=owner.id, title="分析还是后端", question="我更适合哪个方向")
+        session.add(project)
+        session.flush()
+        session.add(
+            ActionPlan(project_id=project.id, user_id=owner.id, title="四周验证", generation_request_id="review-plan")
+        )
+        session.commit()
+        project_id = project.id
+
+    review = {
+        "conclusion": "本周按计划投出 5 份数据分析岗，2 个已读不回、1 次一面",
+        "evidence_basis": [],
+        "uncertainties": ["还没在后端岗上做过同样的验证"],
+        "next_actions": ["下周投 5 份后端岗并记录回复"],
+        "confidence_trend": "up",
+        "confidence_reason": "数据分析方向真约到了面试",
+        "next_focus": "后端岗的回复率",
+    }
+    script = [
+        tool_payload("get_plan", {"project_id": project_id}),
+        text_payload("读到了本周的账"),
+        text_payload(json.dumps(review, ensure_ascii=False)),
+    ]
+    async with build_service(
+        settings, session_factory, script, tmp_path / "cp.sqlite", capability_ids=("weekly_review",)
+    ) as (service, _):
+        run = service.create_run(owner, "复盘这一周", capability_id="weekly_review", project_id=project_id)
+        await service.start(run, allow_external_ai=True)
+
+    with session_factory() as session:
+        artifact = session.scalar(select(Artifact).where(Artifact.run_id == run.id))
+        assert artifact is not None
+        assert artifact.artifact_type == "WeeklyReviewDraft"
+        # Structured, so the card can show the trend as a value and carry it into the table.
+        assert artifact.content["confidence_trend"] == "up"
+        assert session.scalar(select(func.count(Proposal.id)).where(Proposal.run_id == run.id)) == 0
+        assert session.scalar(select(func.count(WeeklyReview.id))) == 0
+        assert session.get(Run, run.id).status == "completed"
 
 
 async def test_rejection_writes_nothing_but_still_records_the_decision(session_factory, settings, tmp_path, owner) -> None:

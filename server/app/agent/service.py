@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import date, timedelta
 from typing import Any
 
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import Command
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload, selectinload, sessionmaker
 
 from app.agent.approvals import ApprovalRepository
@@ -18,7 +19,7 @@ from app.agent.state import RunState
 from app.capabilities.registry import get_capability
 from app.capabilities.spec import CapabilitySpec
 from app.config import Settings
-from app.db.domain import ActionPlan, DecisionCandidate, DecisionProject, PlanTask, TaskResult
+from app.db.domain import ActionPlan, DecisionCandidate, DecisionProject, PlanTask, TaskResult, WeeklyReview
 from app.db.models import Approval, Artifact, Obligation, Proposal, Run, User, new_id, utcnow
 from app.llm.gateway import Gateway
 from app.tools.base import ToolRegistry
@@ -224,6 +225,77 @@ class RunService:
         with self._factory() as session:
             return [_artifact_json(a) for a in session.scalars(select(Artifact).where(Artifact.run_id == run.id))]
 
+    def confirm_weekly_review(
+        self,
+        user: User,
+        project_id: str,
+        *,
+        week_start: str,
+        body: str,
+        confidence_trend: str,
+        confidence_reason: str,
+        next_focus: str,
+        request_id: str,
+        source_run_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Close a week, once, because the person said so.
+
+        Not a Proposal. `weekly_review` is R3 and the graph fails an applied R3 on
+        purpose, so a terminal record of a period that has already passed reaches the
+        table through here — a draft the model wrote becomes a stored review only when
+        a human confirms it, and `source_run_id` keeps that draft's run on the record
+        so a later comparison can be read back against the account that moved it.
+
+        `uq_review_user_week` is the schema's promise that a person has one review per
+        week, so a second project cannot open a parallel week; that is reported as a
+        conflict rather than quietly overwritten or duplicated.
+        """
+        week = date.fromisoformat(week_start)
+        with self._factory() as session:
+            project = session.get(DecisionProject, project_id)
+            if project is None or project.user_id != user.id:
+                raise NotOwner(project_id)
+            repeated = session.scalar(select(WeeklyReview).where(WeeklyReview.request_id == request_id))
+            if repeated is not None:
+                # A second click is the same confirmation of the same week; recording
+                # it twice would let one week count as two trends.
+                return {"review_id": repeated.id, "project_id": repeated.project_id, "duplicate": True}
+            existing = session.scalar(
+                select(WeeklyReview).where(WeeklyReview.user_id == user.id, WeeklyReview.week_start == week)
+            )
+            if existing is not None:
+                return {"review_id": existing.id, "project_id": existing.project_id, "week_conflict": True}
+            source = session.get(Run, source_run_id) if source_run_id else None
+            review = WeeklyReview(
+                project_id=project.id,
+                user_id=user.id,
+                week_start=week,
+                body=body.strip(),
+                confidence_trend=confidence_trend,
+                confidence_reason=confidence_reason.strip() or None,
+                next_focus=next_focus.strip(),
+                # Only the person's own run can be cited as where the draft came from.
+                run_id=source.id if source is not None and source.user_id == user.id else None,
+                request_id=request_id,
+            )
+            session.add(review)
+            try:
+                session.flush()
+            except IntegrityError:
+                # Two tabs on the same week: the constraint decides, this reads it back.
+                session.rollback()
+                raced = session.scalar(select(WeeklyReview).where(WeeklyReview.request_id == request_id))
+                if raced is not None:
+                    return {"review_id": raced.id, "project_id": raced.project_id, "duplicate": True}
+                other = session.scalar(
+                    select(WeeklyReview).where(WeeklyReview.user_id == user.id, WeeklyReview.week_start == week)
+                )
+                if other is not None:
+                    return {"review_id": other.id, "project_id": other.project_id, "week_conflict": True}
+                raise
+            session.commit()
+            return {"review_id": review.id, "project_id": project.id, "week_start": week_start}
+
     def submit_task_result(
         self,
         user: User,
@@ -413,7 +485,7 @@ class RunService:
             if approval.run_id != run.id:
                 raise NotOwner(approval_id)
             if not self._approvals.claim(session, approval_id):
-                raise RuntimeError("approval is no longer pending")
+                raise RuntimeError("这条确认已经不可再执行（审批已结束或已过期）")
             return approval
 
     @staticmethod

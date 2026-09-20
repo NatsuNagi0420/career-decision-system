@@ -106,7 +106,7 @@ async def test_a_finished_run_leaves_a_durable_promise(session_factory, settings
         assert feed["runs"][0]["id"] == run.id
 
 
-@pytest.mark.parametrize("target", ["skeleton_probe", "no_such_capability", "weekly_review"])
+@pytest.mark.parametrize("target", ["skeleton_probe", "no_such_capability"])
 async def test_a_promise_pointing_at_the_wrong_thing_is_dropped_not_fatal(
     session_factory, settings, tmp_path, owner, target
 ) -> None:

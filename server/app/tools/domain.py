@@ -30,6 +30,7 @@ from app.db.domain import (
     JobRequirementItem,
     ProfileFact,
     UserProfile,
+    WeeklyReview,
 )
 from app.tools.base import Tool, ToolResult
 
@@ -519,6 +520,44 @@ class GetPlan(Tool):
         )
 
 
+class GetReviewsArgs(BaseModel):
+    project_id: str = Field(max_length=32)
+
+
+class GetReviews(Tool):
+    name: ClassVar[str] = "get_reviews"
+    description: ClassVar[str] = "读取本项目已确认的周复盘（逐周趋势）。只读自己的。"
+    args_model: ClassVar[type[BaseModel]] = GetReviewsArgs
+
+    def execute(self, session: Session, *, user_id: int, args: BaseModel) -> ToolResult:
+        typed: GetReviewsArgs = args  # type: ignore[assignment]
+        project = _owned_project(session, user_id, typed.project_id)
+        if project is None:
+            return _not_found("project", typed.project_id)
+        reviews = list(
+            session.scalars(
+                select(WeeklyReview).where(WeeklyReview.project_id == project.id).order_by(WeeklyReview.week_start)
+            )
+        )
+        return ToolResult(
+            payload={
+                "project_id": project.id,
+                "reviews": [
+                    {
+                        "review_id": review.id,
+                        "week_start": review.week_start.isoformat(),
+                        "body": review.body,
+                        "confidence_trend": review.confidence_trend,
+                        "confidence_reason": review.confidence_reason,
+                        "next_focus": review.next_focus,
+                    }
+                    for review in reviews
+                ],
+            },
+            source_refs=[{"table": "weekly_reviews", "id": review.id} for review in reviews],
+        )
+
+
 DOMAIN_TOOLS: tuple[Tool, ...] = (
     SearchDirections(),
     GetDirectionDetail(),
@@ -530,4 +569,5 @@ DOMAIN_TOOLS: tuple[Tool, ...] = (
     CompareCandidates(),
     EstimateLoad(),
     GetPlan(),
+    GetReviews(),
 )

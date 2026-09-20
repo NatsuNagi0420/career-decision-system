@@ -660,6 +660,7 @@ function WorkbenchShell({ onSignedOut }: Props) {
               model={snapshot?.run.model_used ?? null}
               streaming={stream}
               obligations={obligationsById}
+              projectId={focusProject}
               usage={snapshot?.run.usage ?? null}
               userName={user?.username ?? null}
               onAbandon={(obligation) => void abandon(obligation)}
@@ -668,6 +669,7 @@ function WorkbenchShell({ onSignedOut }: Props) {
                 document.getElementById("composer")?.focus();
               }}
               onContinue={continueObligation}
+              onReviewFiled={() => void refreshFeed()}
               onRunAction={(text) => void launch({ goal: text, capability_id: chosen, project_id: project })}
             />
 

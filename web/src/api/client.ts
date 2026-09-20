@@ -58,6 +58,12 @@ async function describe(response: Response): Promise<string> {
   }
 }
 
+/** Written by the browser, never by the server: it is what makes a second click on the
+ *  same button land as one row. Generated once per card, so retrying still is one write. */
+export function newRequestId(): string {
+  return crypto.randomUUID?.() ?? `req-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
+}
+
 export interface SessionResponse {
   token: string;
   user: { id: number; username: string; external_ai_consent: boolean };
@@ -95,12 +101,18 @@ export const api = {
         body: JSON.stringify({
           body,
           link: link || null,
-          // Client-generated so a double click lands exactly one row.
-          request_id:
-            crypto.randomUUID?.() ?? `req-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`,
+          request_id: newRequestId(),
         }),
       },
     ),
+  /** The person closes the week. `weekly_review` is R3, so this is the only door a
+   *  draft can become a record through — the agent has none. `input.request_id` is
+   *  the card's own, which is what makes a replay come back as `duplicate`. */
+  confirmWeeklyReview: (projectId: string, input: WeeklyReviewInput) =>
+    request<WeeklyReviewOutcome>(`/api/v1/projects/${projectId}/weekly-review`, {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
   decide: (runId: string, approvalId: string, approved: boolean, feedback: string) =>
     request<{ accepted: boolean }>(`/api/v1/runs/${runId}/approvals/${approvalId}/decision`, {
       method: "POST",
@@ -212,6 +224,29 @@ export interface Continuation {
   obligation: ObligationEntry | null;
   /** Why nothing is starting on its own. Shown rather than hidden behind silence. */
   reason: "no_due_obligation" | "cooling_down" | null;
+}
+
+export type ConfidenceTrend = "up" | "flat" | "down";
+
+/** The body of the week's close, exactly as the endpoint takes it. */
+export interface WeeklyReviewInput {
+  /** Monday of the week being closed, `YYYY-MM-DD`. */
+  week_start: string;
+  body: string;
+  confidence_trend: ConfidenceTrend;
+  confidence_reason: string;
+  next_focus: string;
+  /** The run whose draft this reacts to. */
+  source_run_id?: string;
+  request_id: string;
+}
+
+export interface WeeklyReviewOutcome {
+  review_id: string;
+  project_id: string;
+  week_start?: string;
+  /** The same `request_id` reached the server twice: one row, not two. */
+  duplicate?: boolean;
 }
 
 export interface Snapshot {

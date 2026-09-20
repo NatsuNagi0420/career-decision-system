@@ -111,7 +111,7 @@ CAPABILITIES: tuple[CapabilitySpec, ...] = (
         description="按标准做确定性打分并给出反方论证；只出矩阵，绝不替用户确认目标。",
         status="implemented",
         required_context=["user", "project"],
-        tools=["list_candidates", "get_evidence", "compare_candidates"],
+        tools=["list_candidates", "get_evidence", "compare_candidates", "get_reviews"],
         artifact_type="ComparisonMatrix",
         risk_tier="R1",
         evidence_required=True,
@@ -125,7 +125,7 @@ CAPABILITIES: tuple[CapabilitySpec, ...] = (
         description="把验证问题排进周任务，按证据缺口控制任务量。",
         status="implemented",
         required_context=["user", "project"],
-        tools=["get_plan", "estimate_load", "list_candidates"],
+        tools=["get_plan", "estimate_load", "list_candidates", "get_reviews"],
         artifact_type="ActionPlanDraft",
         proposal_types=["create_job_search_task"],
         risk_tier="R2",
@@ -141,13 +141,33 @@ CAPABILITIES: tuple[CapabilitySpec, ...] = (
         domain="act",
         name="周复盘",
         description="汇总本周成果与置信度趋势，产出复盘草稿。提交复盘属终局动作，只能人做。",
-        status="planned",
+        status="implemented",
         required_context=["user", "project"],
-        tools=["get_plan", "get_evidence"],
+        # `get_reviews` is for the trend: a week review that cannot see last week's
+        # cannot say whether confidence went up or down, it can only assert.
+        tools=["get_plan", "get_evidence", "get_reviews"],
         artifact_type="WeeklyReviewDraft",
         risk_tier="R3",
         requires_approval=True,
         thinking="on",
+        # Measured on the real model: the first review run died at `synthesize` with
+        # "model exhausted max_tokens on reasoning without emitting content" — a week
+        # review reasons over every task in the plan, and the spec floor of 1500 (and
+        # the 2000 default) is spent before any content arrives. Reasoning tokens are
+        # billed out of this budget, so a judgement capability that must weigh a whole
+        # week needs room, not a disabled thinking mode.
+        max_tokens=4000,
+        synthesis_notes=(
+            "这是周复盘，不是进展汇报：逐项对本周任务「说了要做什么 / 实际交回了什么」，"
+            "没交回的照实说没交回，不要把任务标题当完成情况。"
+            "confidence_trend 只能填 up / flat / down 之一，并给出理由，理由里要指出是"
+            "哪一条本周交回的记录或哪条证据让它变了；没有依据就填 flat 并说明证据不足。"
+            "next_focus 写下一周最该验证的一件事，要能被一个任务完成。"
+            "复盘正文属终局写入，只能由人在界面上确认后落库，所以不要提出 proposed 提案。"
+        ),
+        # A review that ends the loop is a report; this one exists so the conclusion
+        # gets recomputed with the week's evidence and the next week gets planned.
+        next_capabilities=["compare_decide", "action_plan"],
     ),
     CapabilitySpec(
         id="resume_build",

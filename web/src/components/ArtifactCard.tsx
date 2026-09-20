@@ -1,6 +1,7 @@
 import { useState, type CSSProperties } from "react";
 import type { ArtifactEntry } from "../api/client";
 import { Ms } from "./Ms";
+import { WeeklyReviewCard } from "./WeeklyReviewCard";
 import { readableQuote } from "../state/readable";
 
 /** Stagger index for the answer's cards, so the sheet assembles top-down. */
@@ -58,6 +59,11 @@ interface Props {
   steps: number;
   model: string | null;
   onRunAction?: (goal: string) => void;
+  /** A weekly review draft is the one artifact that is not an answer but a form, and
+   *  only the person can file it — so the write needs the project and a way to say
+   *  "the feed changed". Every other artifact type ignores both. */
+  projectId: string | null;
+  onFiled: () => void;
 }
 
 /**
@@ -68,7 +74,11 @@ interface Props {
  * Coverage, provisional and the fabrication list come from code, never the model, so
  * they are shown as data rather than folded into prose.
  */
-export function ArtifactCard({ artifact, usage, steps, model, onRunAction }: Props) {
+export function ArtifactCard({ artifact, usage, steps, model, projectId, onFiled, onRunAction }: Props) {
+  if (artifact.artifact_type === "WeeklyReviewDraft") {
+    return <WeeklyReviewCard artifact={artifact} projectId={projectId} onFiled={onFiled} />;
+  }
+
   const body = (artifact.content ?? {}) as Record<string, unknown>;
   const conclusion = typeof body.conclusion === "string" ? body.conclusion : "";
   const evidence = Array.isArray(body.evidence_basis) ? (body.evidence_basis as EvidenceLine[]) : [];

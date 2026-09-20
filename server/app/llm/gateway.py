@@ -375,17 +375,25 @@ class Gateway:
         json_mode: bool = False,
         system: str = "",
     ) -> Completion:
-        payload = self._payload(
-            messages=messages,
-            tools=tools,
-            thinking=thinking,
-            max_tokens=max_tokens,
-            json_mode=json_mode,
-            system=system,
-        )
         self._guard(allow_external_ai)
-        data = await self._require().complete(payload)
-        return parse_completion(data, self.settings.llm_model)
+        ladder = self._budget_ladder(max_tokens)
+        attempt = 0
+        while True:
+            payload = self._payload(
+                messages=messages,
+                tools=tools,
+                thinking=thinking,
+                max_tokens=ladder[attempt],
+                json_mode=json_mode,
+                system=system,
+            )
+            data = await self._require().complete(payload)
+            try:
+                return parse_completion(data, self.settings.llm_model)
+            except TruncatedEmptyResponse:
+                attempt += 1
+                if attempt >= len(ladder):
+                    raise
 
     async def stream_completion(
         self,
@@ -402,20 +410,30 @@ class Gateway:
         """Same guards and the same final shape as `complete`, plus a callback for
         each fragment. The chunks are folded back into a normal response envelope so
         the truncation check and tool-call parsing are shared, not re-implemented."""
-        payload = self._payload(
-            messages=messages,
-            tools=tools,
-            thinking=thinking,
-            max_tokens=max_tokens,
-            json_mode=json_mode,
-            system=system,
-        )
-        payload["stream"] = True
-        # Without this the endpoint sends no usage at all when streaming, and the
-        # spend would silently drop out of `usage_recorded`.
-        payload["stream_options"] = {"include_usage": True}
         self._guard(allow_external_ai)
+        ladder = self._budget_ladder(max_tokens)
+        attempt = 0
+        while True:
+            payload = self._payload(
+                messages=messages,
+                tools=tools,
+                thinking=thinking,
+                max_tokens=ladder[attempt],
+                json_mode=json_mode,
+                system=system,
+            )
+            payload["stream"] = True
+            # Without this the endpoint sends no usage at all when streaming, and the
+            # spend would silently drop out of `usage_recorded`.
+            payload["stream_options"] = {"include_usage": True}
+            try:
+                return await self._stream_once(payload, on_delta)
+            except TruncatedEmptyResponse:
+                attempt += 1
+                if attempt >= len(ladder):
+                    raise
 
+    async def _stream_once(self, payload: dict[str, Any], on_delta: DeltaCallback) -> Completion:
         content: list[str] = []
         tool_calls: dict[int, dict[str, Any]] = {}
         finish: str | None = None
@@ -468,6 +486,22 @@ class Gateway:
         is_mock = isinstance(self.provider, (MockProvider, ScriptedProvider))
         if not is_mock and not allow_external_ai:
             raise ExternalAiNotAllowed("user has not granted external AI consent")
+
+    def _budget_ladder(self, max_tokens: int | None) -> list[int]:
+        """Budgets to try, in order: the requested one, then one doubled.
+
+        Measured live on 2026-09-20 while closing the loop's last link: `action_plan`'s
+        synthesis failed four runs in a row on the budget alone — truncated JSON at
+        2000, then `finish_reason=length` with no content at 3500 and again at 6000.
+        Reasoning is billed out of the same ceiling as the answer, so a judgement
+        capability can spend the entire budget thinking about a question it did answer.
+        One escalation costs a second call and keeps the run; without it the person
+        gets a red failure card for a model that only needed room. Past the ceiling the
+        failure stays loud.
+        """
+        budget = max_tokens or self.settings.llm_default_max_tokens
+        escalated = min(budget * 2, _BUDGET_CEILING)
+        return [budget] if escalated <= budget else [budget, escalated]
 
     def _payload(
         self,
@@ -529,7 +563,7 @@ class Gateway:
                 json_mode=True,
             )
             try:
-                return schema.model_validate(json.loads(completion.text or "{}")), completion
+                return schema.model_validate(_json_object(completion.text)), completion
             except (ValidationError, ValueError) as exc:
                 last_error = _short(str(exc))
                 messages = [
@@ -570,7 +604,7 @@ class Gateway:
                 json_mode=True,
             )
             try:
-                return schema.model_validate(json.loads(completion.text or "{}")), completion
+                return schema.model_validate(_json_object(completion.text)), completion
             except (ValidationError, ValueError) as exc:
                 last_error = _short(str(exc))
                 messages = [
@@ -583,7 +617,28 @@ class Gateway:
 
 _REPAIR_SYSTEM = "你只输出符合给定 JSON schema 的对象，不输出任何解释、前后缀或代码围栏。"
 
+#: How far a single call may escalate its budget before the failure is reported.
+#: Bounded so a runaway capability cannot spend unbounded money per run.
+_BUDGET_CEILING = 12000
+
 
 def _short(text: str, limit: int = 800) -> str:
     collapsed = " ".join(text.split())
     return collapsed if len(collapsed) <= limit else collapsed[:limit] + "…"
+
+
+def _json_object(text: str | None) -> dict[str, Any]:
+    """The first JSON object in the reply, ignoring whatever trails it.
+
+    Measured live on 2026-09-20 on `action_plan`: the model returned a complete object
+    and then a second one, and strict `json.loads` turned that into `Extra data: line 2
+    column 1` — a run failure that threw away an answer whose part we needed was valid.
+    A doubled or fenced reply is a formatting miss, not a wrong judgement; the schema
+    still has to validate, and an answer with no object at all still raises ValueError
+    into the same repair-then-fail-loudly path.
+    """
+    body = text or ""
+    start = body.find("{")
+    if start < 0:
+        raise ValueError("输出里没有 JSON 对象")
+    return json.JSONDecoder().raw_decode(body[start:])[0]

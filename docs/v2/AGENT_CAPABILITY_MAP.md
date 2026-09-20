@@ -555,3 +555,67 @@ MySQL 的 DDL 不进事务，这条这次真撞上了：迁移里 `create_index`
 ### 门禁
 
 树静止后 `powershell -File scripts/verify.ps1` 七项全 PASS（日志 `server/var/verify-p14.log`）。新增测试：`server/tests/test_comparisons.py`（11 例：一次批准落一整轮且标准入表、模型自报分数被丢、假候选/假引用直接失败、反方证据留指针不留散文、第二轮追加并指回第一轮、下一轮 run 读得到上一轮、无标准不落卡、空 cells 也算诚实、复合标准按部分衡量、读接口给出逐字引文且他人 404）与 `web/src/components/ComparisonBoard.test.ts`（4 例：只报判定真的动过的格、没有上一版就不编变化、分数变了但 verdict 没变保持安静、未知 verdict 不硬套标签）。
+
+## 23. P1-5：第 13 环节真的落库，以及"人点头的那张卡到底写了几条"（2026-09-20）
+
+闭环第 13 环节（生成下一周期行动计划）＋P1 清单第 6 项，也是这一轮唯一没跑通过的环节。做完它，P1 的完成判据"一个用户能真正完成一次计划—行动—复盘—调整"才第一次被实测而不是被推断。
+
+### 第 13 环节为什么一直没落地：不是模型不行，是两份契约对不上
+
+`action_plan` 的成果物 `ActionPlanDraft` 一直正常出（覆盖度 100），但每次 `DECIDE` 之后库里都没有新任务。原因在 `executors.py`：草稿把任务放在 `proposed.plan_tasks`（一个数组），而 `create_job_search_task` 的 payload schema 要求**顶层单个 `title`**。于是每一张被人在界面上批准过的下周计划，都在真正写入前一刻被判 `unsupported`，错误内容正是 `Field required: title`——§20 的教训第三次生效：**mock 全绿不代表能力可用**，因为没有任何一条 mock 测试真的拿"模型会交 `plan_tasks`"这个事实去喂执行器。现在这条由 `test_next_cycle.py` 守住（同时断言 `plan_tasks` 既出现在 `synthesis_notes` 里、也出现在 `PAYLOAD_SCHEMAS["create_job_search_task"]` 的 JSON Schema 里，两端对不上就红）。
+
+修之前还有一处 P1-2 形状的瞎点：`action_plan` 的工具列表里没有 `compare_candidates`。"根据新结论重排下周"因此只能靠模型复述它记得的话，而不是读那一轮真的重算出来的矩阵。补上工具只是前一半——`synthesis_notes` 现在直接点名 `missing_cells` 与 `last_round`，并写明"分数已经够 2 的格子别再排""已经交回过的任务不要重复排：`get_plan` 里能看到状态"。不然矩阵只是又一块模型可以忽略的 JSON。
+
+### 一次批准 = 一整周，所以卡片必须写出它写几条
+
+`CreateJobSearchTaskPayload` 改成吃 `plan_tasks`（1–12 条，每条 `title`/`expected_output`/`week_no`/`kind`——想补哪一格写在 `title` 里，schema 不另开 `criterion` 列，因为那一格是给人读的）加可选 `plan_id`。执行器逐条落：撞同一计划同名任务的进 `already_present`，其余写进去并返回 `{task_ids, already_present, plan_id, plan_version}`——**下一周期是接着排，不是另起一个计划**（`plan_id` 缺省时落到该项目当前计划，聚合版本照样 `touch`）。
+
+标题也随之要诚实：以前卡片写"排下一周期的行动任务：某条标题"，人以为自己在批准一条任务，实际一次写四条。现在 `len(tasks) > 1` 就追加"等 N 条"。这条属于目标三的精神——**人点头的那份 payload 必须就是写进去的那份**，包括数量。
+
+### 真实模型在同一能力上撞出的三种失败形状（都不是契约问题能替掉的）
+
+`action_plan` 是 `thinking="on"`，deepseek-flash 的推理 token 计入 `max_tokens`，所以三种失败轮着出现（日志 `server/var/live-p15*.log`）：
+
+| 预算 | 失败 |
+| --- | --- |
+| 2000（默认） | `model output failed schema validation after 1 repair retry: Unterminated string starting at: line 1 column 4244` |
+| 3500 | `model exhausted max_tokens on reasoning without emitting content` |
+| 6000 | `model output failed schema validation after 1 repair retry: Extra data: line 2 column 1 (char 351)` |
+
+查这三条的过程里发现两个更普遍的事实：
+
+1. **`TruncatedEmptyResponse` 抛出来以后没有任何地方接**——第二种失败只能以"整个 run 挂掉"的形态出现，重试无从谈起。现在 `complete()` 与 `stream_completion()` 走 `_budget_ladder`：先按能力预算，撞上"只有思考没有内容/JSON 被截断"就**原地升一档（×2，硬顶 12000）**，再不行照旧抛出，不静默降级。一次调用最多两次 provider 请求，成本可控。
+2. **模型会在 JSON 后面多写一段**（第三种失败）。`structured` 不再要求整段是纯 JSON：`_json_object()` 取第一个能 `raw_decode` 的对象、丢掉尾巴，因此那一轮不再触发修复重试（少一次真实付费调用）；真的没有对象时仍然报错，并保留"带 schema 重问一次"的修复路径。
+3. `action_plan.max_tokens` 定在 6000（`compare_decide` 同值，`weekly_review` 4000）。§21/§22 的判据在这里再成立一次：**判断型能力要抬天花板，不是关 thinking**。
+
+顺带记给 P3 的一条**成本账目缺陷**（数字都来自那几轮的 `usage` 帧，紧挨 `run_failed` 的那一行就是 synthesize 自己的）：
+
+| 那一轮 | synthesize 报回来的 |
+| --- | --- |
+| 截断成坏 JSON | `completion=1135 思考=0` |
+| 只有思考没有内容 | `completion=1333 思考=0` |
+| JSON 后多一段 | `completion=1388 思考=0` |
+| 成功（第 6 轮） | `completion=2325 思考=453` |
+
+前两轮是撞光 `max_tokens` 才失败的，可 `completion` 却只有 1135 / 1333，`思考` 还是 0——**吃光预算的那部分 reasoning 既没进 `completion` 也没进 `reasoning`，失败调用的真实花费在账面上完全看不见**。而同一条能力成功时就报得出 `思考=453`（§22 的 `compare_decide` 报过 `completion=5539 思考=3682`），所以这不是"字段永远不填"，而是**失败/截断帧里缺数**。P3 做每能力 token 与费用统计之前必须先用一帧原始响应定性：是 provider 在 `finish_reason=length` 时不回 `completion_tokens_details`，还是我们截断时丢了最后一帧。在此之前，`思考=0` 不能被当成"这次没思考"。
+
+### 实测（真模型 + 真账号点击 + 浏览器，第 6 轮）
+
+| 环节 | 结果 |
+| --- | --- |
+| 重算之后接着排 | `tool: compare_candidates → 14 条来源`、`estimate_load → 1`、`get_reviews → 2`，`artifact: ActionPlanDraft 覆盖度=100 依据不足=False` |
+| 卡片 | `[R2] 排下一周期的行动任务：在一个真实后端代码库里定位并修一个真实存在的 bug（或做一次真实的小改动），跑完回归 等 4 条` → `DECIDE 202` |
+| 落库 | `落库计数: {"plans": 1, "tasks": 7}`（原来 3 条 → 7 条；计划表仍只有 1 行，四条都是**第 5 周**） |
+| 它自己认出的欠账 | 四条里有一条是"补交第 1 周欠下的 3 个广州数据分析入门岗 JD 硬性要求清单"——不是脚本塞的，是它读 `missing_cells` 排出来的 |
+| 界面 | 行动清单周次 pill 变成 `第 1/1/2/5/5/5/5 周`，提示"3 项待你去做，做完把结果交回来" |
+| 第 13→9 的回边 | 给新任务交结果 → `201 {result_id, task_id, run_id: 7fa86513…}`，被唤醒的 `evidence_collect` run 读到 `get_plan → 5 条来源`、`get_evidence → 11 条来源`，出 `EvidencePlan 覆盖度=60` 加一条归档提案 |
+
+那个 **60 而不是 100** 是好消息：新任务名下只有一条 SQL 窗口函数练习，覆盖度就照实往下掉，没有因为"刚排完计划"而虚高。
+
+### defer 分支也终于有测试守着
+
+同一项目已有 open run 时再交结果，不重复起 run，而是留一条 `Obligation`（写明"读回任务「…」新交回的结果"）并返回 `deferred_to_run`。这条代码在 §20 就写了，但没人测过——**留不下承诺的 defer 就等于悄悄丢掉这一周的账**。`test_next_cycle.py` 现在两分支都测：先断言 defer 留下了 obligation，再关掉起草 run、重交一次，验证下一轮真的被唤醒。
+
+### 门禁
+
+树静止后 `powershell -File scripts/verify.ps1`（日志 `server/var/verify-p15.log`）。新增/改动测试：`server/tests/test_next_cycle.py`（3 例：重排的能力确有读矩阵的工具且两端字段名一致、下一周期任务落在已有计划上且 `get_plan` 读得回、新任务的结果要么被读回要么留下承诺）；`test_gateway.py` 加 4 例（JSON 后带尾巴只调一次 provider、真的没有对象时仍走修复、空内容重试且预算翻倍 `[2000, 4000]`、升档停在硬顶 `[10000, 12000]` 后再失败就报错）；`test_domain_tools.py` 的计划写入用例改成两条 `plan_tasks` 并断言标题里的"等 2 条"。

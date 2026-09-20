@@ -112,11 +112,23 @@ class CreateDecisionProjectPayload(BaseModel):
     question: str = Field(default="", max_length=2000)
 
 
-class CreateJobSearchTaskPayload(BaseModel):
+class PlanTaskItem(BaseModel):
     title: str = Field(min_length=2, max_length=300)
     expected_output: str = Field(default="", max_length=1000)
     week_no: int = Field(default=1, ge=1, le=12)
     kind: str = Field(default="evidence", max_length=24)
+
+
+class CreateJobSearchTaskPayload(BaseModel):
+    """The thing a person nods at is the week's plan, so the write takes a plan.
+
+    Measured live on 2026-09-20 closing the loop's last link: `action_plan` drafts
+    `plan_tasks`, this payload asked for one top-level `title`, so every next-cycle plan
+    was flagged `unsupported` ("Field required: title") *after* the person had approved
+    it. That mismatch is why 第 13 环节 had never once put a task in the database.
+    """
+
+    plan_tasks: list[PlanTaskItem] = Field(min_length=1, max_length=12)
     plan_id: str | None = Field(default=None, max_length=32)
 
 
@@ -140,7 +152,7 @@ PROPOSAL_LABELS = {
     "add_candidate": "加入候选职业",
     "collect_evidence": "归档一条证据",
     "create_decision_project": "新建决策项目",
-    "create_job_search_task": "新增一个行动任务",
+    "create_job_search_task": "排下一周期的行动任务",
     "record_profile_fact": "补充一条画像事实",
     "record_comparison": "落一版多标准比较",
 }
@@ -291,23 +303,37 @@ def _create_job_search_task(session: Session, run: Run, proposal: Proposal) -> d
         session.add(plan)
         session.flush()
 
-    clash = session.scalar(select(PlanTask).where(PlanTask.plan_id == plan.id, PlanTask.title == payload.title))
-    if clash is not None:
-        return {"task_id": clash.id, "plan_id": plan.id, "already_present": True}
+    written: list[str] = []
+    already: list[str] = []
+    for item in payload.plan_tasks:
+        clash = session.scalar(select(PlanTask).where(PlanTask.plan_id == plan.id, PlanTask.title == item.title))
+        if clash is not None:
+            # Same plan, same wording: one approval of the same draft must not schedule
+            # the week twice.
+            already.append(clash.id)
+            continue
+        task = PlanTask(
+            plan_id=plan.id,
+            user_id=proposal.user_id,
+            title=item.title,
+            expected_output=item.expected_output,
+            week_no=item.week_no,
+            kind=item.kind,
+            ordinal=len(plan.tasks),
+        )
+        session.add(task)
+        session.flush()
+        written.append(task.id)
 
-    task = PlanTask(
-        plan_id=plan.id,
-        user_id=proposal.user_id,
-        title=payload.title,
-        expected_output=payload.expected_output,
-        week_no=payload.week_no,
-        kind=payload.kind,
-        ordinal=len(plan.tasks),
-    )
-    session.add(task)
-    plan.touch()
-    session.flush()
-    return {"task_id": task.id, "plan_id": plan.id, "plan_version": plan.version}
+    if written:
+        plan.touch()
+        session.flush()
+    return {
+        "task_ids": written,
+        "already_present": already,
+        "plan_id": plan.id,
+        "plan_version": plan.version,
+    }
 
 
 def _record_profile_fact(session: Session, run: Run, proposal: Proposal) -> dict[str, Any]:
@@ -547,10 +573,15 @@ def build_proposal(capability: CapabilitySpec, run: Run, artifact: Artifact, syn
     # proposal as unsupported rather than inventing a candidate name or an evidence
     # statement the model never justified.
     error = payload_error(proposal_type, payload)
+    tasks = [item for item in payload.get("plan_tasks") or [] if isinstance(item, dict)]
     subject = str(
         payload.get("name") or payload.get("title") or payload.get("statement") or payload.get("body")
+        or (tasks[0].get("title") if tasks else "")
         or (actions[0] if actions else "")
     )
+    # One card writes the whole plan, so the card has to say how much it writes.
+    if len(tasks) > 1:
+        subject = f"{subject} 等 {len(tasks)} 条"
     return Proposal(
         run_id=run.id,
         artifact_id=artifact.id,

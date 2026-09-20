@@ -141,15 +141,32 @@ CAPABILITIES: tuple[CapabilitySpec, ...] = (
         description="把验证问题排进周任务，按证据缺口控制任务量。",
         status="implemented",
         required_context=["user", "project"],
-        tools=["get_plan", "estimate_load", "list_candidates", "get_reviews"],
+        # compare_candidates is the reason this capability can re-plan instead of repeat:
+        # the next week exists to fill the cells that came back 缺证据, and `last_round`
+        # says which cells those are. Without it the new conclusion could only be copied
+        # out of whatever the person typed in the goal sentence.
+        tools=["get_plan", "estimate_load", "list_candidates", "get_reviews", "compare_candidates"],
         artifact_type="ActionPlanDraft",
         proposal_types=["create_job_search_task"],
         risk_tier="R2",
         requires_approval=True,
         thinking="on",
-        # weekly_review is still planned, so it was the only declared target and every
-        # promise from this capability was silently dropped. After acting, the real
-        # next steps are to bring back evidence and re-compare with it.
+        # Measured live on 2026-09-20, two different failures at one capability: at the
+        # 2000 default `synthesize` came back as truncated JSON ("Unterminated string ...
+        # column 4244"), and at 3500 it exhausted the budget on reasoning and emitted no
+        # content at all. Same shape as compare_decide's history, so the ceiling is a
+        # correctness setting here, not a cost knob; the deterministic fix (retry the
+        # empty/truncated call with a bigger budget) is a P2 item.
+        max_tokens=6000,
+        synthesis_notes=(
+            "任务要对着证据缺口排：先看 compare_candidates 的 missing_cells 和 last_round，"
+            "要落的字段是 proposed.plan_tasks（一个数组，一条一项；卡片一次批准整个计划）。"
+            "每条任务写清它想补哪一格（criterion + 候选方向），期望产出要能变成一条证据。"
+            "不要给分数已经够 2 的格子再加任务，也不要把任务写成「深入了解」这类无法交回的话。"
+            "任务量由 estimate_load 的每周额度控制，超了就说明哪几格这周不验证，照实写出来。"
+            "已经交回过的任务不要重复排：get_plan 里能看到状态。"
+        ),
+        # After acting, the loop needs the evidence back and then the verdict recomputed.
         next_capabilities=["evidence_collect", "compare_decide", "weekly_review"],
     ),
     CapabilitySpec(

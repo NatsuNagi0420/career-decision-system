@@ -369,18 +369,28 @@ def test_create_job_search_task_creates_a_plan_when_the_project_has_none(session
         capability,
         run,
         artifact,
-        {"conclusion": "排任务", "proposed": {"title": "约一位在职分析师聊 30 分钟", "week_no": 2}},
+        {
+            "conclusion": "排任务",
+            "proposed": {
+                "plan_tasks": [
+                    {"title": "约一位在职分析师聊 30 分钟", "week_no": 2, "expected_output": "对方真实的一天"},
+                    {"title": "补一条后端方向的真实改动证据", "week_no": 3, "expected_output": "一次可交付的改动链接"},
+                ]
+            },
+        },
     )
     assert proposal is not None
+    # One card, one plan: the title has to say how much the approval writes.
+    assert proposal.title.endswith("等 2 条"), proposal.title
     with session_factory() as session:
         session.add(proposal)
         session.flush()
         result = apply_executor(session, session.get(Run, run.id), session.get(Proposal, proposal.id))
         session.commit()
-    assert result["task_id"] and result["plan_id"]
+    assert len(result["task_ids"]) == 2 and result["plan_id"]
     with session_factory() as check:
-        task = check.get(PlanTask, result["task_id"])
-        assert task.week_no == 2 and task.ordinal == 0
+        weeks = [check.get(PlanTask, task_id).week_no for task_id in result["task_ids"]]
+        assert weeks == [2, 3]
 
 
 def test_create_note_path_still_works_for_the_probe_capability(session_factory, student) -> None:

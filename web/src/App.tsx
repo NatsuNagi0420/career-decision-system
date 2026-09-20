@@ -13,6 +13,7 @@ import {
   type Snapshot,
 } from "./api/client";
 import { BrandMark, SuinaiFace } from "./components/Brand";
+import { ComparisonBoard } from "./components/ComparisonBoard";
 import { DecisionCard } from "./components/DecisionCard";
 import { EvidenceDrawer } from "./components/EvidenceDrawer";
 import { Login } from "./components/Login";
@@ -78,12 +79,16 @@ function WorkbenchShell({ onSignedOut }: Props) {
   const [stream, setStream] = useState<{ answer: string; reasoning: string } | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  /** Bumped with every feed reload so the stored comparison board re-reads the table
+   *  right after the approval that wrote a round. */
+  const [boardTick, setBoardTick] = useState(0);
   const abortRef = useRef<AbortController | null>(null);
   const bootRef = useRef(false);
 
   const refreshFeed = useCallback(async () => {
     try {
       setFeed(await api.feed());
+      setBoardTick((tick) => tick + 1);
     } catch (error) {
       setNotice((error as Error).message);
     }
@@ -674,6 +679,8 @@ function WorkbenchShell({ onSignedOut }: Props) {
             />
 
             <TaskDeck tasks={focusTasks} onSubmitted={taskSubmitted} />
+
+            <ComparisonBoard projectId={focusProject} revision={boardTick} />
 
             {awaiting ? (
               <DecisionCard

@@ -113,6 +113,10 @@ export const api = {
       method: "POST",
       body: JSON.stringify(input),
     }),
+  /** The matrix as stored, newest round first. Read from `comparison_results`, not from
+   *  a run's prose, so a cell shows what spoke for it and against it rather than a
+   *  bare score — and the superseded round stays visible. */
+  comparison: (projectId: string) => request<ComparisonRound[]>(`/api/v1/projects/${projectId}/comparison`),
   decide: (runId: string, approvalId: string, approved: boolean, feedback: string) =>
     request<{ accepted: boolean }>(`/api/v1/runs/${runId}/approvals/${approvalId}/decision`, {
       method: "POST",
@@ -188,6 +192,37 @@ export interface ArtifactEntry {
   content: Record<string, unknown>;
   evidence_quotes: Record<string, string>;
   source_refs: Array<Record<string, unknown>>;
+  /** The matrix this one replaced. `version` is an optimistic lock, so this is the only
+   *  field that says "the answer moved" rather than "this is the first answer". */
+  supersedes_id: string | null;
+}
+
+export interface ComparisonCite {
+  id: string;
+  kind: string;
+  statement: string;
+  /** The verbatim source text, not a paraphrase of it. */
+  quote: string;
+}
+
+export interface ComparisonCell {
+  criterion: string;
+  candidate: string;
+  verdict: string | null;
+  score: number | null;
+  note: string;
+  for_it: ComparisonCite[];
+  against: ComparisonCite[];
+}
+
+export interface ComparisonRound {
+  round_no: number;
+  artifact_id: string | null;
+  supersedes_id: string | null;
+  conclusion: string;
+  is_provisional: boolean;
+  created_at: string;
+  cells: ComparisonCell[];
 }
 
 export interface TaskResultEntry {

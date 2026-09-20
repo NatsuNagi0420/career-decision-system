@@ -236,6 +236,24 @@ async def confirm_weekly_review(
     return outcome
 
 
+@router.get("/projects/{project_id}/comparison")
+def get_comparison(
+    project_id: str,
+    request: Request,
+    user: User = Depends(current_user),
+) -> list[dict[str, Any]]:
+    """The comparison as it was actually stored, newest round first.
+
+    Not the run's prose: per-cell verdict, the quotes that earned the score, the ones
+    the model judged to speak against it, and the round that this one replaced. That is
+    what lets a student see why the answer moved instead of being handed a number.
+    """
+    try:
+        return _runs(request).comparison_board(user, project_id)
+    except NotOwner as exc:
+        raise HTTPException(status_code=404, detail="项目不存在") from exc
+
+
 @router.post("/runs", status_code=202)
 async def create_run(payload: RunCreate, request: Request, user: User = Depends(current_user)) -> dict[str, Any]:
     service = _runs(request)

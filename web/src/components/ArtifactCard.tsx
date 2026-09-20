@@ -99,6 +99,14 @@ export function ArtifactCard({ artifact, usage, steps, model, projectId, onFiled
           <Ms g="verified_user" size={20} />
           <div className="insight__col">
             <span className="insight__label">{artifact.title || STATUS_LABEL[artifact.status] || "穗奈的整理"}</span>
+            {/* The chain has to be visible here too: without it a corrected conclusion
+                reads exactly like a first conclusion, and "为什么变了" loses its anchor. */}
+            {artifact.supersedes_id ? (
+              <p className="faint t-label-sm">这一版取代上一版；旧版仍在库里，可以对照它当时怎么判</p>
+            ) : null}
+            {artifact.status === "superseded" ? (
+              <p className="faint t-label-sm">这一版已被之后的一版取代，当前结论以最新那版为准</p>
+            ) : null}
             {quote.text ? <p className="insight__quote">“{quote.text}”</p> : null}
             {conclusion ? <p className="insight__body">{conclusion}</p> : null}
           </div>

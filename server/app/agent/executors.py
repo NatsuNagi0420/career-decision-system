@@ -17,13 +17,15 @@ from collections.abc import Callable
 from typing import Any
 
 from pydantic import BaseModel, Field, ValidationError, model_validator
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.capabilities.spec import CapabilitySpec
 from app.db.domain import (
     ActionPlan,
+    ComparisonCriterion,
+    ComparisonResult,
     DecisionCandidate,
     DecisionProject,
     EvidenceItem,
@@ -33,6 +35,7 @@ from app.db.domain import (
     UserProfile,
 )
 from app.db.models import Artifact, Note, Proposal, Run
+from app.tools.domain import _build_matrix  # one scoring rule, shared with the tool the model read
 
 
 class CreateNotePayload(BaseModel):
@@ -71,6 +74,39 @@ class CollectEvidencePayload(BaseModel):
         return self
 
 
+class ComparisonCellPayload(BaseModel):
+    """What the model says about one cell. It names the cell and the counter-evidence;
+    the score and verdict are computed from stored evidence, never proposed.
+
+    The keys are `compare_candidates`' own vocabulary (`candidate_id` + `criterion`),
+    measured: the model echoes the shape the tool handed it, and a prettier name only
+    made the whole proposal `unsupported`. `note` is deliberately short — a long prose
+    field per cell is what pushed the synthesis JSON past the output ceiling.
+    """
+
+    criterion: str = Field(min_length=1, max_length=80)
+    candidate_id: str = Field(min_length=8, max_length=32)
+    #: evidence_items ids the person should see as speaking *against* this cell. Pointers
+    #: only — the row behind each one must exist in this project.
+    opposes: list[str] = Field(default_factory=list, max_length=8)
+    note: str = Field(default="", max_length=200)
+
+
+class RecordComparisonPayload(BaseModel):
+    criteria: list[str] = Field(default_factory=list, max_length=8)
+    #: Optional on purpose. The matrix itself is computed by code from stored evidence,
+    #: so a run with nothing to say against any cell still records an honest round.
+    cells: list[ComparisonCellPayload] = Field(default_factory=list, max_length=60)
+
+    @model_validator(mode="after")
+    def _needs_dimensions(self) -> RecordComparisonPayload:
+        """A comparison without named standards is unjudgeable later: there is nothing
+        for a new round to be compared against, and no way to see what moved."""
+        if not [name for name in self.criteria if name.strip()]:
+            raise ValueError("落表前必须先给出比较标准")
+        return self
+
+
 class CreateDecisionProjectPayload(BaseModel):
     title: str = Field(min_length=2, max_length=200)
     question: str = Field(default="", max_length=2000)
@@ -96,6 +132,7 @@ PAYLOAD_SCHEMAS: dict[str, type[BaseModel]] = {
     "create_decision_project": CreateDecisionProjectPayload,
     "create_job_search_task": CreateJobSearchTaskPayload,
     "record_profile_fact": RecordProfileFactPayload,
+    "record_comparison": RecordComparisonPayload,
 }
 
 PROPOSAL_LABELS = {
@@ -105,6 +142,7 @@ PROPOSAL_LABELS = {
     "create_decision_project": "新建决策项目",
     "create_job_search_task": "新增一个行动任务",
     "record_profile_fact": "补充一条画像事实",
+    "record_comparison": "落一版多标准比较",
 }
 
 
@@ -333,6 +371,137 @@ def _insert_by_request_id(session: Session, entity: Any, model: type[Any], key: 
     return {key: entity.id}
 
 
+def _persist_criteria(session: Session, project: DecisionProject, names: list[str]) -> list[ComparisonCriterion]:
+    """Standards are stored, not kept alive only inside one tool call.
+
+    `compare_candidates` used to build requested criteria as throwaway objects, so the
+    yardstick a conclusion was judged by existed only in that run's memory — a later
+    round could quietly measure the candidates with different standards and nobody
+    could tell the answer moved because the evidence changed or because the ruler did.
+    """
+    rows: list[ComparisonCriterion] = []
+    for order, name in enumerate(dict.fromkeys(item.strip()[:80] for item in names if item.strip())):
+        row = session.scalar(
+            select(ComparisonCriterion).where(
+                ComparisonCriterion.project_id == project.id, ComparisonCriterion.name == name
+            )
+        )
+        if row is None:
+            row = ComparisonCriterion(project_id=project.id, name=name, sort_order=order)
+            session.add(row)
+            session.flush()
+        rows.append(row)
+    return rows
+
+
+def _counter_refs(session: Session, project: DecisionProject, ids: list[str], candidate: DecisionCandidate) -> list[dict]:
+    """The model picks which evidence speaks against a cell; it does not decide which
+    evidence exists. Each pointer is resolved against this project, or the write fails."""
+    refs: list[dict] = []
+    for evidence_id in dict.fromkeys(ids):
+        item = session.get(EvidenceItem, evidence_id)
+        if item is None or item.project_id != project.id:
+            raise LookupError("反方证据必须来自本项目的证据")
+        if item.candidate_id is not None and item.candidate_id != candidate.id:
+            raise LookupError("反方证据挂在另一个候选上")
+        refs.append({"table": "evidence_items", "id": item.id})
+    return refs
+
+
+def _supersede_matrix(session: Session, proposal: Proposal, project: DecisionProject) -> dict[str, Any]:
+    """Link this run's matrix to the one it replaces, and mark that one superseded.
+
+    `Artifact.version` is an optimistic lock, so it cannot answer "what did the system
+    say before this". Without the chain, a corrected conclusion looks exactly like a
+    first conclusion — and "用户能看懂当前结论为什么发生变化" has nothing to point at.
+    """
+    current = session.get(Artifact, proposal.artifact_id) if proposal.artifact_id else None
+    if current is None:
+        return {}
+    previous = session.scalar(
+        select(Artifact)
+        .join(Run, Artifact.run_id == Run.id)
+        .where(
+            Run.project_id == project.id,
+            Artifact.artifact_type == "ComparisonMatrix",
+            Artifact.id != current.id,
+        )
+        .order_by(Artifact.created_at.desc())
+        .limit(1)
+    )
+    if previous is None:
+        return {}
+    current.supersedes_id = previous.id
+    previous.status = "superseded"
+    session.flush()
+    return {"supersedes": previous.id, "previous_conclusion": str((previous.content or {}).get("conclusion") or "")[:400]}
+
+
+def _record_comparison(session: Session, run: Run, proposal: Proposal) -> dict[str, Any]:
+    """Append one round of the matrix: scores from stored evidence, verdicts from the
+    same rule the tool showed, and the model's citations kept as pointers.
+
+    Nothing here edits an older round. The previous answer stays readable so the new
+    one can be compared with it rather than replacing it in memory.
+    """
+    payload = RecordComparisonPayload.model_validate(proposal.payload)
+    project = _project_for(session, run, proposal)
+    criteria = _persist_criteria(session, project, payload.criteria)
+    candidates = list(session.scalars(select(DecisionCandidate).where(DecisionCandidate.project_id == project.id)))
+    if len(candidates) < 2:
+        raise ValueError("至少需要两个候选，比较才落表")
+    evidence = list(session.scalars(select(EvidenceItem).where(EvidenceItem.project_id == project.id)))
+    facts = list(session.scalars(select(ProfileFact).where(ProfileFact.user_id == proposal.user_id)))
+    matrix, missing = _build_matrix(candidates, criteria, evidence, facts)
+
+    round_no = (
+        session.scalar(select(func.max(ComparisonResult.round_no)).where(ComparisonResult.project_id == project.id)) or 0
+    ) + 1
+    claims = {(claim.candidate_id, claim.criterion): claim for claim in payload.cells}
+    criterion_by_name = {criterion.name: criterion for criterion in criteria}
+    candidate_by_id = {candidate.id: candidate for candidate in candidates}
+    # A claim about a candidate or a standard this project does not have is not a
+    # detail to drop: the person approved exactly this payload, so writing a
+    # different one than was shown would be a silent substitution.
+    unknown = [key for key in claims if key[0] not in candidate_by_id or key[1] not in criterion_by_name]
+    if unknown:
+        raise LookupError(f"提案里有本项目没有的候选或标准：{unknown[0]}")
+    cells_written = 0
+    for row in matrix:
+        candidate = candidate_by_id[row["candidate_id"]]
+        for cell in row["cells"]:
+            criterion = criterion_by_name[cell["criterion"]]
+            claim = claims.get((candidate.id, cell["criterion"]))
+            note = (claim.note.strip() if claim and claim.note.strip() else "") or (
+                "还没有能对上这条标准的证据" if cell["verdict"] == "missing" else ""
+            )
+            result = ComparisonResult(
+                project_id=project.id,
+                criterion_id=criterion.id,
+                candidate_id=candidate.id,
+                round_no=round_no,
+                request_id=f"{proposal.request_id}#{criterion.id}#{candidate.id}",
+                score=cell["score"],
+                verdict=cell["verdict"],
+                note=note,
+                evidence_refs=[{"table": "evidence_items", "id": item_id} for item_id in cell["evidence_ids"]],
+                counter_refs=_counter_refs(session, project, claim.opposes if claim else [], candidate),
+                run_id=run.id,
+            )
+            session.add(result)
+            cells_written += 1
+    project.touch()
+    session.flush()
+    chain = _supersede_matrix(session, proposal, project)
+    return {
+        "round_no": round_no,
+        "cells": cells_written,
+        "missing_cells": len(missing),
+        "project_version": project.version,
+        **chain,
+    }
+
+
 EXECUTORS: dict[str, Executor] = {
     "create_note": _create_note,
     "add_candidate": _add_candidate,
@@ -340,6 +509,7 @@ EXECUTORS: dict[str, Executor] = {
     "create_decision_project": _create_decision_project,
     "create_job_search_task": _create_job_search_task,
     "record_profile_fact": _record_profile_fact,
+    "record_comparison": _record_comparison,
 }
 
 

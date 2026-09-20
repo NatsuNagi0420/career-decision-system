@@ -12,6 +12,7 @@ base cannot be papered over with confident prose.
 
 from __future__ import annotations
 
+import re
 from typing import Any, ClassVar
 
 from pydantic import BaseModel, Field
@@ -22,6 +23,7 @@ from app.db.domain import (
     ActionPlan,
     CareerDirection,
     ComparisonCriterion,
+    ComparisonResult,
     DecisionCandidate,
     DecisionProject,
     DirectionJobLink,
@@ -364,15 +366,44 @@ class CompareCandidates(Tool):
         matrix, missing = _build_matrix(candidates, criteria, evidence, profile_facts)
         cells = len(candidates) * len(criteria)
         supported = sum(1 for row in matrix for cell in row["cells"] if cell["quotes"])
+        # The last stored round, so "what changed and why" can be answered from data
+        # instead of from the model's recollection of a previous run. Reading the matrix
+        # without it is what made every new conclusion look like a first conclusion.
+        last_round = session.scalar(
+            select(func.max(ComparisonResult.round_no)).where(ComparisonResult.project_id == project.id)
+        )
+        previous_cells: list[dict[str, Any]] = []
+        previous_refs: list[dict[str, Any]] = []
+        if last_round:
+            criteria_by_id = {criterion.id: criterion.name for criterion in session.scalars(
+                select(ComparisonCriterion).where(ComparisonCriterion.project_id == project.id)
+            )}
+            candidates_by_id = {candidate.id: candidate.name for candidate in candidates}
+            for stored in session.scalars(
+                select(ComparisonResult).where(
+                    ComparisonResult.project_id == project.id, ComparisonResult.round_no == last_round
+                )
+            ):
+                previous_cells.append(
+                    {
+                        "criterion": criteria_by_id.get(stored.criterion_id, stored.criterion_id),
+                        "candidate": candidates_by_id.get(stored.candidate_id, stored.candidate_id),
+                        "score": stored.score,
+                        "verdict": stored.verdict,
+                        "counter_evidence_ids": [ref.get("id") for ref in stored.counter_refs or []],
+                    }
+                )
+                previous_refs.append({"table": "comparison_results", "id": stored.id})
         return ToolResult(
             payload={
                 "criteria": [criterion.name for criterion in criteria],
                 "matrix": matrix,
                 "data_coverage": round(100 * supported / max(1, cells)),
                 "missing_cells": missing,
+                "last_round": {"round_no": last_round, "cells": previous_cells} if last_round else None,
                 "rule": "score = 命中的逐字证据条数，上限 5；无证据即 verdict=missing",
             },
-            source_refs=[{"table": "evidence_items", "id": item.id} for item in evidence],
+            source_refs=[{"table": "evidence_items", "id": item.id} for item in evidence] + previous_refs,
         )
 
 
@@ -422,9 +453,16 @@ def _build_matrix(
     return matrix, missing
 
 
+_CLAUSE = re.compile(r"[、,，/;；\s]+|与|和|及|或")
+
+
 def _keywords(criterion: str) -> list[str]:
-    parts = [part for part in criterion.replace("、", ",").replace("/", ",").split(",") if part.strip()]
-    return [part.strip().lower() for part in parts] or [criterion.strip().lower()]
+    """A standard named "SQL 与统计" asks about two things, so it is measured by its
+    parts. Kept as one string it can never appear inside a JD sentence, and every cell
+    would come back 缺证据 next to evidence that is plainly there — which is what the
+    first stored round measured live on 2026-09-20."""
+    parts = [part.strip().lower() for part in _CLAUSE.split(criterion) if part.strip()]
+    return parts or [criterion.strip().lower()]
 
 
 def _matches(keywords: list[str], *texts: str) -> bool:

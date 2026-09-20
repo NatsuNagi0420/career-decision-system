@@ -108,14 +108,30 @@ CAPABILITIES: tuple[CapabilitySpec, ...] = (
         id="compare_decide",
         domain="decide",
         name="多标准比较",
-        description="按标准做确定性打分并给出反方论证；只出矩阵，绝不替用户确认目标。",
+        description="按标准做确定性打分并给出反方论证；矩阵落表要人批准，绝不替用户确认目标。",
         status="implemented",
         required_context=["user", "project"],
         tools=["list_candidates", "get_evidence", "compare_candidates", "get_reviews"],
         artifact_type="ComparisonMatrix",
-        risk_tier="R1",
+        proposal_types=["record_comparison"],
+        risk_tier="R2",
+        requires_approval=True,
         evidence_required=True,
         thinking="on",
+        # Measured twice on the real model, both with thinking on: one run reasoned to
+        # 875 tokens and produced a full matrix, another exhausted 4000 and emitted no
+        # content at all. The ceiling is a correctness setting for a judgement
+        # capability — the empty-retry path that makes this deterministic is a P2 item.
+        max_tokens=6000,
+        synthesis_notes=(
+            "标准要落表：proposed.criteria 给这次判断用的标准名，尽量沿用上一轮的同一批"
+            "（last_round 里能看到上一版用的什么）。proposed.cells 只写有反方证据的格子，"
+            "每格用 candidate_id + criterion（照 compare_candidates 返回的原样），"
+            "opposes 填 evidence_ids 里的证据 id，note 不超过 40 字。"
+            "没有反方证据就整个 cells 留空——矩阵本身由程序按存量证据算，"
+            "你不要给分、不要改判、不要复述整张表。"
+            "如果这轮结论和上一版不同，在 conclusion 里点名是哪条新证据让它变的。"
+        ),
         next_capabilities=["action_plan"],
     ),
     CapabilitySpec(

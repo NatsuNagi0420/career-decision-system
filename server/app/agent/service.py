@@ -19,7 +19,17 @@ from app.agent.state import RunState
 from app.capabilities.registry import get_capability
 from app.capabilities.spec import CapabilitySpec
 from app.config import Settings
-from app.db.domain import ActionPlan, DecisionCandidate, DecisionProject, PlanTask, TaskResult, WeeklyReview
+from app.db.domain import (
+    ActionPlan,
+    ComparisonCriterion,
+    ComparisonResult,
+    DecisionCandidate,
+    DecisionProject,
+    EvidenceItem,
+    PlanTask,
+    TaskResult,
+    WeeklyReview,
+)
 from app.db.models import Approval, Artifact, Obligation, Proposal, Run, User, new_id, utcnow
 from app.llm.gateway import Gateway
 from app.tools.base import ToolRegistry
@@ -224,6 +234,89 @@ class RunService:
         run = self._owned_run(run_id, user)
         with self._factory() as session:
             return [_artifact_json(a) for a in session.scalars(select(Artifact).where(Artifact.run_id == run.id))]
+
+    def comparison_board(self, user: User, project_id: str, *, rounds: int = 3) -> list[dict[str, Any]]:
+        """The stored matrix, newest round first, with each cell's evidence resolved.
+
+        A score is exactly what the acceptance criteria forbid handing a student alone;
+        they need what spoke *for* a cell, what spoke *against* it, and what is still
+        missing. Those three are columns of `comparison_results`, so this reads them
+        back instead of re-narrating a run — and it keeps the earlier rounds, because
+        "why did the answer move" is only answerable while the previous answer exists.
+        """
+        with self._factory() as session:
+            project = session.get(DecisionProject, project_id)
+            if project is None or project.user_id != user.id:
+                raise NotOwner(project_id)
+            cells = list(
+                session.scalars(
+                    select(ComparisonResult)
+                    .where(ComparisonResult.project_id == project.id)
+                    .order_by(ComparisonResult.round_no.desc(), ComparisonResult.created_at)
+                )
+            )
+            if not cells:
+                return []
+            newest = set(sorted({cell.round_no for cell in cells}, reverse=True)[:rounds])
+            cells = [cell for cell in cells if cell.round_no in newest]
+
+            criteria = {
+                row.id: row.name
+                for row in session.scalars(select(ComparisonCriterion).where(ComparisonCriterion.project_id == project.id))
+            }
+            candidates = {
+                row.id: row.name
+                for row in session.scalars(select(DecisionCandidate).where(DecisionCandidate.project_id == project.id))
+            }
+            wanted = {
+                ref["id"]
+                for cell in cells
+                for ref in [*cell.evidence_refs, *cell.counter_refs]
+                if ref.get("table") == "evidence_items" and isinstance(ref.get("id"), str)
+            }
+            sources = {
+                row.id: row
+                for row in session.scalars(
+                    select(EvidenceItem).where(EvidenceItem.id.in_(wanted), EvidenceItem.user_id == user.id)
+                )
+            } if wanted else {}
+            run_ids = {cell.run_id for cell in cells if cell.run_id}
+            matrices: dict[str, Artifact] = {}
+            if run_ids:
+                for artifact in session.scalars(
+                    select(Artifact)
+                    .where(Artifact.run_id.in_(run_ids), Artifact.artifact_type == "ComparisonMatrix")
+                    .order_by(Artifact.created_at)
+                ):
+                    matrices[artifact.run_id] = artifact
+
+            board: list[dict[str, Any]] = []
+            for round_no in sorted({cell.round_no for cell in cells}, reverse=True):
+                mine = [cell for cell in cells if cell.round_no == round_no]
+                artifact = next((matrices[cell.run_id] for cell in mine if cell.run_id in matrices), None)
+                board.append(
+                    {
+                        "round_no": round_no,
+                        "artifact_id": artifact.id if artifact else None,
+                        "supersedes_id": artifact.supersedes_id if artifact else None,
+                        "conclusion": str((artifact.content or {}).get("conclusion") or "") if artifact else "",
+                        "is_provisional": bool(artifact.is_provisional) if artifact else False,
+                        "created_at": min(cell.created_at for cell in mine).isoformat(),
+                        "cells": [
+                            {
+                                "criterion": criteria.get(cell.criterion_id, "（标准已不在本项目）"),
+                                "candidate": candidates.get(cell.candidate_id, "（候选已不在本项目）"),
+                                "verdict": cell.verdict,
+                                "score": cell.score,
+                                "note": cell.note,
+                                "for_it": [_cite(sources[ref["id"]]) for ref in cell.evidence_refs if ref.get("id") in sources],
+                                "against": [_cite(sources[ref["id"]]) for ref in cell.counter_refs if ref.get("id") in sources],
+                            }
+                            for cell in mine
+                        ],
+                    }
+                )
+            return board
 
     def confirm_weekly_review(
         self,
@@ -517,6 +610,12 @@ def _run_json(run: Run) -> dict[str, Any]:
     }
 
 
+def _cite(item: EvidenceItem) -> dict[str, str]:
+    """A cell's pointer resolved into the sentence a person can actually read. The quote
+    is the stored verbatim text, so a cell never shows more than a row really says."""
+    return {"id": item.id, "kind": item.kind, "statement": item.statement, "quote": item.quote or item.statement}
+
+
 def _artifact_json(artifact: Artifact) -> dict[str, Any]:
     return {
         "id": artifact.id,
@@ -531,6 +630,10 @@ def _artifact_json(artifact: Artifact) -> dict[str, Any]:
         "content": artifact.content,
         "evidence_quotes": artifact.evidence_quotes,
         "source_refs": artifact.source_refs,
+        # The chain, not the lock: the shell needs this to show "取代上一版" instead of
+        # presenting a corrected conclusion as if it were the first one.
+        "supersedes_id": artifact.supersedes_id,
+        "created_at": artifact.created_at.isoformat(),
     }
 
 

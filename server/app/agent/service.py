@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from typing import Any
 
 from langgraph.checkpoint.base import BaseCheckpointSaver
@@ -12,7 +12,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload, selectinload, sessionmaker
 
 from app.agent.approvals import ApprovalRepository
-from app.agent.events import EventLog, RunFailed, RunStarted
+from app.agent.events import EventLog, RunCompleted, RunFailed, RunStarted
 from app.agent.graph import AgentDeps, build_agent_graph
 from app.agent.obligations import ObligationRepository
 from app.agent.state import RunState
@@ -93,6 +93,66 @@ def reconcile_stale_runs(
     for run_id in closed:
         events.announce(run_id)
     return closed
+
+
+def expire_stale_approvals(
+    session_factory: sessionmaker[Session],
+    approvals: ApprovalRepository,
+    events: EventLog,
+    *,
+    now: datetime | None = None,
+) -> list[str]:
+    """Make an expired confirmation a piece of state, not just a message.
+
+    `claim()` refuses an expired approval, so a run parked at `awaiting_approval`
+    whose only card has lapsed can never be resumed — leaving it parked is the same
+    "stuck forever" failure 目标四 forbids. So the run is closed here too. Nothing was
+    ever written for it, which is why it reads `cancelled` with an `approval:` stage
+    rather than `failed`; and the Proposal stays `pending`, because nobody rejected it
+    — letting the card say "已过期，不能再生效" is the honest version of that.
+    """
+    moment = now or utcnow()
+    expired: list[str] = []
+    with session_factory() as session:
+        doomed = [
+            (approval.id, approval.run_id)
+            for approval in session.scalars(
+                select(Approval).where(Approval.status == "pending", Approval.expires_at < moment)
+            )
+        ]
+        if not doomed:
+            return []
+        expired = approvals.expire_stale(session, now=moment)
+        for _, run_id in doomed:
+            run = session.get(Run, run_id)
+            if run is None or run.finished_at is not None:
+                continue
+            still_alive = session.scalar(
+                select(Approval.id).where(Approval.run_id == run_id, Approval.status == "pending")
+            )
+            if still_alive is not None:
+                continue  # another card on the same run is still decidable
+            run.status = "cancelled"
+            run.error = "approval: 确认在有效期内没有被点，这次写入没有发生。可以再发起一次同样的判断。"
+            run.finished_at = moment
+            events.append(
+                session,
+                run,
+                RunCompleted(
+                    run_id=run.id,
+                    thread_id=run.thread_id,
+                    seq=0,
+                    event_id="",
+                    occurred_at=moment,
+                    kind="run_completed",
+                    status="cancelled",
+                    summary="确认超时，未写入",
+                ),
+            )
+        session.commit()
+    for run_id in {target for _, target in doomed}:
+        events.announce(run_id)
+    return expired
 
 
 @dataclass

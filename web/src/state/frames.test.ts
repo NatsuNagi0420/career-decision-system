@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { emptyState, groupTrace, reduceFrame, type Frame, type ShellState } from "./frames";
+import { emptyState, expiryNote, groupTrace, reduceFrame, type Frame, type ShellState } from "./frames";
+
+/** How the server actually writes a deadline: `utcnow()` strips the offset. */
+function naiveUtc(fromNowMs: number): string {
+  return new Date(Date.now() + fromNowMs).toISOString().slice(0, 19);
+}
 
 function frame(kind: Frame["kind"], seq: number, extra: Record<string, unknown> = {}): Frame {
   return {
@@ -71,6 +76,28 @@ describe("reduceFrame", () => {
     ]);
     expect(reduceFrame(base, frame("approval_resolved", 3, { approval_id: "ap1", status: "approved" })).proposals[0].state).toBe("approved");
     expect(reduceFrame(base, frame("approval_resolved", 3, { approval_id: "ap1", status: "error" })).proposals[0].state).toBe("error");
+  });
+
+  it("tells the person the confirmation has a fuse, and counts it in UTC", () => {
+    // Naive-UTC from the server must not be read as local time: in UTC+8 that would
+    // turn a card with 3 hours left into one that already expired.
+    const note = expiryNote(naiveUtc(3 * 3_600_000));
+    expect(note).toContain("有效期到");
+    expect(note).toMatch(/还剩 \d+ 小时/);
+    expect(expiryNote(naiveUtc(-60_000))).toContain("已经过期");
+    expect(expiryNote("2099-01-01T00:00:00+08:00")).toContain("有效期到");
+    // A frame without a usable deadline says nothing rather than inventing one.
+    expect(expiryNote("")).toBe("");
+    expect(expiryNote("x")).toBe("");
+  });
+
+  it("states that deadline on the card that asks for the decision", () => {
+    const state = applyAll([
+      frame("run_started", 0, { goal: "g" }),
+      frame("proposal_created", 1, { proposal_id: "p1", proposal_type: "add_candidate", title: "t", risk_tier: "R2" }),
+      frame("approval_required", 2, { approval_id: "ap1", proposal_id: "p1", expires_at: naiveUtc(3 * 3_600_000) }),
+    ]);
+    expect(state.items.at(-1)?.detail).toContain("有效期到");
   });
 
   it("survives a failed apply instead of hiding it", () => {

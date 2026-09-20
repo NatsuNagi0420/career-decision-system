@@ -295,7 +295,7 @@ export function reduceFrame(state: ShellState, frame: Frame): ShellState {
 
     case "approval_required": {
       const proposalId = str(frame, "proposal_id");
-      return push(item(frame, "等你决定", "在你确认之前，不会有任何业务写入", "warn"), {
+      return push(item(frame, "等你决定", `在你确认之前，不会有任何业务写入。${expiryNote(str(frame, "expires_at"))}`, "warn"), {
         status: "awaiting_approval",
         proposals: state.proposals.map((p) => (p.id === proposalId ? { ...p, approvalId: str(frame, "approval_id"), state: "awaiting" } : p)),
       });
@@ -424,4 +424,24 @@ function usageOf(frame: Frame): UsageView {
 function usageText(frame: Frame): string {
   const usage = usageOf(frame);
   return `${usage.model} · 输入 ${usage.prompt} / 输出 ${usage.completion}（思考 ${usage.reasoning}，命中缓存 ${usage.cached}）`;
+}
+
+/**
+ * The confirmation has a fuse: past `expires_at` the server refuses the write and the
+ * sweep cancels the run. A deadline nobody states reads as an infinite one, so the
+ * first thing a person learns about expiry is that their click failed.
+ *
+ * Dates leave the server naive-UTC (`utcnow()` strips the offset), and `Date.parse`
+ * reads an offset-less timestamp as *local* — without the `Z`, every deadline in a
+ * UTC+8 browser would land eight hours early.
+ */
+export function expiryNote(raw: string): string {
+  if (!raw || Number.isNaN(Date.parse(raw))) return "";
+  const deadline = Date.parse(/(?:Z|[+-]\d{2}:\d{2})$/.test(raw) ? raw : `${raw}Z`);
+  const left = deadline - Date.now();
+  if (left <= 0) return "这张确认已经过期，点了也不会写入；还需要它的话，再发起一次同样的判断。";
+  const hours = left / 3_600_000;
+  const remaining = hours < 1 ? "不到 1 小时" : `${Math.floor(hours)} 小时`;
+  const when = new Date(deadline).toLocaleString("zh-CN", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  return `有效期到 ${when}（还剩 ${remaining}），过期后自动作废。`;
 }

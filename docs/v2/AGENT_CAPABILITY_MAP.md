@@ -639,9 +639,9 @@ MySQL 的 DDL 不进事务，这条这次真撞上了：迁移里 `create_index`
 
 **负向验证**（这次先做再写文档）：把 `_ceiling()` 临时改成永远返回空，两条新测试当场红——`assert 3 == 2`（守卫没了就多花一次模型）、以及另一条烧到 `scripted provider exhausted`（超预算后一路花到脚本见底）。"新测试第一次就绿"在这里不算证据。
 
-### 重启对账：`running` 这个状态值根本不存在
+### 重启对账：`running` 写在字典里，没有人把它写进库里
 
-目标四写的是"服务重启后不允许 Run 永久停留在 `running`"。实测 `career_v2` 的 `agent_runs`：distinct status 只有 **completed / failed / awaiting_approval / cancelled**，全 `app/` 也没有 `"running"` 这个字面量。也就是说 **`created` 就是在飞标记**——行生下来是这个值，只有 graph 收尾或挂起才会改。进程死在半路，行就永远停在 `created`，feed 一直显示"进行中"，谁也不会再去动它。
+目标四写的是"服务重启后不允许 Run 永久停留在 `running`"。实测 `career_v2` 的 `agent_runs`：distinct status 只有 **completed / failed / awaiting_approval / cancelled**。`RUN_STATUSES` 确实声明了 `running` 与 `paused`（`app/db/models.py:25`），但那是**词汇表不是状态机**——`app/` 里对 `run.status` 的赋值只有 `created`（`service.py:248`）、`awaiting_approval`、`completed`／`failed`／`cancelled`（`graph.py:694`、`service.py:75/135`），没有一处写 `running`，也没有一处写 `paused`。唯一出现该字面量的地方是 `Step.status` 的默认值（`models.py:113`，`graph.py:157` 会把它收成 `done`／`failed`，所以这一步是活的）和两处测试 fixture。也就是说 **`created` 才是 Run 的在飞标记**——行生下来是这个值，只有 graph 收尾或挂起才会改。进程死在半路，行就永远停在 `created`，feed 一直显示"进行中"，谁也不会再去动它。
 
 `service.reconcile_stale_runs()`：把 `status='created'` 且 `updated_at` 老于窗口的行判为 `failed`，错误写 `restart:` 前缀 + 具体阶段，并补一条 `run_failed` 事件（不然开着页面的人只看到一个永远转圈的进度条）。`awaiting_approval` **不扫**：那是人手里攥着的状态，让它过期是 #41 审批过期的活，在这儿收掉等于替人把待办删了。
 
@@ -672,3 +672,70 @@ runs still claiming to work: []
 ### 测试
 
 `server/tests/test_run_ceilings.py`（3 例：步数用完仍出结论且少花一次调用、token 用完以 budget 失败且不落成果物、有预算时一切照常）、`server/tests/test_stale_runs.py`（4 例：孤儿被判失败且阶段进时间线、等人批准的不动、刚有进展的不动、启动零窗口连两秒前的孤儿也不留）。ruff 干净，7 例全绿。
+
+## §25 P2-2：审批过期从"存在代码"变成"真的被执行"（目标三 + 目标四）
+
+§24 故意把 `awaiting_approval` 排除在重启扫描之外，理由是"那是人手里攥着的状态"。这一节补上它的另一半：**攥着的手也会松开**。目标四要"审批超时能够被实际执行，而不只是存在代码"，目标三要"已过期审批不能继续执行"。两条当时都没满足，而且是同一个病灶的第 3、4 次发作——**能力在，没人调；调用在，不看那一列**。
+
+| 死的地方 | 实况 |
+| --- | --- |
+| `ApprovalRepository.expire_stale()` | 写好了、还被 `test_approvals_and_events.py` 单测过，但 `app/` 里**零调用点**。所以没有任何东西会把过期卡变成 `timed_out`，`APPROVAL_STATUSES` 里那个值从未在库里出现过 |
+| `ApprovalRepository.claim()` | `where` 只有 `id == approval_id, status == "pending"`。`expires_at` 是 `nullable=False` 且**没有默认值**（每张卡都带真死线），可抢占时一眼都不看它——于是 TTL 之后点"采纳"照样写入 |
+
+### 两半分别由两段代码负责，这是刻意的
+
+`claim()` 里加过期谓词，且**加在那条 UPDATE 内部**，不是加在前置读取上：卡"仍是 pending"和"已经过期"可以同时为真，中间那次读出来的状态活不过竞态。扫描器只负责让过期**可见**，`claim()` 才负责它**有效**。
+
+`service.expire_stale_approvals()` 负责把过期变成状态：卡 `timed_out`；若这条 run 上**没有别的还没到点的卡**，run 收为 `cancelled`，错误写 `approval: 确认在有效期内没有被点，这次写入没有发生。可以再发起一次同样的判断。`，并补一条 `run_completed(status="cancelled", summary="确认超时，未写入")`——不补这条，开着页面的人只看到一个永远转圈的进度条。
+
+为什么是 `cancelled` 不是 `failed`：**那张卡一次也没写进库**，没有东西出错，只是没人点头。为什么 Proposal 保持 `pending`：**没有人拒绝它**，把它写成 `rejected` 是替人做了一个他没做过的决定；诚实的版本是卡自己说"已过期，不能再生效"。为什么不碰 `awaiting_approval` 以外的 run：`finished_at` 已有值的说明已经收尾，不该被扫描器改口。
+
+`main.py` 挂在两处，和 §24 同一个循环里：启动时先跑一次（进程刚起来，看到的过期卡都是上一个进程留下的），之后每 60 秒一次。
+
+### 负向验证
+
+把 `claim()` 的过期谓词临时摘掉，新测试当场红（`assert True is False`：过期卡被抢占了）。前端同理——把 `Z` 归一化摘掉，两条新 vitest 一起红，而且红得说明问题：一张还剩 3 小时的卡直接报"已经过期"。因为 `utcnow()` 是**减掉偏移的 naive UTC**（`models.py:41`），线上 payload 长这样 `2026-09-21T21:33:57.876933`，而 `Date.parse` 按 ES 规范把无偏移的日期时间串当**本地时间**读——UTC+8 的浏览器上每张卡的死线都提前 8 小时。
+
+### 前端：死线终于有人读了
+
+`expires_at` 一直在 `approval_required` 的 payload 里（`graph.py:627`）、一直在 `client.ts` 的类型里（`:255`），但 `frames.ts` 的 case 只取了 `approval_id` 和 `proposal_id`，所以确认卡上没有任何时间信息——用户学到的第一课是"我点了，它失败了"。现在 `expiryNote()` 把它渲染进那条提示，浏览器实测一张真卡：
+
+```text
+等你决定
+在你确认之前，不会有任何业务写入。有效期到 9/22 05:33（还剩 22 小时），过期后自动作废。
+```
+
+对照库里的 `2026-09-21T21:33:57Z`，UTC+8 本地正是 9/22 05:33，22 小时也对得上。拿不到可用死线时（空串、脏值）返回空话术，不编一个日期。
+
+### 真进程、真库实测
+
+`server/var/p2b_expiry.py`：注册新用户 → 直接插两条 `awaiting_approval` 的 run（一条 1 张过期卡，一条 1 张过期 + 1 张 6 小时后才过期）→ 立刻用 HTTP 点那张过期卡 → 等 75 秒让进程内扫描跑一次 → 回读。
+
+```text
+[1] 点过期卡 → HTTP 409 {'detail': '这条确认已经不可再执行（审批已结束或已过期）'}
+    扫描器还没跑，卡上状态仍是 'pending'（过期谓词挡在 claim 里，不依赖扫描）
+
+[2] 单卡 run status='cancelled' finished_at=set
+    error='approval: 确认在有效期内没有被点，这次写入没有发生。可以再发起一次同样的判断。'
+    cards=[('timed_out', 'expired')]
+    timeline=[('run_completed', 'cancelled', '确认超时，未写入')]
+    proposals=['pending']（没人拒绝过，所以必须还是 pending）
+
+[2] 双卡 run status='awaiting_approval' finished_at=None error=None
+    cards=[('timed_out', 'expired'), ('pending', 'alive')]
+    timeline=[]
+    proposals=['pending', 'pending']
+```
+
+第 [1] 步是这节最值钱的一行：**409 发生在扫描器之前**，说明"过期不能执行"不靠一个每分钟跑一次的后台任务兜底。双卡那一支证明过期是**逐卡**的：一张到点不收掉另一张还来得及做的决定。
+
+### 边界与未做（诚实项）
+
+- TTL 默认 86400 秒（`approval_ttl_seconds`）是拍脑袋的，没测过试点用户实际多久回来点。改成多久属于评测题，不在这次里定。
+- 扫描器和 run 收尾之间没有分布式锁：单进程下没问题，多 worker 会重复扫（同 §24 的 lease 缺口）。
+- 过期即 `cancelled`，但**不重放**：没有"自动重新起草一张一样的卡"。跨 run 推进本来有 Obligation，要不要给超时的事再挂一条承诺，等试点看用户是不是真的需要。
+- 计时按 `utcnow()` 比 `expires_at`；卡片上的死线是浏览器本地时区，服务端不做时区。
+
+### 门禁与测试
+
+`server/tests/test_approval_expiry.py`（4 例：过期卡仍 pending 时也不能被抢占、没到点的照常能抢、扫描把过期变成状态并给 run 收尾、同 run 还有活卡就不收尾）。ruff 干净；`test_approvals_and_events.py`、`test_run_lifecycle.py` 未受影响仍绿。

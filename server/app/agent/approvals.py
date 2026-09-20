@@ -63,11 +63,18 @@ class ApprovalRepository:
         return approval
 
     def claim(self, session, approval_id: str) -> bool:
-        """Atomic pending -> resuming. True only for the single winning caller."""
+        """Atomic pending -> resuming. True only for the single winning caller.
+
+        The expiry test belongs inside this UPDATE, not in a read that happens
+        before it: otherwise two things can both be true — the card still says
+        `pending` while its `expires_at` has passed, and a person clicking at that
+        moment gets a write that 目标三 says an expired approval may not produce. The
+        sweeper only makes the state visible; this is what makes it enforced.
+        """
         rowcount = session.execute(
             update(Approval)
             .execution_options(synchronize_session=False)
-            .where(Approval.id == approval_id, Approval.status == "pending")
+            .where(Approval.id == approval_id, Approval.status == "pending", Approval.expires_at > utcnow())
             .values(status="resuming")
         ).rowcount
         session.commit()

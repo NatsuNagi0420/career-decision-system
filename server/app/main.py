@@ -13,7 +13,7 @@ from app.agent.approvals import ApprovalRepository
 from app.agent.checkpointer import open_checkpointer
 from app.agent.events import EventLog
 from app.agent.obligations import ObligationRepository
-from app.agent.service import GraphRegistry, RunService, reconcile_stale_runs
+from app.agent.service import GraphRegistry, RunService, expire_stale_approvals, reconcile_stale_runs
 from app.api.routes import router
 from app.capabilities.registry import CAPABILITIES
 from app.config import Settings, get_settings
@@ -72,10 +72,12 @@ def create_app(settings: Settings | None = None, *, gateway: Gateway | None = No
                 stale_after=timedelta(0),
                 reason="上次进程退出时它还停在这一步",
             )
+            expire_stale_approvals(session_factory, approvals, events)
 
             async def sweep_stalled_runs() -> None:
                 while True:
                     await asyncio.sleep(60)
+                    expire_stale_approvals(session_factory, approvals, events)
                     reconcile_stale_runs(session_factory, events)
 
             sweeper = asyncio.create_task(sweep_stalled_runs())

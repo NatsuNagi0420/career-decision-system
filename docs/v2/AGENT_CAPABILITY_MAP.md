@@ -1345,4 +1345,17 @@ run.error        : restart: 上次进程退出时它还停在这一步，已按�
 
 两个当场改掉的形状问题：`tool_trace` 里 `ok=False` 的调用被排除在 `traced` 之外（失败的回执不能供出处）；`get_requirement_items` 原先发的 ref 是 `{table, job_id, text}`，**没有条目自己的 id**，所以要求条目的引文永远绑不到 `job_requirement_items` 的具体一行——补上 `"id": item.id`（`JobRequirementItem` 本来就是 BigInteger 单列主键）。
 
-未覆盖的部分说清楚：4 条新测试打在 `_attribute_quotes` 这个判断上，`scripts.validate` 19 条不变；**没有**一条端到端测试断"一次真 run 写出的 artifact.source_refs 里出现了岗位行"——wiring 只靠 `run_tools` 返回 `tool_trace`（`graph.py:420`）这处读码保证。端到端那条要连 MySQL 夹具一起写，排在 #56 剩余项里；同样要等账户恢复才能看的，是 `only_in_payload` 会不会因此真的掉下来——那是这条改动的唯一成功标准，不是"代码写了"。
+未覆盖的部分说清楚：4 条新测试打在 `_attribute_quotes` 这个判断上，`scripts.validate` 19 条不变；**没有**一条端到端测试断"一次真 run 写出的 artifact.source_refs 里出现了岗位行"——wiring 只靠 `run_tools` 返回 `tool_trace`（`graph.py:420`）这处读码保证。端到端那条要连 MySQL 夹具一起写，排在 #56 剩余项里；同样要等账户恢复才能看的，是 `only_in_payload` 会不会因此真的掉下来——那是这条改动的唯一成功标准，不是"代码写了"。（**这一段已被 §40 作废**：端到端测试补上了，负向验证做过，欠的只剩"真模型上 `only_in_payload` 降不降"。）
+
+## 40. §39 欠的那条端到端测试补上了，它当场纠正我两个想当然（P2-10 收尾）
+
+`tests/test_artifact_sources.py::test_a_run_leaves_the_quoted_row_on_its_own_artifact`：往 `career_v2_test` 插一行真实 `jobs`，脚本让模型调 `get_job_samples`、再原句引用岗位标题，最后断两件事——`artifact.source_refs` 里出现 `{"table": "jobs", "id": <那一行>}`，且该条 `evidence_basis` 上写着 `source_tools: ["get_job_samples"]`。这是 §39 明说欠着的那一半：**纯函数测试看不见 wiring**。
+
+负向验证照 §37/§38 的规矩做：把 `run_tools` 里那句 `trace.append(observed)` 改成 `trace.append({**observed, "source_refs": []})`（模拟"回执照常发、状态里不带行指针"），结果**只有**这条端到端测试变红，且红在 `{"table": "jobs", "id": "1"} in [...]` 这一行，4 条纯函数测试全绿。摘对了守卫才叫测到了东西；恢复后 5 条全绿、ruff 干净。
+
+两个被测试当场否掉的假设，记下来免得下次再想当然：
+
+1. **这条 run 不会停在确认门。** 第一版照着 `test_run_interrupts_waits_and_then_writes_the_row` 写了 `assert first["interrupted"] is True` + 一次 approve，直接红。读回来的事实是：确认门只对**业务写入提案**（digest 里的 `proposed`）开，`direction_explore` 收到一份没有 `proposed` 的草稿时 `interrupted=False`，一路跑到 `completed`——成果物草稿本身不是提案，不需要批准。
+2. **`get_job_samples({"city": "广州"})` 不是一次成功调用。** 它 `execute` 第一句就要求 `direction_id` 或 `keyword`，只给城市回的是 `{"ok": false, "error": "需要 direction_id 或 keyword 至少一个"}`；而失败调用正是 §39 排除在 `traced` 之外的那一类，所以那条测试最初"什么都没绑"红得完全正确。补上 `keyword` 才真正测到绑定——顺带算是一次意外的负向验证：**`ok=False` 供不了出处，这条分支在端到端路径上也成立**，不只是单元里那句"`traced` 只收 ok 的调用"。
+
+仍然欠的，不粉饰：这条测试只保证"成果物自己带得上行指针"，不保证"模型真的去引用它"。`only_in_payload` 会不会因此下降，仍要等账户恢复后那轮带指纹基线（#51）才算数。

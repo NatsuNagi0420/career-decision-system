@@ -70,6 +70,31 @@ def _failure_stage_drift() -> str:
     return f"unlabelled={unlabelled}" if unlabelled else ""
 
 
+#: `resolve()` refuses from these, `claim()` from `resuming`; the route turns each into a
+#: sentence. They are listed here as the things a rename must not be able to lose.
+APPROVAL_SOURCE = "agent/approvals.py"
+TERMINAL_GUARD = r"if status not in \{([^}]*)\}:"
+
+
+def _approval_hint_drift() -> str:
+    """Compare the approval states the route can be asked to explain against the ones the
+    state machine can actually be in when it refuses."""
+    from app.api.routes import APPROVAL_STATE_HINT
+    from app.db.models import APPROVAL_STATUSES
+
+    text = (Path(__file__).resolve().parents[1] / "app" / APPROVAL_SOURCE).read_text(encoding="utf-8")
+    guard = re.search(TERMINAL_GUARD, text)
+    if guard is None:
+        return "resolve()'s terminal-status guard stopped matching — this check can no longer see the vocabulary"
+    reachable = {item.strip().strip("\"'") for item in guard.group(1).split(",")} | {"resuming"}
+
+    invented = sorted(set(APPROVAL_STATE_HINT) - set(APPROVAL_STATUSES))
+    if invented:
+        return f"提示表里的状态机器根本写不出来: {invented}"
+    unexplained = sorted(reachable - set(APPROVAL_STATE_HINT))
+    return f"这些状态下重复点击只会拿到兜底文案: {unexplained}" if unexplained else ""
+
+
 class Report:
     def __init__(self) -> None:
         self.failures: list[str] = []
@@ -161,6 +186,13 @@ def validate() -> Report:
         not stage_drift,
         "failure stages the server writes are all labelled by the shell",
         stage_drift,
+    )
+
+    hint_drift = _approval_hint_drift()
+    report.check(
+        not hint_drift,
+        "approval states the route explains are states the machine can reach",
+        hint_drift,
     )
 
     from tests.support import sample_frames

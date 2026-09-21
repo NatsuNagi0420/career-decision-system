@@ -58,21 +58,32 @@ powershell -File scripts\verify.ps1          # 含真实 MySQL 测试库，约 7
 powershell -File scripts\verify.ps1 -Quick   # 跳过 pytest
 ```
 
-它依次跑：ruff、能力与契约完整性（`server/scripts/validate.py` 14 项）、Alembic 漂移检查、pytest、`tsc --noEmit`、vitest、生产构建，并给出逐项结论。
+它依次跑：ruff、能力与契约完整性（`server/scripts/validate.py` 16 项）、Alembic 漂移检查、pytest、`tsc --noEmit`、vitest、生产构建，并给出逐项结论。
 
 `validate.py` 里有几条是**跨语言契约**：后端帧类型集合必须等于前端 `FrameKind`、每种帧都要有序列化样本、能力链不能通向没有实现的能力。这类不一致以前靠人眼发现。
 
 ## 测试与评测的边界
 
 - `server/tests/` 用真实 MySQL（`career_v2_test`，缺失时同样自动建库）+ `ScriptedProvider`，覆盖结构、权限、审批、事件与承诺，**不调用真实模型**。
-- 真实模型的质量门禁还没有。这是当前最大的一块欠账，列为 P3，见 `docs/v2/PROJECT_GOAL.md` 第五节"目标五"。
-- **不要同时开两个 pytest 会话**：它们共享 `career_v2_test`，`TRUNCATE` 会互相打断。
+- 真实模型的质量门禁在 `server/evals/`：38 条固定案例 + 引用溯源校验器，只写专用库 `career_v2_eval`（`career_v2`/`career_v2_test`/两个 v1 库被硬性禁止写入）。
+
+  ```powershell
+  cd server
+  .venv\Scripts\python.exe -m scripts.run_evals --check                       # 只核对案例集，不连库不花钱
+  .venv\Scripts\python.exe -m scripts.run_evals --limit 5                     # 假模型，只验机器本身转不转
+  .venv\Scripts\python.exe -m scripts.run_evals --live                        # 真模型出基线，38 例约 $0.14
+  .venv\Scripts\python.exe -m scripts.run_evals --rescore var\eval-xxx-live.json   # 改了评分器就重算引用，不再花钱
+  ```
+
+  当前基线与七条指标的口径都记在 `docs/v2/AGENT_CAPABILITY_MAP.md` §31–§32。**离线跑故意过不了阈值**（报告末尾会自己说明），只有 `--live` 的数字才拿来比较。
+- **不要同时开两个 pytest 会话**：它们共享 `career_v2_test`，`TRUNCATE` 会互相打断。评测跑 `career_v2_eval`，但仍不能与别人的全量 pytest 并发（MySQL 1684 并发改表）。
 
 ## 文档
 
 | 位置 | 内容 |
 | --- | --- |
 | `docs/v2/PROJECT_GOAL.md` | 项目目标、验收标准、P0–P4 优先级、明确不做的事 |
+| `docs/v2/PILOT_PROTOCOL.md` | P4 小规模试点的观察口径与判读规则（全部可用现有表算出，缺的是人不是代码） |
 | `docs/v2/AI_NATIVE_ARCHITECTURE.md` | AI 原生公理、对象模型、事件与审批契约、§11 试点与运维约定 |
 | `docs/v2/AGENT_CAPABILITY_MAP.md` | 能力地图与**逐里程碑落地记录**（含实测发现的缺陷） |
 | `docs/v1-历史/` | v1 四层架构时期的规格与计划，仅供追溯，**不描述当前系统** |
@@ -82,7 +93,8 @@ powershell -File scripts\verify.ps1 -Quick   # 跳过 pytest
 
 ```text
 server/   FastAPI + LangGraph 服务：API、鉴权、能力注册表、工具、事件、审批、承诺
-  scripts/   validate.py（契约校验）、import_catalog.py（职业目录）、brand_assets.py（品牌素材切图）、demo_e2e.py
+  scripts/   validate.py（契约校验）、run_evals.py（真模型评测入口）、import_catalog.py（职业目录）、brand_assets.py（品牌素材切图）、demo_e2e.py
+  evals/     38 条固定评测案例、引用溯源校验器、指标探测与报告
 web/      React 19 + Vite 应用壳：对话流、成果物、确认门、对象层侧栏
 spikes/   一次性技术验证（模型行为、checkpoint 一致性），结论已并入文档
 scripts/  verify.ps1 —— 唯一验证入口

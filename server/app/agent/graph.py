@@ -406,7 +406,13 @@ async def run_tools(deps: AgentDeps, state: RunState) -> RunState:
                 emit(
                     deps, run_id,
                     _frame(deps, run_id, ToolCallFinished, kind="tool_call", step_id=step_id, name=name,
-                           arguments=arguments, truncated=truncated, source_refs=refs),
+                           arguments=arguments, truncated=truncated, source_refs=refs,
+                           # The durable log used to record *which* rows a run read but not
+                           # the text the model was handed, so a quote of a tool's own
+                           # envelope (`count: 0`, the matrix's scoring rule) could never be
+                           # checked against anything. `result_content` is exactly what the
+                           # model received — already bounded by `max_output_chars`.
+                           result_summary=result_content),
                 )
             messages.append({"role": "tool", "tool_call_id": call.get("id"), "content": result_content})
 
@@ -982,7 +988,28 @@ def _coverage(facts: dict[str, Any]) -> int:
     if not facts:
         return 0
     filled = sum(1 for value in facts.values() if value)
-    return min(100, round(100 * filled / len(facts)))
+    replied = min(100, round(100 * filled / len(facts)))
+    # A tool that measured its own evidence answers with a lower number than "the tool
+    # replied". The comparison matrix counts `100 * supported / cells`, so a project with
+    # two candidates and no archived evidence says 0 — while tool responsiveness says
+    # 100. Treating the second as `data_coverage` is what let an unevidenced comparison
+    # ship as a certain conclusion, so the measured number wins.
+    reported = _reported_coverages(facts)
+    return min([replied, *reported]) if reported else replied
+
+
+def _reported_coverages(value: Any) -> list[int]:
+    """Every `data_coverage` a tool measured, wherever it sits in its payload."""
+    if isinstance(value, dict):
+        found = [
+            int(item)
+            for key, item in value.items()
+            if key == "data_coverage" and isinstance(item, (int, float)) and 0 <= item <= 100
+        ]
+        return found + [part for item in value.values() for part in _reported_coverages(item)]
+    if isinstance(value, (list, tuple)):
+        return [part for item in value for part in _reported_coverages(item)]
+    return []
 
 
 def _fabricated_numbers(synthesis: dict[str, Any], facts: dict[str, Any]) -> list[str]:

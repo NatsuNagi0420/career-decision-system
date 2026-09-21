@@ -299,12 +299,15 @@ def get_run(run_id: str, request: Request, user: User = Depends(current_user)) -
         raise HTTPException(status_code=404, detail="这一轮不存在，或者不属于你。") from exc
 
 
-#: Each terminal approval state explains a different refusal, and `claim()` refuses on
-#: the row, so the status is the only thing that says why this click did nothing.
+#: Each state `resolve()` can refuse from explains a different one, and the status is the
+#: only thing that says why this click did nothing. The keys must be the vocabulary
+#: `app/agent/approvals.py` actually writes — `scripts/validate.py` pins that, because a
+#: guessed key reads as a working sentence while never being reachable.
 APPROVAL_STATE_HINT = {
-    "decided": "这张确认卡已经点过了，同样的写入不会再来一次。",
+    "approved": "这张确认卡已经点过「采纳」了，同样的写入不会再来一次。",
+    "rejected": "这张确认卡已经被你拒绝了，那次写入没有发生。",
     "timed_out": "这张确认卡已经过期，那次写入没有发生。",
-    "cancelled": "那一轮已经收掉了，这张卡跟着一起失效。",
+    "error": "这次写入执行失败了，所以没有算成功。可以重新发起一轮。",
     "resuming": "这张确认卡正在执行中，请等它跑完。",
 }
 

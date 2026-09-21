@@ -44,7 +44,7 @@ if (-not (Test-Path (Join-Path $web 'node_modules'))) {
     throw "web dependencies missing. Run: cd web; npm ci"
 }
 
-Invoke-Step 'ruff (server lint)' $server { & $py -m ruff check app tests scripts migrations }
+Invoke-Step 'ruff (server lint)' $server { & $py -m ruff check app tests scripts migrations evals }
 Invoke-Step 'capability + contract integrity' $server { & $py scripts\validate.py }
 Invoke-Step 'alembic drift check' $server { & $py -m alembic check }
 

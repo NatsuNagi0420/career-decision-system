@@ -1390,3 +1390,24 @@ run.error        : restart: 上次进程退出时它还停在这一步，已按�
 **这条改动最贵的副产品是它否证了我第一次的判断。** 我第一版加完过滤后 `tests/test_comparisons.py` **整文件红**，包括既有那条 `test_a_second_round_appends_and_points_back_at_the_first`，我当时据此判定"谓词错了"并回滚。重读 `_apply_proposal` 才发现真相：那条测试是直接调 `apply_executor` 的，**从不走 `_apply_proposal`**，所以它那条"已应用"的矩阵永远停在 `draft`——是测试绕过了生产的状态迁移，不是谓词不成立。修法是让测试把生产事实写出来（apply 之后显式 `committed`，并注明为什么），不是把过滤放弃。另一处被测试纠正的小错：我断草稿状态应是 `pending_approval`，夹具里其实是 `draft`，于是断言改成**它不该变成 `superseded`**——那才是要钉的不变量，而不是某个具体前置状态。
 
 **留下的形状**：这条链仍只在同一 `project_id` 内找上一条；同 tick 两条 `committed` 互相指的情况由 id 全序决定（稳定，但取哪条是任意的）。
+
+## 43. 界面上的"来源"从模型自述换成系统绑定的行指针（目标二最后一条）
+
+§39/§40 把引文绑到行、把行写进 `artifact.source_refs` 之后，目标二第一条仍然只在弱意义上成立：**数据到了浏览器，没人读它**。两处都在：
+
+- `web/src/state/frames.ts:240` 取出 `frame.source_refs` 之后只留 `refs.length`，`Timeline.tsx:472` 打的是 `3 条`；
+- `EvidenceDrawer.tsx` 那一行"来源"打的是 `evidence_basis[].source` —— **模型自己写的一个词**（它经常写"jobs"，因为提示词里出现过这张表）。
+
+第二个比第一个严重：它不是"信息少"，而是把模型的话当作系统核实过的出处展示给用户，正对着目标二"不允许用模型常识冒充项目数据"。服务端确认过 `source_refs` 确实在载荷里（`service.py:841`、`client.ts:196` 有类型），所以这次**一行后端都不用改**，纯显示层。
+
+改法集中在一个翻译处 `readable.ts`：`rowPointers()` 剔掉记账项（`agent_runs` / `tool` 说的是"哪次 run、哪个工具"，不是数据）、剔掉没有 id 的 ref、去重，并且**认不出人话名的表保留表名**——藏掉一个还没写标签的新表，就是把"值在、没人读"重演一遍。`pointerSummary()` 按服务端记录顺序渲染，超过 cap 写 `… 等 N 行`（数量诚实，不假装只有列出来的那几行）。抽屉顶部一句"系统记下的真实出处：岗位样本 #295"，没有行指针时明说"只记到哪个工具答过…下面的来源都是模型自己的说法"，模型的 `source` 前面一律冠上"模型自述来源"。
+
+**测试分三层，最贵的是第三层。** ① `readable.test.ts` 4 条纯函数（记账被剔、未知表保留原名、无 id 丢掉、cap 与"等 N 行"）；② `frames.test.ts` 在既有那条回执测试上补一句 `refSummary === "职业方向 #7"`——reducer 不许再丢 refs；③ 新增 `EvidenceDrawer.test.ts` 用 `renderToStaticMarkup` 断言指针**真的出现在 markup 里**。第三层不是为了好看：vitest 的 include 是 `src/**/*.test.ts`、仓库里组件测试历来只测导出的纯函数，不引 testing-library 也能渲染（`createElement`，环境本来就是 node）。我先写成 `.test.tsx` 试了一次，`tsc` 报的其实是另一个错（键里带空格没加引号），但 include 不匹配这条会静默让新测试**根本不跑**——所以沿用 `.ts` 而不是改门禁配置。
+
+负向验证两处各摘一次：`frames` 的 `refSummary` 置空 → `vitest exit=1`，红在第 ② 层那句；去掉 ledger 表过滤 → 第 ① 层两条一起红（`tool #get_plan` 被当成了数据行）。还原后 45/45 绿、`tsc` 干净。
+
+**这条没有覆盖什么，说清楚**：指针是**成果物级**，不是逐句级——服务端逐句只到工具名（`per_claim`），行级绑定是全量 `bound_refs`，所以抽屉里那句"真实出处"说的是这一轮读过哪些行，不能说"这一句出自第 295 行"；界面也没有"点指针跳去查那一行"的读接口，指针是**可核对的地址**，不是一键直达。`only_in_payload` 会不会因为 §39/§40 真的下降，仍和 #51 一起等账户恢复（本轮 13:18 实测 `--live --limit 1` 依旧 `402 Payment Required`）。
+
+**一条顺带的线上证据**（不是本轮设计要验的）：那次 402 的中途失败落成了 `run.status=failed` + 具名阶段 `select_action: 决定下一步时模型没答成…402`，没有产出任何成果物，报告里 `unapproved_writes=0`、`cross_user_reads=0`、`fake_success_artifacts=0`。目标四"模型失败不得伪装成成功"这条在真实欠费路径上成立了一次——一次观测，不是一条验证。
+
+**顺手判掉的一条候选改动（#58），结论是不做。** 同一族的下一处是 `ComparisonRound.artifact_id`：`web/src` 里除了测试夹具没有任何读取点，看着又像"列在、值在、没人读"。但读 `service.comparison_board` 之后价值判断翻了：它按轮次把每格的 `for_it/against` 连 `quote` + `origin` 一起带回（`ComparisonCite`），**旧轮的原句本来就看得到**，`artifact_id` 多给的只是那一轮成果物自己的 `source_refs`（行指针）与正文。为这一点边际收益要新开一个按 owner 收窄的读接口（外加"不存在／不是你的同码同文"那条不变量的新落点），代价大于收益，所以不做。**限制记在这里，不假装界面上说了**：抽屉顶部那句"系统记下的真实出处"只对**当前这份成果物**成立，旧轮界面说的是逐格原句与它的 origin，没有旧轮的行指针（也没有一句 UI 文案去声明这个差别——加这句要多一个测试文件，而本轮门禁正在跑，不为它半途换树）。若将来试点里真有人拿旧轮的原句去问"这到底是哪条岗位"，再按方案 A 补接口（`GET /api/v1/artifacts/{id}`，owner 收窄，404 与"不是你的"同码同文），并在同一改动里把界面上那句限制补上。

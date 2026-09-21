@@ -1,6 +1,6 @@
 import type { ArtifactEntry } from "../api/client";
 import { Ms } from "./Ms";
-import { readableQuote } from "../state/readable";
+import { pointerSummary, readableQuote } from "../state/readable";
 
 interface Props {
   open: boolean;
@@ -23,6 +23,7 @@ export function EvidenceDrawer({ open, artifact, onClose }: Props) {
   const lines = Array.isArray((artifact?.content as Record<string, unknown> | undefined)?.evidence_basis)
     ? (((artifact?.content as Record<string, unknown>).evidence_basis ?? []) as EvidenceLine[])
     : [];
+  const pointers = pointerSummary(artifact?.source_refs ?? [], 6);
 
   return (
     <>
@@ -38,6 +39,11 @@ export function EvidenceDrawer({ open, artifact, onClose }: Props) {
           </button>
         </div>
         <div className="drawer__body">
+          <p className="drawer__cap">
+            {pointers
+              ? `系统记下的真实出处：${pointers}`
+              : "这一轮的出处只记到「哪个工具答过」，没有落到具体行——下面写的来源都是模型自己的说法。"}
+          </p>
           {lines.length ? null : <p className="empty">这一轮还没有可核验的原句。</p>}
           {lines.map((line, index) => {
             const quote = readableQuote(line.quote ?? "");
@@ -47,7 +53,7 @@ export function EvidenceDrawer({ open, artifact, onClose }: Props) {
                 {quote.text ? <p className="drawer__quote">「{quote.text}」</p> : null}
                 <span className="drawer__src">
                   <Ms g="source" size={14} />
-                  <span>{line.source || "工具返回"}</span>
+                  <span>{line.source ? `模型自述来源：${line.source}` : "模型没有说来源"}</span>
                 </span>
                 {quote.raw ? (
                   <pre className="mono" style={{ whiteSpace: "pre-wrap", wordBreak: "break-all", margin: 0 }}>

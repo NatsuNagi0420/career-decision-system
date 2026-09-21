@@ -469,7 +469,7 @@ function Thought({ groups, live, standalone = false }: { groups: TraceGroup[]; l
                       <span className="thought__tool" key={entry.eventId}>
                         <Ms g="manage_search" size={13} />
                         <span>{entry.toolName ?? "资料"}</span>
-                        <em>{`${entry.refCount ?? 0} 条`}</em>
+                        <em>{entry.refSummary || `${entry.refCount ?? 0} 条`}</em>
                       </span>
                     ))}
                   </div>

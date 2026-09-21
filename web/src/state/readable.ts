@@ -110,6 +110,70 @@ function dedupe(values: string[]): string[] {
 }
 
 /**
+ * A `source_refs` entry that names the actual row a tool read.
+ *
+ * The server already verifies these (`_attribute_quotes` binds each quoted sentence to
+ * a row) and already ships them to this file's caller, but both reading surfaces showed
+ * only a count — "3 条来源" is a number the user has to trust, and `evidence_basis[].source`
+ * is a word the *model* chose. §目标二 asks for the former to be checkable, so this is
+ * the one place that turns a table name into something a student can go and look up.
+ */
+export interface SourcePointer {
+  table: string;
+  label: string;
+  id: string;
+}
+
+/** Which run and which tool: bookkeeping every 成果物 carries, not a piece of data. */
+const LEDGER_TABLES = new Set(["agent_runs", "tool"]);
+
+const TABLE_LABELS: Record<string, string> = {
+  jobs: "岗位样本",
+  job_requirement_items: "岗位要求条目",
+  career_directions: "职业方向",
+  profile_facts: "我的经历事实",
+  evidence_items: "证据条目",
+  task_results: "我提交的结果",
+  decision_candidates: "候选方向",
+  decision_projects: "决策项目",
+  action_plans: "行动计划",
+  plan_tasks: "计划任务",
+  weekly_reviews: "周复盘",
+  comparison_results: "比较结果",
+  artifacts: "成果物",
+};
+
+export function rowPointers(refs: Array<Record<string, unknown>>): SourcePointer[] {
+  const seen = new Set<string>();
+  const rows: SourcePointer[] = [];
+  for (const entry of refs) {
+    const table = String(entry.table ?? "");
+    const id = String(entry.id ?? "");
+    if (!table || !id || LEDGER_TABLES.has(table) || seen.has(`${table}#${id}`)) {
+      continue;
+    }
+    seen.add(`${table}#${id}`);
+    // An unlabelled table still shows its own name: hiding a pointer we haven't named
+    // yet would re-create "值在、没人读" the first time a tool reads a new table.
+    rows.push({ table, id, label: TABLE_LABELS[table] ?? table });
+  }
+  return rows;
+}
+
+/** Named rows, in the order the server recorded them, capped so a chip stays a chip. */
+export function pointerSummary(refs: Array<Record<string, unknown>>, cap = 2): string {
+  const rows = rowPointers(refs);
+  if (!rows.length) {
+    return "";
+  }
+  const head = rows
+    .slice(0, cap)
+    .map((row) => `${row.label} #${row.id}`)
+    .join(" · ");
+  return rows.length > cap ? `${head} 等 ${String(rows.length)} 行` : head;
+}
+
+/**
  * The run-header pill. A finished run says nothing about provenance, so this must never
  * read a percentage off `run.status` — the shell used to print "100% 证据可溯源" for any
  * completed run, which is a made-up number in the one place the product promises evidence.

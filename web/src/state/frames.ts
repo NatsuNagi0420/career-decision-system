@@ -12,6 +12,7 @@
  * keeping, but it is not what a student reads first.
  */
 import { formatFailure } from "./failure";
+import { pointerSummary } from "./readable";
 
 export type FrameKind =
   | "run_started"
@@ -61,6 +62,8 @@ export interface TimelineItem {
   /** Tool calls carry these so the trace rail can render a chip without re-reading prose. */
   toolName?: string;
   refCount?: number;
+  /** Which rows the tool read, named: the count alone is something the user must trust. */
+  refSummary?: string;
   /** What the tool actually handed back — the text the model read. */
   toolEcho?: string;
 }
@@ -237,14 +240,16 @@ export function reduceFrame(state: ShellState, frame: Frame): ShellState {
 
     case "tool_call": {
       const truncated = bool(frame, "truncated");
-      const refs = Array.isArray(frame.source_refs) ? (frame.source_refs as unknown[]) : [];
+      const rows = Array.isArray(frame.source_refs)
+        ? (frame.source_refs as Array<Record<string, unknown>>)
+        : [];
       // The server keeps the reply text it handed to the model. Without this the audit
       // trail says "it read 3 rows" and never what the model was shown.
       const echo = str(frame, "result_summary").slice(0, 4000);
       return push(
         item(
           frame,
-          `查了「${labelForTool(str(frame, "name"))}」（${refs.length} 条来源）`,
+          `查了「${labelForTool(str(frame, "name"))}」（${rows.length} 条来源）`,
           truncated ? "结果被裁剪，模型看到的是摘要，不是全量" : undefined,
           truncated ? "warn" : "neutral",
           "trace",
@@ -254,7 +259,8 @@ export function reduceFrame(state: ShellState, frame: Frame): ShellState {
           {
             stepId: str(frame, "step_id"),
             toolName: labelForTool(str(frame, "name")),
-            refCount: refs.length,
+            refCount: rows.length,
+            refSummary: pointerSummary(rows),
             toolEcho: echo || undefined,
           },
         ),

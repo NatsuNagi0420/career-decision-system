@@ -2173,6 +2173,16 @@ details[open] .thought__chev {
   background: var(--md-surface-lowest);
 }
 
+.drawer__cap {
+  padding: var(--sp-sm) var(--sp-md);
+  border-left: 3px solid var(--md-secondary);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  background: var(--md-surface-container-low);
+  color: var(--md-on-surface-variant);
+  font: 600 12px/18px var(--md-font);
+  overflow-wrap: anywhere;
+}
+
 .drawer__claim {
   color: var(--md-on-surface);
   font: 600 13px/20px var(--md-font);

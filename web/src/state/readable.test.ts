@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { evidencePill, readableQuote } from "./readable";
+import { evidencePill, pointerSummary, readableQuote, rowPointers } from "./readable";
 
 /**
  * Pinned because it shipped once: the first real run rendered
@@ -64,5 +64,39 @@ describe("evidencePill", () => {
   it("prints only measured coverage, and says when the conclusion is provisional", () => {
     expect(evidencePill({ coverage: 40, quotes: 2, provisional: false })).toBe("2 条原句可比对 · 覆盖度 40%");
     expect(evidencePill({ coverage: 0, quotes: 0, provisional: true })).toBe("还没有可比对的原文 · 临时结论");
+  });
+});
+
+/**
+ * 目标二 asks for "用户可以查看证据来源，而不只是看到最终分数". The server already binds
+ * each quote to a row (§39/#56) and already ships those pointers on `source_refs`; what
+ * was missing was a reader for them — both surfaces printed a count and let the model's
+ * own `evidence_basis[].source` word stand as the provenance.
+ */
+describe("rowPointers", () => {
+  it("keeps the business rows and drops the bookkeeping ones", () => {
+    const rows = rowPointers([
+      { table: "agent_runs", id: "63982e" },
+      { table: "tool", id: "get_job_samples" },
+      { table: "jobs", id: 295 },
+      { table: "jobs", id: 295 },
+    ]);
+    expect(rows).toEqual([{ table: "jobs", label: "岗位样本", id: "295" }]);
+  });
+
+  it("names an unlabelled table by its own name instead of hiding it", () => {
+    // Dropping a pointer we haven't written a label for yet would re-create "值在、没人读"
+    // the first time a tool starts reading a new table.
+    expect(rowPointers([{ table: "salary_benchmarks", id: 3 }])[0].label).toBe("salary_benchmarks");
+  });
+
+  it("drops a ref with no id rather than rendering 岗位样本 #undefined", () => {
+    expect(rowPointers([{ table: "jobs" }, { table: "jobs", id: "" }])).toEqual([]);
+  });
+
+  it("caps the list but says how many rows there were", () => {
+    const refs = [{ table: "jobs", id: 1 }, { table: "evidence_items", id: 2 }, { table: "plan_tasks", id: 3 }];
+    expect(pointerSummary(refs)).toBe("岗位样本 #1 · 证据条目 #2 等 3 行");
+    expect(pointerSummary([{ table: "tool", id: "get_plan" }])).toBe("");
   });
 });

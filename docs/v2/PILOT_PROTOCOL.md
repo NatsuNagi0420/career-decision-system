@@ -40,3 +40,8 @@
 ## 五、还欠什么
 
 🙋 人。这份协议的数据口径全部可由现有表算出，成本换算按 §28 单价（峰时上限、USD 口径，账单币种未确认）。缺的是 10–15 个真实账号——需要你去招，我不能替你做这一步。
+
+**2026-09-21 把上面那张表的口径逐列重核过一遍**（读 `app/db/models.py` 与 `app/db/domain.py` 的 `Mapped` 列，不是转述）：`decision_projects.user_id`、`decision_candidates.project_id`、`task_results.task_id`、`weekly_reviews.run_id`、`agent_runs.capability_id`/`status`/`prompt_tokens`/`completion_tokens`/`cached_tokens`、`artifacts.is_provisional` 全部在——所以"数据口径可算"这句现在是量过的，不再是断言。两处要防的读法：
+
+- `RUN_STATUSES` 里 `running` 与 `paused` 只是词汇表（`app/` 内无处写入），因此流失判读**不能**把"停在 `running`"当成一种在飞状态；在飞的标记是 `created` + `finished_at IS NULL`。而 `awaiting_approval` **是**真状态（`app/agent/graph.py:749` 写），所以"确认门后无动作单独算一类"这句可算，且它是**人**停住的、不是模型停住的——`service.py:76` 的自动续跑名单故意排除它。
+- 成本列里 `reasoning_tokens` 是 `completion_tokens` 的子集，折算时**不加**它（§26 实测三次），否则每个用户的钱会被高估一截。

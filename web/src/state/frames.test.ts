@@ -123,6 +123,9 @@ describe("reduceFrame", () => {
       }),
     ]);
     expect(state.items.at(-1)?.toolEcho).toContain("后端开发（技术研发）");
+    // The chip used to render only "1 条". A count is something the student has to
+    // trust; the named row is the thing they can go and check.
+    expect(state.items.at(-1)?.refSummary).toBe("职业方向 #7");
   });
 
   it("makes a withheld write as visible as a proposal", () => {

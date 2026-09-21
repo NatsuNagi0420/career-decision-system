@@ -75,13 +75,15 @@
   --sp-lg: 24px;
   --sp-xl: 32px;
 
-  /* --- radii --- */
+  /* --- radii: sm = nested inside a card, md = a card, lg = a panel you act on,
+         full = anything small you click or label with. tail = the speech-bubble corner.
+         Inputs split by the same two roles: a control you can type into any moment
+         (search, dock) is full; a field sitting inside a form card is md. --- */
   --r-sm: 8px;
-  --r-default: 16px;
-  --r-2xl: 16px;
-  --r-3xl: 24px;
-  --r-lg: 32px;
+  --r-md: 16px;
+  --r-lg: 24px;
   --r-full: 9999px;
+  --r-tail: 2px;
 
   /* --- shadows --- */
   --sh-sidebar: 0 1px 8px rgba(0, 80, 72, 0.06);
@@ -405,7 +407,7 @@ a {
   align-items: center;
   gap: var(--sp-sm);
   padding: var(--sp-sm);
-  border-radius: var(--r-default);
+  border-radius: var(--r-md);
   background: var(--md-surface-container);
 }
 
@@ -599,8 +601,8 @@ a {
 .bubble {
   max-width: 672px;
   padding: var(--sp-lg);
-  border-radius: var(--r-3xl);
-  border-top-right-radius: var(--r-sm);
+  border-radius: var(--r-md);
+  border-top-right-radius: var(--r-tail);
   background: var(--md-surface-high);
   color: var(--md-on-surface);
   font: 400 16px/24px var(--md-font);
@@ -693,7 +695,7 @@ details[open] .thought__chev {
 .thought__body {
   margin-top: var(--sp-sm);
   padding: var(--sp-sm) var(--sp-md) var(--sp-md);
-  border-radius: var(--r-2xl);
+  border-radius: var(--r-md);
   border: 1px solid var(--md-surface-container);
   background: var(--md-surface-low);
   color: var(--md-on-surface-variant);
@@ -1010,7 +1012,7 @@ details[open] .thought__chev {
   flex-direction: column;
   gap: var(--sp-sm);
   padding: var(--sp-md) var(--sp-lg) var(--sp-lg);
-  border-radius: var(--r-3xl);
+  border-radius: var(--r-lg);
   border: 1px solid rgba(0, 80, 72, 0.16);
   background: linear-gradient(180deg, var(--md-surface-low) 0%, var(--md-surface-container) 100%);
 }
@@ -1096,7 +1098,7 @@ details[open] .thought__chev {
   gap: var(--sp-sm);
   max-width: var(--agent-w);
   padding: var(--sp-md);
-  border-radius: var(--r-2xl);
+  border-radius: var(--r-md);
   font: 400 14px/20px var(--md-font);
 }
 
@@ -1152,7 +1154,7 @@ details[open] .thought__chev {
   width: 100%;
   max-width: var(--dock-w);
   padding: var(--sp-sm);
-  border-radius: var(--r-3xl);
+  border-radius: var(--r-lg);
   border: 1px solid rgba(190, 201, 198, 0.2);
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(32px);
@@ -1208,7 +1210,7 @@ details[open] .thought__chev {
   width: 100%;
   max-width: var(--agent-w);
   padding: var(--sp-lg);
-  border-radius: var(--r-3xl);
+  border-radius: var(--r-lg);
   border: 1px solid var(--md-primary);
   background: var(--md-surface-lowest);
   box-shadow: var(--sh-dock);
@@ -1226,7 +1228,7 @@ details[open] .thought__chev {
   width: 100%;
   max-width: var(--agent-w);
   padding: var(--sp-lg);
-  border-radius: var(--r-3xl);
+  border-radius: var(--r-lg);
   border: 1px solid var(--md-outline-variant);
   background: var(--md-surface-low);
   display: flex;
@@ -1262,7 +1264,7 @@ details[open] .thought__chev {
 
 .task {
   padding: var(--sp-md);
-  border-radius: var(--r-2xl);
+  border-radius: var(--r-md);
   border: 1px solid var(--md-outline-variant);
   background: var(--md-surface-lowest);
   display: flex;
@@ -1310,7 +1312,7 @@ details[open] .thought__chev {
   margin: 0;
   padding: var(--sp-sm) var(--sp-md);
   border-left: 3px solid var(--md-primary);
-  border-radius: 0 var(--r-2xl) var(--r-2xl) 0;
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
   background: var(--md-surface-low);
   font: 400 14px/22px var(--md-font);
   white-space: pre-wrap;
@@ -1342,7 +1344,7 @@ details[open] .thought__chev {
 .tasks__error {
   margin: 0;
   padding: var(--sp-sm) var(--sp-md);
-  border-radius: var(--r-2xl);
+  border-radius: var(--r-md);
   background: var(--md-error-container);
   color: var(--md-on-error-container);
   font: 500 13px/19px var(--md-font);
@@ -1353,7 +1355,7 @@ details[open] .thought__chev {
   width: 100%;
   max-width: var(--agent-w);
   padding: var(--sp-lg);
-  border-radius: var(--r-3xl);
+  border-radius: var(--r-lg);
   border: 1px solid var(--md-outline-variant);
   background: var(--md-surface-low);
   display: flex;
@@ -1401,7 +1403,7 @@ details[open] .thought__chev {
   width: 100%;
   padding: 10px var(--sp-md);
   border: 1px solid var(--md-outline-variant);
-  border-radius: var(--r-2xl);
+  border-radius: var(--r-md);
   background: var(--md-surface-lowest);
   outline: none;
   font: 400 14px/20px var(--md-font);
@@ -1434,7 +1436,7 @@ details[open] .thought__chev {
 }
 
 .wreview__cites {
-  border-radius: var(--r-2xl);
+  border-radius: var(--r-md);
   border: 1px solid var(--md-outline-variant);
   background: var(--md-surface-lowest);
 }
@@ -1479,7 +1481,7 @@ details[open] .thought__chev {
   gap: var(--sp-xs);
   margin: 0;
   padding: var(--sp-sm) var(--sp-md);
-  border-radius: var(--r-2xl);
+  border-radius: var(--r-md);
   background: var(--md-primary-fixed);
   color: var(--md-on-primary-fixed);
   font: 600 13px/19px var(--md-font);
@@ -1534,7 +1536,7 @@ details[open] .thought__chev {
   gap: var(--sp-sm);
   max-width: var(--agent-w);
   padding: var(--sp-sm) var(--sp-md);
-  border-radius: var(--r-2xl);
+  border-radius: var(--r-md);
   background: var(--md-error-container);
   color: var(--md-on-error-container);
   font: 400 14px/20px var(--md-font);
@@ -1554,7 +1556,7 @@ details[open] .thought__chev {
   max-width: 420px;
   margin: 12vh auto;
   padding: var(--sp-xl);
-  border-radius: var(--r-3xl);
+  border-radius: var(--r-lg);
   background: var(--md-surface-low);
   box-shadow: var(--sh-card);
   display: flex;
@@ -1586,7 +1588,7 @@ details[open] .thought__chev {
   align-items: flex-start;
   gap: var(--sp-sm);
   padding: var(--sp-md);
-  border-radius: var(--r-2xl);
+  border-radius: var(--r-md);
   background: var(--md-surface-container);
   font: 400 14px/20px var(--md-font);
   line-height: 1.7;
@@ -1648,7 +1650,7 @@ details[open] .thought__chev {
   flex-direction: column;
   gap: 6px;
   padding: var(--sp-xs);
-  border-radius: var(--r-2xl);
+  border-radius: var(--r-md);
   border: 1px solid var(--md-surface-container);
   background: var(--md-surface-container);
   transition: background-color 180ms;
@@ -1719,7 +1721,7 @@ details[open] .thought__chev {
   gap: var(--sp-xs);
   width: 100%;
   padding: 8px 10px;
-  border-radius: var(--r-default);
+  border-radius: var(--r-md);
   color: var(--md-on-surface-variant);
   text-align: left;
 }
@@ -1859,8 +1861,8 @@ details[open] .thought__chev {
 }
 
 .tag {
-  padding: 1px 4px;
-  border-radius: 4px;
+  padding: 1px var(--sp-sm);
+  border-radius: var(--r-full);
   background: var(--md-surface-highest);
   color: var(--md-on-surface-variant);
   font: 500 10px/14px var(--md-font);
@@ -1891,7 +1893,7 @@ details[open] .thought__chev {
 .usercard {
   position: relative;
   padding: var(--sp-sm);
-  border-radius: var(--r-default);
+  border-radius: var(--r-md);
   background: var(--md-surface-container);
 }
 
@@ -1917,7 +1919,7 @@ details[open] .thought__chev {
   display: flex;
   flex-direction: column;
   padding: var(--sp-xs);
-  border-radius: var(--r-default);
+  border-radius: var(--r-md);
   border: 1px solid var(--md-surface-container-high);
   background: var(--md-surface-lowest);
   box-shadow: var(--sh-dock);
@@ -2168,7 +2170,7 @@ details[open] .thought__chev {
   flex-direction: column;
   gap: 6px;
   padding: var(--sp-md);
-  border-radius: var(--r-2xl);
+  border-radius: var(--r-md);
   border: 1px solid var(--md-surface-container);
   background: var(--md-surface-lowest);
 }
@@ -2239,8 +2241,8 @@ details[open] .thought__chev {
 .bubble {
   max-width: 100%;
   padding: 14px var(--sp-lg);
-  border-radius: var(--r-2xl);
-  border-top-right-radius: 2px;
+  border-radius: var(--r-md);
+  border-top-right-radius: var(--r-tail);
   background: var(--md-primary);
   color: var(--md-on-primary);
   font: 600 16px/24px var(--md-font);
@@ -2296,7 +2298,7 @@ details[open] .thought__chev {
 .agenthead__logo {
   width: 40px;
   height: 40px;
-  border-radius: var(--r-2xl);
+  border-radius: var(--r-full);
   background: var(--md-primary);
   overflow: hidden;
   flex: 0 0 auto;
@@ -2332,7 +2334,7 @@ details[open] .thought__chev {
   align-items: flex-start;
   gap: 4px;
   padding: var(--sp-lg);
-  border-radius: var(--r-2xl);
+  border-radius: var(--r-md);
   border: 1px solid rgba(0, 80, 72, 0.18);
   background: var(--md-surface-low);
   box-shadow: var(--sh-card);
@@ -2366,7 +2368,7 @@ details[open] .thought__chev {
   flex-direction: column;
   gap: 6px;
   padding: var(--sp-sm) var(--sp-md);
-  border-radius: var(--r-default);
+  border-radius: var(--r-md);
   border: 1px dashed rgba(190, 201, 198, 0.9);
   background: var(--md-surface-container);
   color: var(--md-on-surface-variant);
@@ -2403,7 +2405,7 @@ details[open] .thought__chev {
   position: relative;
   overflow: hidden;
   padding: var(--sp-lg);
-  border-radius: var(--r-2xl);
+  border-radius: var(--r-md);
   border: 1px solid var(--md-surface-container);
   background: var(--md-surface-low);
 }
@@ -2456,7 +2458,7 @@ details[open] .thought__chev {
   flex-direction: column;
   gap: var(--sp-md);
   padding: var(--sp-lg);
-  border-radius: var(--r-2xl);
+  border-radius: var(--r-md);
   border: 1px solid var(--md-surface-container-high);
   background: var(--md-surface-lowest);
 }
@@ -2512,7 +2514,7 @@ details[open] .thought__chev {
   justify-content: center;
   gap: var(--sp-md);
   padding: var(--sp-sm);
-  border-radius: var(--r-default);
+  border-radius: var(--r-md);
   background: var(--md-surface-low);
 }
 
@@ -2538,8 +2540,8 @@ details[open] .thought__chev {
 .gauge__flag {
   align-self: flex-start;
   margin-top: 4px;
-  padding: 2px var(--sp-xs);
-  border-radius: 4px;
+  padding: 2px var(--sp-sm);
+  border-radius: var(--r-full);
   background: var(--md-tertiary-fixed);
   color: var(--md-tertiary);
   font: 600 11px/16px var(--md-font);
@@ -2632,7 +2634,7 @@ details[open] .thought__chev {
 .ev {
   width: 100%;
   padding: var(--sp-md);
-  border-radius: var(--r-2xl);
+  border-radius: var(--r-md);
   border: 1px solid var(--md-surface-container);
   background: var(--md-surface-low);
   text-align: left;
@@ -2775,7 +2777,7 @@ details[open] .thought__chev {
 .dock__inner {
   gap: 6px;
   padding: var(--sp-sm);
-  border-radius: var(--r-2xl);
+  border-radius: var(--r-md);
   border: 1px solid var(--md-surface-container-high);
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(12px);
@@ -2951,7 +2953,7 @@ details[open] .thought__chev {
   scrollbar-width: thin;
   scrollbar-color: var(--md-surface-highest) transparent;
   padding: var(--sp-xs) var(--sp-xs) var(--sp-sm);
-  border-radius: var(--r-3xl);
+  border-radius: var(--r-lg);
   border: 1px solid var(--md-surface-container-high);
   background: var(--md-surface-lowest);
   box-shadow: var(--sh-dock);
@@ -2983,7 +2985,7 @@ details[open] .thought__chev {
   gap: var(--sp-xs);
   width: 100%;
   padding: 7px var(--sp-sm);
-  border-radius: var(--r-default);
+  border-radius: var(--r-md);
   color: var(--md-on-surface);
   text-align: left;
   animation: item-in 260ms cubic-bezier(0.05, 0.7, 0.1, 1) both;
@@ -3052,8 +3054,8 @@ details[open] .thought__chev {
 }
 
 .picker__soon {
-  padding: 1px 5px;
-  border-radius: 4px;
+  padding: 1px var(--sp-sm);
+  border-radius: var(--r-full);
   background: var(--md-surface-highest);
   color: var(--md-on-surface-variant);
   font: 600 10px/14px var(--md-font);
@@ -3374,7 +3376,7 @@ details[open] .thought__chev {
   }
 
   .ribbon {
-    border-radius: var(--r-3xl);
+    border-radius: var(--r-lg);
   }
 
   .auth__art {

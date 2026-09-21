@@ -1359,3 +1359,19 @@ run.error        : restart: 上次进程退出时它还停在这一步，已按�
 2. **`get_job_samples({"city": "广州"})` 不是一次成功调用。** 它 `execute` 第一句就要求 `direction_id` 或 `keyword`，只给城市回的是 `{"ok": false, "error": "需要 direction_id 或 keyword 至少一个"}`；而失败调用正是 §39 排除在 `traced` 之外的那一类，所以那条测试最初"什么都没绑"红得完全正确。补上 `keyword` 才真正测到绑定——顺带算是一次意外的负向验证：**`ok=False` 供不了出处，这条分支在端到端路径上也成立**，不只是单元里那句"`traced` 只收 ok 的调用"。
 
 仍然欠的，不粉饰：这条测试只保证"成果物自己带得上行指针"，不保证"模型真的去引用它"。`only_in_payload` 会不会因此下降，仍要等账户恢复后那轮带指纹基线（#51）才算数。
+
+## 41. "工具答了但结果为空"终于有一个数（P3-7）
+
+§38 修掉了产品说谎的方式（空查询不再被记成覆盖度 100），但留下一句明确的"没测到"：评测报告里**没有任何一格**说得出这一轮有多少次读是空的，当时能做的只有人肉重读 payload 正文。原料早就齐了——`ToolCallFinished` 自 P3 起带 `source_refs`（读过哪些行）与 `result_summary`（模型看到的原文），所以这次不需要迁移、不需要新状态。
+
+`evals/scoring.py` 新增 `empty_result_reads = 空 source_refs 的回执 / 全部工具回执`，按例记在 `counters` 里。三条判断写进代码与测试：
+
+1. **数在 `event.kind == "tool_call"` 上，不看 payload 的形状。** `events._frame()` 存盘时**故意 exclude 掉 `kind`**（`events.py:182`），所以任何"按 payload 里有没有 name"式的过滤会数出 0——指标会永远报"没数出来"，而代码看起来已经实现了。`test_reading_the_catalogue_and_getting_nothing_is_counted_from_the_frames` 钉的就是这一处：真 `Event` 行两条（一条空 refs、一条有），断 `(2, 1)` 与 `0.5`。
+2. **只数真的跑完的调用。** 参数不可解析、不在能力白名单里的调用不发 `tool_call` 帧（`graph.py:385-394` 那两条分支不 emit），于是"答了但空"与"调用失败"不会被揉进同一个数字——它们是两个事实。
+3. **量到 0.0 与没量到必须不同形。** 有回执且都不空 → `0.0`；一轮没有任何工具回执 → `None`，分母自己写"（这一轮没有工具回执可数）"。沿用 §32 那条：算不出来不许冒充满分。
+
+`empty_result_reads` **故意不进 `THRESHOLDS`**：一次孤立的空读是合法结果（首次 run 的 `get_run_history` 必然空），给它设门槛只会诱逼人调阈值。两个"必须为 0"一个字没动。
+
+负向验证：把帧过滤器换成另一种 kind → 新增那条当场红（脚本 `try/finally` 还原并断言文本一致）。ruff 干净，`tests/test_evals.py` + `tests/test_metric_denominators.py` 21 条全绿。
+
+**这个数不能做什么**：它分不出"合法的空"和"城市写错的空"（那是 §38 的 `_answered_with_data()` 在判），也不改任何门槛。它只是把"多数读都是空"从体感变成报告里的一格；这一格在真模型上到底是多少，仍和 #51 一起等账户恢复。

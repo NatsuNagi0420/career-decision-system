@@ -18,7 +18,7 @@ from app.db.domain import Job
 from app.db.models import Approval, Artifact, Event, Proposal, Run, User, utcnow
 from evals.cases import COVERAGE, MIN_CASES, Case, load_cases, validate
 from evals.corpus import check_quote, score_artifact
-from evals.scoring import business_row_counts, score_case
+from evals.scoring import business_row_counts, score_case, summarise
 from evals.seed import FORBIDDEN_SCHEMAS, assert_eval_target, eval_db_url, seed_world
 
 pytestmark = pytest.mark.filterwarnings("ignore::DeprecationWarning")
@@ -369,6 +369,39 @@ def test_a_tool_receipt_is_where_the_cross_user_guard_looks(session_factory: ses
 
     assert hit.cross_user_reads >= 1, "整数主键的私表读漏了必须算进去"
     assert clean.cross_user_reads == 0, "引用自己的画像不该被数成越权"
+
+
+def test_reading_the_catalogue_and_getting_nothing_is_counted_from_the_frames(
+    session_factory: sessionmaker[Session],
+) -> None:
+    """§38's red case had no number at all: the run called the catalogue tools, every one
+    answered `{"count": 0}`, and the only way to see that was a human re-reading payloads.
+
+    The count keys on `event.kind`, not on payload keys — `_frame` deliberately excludes
+    `kind` from the stored payload (`events.py:182`), so a payload-shaped filter would
+    count nothing and the metric would report "没数出来" forever while looking implemented.
+    """
+    case = make_case(id="empty_reads_case", seed={"facts": [], "tripwire": True})
+    world = seed_world(session_factory, case, tag=case.id)
+
+    with session_factory() as session:
+        run = make_run(session, world.user_id, capability="direction_explore")
+        for offset, refs in enumerate(([], [{"table": "jobs", "id": 1}])):
+            session.add(
+                Event(
+                    run_id=run.id,
+                    seq=100 + offset,
+                    thread_id=run.thread_id,
+                    kind="tool_call",
+                    payload={"name": "get_job_samples", "source_refs": refs},
+                )
+            )
+        session.commit()
+        with session_factory() as check:
+            result = score_case(check, case, run=check.get(Run, run.id), world=world, before=business_row_counts(check))
+
+    assert (result.tool_frames, result.empty_tool_frames) == (2, 1)
+    assert summarise([result])["metrics"]["empty_result_reads"] == 0.5
 
 
 def test_a_public_row_number_is_not_a_cross_user_read(session_factory: sessionmaker[Session]) -> None:

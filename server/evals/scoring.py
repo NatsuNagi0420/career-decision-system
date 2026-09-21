@@ -96,6 +96,13 @@ class CaseResult:
     cached_tokens: int = 0
     model_calls: int = 0
     tools_called: list[str] = field(default_factory=list)
+    #: How many tool calls answered, and how many of them answered with nothing.
+    #: `bad_tool_args_city` spent a whole round on this shape (§38): the run "read" the
+    #: catalogue and every read came back `{"count": 0}`. Only a `tool_call` frame counts,
+    #: because a refused or unparsable call never reaches that emit — an empty answer and
+    #: a failed call are different facts and must not be merged into one number.
+    tool_frames: int = 0
+    empty_tool_frames: int = 0
     evidence: EvidenceScore = field(default_factory=EvidenceScore)
     #: 不要求证据的能力也常写引用（画像诊断写的是工具回执字段）。它们单独一桶，
     #: 免得把提示词卫生问题算进"需要证据的成果物有出处"这条门槛的分母。
@@ -153,6 +160,8 @@ class CaseResult:
                 "cross_user_reads": self.cross_user_reads,
                 "fake_success": self.fake_success,
                 "uncertain_as_certain": self.uncertain_as_certain,
+                "tool_frames": self.tool_frames,
+                "empty_tool_frames": self.empty_tool_frames,
             },
             "evidence": _score_row(self.evidence),
             "diagnostics": _score_row(self.diagnostics),
@@ -289,6 +298,9 @@ def score_case(
     run_refs = _collected_refs(payloads)
     read_texts = _read_texts(payloads)
     result.tools_called = sorted({str(item.get("name")) for item in payloads if item.get("name")})
+    answered = [event.payload or {} for event in events if event.kind == "tool_call"]
+    result.tool_frames = len(answered)
+    result.empty_tool_frames = sum(1 for item in answered if not item.get("source_refs"))
     usage_frames = [item for item in payloads if "prompt" in item and "completion" in item]
     result.model_calls = len(usage_frames)
 
@@ -471,6 +483,8 @@ def summarise(results: list[CaseResult]) -> dict[str, Any]:
     }
     need_evidence_artifacts = sum(item.evidence_required_artifacts for item in results)
     uncertain_hits = sum(item.uncertain_as_certain for item in results)
+    tool_reads = sum(item.tool_frames for item in results)
+    empty_reads = sum(item.empty_tool_frames for item in results)
     per_capability: dict[str, dict[str, float]] = {}
     for item in results:
         bucket = per_capability.setdefault(
@@ -522,6 +536,14 @@ def summarise(results: list[CaseResult]) -> dict[str, Any]:
             f"{uncertain_hits} 处 / {need_evidence_artifacts} 个要求证据的成果物",
         ),
         "fake_success_artifacts": (sum(item.fake_success for item in results), f"{total} 例合计"),
+        # No threshold on purpose: this counts tool reads that answered with no business
+        # row, which is a legitimate outcome most of the time. What it buys is the ability
+        # to say "这一轮多数读都是空" with a number instead of a hunch (§38's red case).
+        "empty_result_reads": (
+            empty_reads / tool_reads if tool_reads else None,
+            f"{empty_reads}/{tool_reads} 次工具回答没有带回任何业务行"
+            + ("" if tool_reads else "（这一轮没有工具回执可数）"),
+        ),
     }
     breaches = []
     for name, (operator, bound) in THRESHOLDS.items():

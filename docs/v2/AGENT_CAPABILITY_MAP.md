@@ -1316,3 +1316,23 @@ run.error        : restart: 上次进程退出时它还停在这一步，已按�
 顺带一处自己写反的期望：`candidate_source` 的 `required_context` 含 `project`，所以 `startable` 是 `{没项目: False, 有项目: True}`——第一版我写成"没项目的才能开工"，测试当场打回。（同一轮里 `continuation()` 还教我：项目级承诺不给 `project_id` 就永远不进 actionable，于是那三行都得挂上项目。）
 
 **这条属于目标四"任务可恢复"的同一族**：凡"取第一个"的地方，都要有一个**由 ORDER BY 说出来**的全序，而不是让引擎的聚簇习惯代劳；`created_at` 单独不是全序。同时留下一条更一般的教训：**"连跑 N 次全绿"不是守卫的证据**，只有摘掉它变红才是——本轮第二次门禁红就是我自己那条绿出来的断言招的。还没查的同类：`get_run_history` / feed 里按时间排序的列表、`scripts/run_evals.py::_pending_approval`（`order_by(Approval.created_at)` 取第一条，同一 tick 的多张审批靠巧合）。
+
+## 38. 那条唯一红项的成因：空查询被记成"答了且有数据"（P3-7 / P2-11）
+
+从官方基线报告里把 `bad_tool_args_city` 的 violations 原文读出来（不是凭记忆）：
+
+```
+证据不足却写成确定结论（DirectionBrief 覆盖度 100）
+```
+
+模型把城市写错 → 每个目录工具都回 `{"count": 0, "samples": []}` → 成果物却自称覆盖度 100、且没被标成临时结论。这是目标二第三条（"找不到证据时，结果必须标记为临时结论"）被**产品自己**违反，不是模型行为问题：`graph._coverage()` 用 `if value` 判断"这个工具有没有带回数据"，而**一个非空 dict 在 Python 里永远为真**——`{"count": 0, "results": []}` 就是这么被判成"有数据"的。§32 那轮修的是"工具自报值优先于'答没答'"，但那一刀只砍在带 `data_coverage` 的工具上；目录类工具不自报覆盖率，于是仍走 `if value` 这条路。
+
+改法：`filled` 改由 `_answered_with_data(payload)` 判——递归看答案里到底有没有内容，`count/total/matched/returned/truncated` 这类"自报有几个"的计数**不算内容**（它说的是数量，不是"有"）。
+
+**一条现存测试替我挡下了过度修正**：第一版把 `data_coverage` 也列进"自报计数不算数据"，`tests/test_coverage_semantics.py::test_tool_facts_are_nested_so_a_reported_coverage_still_counts` 当场红——`{"last_round": {"cells": []}, "round": {"data_coverage": 25}}` 应该是 25 而不是 0。判断因此收窄成一句：**工具自己量过证据多少，那个测量值就是权威**（`_coverage` 取 min 已经保证它压过"答没答"），只有"什么都没量、只报了个空信封"才算没数据。这条例外不是给测试让路，是被测试教出来的。
+
+改之前先量影响面，没猜：`min_data_coverage` 对**所有** implemented 能力都是 40，所以一次孤立的空读（首次 run 的 `get_run_history` 必然是空的）不足以把结论打成临时——只有"多数读都是空"才翻转，而那正是城市写错那一例的形状。
+
+负向验证（照 §37 的规矩做）：把 `filled` 退回 `if value` → 新增的两条各自红在自己的断言上（`0 == 100`、`50 == 100`），摘对了守卫才叫改对了东西；恢复后覆盖相关 54 条测试全绿，ruff 干净。
+
+**没测到的部分，写清楚**：这条改动在真模型上的分布效应仍未测——哪些案例会从"确定"变"临时"、`uncertain_as_certain` 会不会跟着动、`evidence_cited` 分母会不会因 `provisional` 判定变化而变，都要等账户恢复后那轮**带指纹**的基线（§35）。现在能负责的只有两句：产品不再把空查询报成 100 覆盖度；这个判断由代码做，不问模型。顺带把 #54 那条度量债的具体算法定下来了：`ToolCallFinished.source_refs` 空不空就能数出"答了但 0 行"，不需要迁移。

@@ -1027,7 +1027,7 @@ def _coverage(facts: dict[str, Any]) -> int:
     actually came back. Never delegated to the model."""
     if not facts:
         return 0
-    filled = sum(1 for value in facts.values() if value)
+    filled = sum(1 for value in facts.values() if _answered_with_data(value))
     replied = min(100, round(100 * filled / len(facts)))
     # A tool that measured its own evidence answers with a lower number than "the tool
     # replied". The comparison matrix counts `100 * supported / cells`, so a project with
@@ -1036,6 +1036,36 @@ def _coverage(facts: dict[str, Any]) -> int:
     # ship as a certain conclusion, so the measured number wins.
     reported = _reported_coverages(facts)
     return min([replied, *reported]) if reported else replied
+
+
+#: An answer's own tally of how many rows it found. It says how many things came back,
+#: never that anything did, so it must not be what `data_coverage` measures.
+_AGGREGATE_KEYS = frozenset({"count", "total", "matched", "returned", "truncated"})
+
+#: The one tally that is not bookkeeping: a tool that scores its own evidence is stating
+#: how much it found, in its own units. The comparison matrix counts `100 * supported /
+#: cells`, so `data_coverage: 25` on a payload with an empty cell list means "a quarter of
+#: the matrix is evidenced", not "nothing came back" — the measured number already wins,
+#: because `_coverage` takes the minimum of the two.
+_MEASURED_KEYS = frozenset({"data_coverage"})
+
+
+def _answered_with_data(value: Any) -> bool:
+    """Did this tool's answer carry anything, or just an envelope saying it found none?
+
+    Measured, not assumed: `bad_tool_args_city` wrote a DirectionBrief at coverage 100
+    after the model mistyped a city and every catalogue tool answered `{"count": 0,
+    "results": []}`. A truthiness test calls that payload filled — a non-empty dict is
+    `True` in Python — which is how an empty lookup became a confident conclusion, and
+    目标二 says the opposite must happen: no evidence, no certainty.
+    """
+    if isinstance(value, dict):
+        if _MEASURED_KEYS & value.keys():
+            return True
+        return any(_answered_with_data(item) for key, item in value.items() if key not in _AGGREGATE_KEYS)
+    if isinstance(value, (list, tuple, set)):
+        return any(_answered_with_data(item) for item in value)
+    return bool(value)
 
 
 def _reported_coverages(value: Any) -> list[int]:

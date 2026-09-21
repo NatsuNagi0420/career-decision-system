@@ -817,3 +817,56 @@ planner→工具→planner 的循环照跑，结论仍然是"缺证据就说不�
 ### 门禁与测试
 
 `test_gateway.py` 新增 2 例、改 1 例（阶梯成本、阶梯耗尽后的异常带账、schema 放弃时带账），`test_run_ceilings.py` 新增 1 例（失败 run 的账面与阶段）。ruff 干净；`test_run_lifecycle.py`、`test_approvals_and_events.py`、`test_stale_runs.py`、`test_api.py` 同批跑过仍绿（63 项）。
+
+## §27 P2-5：同步 DB 到底便不支持循环——先量，再决定不改；后台任务死了不再没人知道（目标四）
+
+P2 清单头两条（"同步数据库操作阻塞异步事件循环"、"进程内后台任务中断"）都不该靠感觉定改不改：前者会引入 session 跨线程的复杂度，后者要动图的事务边界。所以先把两件事分开——**量**前者，**修**后者。
+
+### 量的部分：一次同步写到底顶住循环多久
+
+方法：`var/p44_measure.py` / `var/p44_probe2.py`。旁边挂一个每 1ms 醒一次的 heartbeat 协程，线程进了 MySQL 它就醒不了，**它报的那个 gap 就是等待中的用户看到的停顿**。读的是活进程同一个 `career_v2`，写全部落在自建探针 run 上（`append` 走回滚事务），测完删掉。
+
+| 被量的那一次 | 每次 | 说明 |
+| --- | --- | --- |
+| checkout 连接 + `SELECT 1` | 0.31ms | 连接池、`pool_pre_ping` 都在这里，**不是成本来源** |
+| `next_seq`（`SELECT max(seq)`） | 0.67ms | 每条事件都先做这个 |
+| SSE 取一页事件（200 行 JSON） | 0.62ms | 重放路径的读 |
+| `stream` 全量回放 60 条 | 1.97ms | 断线重连一次 |
+| `append`（`SELECT max` + `INSERT` + flush） | **15.70ms** | 图里每个节点每帧都走 |
+| `open_step` + `close_step`（各一次 commit） | **31.08ms** | 一步两次 |
+| 同一连接上连续 flush 20 次 | 15.61ms/次 | 不换 session、不 commit 也一样 |
+
+三条读数：**一次写入的往返就是 ~15ms，与 commit、与新开 session 无关**（要省的是"写几次"，不是"在哪个线程写"）；读基本免费（0.6–2ms），所以 `snapshot`/`feed`/`comparison` 这些读路径不值得动；再把 §26 那条真 run 摊开——10 步（20 次 step 开合）+ 53 条事件 + usage 更新 ≈ 80 次写 ≈ 1.2s，摊在 60–90s 的 run 上是 ~1.5% 占空比，单次停顿 15–31ms **低于 SSE 合帧本来的 10–20ms 粒度**。
+
+判据是动手前写下的：只有几毫秒就"记录在案、不改"。今天的数字落在这里，所以**不做线程池改造、不换 async driver、不做 session 跨线程复用**。重估的两个触发条件也写死在这，免得下次从头再吵：① 单次写顶住 ≥100ms（换远端 MySQL / 加 TLS / 网络抖动之后要复量）；② 试点里出现**并发 run** 导致 SSE 可见停顿（多标签页、多用户同时跑）。
+
+### 同一项里真正咬人的：`_spawn` 把异常吞了
+
+`_spawn` 原来只做两件事——`create_task` 加 `add_done_callback(pending.discard)`。**任务的异常从来没人取回**，于是任何绕过 graph 自己 `except GatewayError` 的失败（checkpointer 掉线、节点里的 bug）都静默消失：run 停在 `created`、`finished_at IS NULL`，用户对着"进行中"的进度条等到 15 分钟对账把它收掉，日志里一个字都没有。这也是 P2 清单末条"运行日志和错误监控"的真实现状——**`app/` 里此前一处 logger 都没有**。
+
+修法让"死了"和"还在跑"不再长成同一张脸：`_spawn(request, coro, *, run_id=...)`，done_callback 里先 `logger.error("后台任务中断 run_id=…：%r")`，再就地收尾——`failed` + `background:` 阶段 + `run_failed` 帧进时间线。收尾**不另写一份逻辑**：给 `reconcile_stale_runs()` 加 `run_ids` 与 `stage` 两个参数（§24 那份"没有人在做却还声称在跑"的判断复用），`RunService.abandon_crashed()` 只是把它对准一条 run。`CancelledError` 只记 warning 不写库——取消可能是人主动的，不等于是故障。
+
+### 负向验证
+
+把 `_finished` 改成"取完引用就直接 return"（等于回到修好的老行为），`test_a_crashed_background_run_stops_claiming_to_work` 当场红；恢复后 `test_run_lifecycle.py` 12 项全绿。ruff 干净。
+
+### 真进程：改过签名的 `_spawn` 跑了一条完整 run
+
+8100 重启到新构建（`/healthz` → `{"ok":true,"env":"local","issues":[]}`，日志 `var/api-p44.log`），再用 `var/p43_run.py` 打真实 HTTP（`var/p44_run.log`）：
+
+```text
+run 34a17d41  capability=direction_explore  model=deepseek-flash
+status    : completed   error : None
+steps_used: 5           artifacts 1 / proposals 0 / approvals 0
+usage     : prompt=20892  completion=5793  reasoning=2523  cached=9216
+8 行 Step 全 done：select_action ×4（2 / 4 / 6 / 0 个工具调用）+ tool_batch ×3 + draft_digest
+```
+
+`steps_used` 是**模型调用计数**（`record_usage` 每计一次账 +1），所以 5 次调用对得上 4 次 planner + 1 次收尾草稿、8 行 Step 对得上真实节点数——两个数不是一回事，别拿它当"步数上限用了几步"读。`reasoning(2523) < completion(5793)` 第三次印证 §25 的子集关系。这条 run 走的就是新 `_spawn(request, coro, run_id=...)`：正常收尾路径没变（`completed`、`error=None`、进度条收满），而"跑完就把任务从 `app.state.background_tasks` 里丢掉"这一条由单测断言（`request.app.state.background_tasks == set()`）——真进程这边没去数集合长度，但它是同一段 done_callback。
+
+### 边界与未做（诚实项）
+
+- 崩溃是**在单测里注入**的（`routes._spawn` 收一个必抛的协程）；真进程侧只覆盖了上一条——"每条 run 都走新 `_spawn` 且正常收尾不受影响"，没有真的把 uvicorn 掐在 run 中间。
+- 日志目前只到 stderr（uvicorn 转发），还没接文件 sink 与级别配置——清单末条"错误监控"只完成了一半。
+- 单次写 15ms 这个事实没被消除，只是被判为可接受：真要压下去，省的是**写的次数**（例如 step 的开合与首帧事件合并成一次事务），而不是换线程。
+- `_spawn` 的前提是"任务在本进程内"，多 worker 下和 §24 一样需要 lease/心跳，这条债没变。

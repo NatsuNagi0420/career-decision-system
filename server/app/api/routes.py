@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 from collections.abc import AsyncIterator
 from typing import Any, Literal
 
@@ -199,7 +200,7 @@ async def submit_task_result(
     except NotOwner as exc:
         raise HTTPException(status_code=404, detail="task not found") from exc
     if run is not None:
-        _spawn(request, service.start(run, allow_external_ai=user.allows_external_ai))
+        _spawn(request, service.start(run, allow_external_ai=user.allows_external_ai), run_id=run.id)
     return {**outcome, "run_id": run.id if run else None}
 
 
@@ -278,7 +279,7 @@ async def create_run(payload: RunCreate, request: Request, user: User = Depends(
     # Running in the background is what makes the replay contract load-bearing:
     # the client attaches to /events after this response, and must still see every
     # event emitted in the meantime.
-    _spawn(request, service.start(run, allow_external_ai=user.allows_external_ai))
+    _spawn(request, service.start(run, allow_external_ai=user.allows_external_ai), run_id=run.id)
     return {"run_id": run.id, "thread_id": run.thread_id, "status": run.status}
 
 
@@ -314,6 +315,7 @@ async def decide(
             decision={"approved": payload.approved, "feedback": payload.feedback or ""},
             allow_external_ai=user.allows_external_ai,
         ),
+        run_id=run.id,
     )
     return {"run_id": run_id, "approval_id": approval_id, "accepted": True}
 
@@ -390,10 +392,34 @@ def _sse(event: Event) -> str:
     return f"id: {event.seq}\nevent: {event.kind}\ndata: {body}\n\n"
 
 
-def _spawn(request: Request, coroutine: Any) -> None:
-    """Keep a strong reference on app.state: asyncio only guarantees a bare task
-    survives while something else holds it."""
+logger = logging.getLogger("career.routes")
+
+
+def _spawn(request: Request, coroutine: Any, *, run_id: str = "") -> None:
+    """Run a graph in the background, and say so out loud when it dies.
+
+    A strong reference goes on `app.state` because asyncio only keeps a bare task
+    alive while something else holds it. The done callback used to *only* drop that
+    reference, so a coroutine that raised left nothing behind: no log line, and a run
+    still claiming to work until the 15-minute sweep noticed. Now the exception is
+    logged and the run is closed on the spot with the stage `background:`, because
+    "它死了" and "它还在跑" cannot look the same to the person waiting.
+    """
     task = asyncio.create_task(coroutine)
     pending: set[asyncio.Task[Any]] = request.app.state.background_tasks
     pending.add(task)
-    task.add_done_callback(pending.discard)
+
+    def _finished(finished: asyncio.Task[Any]) -> None:
+        pending.discard(finished)
+        if finished.cancelled():
+            logger.warning("后台任务被取消 run_id=%s", run_id or "?")
+            error: BaseException | None = asyncio.CancelledError("后台任务被取消")
+        else:
+            error = finished.exception()
+        if error is None:
+            return
+        logger.error("后台任务中断 run_id=%s：%r", run_id or "?", error)
+        if run_id:
+            _runs(request).abandon_crashed(run_id, reason=repr(error))
+
+    task.add_done_callback(_finished)

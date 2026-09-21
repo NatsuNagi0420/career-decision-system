@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import asyncio
 import json
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 import pytest
@@ -14,6 +16,7 @@ from app.agent.approvals import ApprovalRepository
 from app.agent.checkpointer import open_checkpointer
 from app.agent.events import EventLog
 from app.agent.service import GraphRegistry, RunService
+from app.api import routes
 from app.capabilities.registry import get_capability
 from app.config import Settings
 from app.db.domain import ActionPlan, DecisionProject, PlanTask, TaskResult, WeeklyReview
@@ -402,3 +405,42 @@ def test_streamed_conclusion_reads_only_what_is_legible_yet() -> None:
     # A half-written escape must not guess: the tail is what the reader is watching.
     assert streamed_conclusion(head + "带" + backslash) == "带"
     assert streamed_conclusion(head + "带" + backslash + "u96") == "带"
+
+
+async def test_a_crashed_background_run_stops_claiming_to_work(
+    session_factory: sessionmaker[Session],
+    settings: Settings,
+    tmp_path: Path,
+    owner: User,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Whatever the graph did not catch itself must still reach a person and a log.
+
+    `_spawn` used to drop its reference and nothing else: an exception raised outside
+    the graph's own failure paths — a checkpointer hiccup, a bug in a node — vanished,
+    and the row stayed `created` so the feed kept saying "进行中" until the 15-minute
+    sweep happened to look. That is 目标四's "要么能恢复，要么明确失败" failing quietly.
+    """
+    caplog.set_level("ERROR", logger="career.routes")
+    async with build_service(settings, session_factory, [], tmp_path / "cp.sqlite") as (service, _):
+        run = service.create_run(owner, GOAL)
+        request = SimpleNamespace(
+            app=SimpleNamespace(state=SimpleNamespace(background_tasks=set(), runs=service))
+        )
+
+        async def crash() -> None:
+            raise RuntimeError("checkpointer 在写入前掉线")
+
+        routes._spawn(request, crash(), run_id=run.id)
+        await asyncio.sleep(0.2)
+
+        with session_factory() as session:
+            row = session.get(Run, run.id)
+            kinds = list(session.scalars(select(Event.kind).where(Event.run_id == run.id)))
+        assert row.status == "failed"
+        assert row.error is not None and row.error.startswith("background:")
+        assert "checkpointer 在写入前掉线" in row.error
+        assert row.finished_at is not None
+        assert "run_failed" in kinds, "开着页面的人也要看到它死了，而不只是刷新后才对"
+        assert "后台任务中断" in caplog.text
+        assert request.app.state.background_tasks == set()

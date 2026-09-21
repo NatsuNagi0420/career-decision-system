@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from typing import Any
@@ -51,6 +52,8 @@ def reconcile_stale_runs(
     *,
     stale_after: timedelta = STALE_RUN_AFTER,
     reason: str = "这一步之后再没有往下走",
+    run_ids: Sequence[str] | None = None,
+    stage: str = "restart",
 ) -> list[str]:
     """Close runs that still claim to be working while nothing is working on them.
 
@@ -64,16 +67,24 @@ def reconcile_stale_runs(
 
     At startup the window is zero, because a fresh process has nothing of its own in
     flight — every `created` row it finds belongs to the one that just died.
+
+    `run_ids` narrows the same closing logic to one run: a background task that raised
+    knows exactly which row is now orphaned and should not wait for the next sweep.
+    `stage` names what closed it, since a crashed coroutine and a dead process are two
+    different things to read in the error line.
     """
     cutoff = utcnow() - stale_after
     closed: list[str] = []
+    wanted = None if run_ids is None else set(run_ids)
     with session_factory() as session:
         stalled = session.scalars(
             select(Run).where(Run.status == "created", Run.updated_at < cutoff).order_by(Run.created_at)
         ).all()
         for run in stalled:
+            if wanted is not None and run.id not in wanted:
+                continue
             run.status = "failed"
-            run.error = f"restart: {reason}，已按失败收尾。可以从头再发起一次；已经确认过的写入不会重复。"
+            run.error = f"{stage}: {reason}，已按失败收尾。可以从头再发起一次；已经确认过的写入不会重复。"
             run.finished_at = utcnow()
             events.append(
                 session,
@@ -293,6 +304,25 @@ class RunService:
         graph = self._graphs.get(str(run.capability_id))
         result = await graph.ainvoke(Command(resume=decision), self._config(run))
         return self._outcome(run.id, result)
+
+    def abandon_crashed(self, run_id: str, reason: str) -> None:
+        """Close a run whose background coroutine died on the way through.
+
+        The graph catches the failures it understands (`select_action: …`, tool
+        errors) and calls `fail()` itself. Anything else — a checkpointer hiccup, a
+        bug in a node — escaped the task unheard, leaving the row `created` while
+        nothing worked on it: the person watched a spinner until the 15-minute sweep.
+        Same closing logic as the sweep, narrowed to this run and labelled by what
+        actually happened.
+        """
+        reconcile_stale_runs(
+            self._factory,
+            self._events,
+            stale_after=timedelta(0),
+            reason=f"后台任务在跑完之前中断（{reason}）",
+            run_ids=[run_id],
+            stage="background",
+        )
 
     def _emit_run_started(self, run: Run) -> None:
         session = self._factory()

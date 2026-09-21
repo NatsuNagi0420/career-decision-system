@@ -739,3 +739,81 @@ runs still claiming to work: []
 ### 门禁与测试
 
 `server/tests/test_approval_expiry.py`（4 例：过期卡仍 pending 时也不能被抢占、没到点的照常能抢、扫描把过期变成状态并给 run 收尾、同 run 还有活卡就不收尾）。ruff 干净；`test_approvals_and_events.py`、`test_run_lifecycle.py` 未受影响仍绿。
+
+## §26 P2-4：失败的那一次调用不免费，而且它说的话是真的（目标四 + 目标五前置）
+
+§24 给 run 装了上限，§25 让过期真的生效。这一节从一条账面假象开始：失败的 run 里 `思考=0`，`prompt/completion` 也常常是 0。一个没花钱的失败在记账上和一个没发生的失败长得一模一样。
+
+定性必须先分岔：**(a)** provider 在 `finish_reason=length` 的那条响应里压根不回 usage；**(b)** 它回了，是我们丢了。绕开 `parse_completion` 直接把原始 chunk 打出来（`server/var/p43_probe.py`），真 endpoint 回的是 `completion_tokens=40, reasoning_tokens=40`——所以是 (b)，我们的代码在 raise 之前就没走到构造 `Completion(usage=…)`。
+
+| 掉账的地方 | 实况 |
+| --- | --- |
+| `parse_completion` 截断分支 | raise `TruncatedEmptyResponse` 时不带 usage，异常到手是空 `Usage()` |
+| `complete()` / `stream_completion()` 预算阶梯 | 升级到第二档成功时只返回最后一次的 usage，第一次烧光的预算不见了 |
+| `structured()` / `structured_stream()` schema 修复 | 两次都不合 schema 时 `StructuredOutputError` 一分钱不报；成功时也只报修好的那次 |
+| `graph.py` 两处 `except GatewayError` | 直接 `fail()`，从不 `record_usage` |
+
+修法是让异常自己带账：`GatewayError.__init__(message, *, usage=None)`，三处把已花的 usage 挂上去，两处 handler 在 `exc.usage.total` 非零时照常入账。**口径不动**：`_ceiling` 仍按 `prompt + completion` 算，因为 reasoning 是 completion 的子集（实测 40/40、1200/1200，以及下面那次真跑的 6140 < 8736），再加一遍就是把同一笔钱记两次。
+
+### 顺手挖出来的第二个缺陷：失败的 planner 会被再问一次
+
+`route_after_select` 只看 `pending_tool_calls`，不看 `status`。于是 planner 已经 `fail()`（状态、`error`、`finished_at` 都写完了、`run_failed` 也发了），路由照样把 run 送进 `synthesize` 再打一次模型——真 endpoint 上就是真钱真延迟。第二次若也失败，`run.error` 被覆盖成 `synthesize: …`，**人看到的失败阶段是假的**，目标四"模型失败时能显示具体失败阶段"当场不成立；就算第二次成功，也白发了一条 `run_failed`。改成 failed → finalize。
+
+`steps` 用尽那一支**故意**还落到 synthesize：那里模型答了，只是没答完，"停止收集、照样给结论"是对的；这里模型根本没答，续下去没有结论可给。
+
+### 负向验证（摘掉一行，看哪条测试红）
+
+| 摘掉 | 结果 |
+| --- | --- |
+| graph 里 `if exc.usage.total:` 入账 | `test_a_model_call_that_failed_is_still_a_paid_call` 红（账面退回 0） |
+| `route_after_select` 的 failed 分支 | 同一条红，且红在阶段名和"只花两次调用"两处 |
+| `complete()` 成功时 `spent + completion.usage` | `test_an_escalated_call_reports_what_both_attempts_cost` 红 |
+| 阶梯耗尽时 `exc.usage = spent` | `test_a_failure_that_used_up_the_ladder_still_carries_its_cost` 红 |
+| `StructuredOutputError(…, usage=spent)` | `test_structured_output_gives_up_loudly_after_one_retry` 红 |
+
+五处都真承重，不是给绿测试补的断言。
+
+### 真 endpoint 实测
+
+`server/var/p43_live.py`：故意把预算压到 40，两档阶梯都撞光，只打 token 数、不打 key 和正文。
+
+```text
+failure type      : TruncatedEmptyResponse
+provider per call : [{prompt 56, completion 40, reasoning 40}, {prompt 56, completion 80, reasoning 80}]
+exc.usage carried : Usage(prompt=112, completion=120, reasoning=120, cached=0)
+provider calls    : 2
+control (success) : Usage(prompt=38, completion=262, reasoning=235, cached=0)
+```
+
+112 = 56+56、120 = 40+80，逐项对得上；修之前这里是 `Usage(0,0,0)`。对照组顺带再确认一次 reasoning ⊂ completion（235 < 262）。
+
+### 真进程实测：正常路径没被新路由碰坏
+
+重启 8100 后走 HTTP 起一条真模型 run（`server/var/p43_run.py`，`direction_explore`）：
+
+```text
+run 8c99f91a capability=direction_explore
+status   : completed  steps_used=6  model=deepseek-flash
+usage    : {'prompt': 21939, 'completion': 8736, 'reasoning': 6140, 'cached': 13696}
+error    : None
+artifacts: 1  proposals: 0  approvals: 0
+  step 0..8: select_action / tool_batch 交替 5 轮（2,2,4,2 次工具调用）
+  step 9: draft_digest  done  "现在的材料还不足以做「数据分析师 vs 后端工程师」的比较……"
+```
+
+planner→工具→planner 的循环照跑，结论仍然是"缺证据就说不够"，账是满的。
+
+### 为什么这件事排在 P3 前面
+
+目标五要"每个能力统计平均调用次数、Token 和费用"，P4 要"每个完整用户的模型成本"。失败不入账的话，能力间成本比较是拿"只算成功"的总数在比——**越容易失败的能力显得越便宜**，正好把评测最想要的信号反过来了。这一节之后，`Run` 那三列才配当成本口径的底。
+
+### 边界与未做（诚实项）
+
+- `_ceiling` 还是事后判定：一次调用花超了才知道，没有预扣额度。
+- provider 不回 usage 时账面仍是 0，"没记到"和"没花钱"仍然不可区分——异常路径至少不再谎报，但依赖 provider 诚实。
+- 只有 token 数，没有价目表：P4 要的"每个完整用户多少钱"得再加一张单价表或在评测脚本里算，这次不做。
+- 失败阶段现在是对的英文阶段名（`select_action: …`），中文化成人话连同 10 处英文 `detail=` 一起归 #46。
+
+### 门禁与测试
+
+`test_gateway.py` 新增 2 例、改 1 例（阶梯成本、阶梯耗尽后的异常带账、schema 放弃时带账），`test_run_ceilings.py` 新增 1 例（失败 run 的账面与阶段）。ruff 干净；`test_run_lifecycle.py`、`test_approvals_and_events.py`、`test_stale_runs.py`、`test_api.py` 同批跑过仍绿（63 项）。

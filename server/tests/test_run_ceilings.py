@@ -83,6 +83,31 @@ def _run(run_id: str, session_factory: sessionmaker[Session]) -> Run:
         return session.get(Run, run_id)
 
 
+async def test_a_model_call_that_failed_is_still_a_paid_call(session_factory, settings, tmp_path, owner) -> None:
+    """A rejected call is not a free call, and the run's row is the only ledger.
+
+    §25 measured the endpoint billing a truncated stream like any other
+    (`completion_tokens=40, reasoning_tokens=40`). Both ladder rungs here burn
+    their budget on thinking and return nothing, so the run must fail *and* carry
+    2 × 299 completion tokens — otherwise the per-capability cost P3 wants to
+    compare is computed from a total that silently drops the expensive failures.
+    And it must fail *naming the planner*: falling through to synthesize asked a
+    third question of a run that was already lost, and the second failure rewrote
+    the stage the person reads.
+    """
+    burned = {"prompt_tokens": 10, "completion_tokens": 299, "completion_tokens_details": {"reasoning_tokens": 299}}
+    truncated = {"choices": [{"message": {"content": ""}, "finish_reason": "length"}], "usage": burned}
+    async with build_service(settings, session_factory, [truncated, truncated], tmp_path / "cp.sqlite") as (service, provider):
+        run = service.create_run(owner, GOAL)
+        await service.start(run, allow_external_ai=True)
+        row = _run(run.id, session_factory)
+        assert row.status == "failed"
+        assert "select_action" in (row.error or "")
+        assert "exhausted max_tokens" in (row.error or "")
+        assert (row.prompt_tokens, row.completion_tokens, row.reasoning_tokens) == (20, 598, 598)
+        assert len(provider.seen_payloads) == 2
+
+
 async def test_a_run_out_of_steps_stops_gathering_but_still_answers(session_factory, settings, tmp_path, owner) -> None:
     """Cutting the loop short must not cut off the person.
 

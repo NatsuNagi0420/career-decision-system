@@ -104,6 +104,42 @@ async def test_truncated_reasoning_response_is_an_error_not_silence() -> None:
     assert len(budgets) == 2 and budgets[1] > budgets[0]
 
 
+@pytest.mark.asyncio
+async def test_an_escalated_call_reports_what_both_attempts_cost() -> None:
+    """The second answer is not the whole bill.
+
+    Measured against the live endpoint, a truncated stream carries usage like any
+    other frame — so the rung that burned its budget was paid for, and returning
+    only the winning response made a run look cheaper than it was.
+    """
+    burned = {"prompt_tokens": 10, "completion_tokens": 299, "completion_tokens_details": {"reasoning_tokens": 299}}
+    paid = {"prompt_tokens": 12, "completion_tokens": 40, "completion_tokens_details": {"reasoning_tokens": 30}}
+    script = ScriptedProvider(
+        [
+            payload(text="", finish="length", usage=burned),
+            payload(text="ok", usage=paid),
+        ]
+    )
+    gateway = Gateway(settings=settings_for(), provider=script)
+    completion = await gateway.complete(messages=[Message(role="user", content="hi")], allow_external_ai=True)
+    assert (completion.usage.prompt, completion.usage.completion, completion.usage.reasoning) == (22, 339, 329)
+
+
+@pytest.mark.asyncio
+async def test_a_failure_that_used_up_the_ladder_still_carries_its_cost() -> None:
+    burned = {"prompt_tokens": 10, "completion_tokens": 299, "completion_tokens_details": {"reasoning_tokens": 299}}
+    script = ScriptedProvider(
+        [
+            payload(text="", finish="length", usage=burned),
+            payload(text="", finish="length", usage=burned),
+        ]
+    )
+    gateway = Gateway(settings=settings_for(), provider=script)
+    with pytest.raises(TruncatedEmptyResponse) as caught:
+        await gateway.complete(messages=[Message(role="user", content="hi")], allow_external_ai=True)
+    assert caught.value.usage == Usage(prompt=20, completion=598, reasoning=598)
+
+
 async def test_tool_calls_are_parsed_and_parallel_is_allowed() -> None:
     script = ScriptedProvider([payload(tool_calls=[tool_call("a", {"x": 1}, "1"), tool_call("b", {"y": 2}, "2")], finish="tool_calls")])
     gateway = Gateway(settings=settings_for(), provider=script)
@@ -150,11 +186,18 @@ async def test_structured_output_uses_json_object_and_repairs_once() -> None:
 
 
 async def test_structured_output_gives_up_loudly_after_one_retry() -> None:
+    """Giving up must give up *both* attempts' cost, not report a free failure.
+
+    This is the failure a real run hits most: the model answered twice and neither
+    answer fitted the schema. P3 wants cost per capability, and a run that fails
+    here has paid for two calls.
+    """
     script = ScriptedProvider([payload(text="{"), payload(text="{}")])
     gateway = Gateway(settings=settings_for(), provider=script)
-    with pytest.raises(StructuredOutputError):
+    with pytest.raises(StructuredOutputError) as caught:
         await gateway.structured(Answer, system="sys", user="usr", allow_external_ai=True)
     assert len(script.seen_payloads) == 2
+    assert caught.value.usage == Usage(prompt=2, completion=2)
 
 
 async def test_structured_output_reads_the_object_and_drops_the_tail() -> None:

@@ -17,7 +17,7 @@ from __future__ import annotations
 import asyncio
 import json
 from collections.abc import AsyncIterator, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any, Literal, Protocol, TypeVar
 
 import httpx
@@ -31,7 +31,19 @@ ModelT = TypeVar("ModelT", bound=BaseModel)
 
 
 class GatewayError(RuntimeError):
-    pass
+    """A model call that did not produce what the run asked for.
+
+    `usage` carries what the attempt still cost. Measured against the real
+    endpoint, a truncated stream reports its spend like any other
+    (`completion_tokens=40, reasoning_tokens=40`), so a failed call is not a
+    free call — reporting the failure without its cost is what made §23's
+    `思考=0` frames look cheap. Anything that catches this can book the spend
+    and still tell the truth about the run.
+    """
+
+    def __init__(self, message: str, *, usage: Usage | None = None) -> None:
+        super().__init__(message)
+        self.usage = usage or Usage()
 
 
 class ExternalAiNotAllowed(GatewayError):
@@ -296,15 +308,17 @@ def parse_completion(data: dict[str, Any], requested_model: str) -> Completion:
     finish = choice.get("finish_reason")
     text = (message.get("content") or "").strip()
     tool_calls = _parse_tool_calls(message.get("tool_calls") or [])
+    usage = _parse_usage(data)
 
     if finish == "length" and not text and not tool_calls:
         raise TruncatedEmptyResponse(
-            "model exhausted max_tokens on reasoning without emitting content; raise the budget or disable thinking"
+            "model exhausted max_tokens on reasoning without emitting content; raise the budget or disable thinking",
+            usage=usage,
         )
     return Completion(
         text=text,
         tool_calls=tool_calls,
-        usage=_parse_usage(data),
+        usage=usage,
         finish_reason=finish,
         model=data.get("model") or requested_model,
     )
@@ -378,6 +392,7 @@ class Gateway:
         self._guard(allow_external_ai)
         ladder = self._budget_ladder(max_tokens)
         attempt = 0
+        spent = Usage()
         while True:
             payload = self._payload(
                 messages=messages,
@@ -389,11 +404,18 @@ class Gateway:
             )
             data = await self._require().complete(payload)
             try:
-                return parse_completion(data, self.settings.llm_model)
-            except TruncatedEmptyResponse:
+                completion = parse_completion(data, self.settings.llm_model)
+            except TruncatedEmptyResponse as exc:
+                spent = spent + exc.usage
                 attempt += 1
                 if attempt >= len(ladder):
+                    exc.usage = spent
                     raise
+                continue
+            # A call that escalated the ladder already paid for the attempt that
+            # burned its budget; handing back only the last response made the run
+            # look cheaper than it was.
+            return replace(completion, usage=spent + completion.usage)
 
     async def stream_completion(
         self,
@@ -413,6 +435,7 @@ class Gateway:
         self._guard(allow_external_ai)
         ladder = self._budget_ladder(max_tokens)
         attempt = 0
+        spent = Usage()
         while True:
             payload = self._payload(
                 messages=messages,
@@ -427,11 +450,15 @@ class Gateway:
             # spend would silently drop out of `usage_recorded`.
             payload["stream_options"] = {"include_usage": True}
             try:
-                return await self._stream_once(payload, on_delta)
-            except TruncatedEmptyResponse:
+                completion = await self._stream_once(payload, on_delta)
+            except TruncatedEmptyResponse as exc:
+                spent = spent + exc.usage
                 attempt += 1
                 if attempt >= len(ladder):
+                    exc.usage = spent
                     raise
+                continue
+            return replace(completion, usage=spent + completion.usage)
 
     async def _stream_once(self, payload: dict[str, Any], on_delta: DeltaCallback) -> Completion:
         content: list[str] = []
@@ -552,6 +579,7 @@ class Gateway:
         shaped = f"{system}\n\n输出必须严格符合这个 JSON Schema，不得增删或改名：\n{contract}"
         messages = [Message(role="user", content=user)]
         last_error = ""
+        spent = Usage()
         for attempt in range(2):
             completion = await self.stream_completion(
                 messages=messages,
@@ -562,8 +590,9 @@ class Gateway:
                 max_tokens=max_tokens,
                 json_mode=True,
             )
+            spent = spent + completion.usage
             try:
-                return schema.model_validate(_json_object(completion.text)), completion
+                return schema.model_validate(_json_object(completion.text)), replace(completion, usage=spent)
             except (ValidationError, ValueError) as exc:
                 last_error = _short(str(exc))
                 messages = [
@@ -571,7 +600,10 @@ class Gateway:
                     Message(role="assistant", content=completion.text),
                     Message(role="user", content=f"上一次输出不符合 schema：{last_error}\n请只输出符合 schema 的 JSON。"),
                 ]
-        raise StructuredOutputError(f"model output failed schema validation after 1 repair retry: {last_error}")
+        raise StructuredOutputError(
+            f"model output failed schema validation after 1 repair retry: {last_error}",
+            usage=spent,
+        )
 
     async def structured(
         self,
@@ -594,6 +626,7 @@ class Gateway:
         shaped = f"{system}\n\n输出必须严格符合这个 JSON Schema，不得增删或改名：\n{contract}"
         messages = [Message(role="user", content=user)]
         last_error = ""
+        spent = Usage()
         for attempt in range(2):
             completion = await self.complete(
                 messages=messages,
@@ -603,8 +636,9 @@ class Gateway:
                 max_tokens=max_tokens,
                 json_mode=True,
             )
+            spent = spent + completion.usage
             try:
-                return schema.model_validate(_json_object(completion.text)), completion
+                return schema.model_validate(_json_object(completion.text)), replace(completion, usage=spent)
             except (ValidationError, ValueError) as exc:
                 last_error = _short(str(exc))
                 messages = [
@@ -612,7 +646,10 @@ class Gateway:
                     Message(role="assistant", content=completion.text),
                     Message(role="user", content=f"上一次输出不符合 schema：{last_error}\n请只输出符合 schema 的 JSON。"),
                 ]
-        raise StructuredOutputError(f"model output failed schema validation after 1 repair retry: {last_error}")
+        raise StructuredOutputError(
+            f"model output failed schema validation after 1 repair retry: {last_error}",
+            usage=spent,
+        )
 
 
 _REPAIR_SYSTEM = "你只输出符合给定 JSON schema 的对象，不输出任何解释、前后缀或代码围栏。"

@@ -194,9 +194,10 @@ def _ceiling(deps: AgentDeps, run_id: str) -> tuple[str, str]:
     `max_steps` and `token_budget` sit on every run row, and until now nothing read
     them: the loop was bounded only by `max_rounds`, so a run could keep asking for
     tools and spend past the budget it declares. Reasoning tokens are deliberately
-    left out of `spent` — §23 measured that a truncated frame reports `思考=0` and a
-    small `completion`, so adding the two would double-count on the calls that got
-    their numbers and under-count on the ones that didn't.
+    left out of `spent` because they are already inside `completion` — measured on
+    the live endpoint, a truncated call reports `completion_tokens=40,
+    reasoning_tokens=40` and a full one `1200/1200`. Adding them would count the
+    thinking twice on every run.
 
     Returns ("", "") while there is room.
     """
@@ -312,6 +313,18 @@ async def select_action(deps: AgentDeps, state: RunState) -> RunState:
             max_tokens=budget,
         )
     except GatewayError as exc:
+        # A rejected call is a paid call. Booking it here is what keeps the run's
+        # token total honest when the model burns its budget on reasoning and
+        # returns nothing — without it the most expensive failures look free.
+        if exc.usage.total:
+            record_usage(
+                deps,
+                state["run_id"],
+                exc.usage,
+                deps.gateway.settings.llm_model,
+                deps.capability.thinking,
+                step_id=step_id,
+            )
         close_step(deps, state["run_id"], step_id, error=str(exc))
         return fail(deps, state, f"select_action: {exc}")
 
@@ -537,6 +550,15 @@ async def synthesize(deps: AgentDeps, state: RunState) -> RunState:
             max_tokens=max(SYNTHESIS_MAX_TOKENS, deps.capability.max_tokens),
         )
     except GatewayError as exc:
+        if exc.usage.total:
+            record_usage(
+                deps,
+                state["run_id"],
+                exc.usage,
+                deps.gateway.settings.llm_model,
+                deps.capability.thinking,
+                step_id=step_id,
+            )
         close_step(deps, state["run_id"], step_id, error=str(exc))
         return fail(deps, state, f"synthesize: {exc}")
 
@@ -868,6 +890,16 @@ def route_after_gate(state: RunState) -> str:
 
 
 def route_after_select(state: RunState) -> str:
+    """A planner that failed must not be answered by another paid call.
+
+    `fail()` has already written the stage and the reason; falling through to
+    synthesize spent one more model call on a run that was already lost, and the
+    second failure overwrote the first — so the person read "synthesize: ..." for
+    a run that died choosing an action. The steps ceiling still lands in
+    synthesize on purpose: there the loop stopped, but the model answered.
+    """
+    if state.get("status") == "failed":
+        return "finalize"
     return "run_tools" if state.get("pending_tool_calls") else "synthesize"
 
 
@@ -891,7 +923,11 @@ def build_agent_graph(deps: AgentDeps) -> StateGraph:
     graph.add_edge(START, "intake")
     graph.add_conditional_edges("intake", route_after_gate, {"proceed": "domain_gate", "finalize": "finalize"})
     graph.add_conditional_edges("domain_gate", route_after_gate, {"proceed": "select_action", "finalize": "finalize"})
-    graph.add_conditional_edges("select_action", route_after_select, {"run_tools": "run_tools", "synthesize": "synthesize"})
+    graph.add_conditional_edges(
+        "select_action",
+        route_after_select,
+        {"run_tools": "run_tools", "synthesize": "synthesize", "finalize": "finalize"},
+    )
     graph.add_edge("run_tools", "select_action")
     graph.add_conditional_edges("synthesize", route_after_synthesize, {"persist": "persist_draft", "finalize": "finalize"})
     graph.add_edge("persist_draft", "approval_gate")

@@ -245,6 +245,10 @@ def test_a_second_round_appends_and_points_back_at_the_first(matrix, session_fac
     with session_factory() as session:
         first_run, first = _round(session, matrix, _proposed(matrix["analyst_id"]), thread="cmp-a", title="第一版")
         apply_executor(session, first_run, first)
+        # `_apply_proposal` flips the artifact to `committed` as soon as the executor
+        # returns (graph.py:964-971); this test drives the executor directly, so it has
+        # to make that state true itself rather than leave a draft looking applied.
+        session.get(Artifact, first.artifact_id).status = "committed"
         session.commit()
     with session_factory() as session:
         second_run, second = _round(session, matrix, _proposed(matrix["analyst_id"]), thread="cmp-b", title="第二版")
@@ -258,6 +262,33 @@ def test_a_second_round_appends_and_points_back_at_the_first(matrix, session_fac
     assert previous.status == "superseded"
     assert current.supersedes_id == first.artifact_id
     assert {row.round_no for row in rows(session_factory, matrix["project_id"])} == {1, 2}
+
+
+def test_a_never_approved_matrix_is_not_the_conclusion_a_new_one_replaces(matrix, session_factory) -> None:
+    """"用户能看懂当前结论为什么变了" points at what the user actually saw.
+
+    The chain used to take "the newest other matrix" and stamp it `superseded`, so a
+    draft nobody approved — or a conclusion the user *rejected* (graph.py:944) — became
+    the predecessor, and the rejection was overwritten by a word about versioning.
+    The draft below is newer than round 1, so the old query picks it: red without the
+    `status == "committed"` filter.
+    """
+    with session_factory() as session:
+        first_run, first = _round(session, matrix, _proposed(matrix["analyst_id"]), thread="chain-a", title="第一版")
+        apply_executor(session, first_run, first)
+        session.get(Artifact, first.artifact_id).status = "committed"
+        session.commit()
+    with session_factory() as session:
+        _draft_run, draft = _round(session, matrix, _proposed(matrix["analyst_id"]), thread="chain-draft", title="没人批")
+        session.commit()
+    with session_factory() as session:
+        third_run, third = _round(session, matrix, _proposed(matrix["analyst_id"]), thread="chain-b", title="第三版")
+        outcome = apply_executor(session, third_run, third)
+        session.commit()
+        untouched = session.get(Artifact, draft.artifact_id)
+
+    assert outcome["supersedes"] == first.artifact_id, "上一条必须是用户真见过的结论"
+    assert untouched.status != "superseded", "没人批过的草稿不能被改写成已被取代"
 
 
 def test_the_next_run_can_read_the_last_round_back(matrix, session_factory) -> None:

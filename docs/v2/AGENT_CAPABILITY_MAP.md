@@ -1375,3 +1375,18 @@ run.error        : restart: 上次进程退出时它还停在这一步，已按�
 负向验证：把帧过滤器换成另一种 kind → 新增那条当场红（脚本 `try/finally` 还原并断言文本一致）。ruff 干净，`tests/test_evals.py` + `tests/test_metric_denominators.py` 21 条全绿。
 
 **这个数不能做什么**：它分不出"合法的空"和"城市写错的空"（那是 §38 的 `_answered_with_data()` 在判），也不改任何门槛。它只是把"多数读都是空"从体感变成报告里的一格；这一格在真模型上到底是多少，仍和 #51 一起等账户恢复。
+
+## 42. 版本链的"上一条"必须是用户真见过的那条（P2-9）
+
+`_supersede_matrix()` 原先取"同项目里除自己之外**最新**的那条 ComparisonMatrix"，然后把它 `status = "superseded"`、写进新条的 `supersedes_id`。缺陷不在排序谓词，在**没有状态过滤**：读码确认 `_apply_proposal`（`graph.py:950-971`）在执行器返回后才把成果物写成 `committed`，而用户拒绝时写的是 `rejected`（`graph.py:944`）——也就是说：
+
+- 一条**从没人批准**的草稿会被当成"上一条结论"指给用户看；
+- 用户**拒绝过**的那条也会被选中，并且它的 `rejected` 会被 `superseded` 覆盖掉——关于用户决定的事实，被一个只描述版本关系的词抹掉。
+
+目标一最后一条要的是"用户能看懂当前结论为什么发生变化"，链条指向一条没出现过的结论时这句就是假话。改法一句：`WHERE Artifact.status = "committed"`（外加 `Artifact.id.desc()` 破并列）。
+
+**两句必须分开说**：状态过滤是缺陷修复——摘掉它，新增那条（"没人批的草稿不能当上一条"）当场红；补 `id` 只是把巧合升级为契约，摘掉它仍然全绿（§37 量过：InnoDB 并列返回的就是主键序），所以这一半不宣称修好了任何用户可见的错误。
+
+**这条改动最贵的副产品是它否证了我第一次的判断。** 我第一版加完过滤后 `tests/test_comparisons.py` **整文件红**，包括既有那条 `test_a_second_round_appends_and_points_back_at_the_first`，我当时据此判定"谓词错了"并回滚。重读 `_apply_proposal` 才发现真相：那条测试是直接调 `apply_executor` 的，**从不走 `_apply_proposal`**，所以它那条"已应用"的矩阵永远停在 `draft`——是测试绕过了生产的状态迁移，不是谓词不成立。修法是让测试把生产事实写出来（apply 之后显式 `committed`，并注明为什么），不是把过滤放弃。另一处被测试纠正的小错：我断草稿状态应是 `pending_approval`，夹具里其实是 `draft`，于是断言改成**它不该变成 `superseded`**——那才是要钉的不变量，而不是某个具体前置状态。
+
+**留下的形状**：这条链仍只在同一 `project_id` 内找上一条；同 tick 两条 `committed` 互相指的情况由 id 全序决定（稳定，但取哪条是任意的）。

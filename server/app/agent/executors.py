@@ -440,6 +440,13 @@ def _supersede_matrix(session: Session, proposal: Proposal, project: DecisionPro
     `Artifact.version` is an optimistic lock, so it cannot answer "what did the system
     say before this". Without the chain, a corrected conclusion looks exactly like a
     first conclusion — and "用户能看懂当前结论为什么发生变化" has nothing to point at.
+
+    Only a *committed* matrix counts as "what the user saw before": `_apply_proposal`
+    (graph.py:950-971) sets `committed` right after the executor returns, and sets
+    `rejected` (graph.py:944) when the user said no. Without the filter, a draft nobody
+    approved — or a conclusion the user rejected — becomes the predecessor and gets its
+    status overwritten by `superseded`, erasing the rejection as a fact.
+    `Artifact.id` breaks the tie because `created_at` alone is not a total order.
     """
     current = session.get(Artifact, proposal.artifact_id) if proposal.artifact_id else None
     if current is None:
@@ -450,9 +457,10 @@ def _supersede_matrix(session: Session, proposal: Proposal, project: DecisionPro
         .where(
             Run.project_id == project.id,
             Artifact.artifact_type == "ComparisonMatrix",
+            Artifact.status == "committed",
             Artifact.id != current.id,
         )
-        .order_by(Artifact.created_at.desc())
+        .order_by(Artifact.created_at.desc(), Artifact.id.desc())
         .limit(1)
     )
     if previous is None:

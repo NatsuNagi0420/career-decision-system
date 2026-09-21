@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import func, select
+from sqlalchemy import event, func, select
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.agent.executors import apply_executor, build_proposal
@@ -271,6 +271,47 @@ def test_a_second_click_states_the_same_fact_once(client, assignment, session_fa
     assert again.status_code == 201 and again.json()["duplicate"] is True
     with session_factory() as session:
         assert session.scalar(select(func.count()).select_from(TaskResult)) == 1
+
+
+def test_a_second_tab_carrying_its_own_id_still_writes_one_row(client, assignment, session_factory) -> None:
+    """The dedupe key above is the browser's, and a second tab mints its own — so on a
+    double-monitor student who submits from both, dedupe-by-id sees two unrelated
+    statements and lets both through. One effort is one piece of evidence (目标四), so the
+    write has to be refused on the *task*, not on whoever happened to click first."""
+    assert submit(client, assignment, request_id="req-tab-a").status_code == 201
+    again = submit(client, assignment, request_id="req-tab-b", body="换个标签页又交了一次")
+    assert again.status_code == 409, again.text
+    assert "已经交过" in again.json()["detail"]
+    with session_factory() as session:
+        bodies = list(session.scalars(select(TaskResult.body).where(TaskResult.task_id == assignment["task_id"])))
+        assert bodies == [WORDS]
+        # A second account would also have woken a second agent to file it twice.
+        assert session.scalar(select(func.count()).select_from(Run)) == 1
+
+
+def test_the_refusal_locks_the_task_row_rather_than_only_reading_it(client, assignment) -> None:
+    """A pre-read is raceable: two writers can both look, both see nothing, both write.
+
+    The row lock is what makes the second one *wait*, so the check is against what MySQL
+    was actually asked to lock — drop `with_for_update` and this goes red even though the
+    sequential test above would still pass. The listener has to sit on the engine the app
+    built (`create_app` makes its own), not on the schema-setup fixture's.
+    """
+    statements: list[str] = []
+
+    def catch(conn, cursor, statement, args, argnames, isexit) -> None:
+        statements.append(statement)
+
+    engine = client.app.state.engine
+    event.listen(engine, "before_cursor_execute", catch)
+    try:
+        submit(client, assignment, request_id="req-lock-probe")
+    finally:
+        event.remove(engine, "before_cursor_execute", catch)
+
+    assert statements, "探针没听到任何语句，engine 接错了"
+    locking = [s for s in statements if "FOR UPDATE" in s.upper()]
+    assert any("plan_tasks" in s.lower() for s in locking), f"任务行没被锁住，第二个写只需抢在读之后：{locking}"
 
 
 def test_someone_elses_task_reads_as_absent(client, assignment, session_factory) -> None:

@@ -3,12 +3,13 @@ from __future__ import annotations
 from datetime import timedelta
 
 import pytest
+from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.agent.approvals import ApprovalAlreadyResolved, ApprovalNotFound, ApprovalRepository
 from app.agent.events import EventLog, RunStarted
 from app.config import Settings
-from app.db.models import Approval, Proposal, Run, User, utcnow
+from app.db.models import Approval, Event, Proposal, Run, User, utcnow
 
 
 @pytest.fixture
@@ -69,8 +70,45 @@ def test_only_one_claimer_wins(session_factory, settings, run, proposal) -> None
     approval_id = _open(session_factory, repo, run, proposal)
 
     with session_factory() as first, session_factory() as second:
-        assert repo.claim(first, approval_id) is True
-        assert repo.claim(second, approval_id) is False
+        assert repo.claim(first, approval_id, run_id=run.id) is True
+        assert repo.claim(second, approval_id, run_id=run.id) is False
+
+
+def test_only_one_card_per_run_may_be_in_flight(session_factory, settings, run, proposal) -> None:
+    """Several cards on one run are allowed — a plan can need two separate decisions.
+
+    Two graphs resuming one `thread_id` at the same moment are not: they fight over the
+    same checkpoint and write the same event sequence. The exclusion therefore has to sit
+    inside the winning UPDATE, so "is anything else on this run in flight?" is answered by
+    the same statement that takes the card.
+    """
+    repo = _repo(settings)
+    first_id = _open(session_factory, repo, run, proposal)
+    with session_factory() as session:
+        other = Proposal(
+            run_id=run.id,
+            user_id=proposal.user_id,
+            proposal_type="create_note",
+            title="t2",
+            request_id="req-2",
+        )
+        session.add(other)
+        session.commit()
+        second_id = repo.open(session, session.get(Run, run.id), other).id
+        session.commit()
+
+    with session_factory() as session:
+        assert repo.claim(session, first_id, run_id=run.id) is True
+    with session_factory() as session:
+        assert repo.claim(session, second_id, run_id=run.id) is False, "同一条 run 上已有卡在飞，第二张不能再起一个图"
+    with session_factory() as session:
+        assert session.get(Approval, second_id).status == "pending"  # not taken, not timed out
+
+    # Finishing the first card hands the run to the second.
+    with session_factory() as session:
+        repo.resolve(session, first_id, status="approved")
+    with session_factory() as session:
+        assert repo.claim(session, second_id, run_id=run.id) is True
 
 
 def test_resolve_rejects_double_resolution(session_factory, settings, run, proposal) -> None:
@@ -112,7 +150,7 @@ def test_expire_stale_only_touches_pending_expired(session_factory, settings, ru
         session.commit()
 
     with session_factory() as session:
-        assert repo.expire_stale(session) == [doomed_id]
+        assert repo.expire_stale(session) == [(doomed_id, run.id)]
     with session_factory() as session:
         assert session.get(Approval, doomed_id).status == "timed_out"
         assert session.get(Approval, fresh_id).status == "pending"
@@ -144,6 +182,40 @@ async def test_event_seq_is_monotonic_and_replay_honours_after_seq(session_facto
     tail = [event.seq for event in [await tail_rows.__anext__() for _ in range(2)]]
     await tail_rows.aclose()
     assert tail == [1, 2]
+
+
+def test_a_colliding_seq_is_retried_instead_of_lost(session_factory, run, monkeypatch) -> None:
+    """`seq` is read before the insert, so two writers on one run can be handed the same
+    number and `uq_event_run_seq` rejects the loser.
+
+    A rejected frame is worse than a slow one: the browser rebuilds its timeline from
+    exactly these rows, so dropping one silently leaves the person watching a story with a
+    hole in it. The collision is injected here rather than raced — two threads would only
+    overlap by luck, and the guard being tested is what happens *after* the clash.
+    """
+    log = EventLog(session_factory)
+    stale = iter([1, 1, 2])  # both writers read "next is 1"; the loser re-reads and finds 2
+    monkeypatch.setattr(log, "next_seq", lambda session, run_id: next(stale))
+
+    def frame(goal: str) -> RunStarted:
+        return RunStarted(
+            run_id=run.id,
+            thread_id=run.thread_id,
+            seq=0,
+            event_id="",
+            occurred_at=utcnow(),
+            kind="run_started",
+            goal=goal,
+        )
+
+    with session_factory() as session:
+        stored = session.get(Run, run.id)
+        log.append(session, stored, frame("first"))
+        log.append(session, stored, frame("second"))
+        session.commit()
+
+    with session_factory() as session:
+        assert sorted(session.scalars(select(Event.seq).where(Event.run_id == run.id))) == [1, 2]
 
 
 async def test_terminal_event_closes_the_stream(session_factory, settings, run) -> None:

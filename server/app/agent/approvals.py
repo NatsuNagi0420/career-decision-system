@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 
 from app.config import Settings, get_settings
 from app.db.models import Approval, Proposal, Run, utcnow
@@ -62,7 +62,7 @@ class ApprovalRepository:
             raise ApprovalNotFound(approval_id)
         return approval
 
-    def claim(self, session, approval_id: str) -> bool:
+    def claim(self, session, approval_id: str, *, run_id: str) -> bool:
         """Atomic pending -> resuming. True only for the single winning caller.
 
         The expiry test belongs inside this UPDATE, not in a read that happens
@@ -70,11 +70,27 @@ class ApprovalRepository:
         `pending` while its `expires_at` has passed, and a person clicking at that
         moment gets a write that 目标三 says an expired approval may not produce. The
         sweeper only makes the state visible; this is what makes it enforced.
+
+        `run_id` belongs in the same statement for the same reason. Resuming runs the
+        graph against one `thread_id`, so two cards on one run claimed together start two
+        graphs on one checkpoint and two writers on one event sequence. "nothing else on
+        this run is being executed" is part of winning the claim, not a check made
+        beforehand.
         """
+        busy = (
+            select(Approval.id)
+            .where(Approval.run_id == run_id, Approval.status == "resuming")
+            .subquery()
+        )
         rowcount = session.execute(
             update(Approval)
             .execution_options(synchronize_session=False)
-            .where(Approval.id == approval_id, Approval.status == "pending", Approval.expires_at > utcnow())
+            .where(
+                Approval.id == approval_id,
+                Approval.status == "pending",
+                Approval.expires_at > utcnow(),
+                select(func.count()).select_from(busy).scalar_subquery() == 0,
+            )
             .values(status="resuming")
         ).rowcount
         session.commit()
@@ -109,7 +125,15 @@ class ApprovalRepository:
         session.refresh(approval)
         return approval
 
-    def expire_stale(self, session, *, now: datetime | None = None) -> list[str]:
+    def expire_stale(self, session, *, now: datetime | None = None) -> list[tuple[str, str]]:
+        """Return `(id, run_id)` for the cards this call actually flipped, not for the
+        ones a pre-read hoped would be here.
+
+        The caller closes the run behind each expired card, and closing the run of a card
+        that got claimed in the meantime would cancel a write that is happening right now.
+        Re-reading after the UPDATE is what makes "I timed this one out" a fact rather
+        than an intention.
+        """
         moment = now or utcnow()
         ids = [
             approval.id
@@ -125,8 +149,14 @@ class ApprovalRepository:
             .where(Approval.id.in_(ids), Approval.status == "pending")
             .values(status="timed_out", resolved_at=moment)
         )
+        flipped = [
+            (approval.id, approval.run_id)
+            for approval in session.scalars(
+                select(Approval).where(Approval.id.in_(ids), Approval.status == "timed_out")
+            )
+        ]
         session.commit()
-        return ids
+        return flipped
 
     def pending_for_run(self, session, run_id: str) -> list[Approval]:
         return list(

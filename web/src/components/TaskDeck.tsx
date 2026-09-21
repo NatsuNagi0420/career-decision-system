@@ -1,5 +1,5 @@
-import { useState, type CSSProperties } from "react";
-import { api, type TaskEntry } from "../api/client";
+import { useRef, useState, type CSSProperties } from "react";
+import { api, newRequestId, type TaskEntry } from "../api/client";
 import { Ms } from "./Ms";
 
 interface Props {
@@ -19,6 +19,10 @@ export function TaskDeck({ tasks, onSubmitted }: Props) {
   const [link, setLink] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /** One id per task, kept for the life of this deck: retrying the same click is one
+   *  statement, so it must carry the same id. Minting it per request would let a retry
+   *  look like a second piece of evidence. */
+  const requestIds = useRef<Record<string, string>>({});
 
   if (!tasks.length) {
     return null;
@@ -32,7 +36,12 @@ export function TaskDeck({ tasks, onSubmitted }: Props) {
     setBusy(true);
     setError(null);
     try {
-      const outcome = await api.submitTaskResult(taskId, body.trim(), link.trim());
+      const outcome = await api.submitTaskResult(
+        taskId,
+        body.trim(),
+        link.trim(),
+        (requestIds.current[taskId] ??= newRequestId()),
+      );
       setExpanded(null);
       setBody("");
       setLink("");

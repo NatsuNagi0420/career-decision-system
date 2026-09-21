@@ -85,7 +85,7 @@ def test_an_expired_card_cannot_be_claimed_while_it_still_says_pending(session_f
     approval_id = _card(session_factory, repo, run_id, proposal_id, expired=True)
 
     with session_factory() as session:
-        claimed = repo.claim(session, approval_id)
+        claimed = repo.claim(session, approval_id, run_id=run_id)
 
     assert claimed is False, "过期的确认不能被抢占，也就不会被执行"
     assert _approval(session_factory, approval_id).status == "pending"  # the sweeper has not run yet
@@ -97,7 +97,7 @@ def test_an_alive_card_is_still_claimable(session_factory, settings: Settings, u
     approval_id = _card(session_factory, repo, run_id, proposal_id, expired=False)
 
     with session_factory() as session:
-        assert repo.claim(session, approval_id) is True
+        assert repo.claim(session, approval_id, run_id=run_id) is True
 
 
 def test_the_sweep_makes_expiry_a_state_and_unparks_the_run(session_factory, settings: Settings, user) -> None:
@@ -145,3 +145,38 @@ def test_a_run_with_a_second_live_card_stays_parked(session_factory, settings: S
     with session_factory() as session:
         assert session.get(Run, run_id).status == "awaiting_approval"
         assert session.get(Approval, alive).status == "pending"
+
+
+def test_a_card_in_flight_keeps_its_run_off_the_sweeper(session_factory, settings: Settings, user) -> None:
+    """The sweep asked "is another card still `pending`?" — but a card that is `resuming`
+    is not pending, it is being executed right now.
+
+    So a *second* card lapsing could cancel the run under a graph that was about to write,
+    and append a terminal event for a run that then went on to finish. "not pending" is the
+    wrong question; "nothing in flight" is the right one.
+    """
+    repo = ApprovalRepository(settings)
+    run_id, first = _parked_run(session_factory, user, thread="exp-resuming")
+    with session_factory() as session:
+        in_flight = Proposal(
+            run_id=run_id,
+            user_id=user.id,
+            proposal_type="create_note",
+            title="正在被点的那条",
+            request_id="req-in-flight",
+        )
+        session.add(in_flight)
+        session.flush()
+        in_flight_id = in_flight.id
+        session.commit()
+
+    lapsed = _card(session_factory, repo, run_id, first, expired=True)
+    flying = _card(session_factory, repo, run_id, in_flight_id, expired=False)
+    with session_factory() as session:
+        assert repo.claim(session, flying, run_id=run_id) is True
+
+    assert expire_stale_approvals(session_factory, repo, EventLog(session_factory)) == [lapsed]
+    with session_factory() as session:
+        run = session.get(Run, run_id)
+        assert (run.status, run.finished_at) == ("awaiting_approval", None), "有人在点的 run 不能被收掉"
+        assert session.scalars(select(Event.kind).where(Event.run_id == run_id)).all() == []

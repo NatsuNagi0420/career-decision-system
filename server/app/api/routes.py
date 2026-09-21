@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 
 from app.agent.events import EventLog
 from app.agent.obligations import ObligationNotFound
-from app.agent.service import NotOwner, RunService
+from app.agent.service import NotOwner, RunService, TaskResultExists
 from app.capabilities.registry import visible_capabilities
 from app.db.models import Event, User
 from app.security import AuthRepository
@@ -199,6 +199,11 @@ async def submit_task_result(
         )
     except NotOwner as exc:
         raise HTTPException(status_code=404, detail="task not found") from exc
+    except TaskResultExists as exc:
+        raise HTTPException(
+            status_code=409,
+            detail="这条任务的结果已经交过了。重复交不会算成第二份证据；要补充或更正，直接说给 agent 听。",
+        ) from exc
     if run is not None:
         _spawn(request, service.start(run, allow_external_ai=user.allows_external_ai), run_id=run.id)
     return {**outcome, "run_id": run.id if run else None}

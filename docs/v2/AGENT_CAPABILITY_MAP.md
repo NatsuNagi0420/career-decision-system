@@ -913,3 +913,69 @@ usage     : prompt=20892  completion=5793  reasoning=2523  cached=9216
 - **单价的币种/结算口径待真实账单复核**；复核前不要用它对外报价。
 - 价格会随官方调整，这张表要跟着 `PROJECT_GOAL.md` 的日期一起维护，别当常量写进代码。真要进代码，就得是配置项＋抓取日期，而不是 `0.15` 这种字面量。
 - 汇率、含税、免费额度都没算。
+
+## §29 P2-6：并发写不再靠运气——四道守卫都落在语句里（目标三 + 目标四）
+
+§27 留下"单次写 15ms 可接受"的结论，同一项里剩下的两条（事件 seq 并发安全、多标签页重复操作）性质完全不同：它们不是性能问题，是**同一份事实被写两次**。四条缺陷读码时都在，逐条落守卫：
+
+| # | 缺陷（修之前的真实语义） | 守卫落在哪 |
+| --- | --- | --- |
+| ① | 任务结果按 `request_id` 去重，而 `web/src/api/client.ts:104` 每次点击现生成一个新 id——**两个标签页就是两个 id，去重形同虚设**，一次行动被记成两份证据 | 互斥改在任务行上：`service.py` `submit_task_result` 用 `session.get(PlanTask, …, with_for_update=True)` + 锁后回读 `TaskResult`，抢不到的人拿 **HTTP 409** |
+| ② | `EventLog.append` 的 `seq` 是 `SELECT max` + 独立 INSERT（`events.py:193-195`），`uq_event_run_seq` 会把撞号的那次打成 `IntegrityError`，而事件路径**没人接**——帧直接消失，浏览器重放出来缺一段 | `append` 撞唯一键就重新取号、有界重试 3 次，重试包在 **savepoint**（`begin_nested`）里而不是调用方事务里 |
+| ③ | 一条 run 允许多张 pending 卡（`uq_approval_run_proposal` 只锁"一 proposal 一卡"），两张卡被两个标签页同时点 → **同一个 `thread_id` 上跑两个图**，抢同一份 checkpoint 和同一段 seq | "本 run 没有别的卡在飞"写进 `claim()` 那条 UPDATE 的谓词（`approvals.py`），沿用 §25 的原则：强制在语句里，不在前置读里 |
+| ④ | `expire_stale_approvals` 遍历**扫描前**读到的 `doomed` 名单，且 `still_alive` 只认 `pending`——`claim()` 产出的 `resuming`（正在执行）不算活着，于是能把一个正在写库的 run 收成 `cancelled` 并追加第二条终态帧 | `expire_stale` 改成返回**本轮真正翻转成功**的 `(id, run_id)`（UPDATE 后同事务回读），收 run 只看这个名单，且 `pending`／`resuming` 都算活着；run 行读取也加 `with_for_update` |
+
+### 为什么不选看起来更干净的那条路
+
+- **①不给 `TaskResult.task_id` 加唯一索引**：现网库里可能已有重复行，加索引会让迁移当场失败，而"为了加索引先删掉别人交过的结果"不是我能替用户做的决定。任务行的条件翻面本来就是这件事的天然互斥点，且天然跨标签页（不要求两端共享 id）。代价：**交完之后改内容**这条路没有了——只能 409 说明"已经交过"，改口要另开语义（见末节）。
+- **②不在 `emit` 里重试**：`emit`（`graph.py:123-133`）自开事务，回滚只丢这一条帧，看着最省事；但 `append` 还被对账、终态收尾等**更大的事务**复用，在那里回滚会连别人的写一起丢。所以重试归 `append`、并且只回滚 savepoint。
+- **③不建进程内 per-run 注册表**：内存里再存一份"这条 run 有没有人在跑"就是第二个真相，重启即失效、多 worker 直接说谎。
+
+### 负向验证（每条各摘一次，红的是它自己那条）
+
+| 摘掉的守卫 | 当场红的测试 |
+| --- | --- |
+| `with_for_update=True` → 普通读 | `test_the_refusal_locks_the_task_row_rather_than_only_reading_it` 红，而顺序版 `test_a_second_tab_…` **仍绿**——这条正是"只看行为会写出假守卫测试"的证据，所以额外断言了 MySQL 真被要求锁 `plan_tasks` |
+| `attempts=3` → `1` | `test_a_colliding_seq_is_retried_instead_of_lost` 红（`IntegrityError` 冒出来） |
+| `claim()` 里的 busy 谓词 | `test_only_one_card_per_run_may_be_in_flight` 红 |
+| `resuming` 从 `still_alive` 里拿掉 | `test_a_card_in_flight_keeps_its_run_off_the_sweeper` 红 |
+
+`ruff` 干净；`test_task_results`、`test_approvals_and_events`、`test_approval_expiry`、`test_run_lifecycle`、`test_stale_runs`、`test_api` 共 **57 项**在一次会话里全绿；前端 `tsc` 与 30 项 vitest 绿（`TaskDeck` 改成每张卡一个 id）。
+
+### 第一个撞回来的不是并发，是 P1 自己的测试
+
+四道守卫落地后跑全量门禁，红的只有一项：`test_next_cycle.py::test_a_result_on_the_next_cycle_task_is_read_and_never_dropped`（第 13 环节）。它验的是"下一周期的任务交回结果 → 唤醒一条 `evidence_collect` run"，而它**制造唤醒的方式就是把同一个任务的 result 再交一次**（第一次因为 run 在飞所以走 defer）。那条路径正是缺陷 ① 要禁掉的双写：修之前它是合法用例，修之后它是被拒的 409。
+
+判它而不是判守卫的理由是：deferred 的结果在真实产品里另有出口——`ObligationRepository.continuation()`。那条卡 `trigger_kind` 不是 `scheduled` 所以 `fireable`，带 `project_id` 所以 `startable`（`server/app/agent/obligations.py:109-125`），自动或手动都会把它捡起来；`test_task_results.py` 里已经断言了它是 `open` 且 `capability_id="evidence_collect"`。也就是说"再交一次"从来只是那个出口在测试里的替身。
+
+改法是让它交**两条不同**的任务（`task_ids[0]` 测 defer、`task_ids[1]` 测唤醒），并补上两点：
+
+- `count(TaskResult) == 2`——口径从"一共 1 行"变成"两个任务两行"，仍然不给同一份努力两行；
+- **defer 之后再交同一个任务同样 409**。这条边界此前没有任何测试区分过：defer 推迟的是 run，不是记录。
+
+摘掉 ① 的守卫，新断言与 `test_a_second_tab_carrying_its_own_id_still_writes_one_row` 一起红在 `assert 201 == 409`；恢复后两处都绿（`git diff` 对 `service.py` 为空，确认改动逐字还原）。
+
+全量门禁因此跑了两遍：第一遍 **6 PASS / 1 FAIL**，红的就是上面那条第 13 环节测试（`var/verify-p45.log`）；改完第二遍 **7/7 PASS、`exit=0`**（`var/verify-p45b.log`）。顺带记一条读日志的坑：`verify.ps1` 失败时确实 `exit 1`，但那一次的后台任务通知写的是"exit code 0"——那是外层 shell 包装器的退出码。**红绿只看日志里的 summary 块**，不看通知。
+
+### 真进程：两个标签页真点了一次
+
+8100 重启到新构建（`/healthz` → `{"ok":true,"env":"local","issues":[]}`，`var/api-p45.log`），`var/p45_live.py` 打真实 HTTP，下面这块是它这次打印出来的原文：
+
+```text
+tab A（id₁）    : HTTP 201  唤醒 run e01bea8a
+tab B（id₂，新）: HTTP 409  detail="这条任务的结果已经交过了。重复交不会算成第二份证据…"
+tab A（id₁ 重发）: HTTP 201  duplicate=True
+TaskResult 行数 : 1      任务状态: done
+唤醒的 run      : awaiting_approval, steps_used=6, prompt 12551 / completion 2748 / cached 9344, error=None
+事件 seq        : 37 条，0..36 连续（新的 savepoint 重试路径在真 run 上没写坏编号）
+```
+
+同一账号、两个不同 id、两次提交 → 一行结果、一次唤醒，这正是目标三"重复点击不会重复写入"与目标四"不产生重复业务写入"合起来要的东西。
+
+### 边界与未做（诚实项）
+
+- ③④ 是**真 MySQL 上的单测 + 摘守卫看红**，没有真的开两个浏览器标签页点同一条 run 的两张卡（要凑出两张活卡得先跑一整条提案链）。①是真 HTTP 点出来的。
+- ②的撞号是**注入的**（让两次取号都拿到同一个陈旧值）：两个线程真并发只能碰运气重叠，而这次要证的恰恰是"撞了之后怎么办"。
+- **交完之后想改**没有路：第二次提交一律 409。补这个语义要单独定"改口"该怎么进时间线（覆盖同一行？留一条 `task_result_amended` 帧？），不在这一片里顺手做。
+- 409 的文案这次直接写了中文；`app/api/routes.py` 里其余 10 处英文 `detail=` 与 `restart:`／`approval:`／`budget`／`background:` 阶段标记的人话展示仍归 #46。
+- 探针数据（标题带"P2-6 探针"的项目/计划/任务/结果 + 一条 `awaiting_approval` 的 run）留在开发库 `career_v2` 里没删：那条 run 还带着一张等人在点的确认卡，删任务行会把它引用的链子剪断。

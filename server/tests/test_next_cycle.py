@@ -18,7 +18,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from app.agent.executors import PAYLOAD_SCHEMAS, apply_executor, build_proposal
 from app.capabilities.registry import get_capability
 from app.config import Settings
-from app.db.domain import ActionPlan, DecisionProject, PlanTask
+from app.db.domain import ActionPlan, DecisionProject, PlanTask, TaskResult
 from app.db.models import Artifact, Obligation, Proposal, Run, User, utcnow
 from app.main import create_app
 from app.tools.domain import GetPlan
@@ -28,6 +28,8 @@ NEXT_WEEK = 5
 NEXT_TASK = "补 SQL 窗口函数练习 3 道，记下每题题号与卡点"
 SECOND_TASK = "把课程项目之外的一次真实改动做完，留下提交链接"
 SECOND_WEEK = 6
+FIRST_FEEDBACK = "3 道题做完了 2 道，第 3 道卡在开窗框架上"
+SECOND_FEEDBACK = "改完了那次课程项目之外的东西，提交链接写在 README 里"
 
 
 @pytest.fixture
@@ -149,22 +151,24 @@ def test_a_result_on_the_next_cycle_task_is_read_and_never_dropped(client, cycle
 
     The first submission lands while the run that planned it is still open, so the
     system defers instead of starting a second run for the same project — deferring has
-    to leave a promise behind, or the week's work silently disappears.
+    to leave a promise behind, or the week's work silently disappears. The second one is
+    a different task, submitted once nothing is in flight, so it wakes a run directly:
+    restating the first task would be exactly the double write P2-6 refuses to allow.
     """
     with session_factory() as session:
         written = _approve_next_week(session, cycle)
         session.commit()
 
-    def submit(request_id: str) -> dict:
+    def submit(task_id: str, body: str, request_id: str) -> dict:
         response = client.post(
-            f"/api/v1/tasks/{written['task_ids'][0]}/results",
-            json={"body": "3 道题做完了 2 道，第 3 道卡在开窗框架上", "link": None, "request_id": request_id},
+            f"/api/v1/tasks/{task_id}/results",
+            json={"body": body, "link": None, "request_id": request_id},
             headers=cycle["headers"],
         )
         assert response.status_code == 201, response.text
         return response.json()
 
-    deferred = submit("req-cycle-2")
+    deferred = submit(written["task_ids"][0], FIRST_FEEDBACK, "req-cycle-2")
     assert deferred["deferred_to_run"] == written["drafting_run_id"]
     with session_factory() as session:
         promise = session.scalar(select(Obligation).where(Obligation.run_id == written["drafting_run_id"]))
@@ -173,8 +177,19 @@ def test_a_result_on_the_next_cycle_task_is_read_and_never_dropped(client, cycle
         (run.status, run.finished_at) = ("completed", utcnow())
         session.commit()
 
-    woken = submit("req-cycle-3")
+    # Deferring postpones the run, not the record: the week's account is already on file,
+    # so restating it is refused even though nothing has read it back yet.
+    restated = client.post(
+        f"/api/v1/tasks/{written['task_ids'][0]}/results",
+        json={"body": FIRST_FEEDBACK, "link": None, "request_id": "req-cycle-2b"},
+        headers=cycle["headers"],
+    )
+    assert restated.status_code == 409
+
+    woken = submit(written["task_ids"][1], SECOND_FEEDBACK, "req-cycle-3")
     with session_factory() as session:
+        # Two accounts, two rows — one per task, never two for one effort.
+        assert session.scalar(select(func.count(TaskResult.id))) == 2
         run = session.get(Run, woken["run_id"])
         assert (run.capability_id, run.entry_point, run.project_id) == (
             "evidence_collect",

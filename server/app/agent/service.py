@@ -40,6 +40,14 @@ class NotOwner(LookupError):
     pass
 
 
+class TaskResultExists(Exception):
+    """This task already has an account on file; a second row would read as two efforts."""
+
+    def __init__(self, result_id: str) -> None:
+        self.result_id = result_id
+        super().__init__(result_id)
+
+
 #: How long a run may sit without any progress before we call it dead. One model call
 #: times out at `llm_timeout_seconds` (60s) and the step ceiling bounds how many there
 #: can be, so a row untouched for this long is not slow — nobody is driving it.
@@ -123,26 +131,26 @@ def expire_stale_approvals(
     — letting the card say "已过期，不能再生效" is the honest version of that.
     """
     moment = now or utcnow()
-    expired: list[str] = []
+    announced: set[str] = set()
     with session_factory() as session:
-        doomed = [
-            (approval.id, approval.run_id)
-            for approval in session.scalars(
-                select(Approval).where(Approval.status == "pending", Approval.expires_at < moment)
-            )
-        ]
-        if not doomed:
-            return []
         expired = approvals.expire_stale(session, now=moment)
-        for _, run_id in doomed:
-            run = session.get(Run, run_id)
+        if not expired:
+            return []
+        for _, run_id in expired:
+            announced.add(run_id)
+            run = session.get(Run, run_id, with_for_update=True)
             if run is None or run.finished_at is not None:
                 continue
+            # `resuming` counts as alive: a card claimed a moment before this sweep read
+            # the table is being executed right now, and cancelling the run under it would
+            # file a write nobody approved while pretending nothing happened.
             still_alive = session.scalar(
-                select(Approval.id).where(Approval.run_id == run_id, Approval.status == "pending")
+                select(Approval.id).where(
+                    Approval.run_id == run_id, Approval.status.in_({"pending", "resuming"})
+                )
             )
             if still_alive is not None:
-                continue  # another card on the same run is still decidable
+                continue  # another card on the same run is still decidable or in flight
             run.status = "cancelled"
             run.error = "approval: 确认在有效期内没有被点，这次写入没有发生。可以再发起一次同样的判断。"
             run.finished_at = moment
@@ -161,9 +169,9 @@ def expire_stale_approvals(
                 ),
             )
         session.commit()
-    for run_id in {target for _, target in doomed}:
+    for run_id in announced:
         events.announce(run_id)
-    return expired
+    return [approval_id for approval_id, _ in expired]
 
 
 @dataclass
@@ -554,7 +562,14 @@ class RunService:
         The run comes back unstarted so the caller can spawn it the same way /runs does.
         """
         with self._factory() as session:
-            task = session.get(PlanTask, task_id)
+            # The task row is the mutex. Two browser tabs carry two *different*
+            # request_ids, so deduplicating on that id only covers a retry within one
+            # tab; locking the row the result is about makes the second tab wait, and
+            # its locking read then sees what the first one committed. A unique index on
+            # task_id would say the same thing in the schema, but rows already in the
+            # database may violate it, and deleting someone's submitted account to add an
+            # index is not a migration I get to run silently.
+            task = session.get(PlanTask, task_id, with_for_update=True)
             if task is None or task.user_id != user.id:
                 raise NotOwner(task_id)
             repeated = session.scalar(select(TaskResult).where(TaskResult.request_id == request_id))
@@ -562,6 +577,11 @@ class RunService:
                 # A second click is the same statement about the same week. Recording it
                 # twice would let one effort count as two pieces of evidence.
                 return {"result_id": repeated.id, "task_id": task.id, "duplicate": True}, None
+            already = session.scalar(
+                select(TaskResult).where(TaskResult.task_id == task.id).with_for_update().limit(1)
+            )
+            if already is not None:
+                raise TaskResultExists(already.id)
             result = TaskResult(
                 task_id=task.id,
                 user_id=user.id,
@@ -723,7 +743,7 @@ class RunService:
             approval = self._approvals.get(session, approval_id, user_id=user.id)
             if approval.run_id != run.id:
                 raise NotOwner(approval_id)
-            if not self._approvals.claim(session, approval_id):
+            if not self._approvals.claim(session, approval_id, run_id=run.id):
                 raise RuntimeError("这条确认已经不可再执行（审批已结束或已过期）")
             return approval
 

@@ -92,8 +92,10 @@ export const api = {
     }),
   snapshot: (runId: string) => request<Snapshot>(`/api/v1/runs/${runId}`),
   /** The person's own account of what they did. No approval gate here: the gate
-   *  belongs on the archiving write that follows, not on their own words. */
-  submitTaskResult: (taskId: string, body: string, link: string) =>
+   *  belongs on the archiving write that follows, not on their own words. `requestId`
+   *  comes from the caller — one per task card, reused when the same click is retried —
+   *  because minting it in here would make every click look like a new statement. */
+  submitTaskResult: (taskId: string, body: string, link: string, requestId: string) =>
     request<{ result_id: string; task_id: string; run_id: string | null; duplicate?: boolean }>(
       `/api/v1/tasks/${taskId}/results`,
       {
@@ -101,7 +103,7 @@ export const api = {
         body: JSON.stringify({
           body,
           link: link || null,
-          request_id: newRequestId(),
+          request_id: requestId,
         }),
       },
     ),

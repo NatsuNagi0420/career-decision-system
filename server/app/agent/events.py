@@ -18,6 +18,7 @@ from typing import Annotated, Any, Literal, Union, get_args
 
 from pydantic import BaseModel, Field, TypeAdapter
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.db.models import Event, Run, new_id
@@ -194,22 +195,38 @@ class EventLog:
         current = session.scalar(select(func.max(Event.seq)).where(Event.run_id == run_id))
         return 0 if current is None else int(current) + 1
 
-    def append(self, session: Session, run: Run, frame: BaseModel) -> Event:
+    def append(self, session: Session, run: Run, frame: BaseModel, *, attempts: int = 3) -> Event:
+        """Persist one durable frame, surviving a writer that took this `seq` first.
+
+        `seq` is `MAX+1` read separately from the insert, so two writers on one run can be
+        handed the same number and `uq_event_run_seq` rejects the loser. That index is the
+        arbiter, so the answer is to re-read and try again — bounded, because real
+        contention should surface rather than spin. The retry rides a savepoint, not the
+        caller's transaction: callers append from inside larger units of work whose other
+        writes must survive this collision instead of being rolled back with it.
+        """
         kind = str(frame.kind)
-        event = Event(
-            event_id=new_id(),
-            run_id=run.id,
-            thread_id=run.thread_id,
-            seq=self.next_seq(session, run.id),
-            kind=kind,
-            # The frame's own timestamp, not re-read at insert time: the moment a
-            # client was told about must be the moment on record.
-            occurred_at=frame.occurred_at,
-            payload=to_payload(frame),
-        )
-        session.add(event)
-        session.flush()
-        return event
+        for attempt in range(attempts):
+            event = Event(
+                event_id=new_id(),
+                run_id=run.id,
+                thread_id=run.thread_id,
+                seq=self.next_seq(session, run.id),
+                kind=kind,
+                # The frame's own timestamp, not re-read at insert time: the moment a
+                # client was told about must be the moment on record.
+                occurred_at=frame.occurred_at,
+                payload=to_payload(frame),
+            )
+            try:
+                with session.begin_nested():
+                    session.add(event)
+                    session.flush()
+                return event
+            except IntegrityError:
+                if attempt == attempts - 1:
+                    raise
+        raise AssertionError("unreachable: the loop returns or raises")
 
     def announce(self, run_id: str) -> None:
         """Call after the committing transaction, never before."""

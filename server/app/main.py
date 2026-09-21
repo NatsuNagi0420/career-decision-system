@@ -7,6 +7,7 @@ from datetime import timedelta
 from typing import Any
 
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from app.agent.approvals import ApprovalRepository
@@ -23,6 +24,55 @@ from app.security import AuthRepository
 from app.tools.base import ToolRegistry
 from app.tools.domain import DOMAIN_TOOLS
 from app.tools.readonly import READ_ONLY_TOOLS
+
+FIELD_LABELS = {
+    "username": "用户名",
+    "password": "密码",
+    "goal": "目标",
+    "capability_id": "能力",
+    "project_id": "决策项目",
+    "obligation_id": "承诺",
+    "body": "结果内容",
+    "link": "链接",
+    "request_id": "请求编号",
+    "approved": "批准与否",
+    "feedback": "补充说明",
+    "week_start": "周起始日",
+}
+KIND_LABELS = {
+    "missing": "不能不填",
+    "string_too_short": "至少 {min_length} 个字符",
+    "string_too_long": "最多 {max_length} 个字符",
+    "int_parsing": "要写一个整数",
+    "bool_parsing": "要写「是」或「否」",
+    "json_invalid": "不是合法的 JSON",
+    "too_short": "至少要有 {min_length} 项",
+    "too_long": "最多 {max_length} 项",
+}
+
+
+def _humanize_validation(exc: RequestValidationError) -> str:
+    """One readable sentence per bad field, joined by 「；」.
+
+    A field the label table does not know keeps its own name rather than being dropped —
+    the sentence still has to point at something the person can find on the form.
+    """
+    parts: list[str] = []
+    for error in exc.errors():
+        names = [str(seg) for seg in error["loc"] if isinstance(seg, str) and seg not in {"body", "payload"}]
+        raw = names[-1] if names else ""
+        label = FIELD_LABELS.get(raw, raw or "输入")
+        ctx = error.get("ctx") or {}
+        if error["type"] == "value_error":
+            reason = str(ctx.get("error", "填得不对"))
+        else:
+            template = KIND_LABELS.get(error["type"], "格式不对")
+            try:
+                reason = template.format(**ctx)
+            except (KeyError, IndexError):
+                reason = template
+        parts.append(f"{label}：{reason}")
+    return "；".join(parts) or "输入没通过校验"
 
 
 def create_app(settings: Settings | None = None, *, gateway: Gateway | None = None) -> FastAPI:
@@ -93,6 +143,10 @@ def create_app(settings: Settings | None = None, *, gateway: Gateway | None = No
     @app.exception_handler(ValueError)
     async def _value_error(_request: Request, exc: ValueError) -> JSONResponse:
         return JSONResponse({"detail": str(exc)}, status_code=400)
+
+    @app.exception_handler(RequestValidationError)
+    async def _validation_error(_request: Request, exc: RequestValidationError) -> JSONResponse:
+        return JSONResponse({"detail": _humanize_validation(exc)}, status_code=422)
 
     @app.get("/healthz")
     async def healthz() -> dict[str, Any]:

@@ -22,6 +22,17 @@ from app.tools.readonly import READ_ONLY_TOOLS
 #: becomes a build failure instead of a missing line in the timeline.
 SHELL_FRAMES = Path(__file__).resolve().parents[2] / "web" / "src" / "state" / "frames.ts"
 
+#: A failed run says where it stopped by prefixing `run.error` with `<stage>: `, and the
+#: shell turns that token into the label a person reads. An unlabelled stage is not a
+#: crash — it is a failure the user sees as raw code, which is how "显示具体失败阶段"
+#: quietly stops being true. So both lists are compared here.
+SHELL_FAILURES = Path(__file__).resolve().parents[2] / "web" / "src" / "state" / "failure.ts"
+STAGE_SOURCES = ("agent/graph.py", "agent/service.py")
+#: The stages whose prefix is built somewhere other than a `fail()`/`run.error` line.
+#: Naming them here means a refactor that breaks a pattern fails loudly instead of
+#: shrinking the set and passing.
+MANDATORY_STAGES = ("budget", "approval", "background", "restart")
+
 
 def _frame_kind_drift() -> str:
     from app.agent.events import FRAME_KINDS
@@ -35,6 +46,28 @@ def _frame_kind_drift() -> str:
     if kinds != set(FRAME_KINDS):
         return f"only in shell={sorted(kinds - set(FRAME_KINDS))} only in server={sorted(set(FRAME_KINDS) - kinds)}"
     return ""
+
+
+def _failure_stage_drift() -> str:
+    """Compare the `<stage>: ` prefixes the server can write into `run.error` against the
+    labels the shell turns them into."""
+    if not SHELL_FAILURES.exists():
+        return f"shell failure vocabulary not found at {SHELL_FAILURES}"
+    labels = set(re.findall(r'^\s+([a-z_]+):\s*"', SHELL_FAILURES.read_text(encoding="utf-8"), re.M))
+
+    server = Path(__file__).resolve().parents[1] / "app"
+    written: set[str] = set()
+    for relative in STAGE_SOURCES:
+        text = (server / relative).read_text(encoding="utf-8")
+        written.update(re.findall(r'fail\(deps, state,\s*f?"([a-z_]+): ', text))
+        written.update(re.findall(r'run\.error = f?"([a-z_]+): ', text))
+        written.update(re.findall(r'stage[^"\n]*"([a-z_]+)"', text))
+        written.update(re.findall(r'return "tokens", \(\s*f?"([a-z_]+): ', text, re.S))
+    lost = sorted(set(MANDATORY_STAGES) - written)
+    if lost:
+        return f"stage prefixes stopped being read out of the server (a pattern went stale): {lost}"
+    unlabelled = sorted(written - labels)
+    return f"unlabelled={unlabelled}" if unlabelled else ""
 
 
 class Report:
@@ -122,6 +155,13 @@ def validate() -> Report:
 
     drift = _frame_kind_drift()
     report.check(not drift, "frame kinds match the shell's reducer", drift)
+
+    stage_drift = _failure_stage_drift()
+    report.check(
+        not stage_drift,
+        "failure stages the server writes are all labelled by the shell",
+        stage_drift,
+    )
 
     from tests.support import sample_frames
 

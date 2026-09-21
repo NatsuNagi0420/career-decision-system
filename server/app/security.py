@@ -27,7 +27,7 @@ TOKEN_BYTES = 32
 
 def hash_password(password: str, *, salt: bytes | None = None) -> str:
     if len(password) < 8:
-        raise ValueError("password must be at least 8 characters")
+        raise ValueError("密码至少 8 位。")
     salt = salt or secrets.token_bytes(16)
     digest = hashlib.pbkdf2_hmac(HASH_ALGORITHM, password.encode("utf-8"), salt, ITERATIONS)
     return f"pbkdf2_{HASH_ALGORITHM}${ITERATIONS}${salt.hex()}${digest.hex()}"
@@ -62,10 +62,10 @@ class AuthRepository:
     def register(self, username: str, password: str, *, external_ai_consent: bool = False) -> User:
         username = username.strip()
         if not username:
-            raise ValueError("username is required")
+            raise ValueError("用户名不能为空。")
         with self._factory() as session:
             if session.scalar(select(User).where(User.username == username)) is not None:
-                raise ValueError("username already taken")
+                raise ValueError("这个用户名已经被注册了。")
             user = User(
                 username=username,
                 password_hash=hash_password(password),

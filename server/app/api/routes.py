@@ -10,8 +10,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
+from app.agent.approvals import ApprovalAlreadyResolved
 from app.agent.events import EventLog
-from app.agent.obligations import ObligationNotFound
+from app.agent.obligations import ObligationNotClaimable, ObligationNotFound
 from app.agent.service import NotOwner, RunService, TaskResultExists
 from app.capabilities.registry import visible_capabilities
 from app.db.models import Event, User
@@ -79,7 +80,7 @@ def _bearer(request: Request) -> str:
 def current_user(request: Request) -> User:
     user = _auth(request).resolve(_bearer(request))
     if user is None:
-        raise HTTPException(status_code=401, detail="authentication required")
+        raise HTTPException(status_code=401, detail="请先登录。")
     return user
 
 
@@ -96,7 +97,7 @@ def register(payload: Credentials, request: Request) -> dict[str, Any]:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     session = repo.login(payload.username, payload.password)
     if session is None:
-        raise HTTPException(status_code=500, detail="registration succeeded but login failed")
+        raise HTTPException(status_code=500, detail="注册成功了，但自动登录没成，请再登录一次。")
     return {"token": session.token, "user": _user_json(user)}
 
 
@@ -104,7 +105,7 @@ def register(payload: Credentials, request: Request) -> dict[str, Any]:
 def login(payload: Credentials, request: Request) -> dict[str, Any]:
     session = _auth(request).login(payload.username, payload.password)
     if session is None:
-        raise HTTPException(status_code=401, detail="invalid credentials")
+        raise HTTPException(status_code=401, detail="用户名或密码不对。")
     return {"token": session.token, "user": _user_json(session.user)}
 
 
@@ -171,7 +172,7 @@ def abandon_obligation(
     try:
         return _runs(request).abandon_obligation(user, obligation_id)
     except NotOwner as exc:
-        raise HTTPException(status_code=404, detail="obligation not found") from exc
+        raise HTTPException(status_code=404, detail="这条承诺不存在，或者不属于你。") from exc
 
 
 @router.post("/tasks/{task_id}/results", status_code=201)
@@ -198,7 +199,7 @@ async def submit_task_result(
             request_id=payload.request_id,
         )
     except NotOwner as exc:
-        raise HTTPException(status_code=404, detail="task not found") from exc
+        raise HTTPException(status_code=404, detail="这条行动任务不存在，或者不属于你。") from exc
     except TaskResultExists as exc:
         raise HTTPException(
             status_code=409,
@@ -272,15 +273,17 @@ async def create_run(payload: RunCreate, request: Request, user: User = Depends(
             obligation_id=payload.obligation_id,
         )
     except NotOwner as exc:
-        raise HTTPException(status_code=404, detail="obligation not found") from exc
+        raise HTTPException(status_code=404, detail="这条承诺不存在，或者不属于你。") from exc
     except ObligationNotFound as exc:
         # A promise belonging to someone else reads identically to one that does not
         # exist, so 404 here keeps the endpoint from being an existence oracle.
-        raise HTTPException(status_code=404, detail="obligation not found") from exc
+        raise HTTPException(status_code=404, detail="这条承诺不存在，或者不属于你。") from exc
+    except ObligationNotClaimable as exc:
+        raise HTTPException(status_code=409, detail="这条承诺已经被领走或不再有效，刷新一下再看看。") from exc
     except RuntimeError as exc:
         # Already claimed by another tab or another click. The 202 path below would
         # otherwise look like a silently duplicated run.
-        raise HTTPException(status_code=409, detail=str(exc)) from exc
+        raise HTTPException(status_code=409, detail=f"这一轮现在不能启动：{exc}") from exc
     # Running in the background is what makes the replay contract load-bearing:
     # the client attaches to /events after this response, and must still see every
     # event emitted in the meantime.
@@ -293,7 +296,17 @@ def get_run(run_id: str, request: Request, user: User = Depends(current_user)) -
     try:
         return _runs(request).snapshot(run_id, user)
     except NotOwner as exc:
-        raise HTTPException(status_code=404, detail="run not found") from exc
+        raise HTTPException(status_code=404, detail="这一轮不存在，或者不属于你。") from exc
+
+
+#: Each terminal approval state explains a different refusal, and `claim()` refuses on
+#: the row, so the status is the only thing that says why this click did nothing.
+APPROVAL_STATE_HINT = {
+    "decided": "这张确认卡已经点过了，同样的写入不会再来一次。",
+    "timed_out": "这张确认卡已经过期，那次写入没有发生。",
+    "cancelled": "那一轮已经收掉了，这张卡跟着一起失效。",
+    "resuming": "这张确认卡正在执行中，请等它跑完。",
+}
 
 
 @router.post("/runs/{run_id}/approvals/{approval_id}/decision", status_code=202)
@@ -309,9 +322,14 @@ async def decide(
         run = service.owned_run(run_id, user)
         service.mark_approval_decided(run_id, user, approval_id)
     except NotOwner as exc:
-        raise HTTPException(status_code=404, detail="approval not found") from exc
+        raise HTTPException(status_code=404, detail="这张确认卡不存在，或者不属于你。") from exc
+    except ApprovalAlreadyResolved as exc:
+        raise HTTPException(
+            status_code=409,
+            detail=APPROVAL_STATE_HINT.get(exc.status, "这张确认卡现在不能再点了。"),
+        ) from exc
     except RuntimeError as exc:
-        raise HTTPException(status_code=409, detail=str(exc)) from exc
+        raise HTTPException(status_code=409, detail=f"这次确认没有被受理：{exc}") from exc
 
     _spawn(
         request,
@@ -335,7 +353,7 @@ async def stream_events(
     try:
         _runs(request).owned_run(run_id, user)
     except NotOwner as exc:
-        raise HTTPException(status_code=404, detail="run not found") from exc
+        raise HTTPException(status_code=404, detail="这一轮不存在，或者不属于你。") from exc
 
     log: EventLog = request.app.state.events
 

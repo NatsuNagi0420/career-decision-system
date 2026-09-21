@@ -977,5 +977,53 @@ TaskResult 行数 : 1      任务状态: done
 - ③④ 是**真 MySQL 上的单测 + 摘守卫看红**，没有真的开两个浏览器标签页点同一条 run 的两张卡（要凑出两张活卡得先跑一整条提案链）。①是真 HTTP 点出来的。
 - ②的撞号是**注入的**（让两次取号都拿到同一个陈旧值）：两个线程真并发只能碰运气重叠，而这次要证的恰恰是"撞了之后怎么办"。
 - **交完之后想改**没有路：第二次提交一律 409。补这个语义要单独定"改口"该怎么进时间线（覆盖同一行？留一条 `task_result_amended` 帧？），不在这一片里顺手做。
-- 409 的文案这次直接写了中文；`app/api/routes.py` 里其余 10 处英文 `detail=` 与 `restart:`／`approval:`／`budget`／`background:` 阶段标记的人话展示仍归 #46。
+- 409 的文案这次直接写了中文；`app/api/routes.py` 里其余 10 处英文 `detail=` 与 `restart:`／`approval:`／`budget`／`background:` 阶段标记的人话展示仍归 #46（**#46 已做完，见 §30**）。
 - 探针数据（标题带"P2-6 探针"的项目/计划/任务/结果 + 一条 `awaiting_approval` 的 run）留在开发库 `career_v2` 里没删：那条 run 还带着一张等人在点的确认卡，删任务行会把它引用的链子剪断。
+
+## §30 P2-7：拒绝与失败阶段都说人话（目标四的最后一格）
+
+目标四的验收口径有一条"模型、工具或数据库失败时，系统能够显示具体失败阶段"。§25–§27 把**阶段**写进 `run.error` 了，但这句话到用户那里还剩两道坎：后端自己还有 12 处返回英文（§28/§29 记的"10 处"是英文字面量，另两处是 `detail=str(exc)` 直接把异常正文透出去，算不进那 10 里），而前端把 `restart:` 这种机器标记原样贴在人眼前。**这是那类缺陷的第 7 次发作，形状是"值在、语义在、没人翻译"**——写标签的人和读标签的人不是同一个人，两边都没有一条测试对得上。
+
+| 面 | 修之前用户看到 | 现在 | 谁保证它不腐 |
+| --- | --- | --- | --- |
+| 未登录 / 错密码 / 重名 / 短密码 | `authentication required`、`invalid credentials`、`username already taken`、pydantic 的英文结构 dump | 请先登录。／用户名或密码不对。／这个用户名已经被注册了。／`密码：至少 8 个字符` | `test_api.py` 三条文案断言 |
+| 找不到别人的数据 | `run not found`（且与"不存在"是否同文无人检查） | `这一轮不存在，或者不属于你。`，两条 404 路径**互相比较**而不是与字符串比较 | `test_the_404_for_another_users_run_is_word_for_word_the_missing_one` |
+| 重复点确认卡 | `approval already resolved: timed_out` | 按状态给话：已点过／已过期／那一轮已收掉／正在执行中 | `APPROVAL_STATE_HINT` 按 `ApprovalAlreadyResolved.status` 取 |
+| 失败阶段 | `restart: 上次进程退出时…`（时间线与状态条各贴一次） | `失败在「重启后对账」：上次进程退出时…` | 前端 `state/failure.ts` 一个解码器给两处用；`validate.py` 新增的第 15 条检查交叉核对 |
+
+**为什么不把翻译放到后端**：`run.error` 里的 `<stage>: ` 是给机器读的契约——重放、日志、评测都要靠它。翻译只在显示边缘做，一次解码（`formatFailure`）同时喂状态条与时间线，两处不可能各说一套。
+
+**`validate.py` 新增的第 15 条检查（从 14 条变 15 条）是这片真正的守门人**。它扫 `app/agent/graph.py`+`service.py` 里所有 `fail(deps, state, "stage: …")`／`run.error = "stage: …"`／`stage="…"`／`return "tokens", (f"budget: …` 四种写法，取出阶段集合，再要求每个阶段都在 `web/src/state/failure.ts` 的标签表里。它还写死一个 `MANDATORY_STAGES`（`budget/approval/background/restart`）：**如果将来某次重构让正则不再匹配，检查会红着说"读不到了"，而不是悄悄缩小集合再全绿**。写它的第一步就抓到 `restart` 匹配不到（它是 `stage: str = "restart"` 这种签名默认值，`stage\W{0,10}"…"` 被 `str` 三个字卡住）——没有这条负向验证，我会带着一个从未生效的守卫交付。
+
+**负向验证（各摘一次）**：
+
+| 摘掉的东西 | 结果 |
+| --- | --- |
+| `failure.ts` 里 `restart:` 这个键改名 | 15 条里红 1 条：`unlabelled=['restart']`；改回后 15/15 绿、文件逐字还原 |
+| 把"不存在"与"不是你的"拆成两条分支（一条 `NotOwner`、一条 `PermissionError`） | `test_the_404_for_another_users_run_is_word_for_word_the_missing_one` 红；恢复后 `git diff` 对 `service.py` 为空 |
+| 只加行为测试不加机制断言 | 上一片（§29）已经证明这样会供出假守卫，所以这片两条新测试都断言机制（`validate.py` 读源码、404 测试比响应） |
+
+**真进程 + 真浏览器**（8100 重启到新构建，`var/p46_live.py` 打真实 HTTP，vite 在 5199）：
+
+```text
+未登录 capabilities : 401  请先登录。
+错密码 login        : 401  用户名或密码不对。
+重名 register       : 400  这个用户名已经被注册了。
+短密码 register     : 422  密码：至少 8 个字符
+不存在的 run        : 404  这一轮不存在，或者不属于你。      同码同文=True
+run e01e50e4  status=failed
+run.error        : restart: 上次进程退出时它还停在这一步，已按失败收尾。可以从头再发起一次；已经确认过的写入不会重复。
+浏览器（点开那条失败的会话并展开全部折叠）:
+  "失败在「重启后对账」：上次进程退出时它还停在这一步，已按失败收尾。…"
+  残留机器标记 restart:/budget:/approval:/background:/synthesize:/select_action:/finalize:  → 0 处
+```
+
+那条 `restart:` 不是伪造的：真实 HTTP 起一条 `direction_explore`，跑到一半 `taskkill` 掉 8100 的 uvicorn（PID 先按命令行确认过是我们自己的 dev server），重启后启动对账就地收尾，前端把它的阶段翻成人话。
+
+**边界与未做（诚实项）**：
+
+- `state.errors` 里仍保留带机器标记的原文——那是给调试看的数组，UI 现在不展示它；哪天要展示，得走同一个解码器。
+- 阶梯升档/schema 修复失败时尾巴上仍会带 provider 的英文异常（`synthesize: 整理结论时模型没答成：<英文>`）。句子是中文，诊断没被藏起来；把异常正文也翻译会把唯一能定位问题的线索弄没。
+- 表里没有的 pydantic 类型落到 `格式不对`——比原来"整段英文结构"更易读，但信息更粗。新字段要出人话，得进 `FIELD_LABELS`。
+- 409 的四种确认卡状态里，只有 `timed_out` 与 `decided` 真被点过（§25、§29）；`resuming`／`cancelled` 的文案是读状态机写的，没实测。
+- 这条检查是**静态**核对：它保证"写进源码的阶段都有标签"，不保证运行期没出现新阶段（那类只能靠 UI 兜底原样显示，那条有 vitest 断言）。

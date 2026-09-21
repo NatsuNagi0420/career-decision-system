@@ -326,7 +326,7 @@ async def select_action(deps: AgentDeps, state: RunState) -> RunState:
                 step_id=step_id,
             )
         close_step(deps, state["run_id"], step_id, error=str(exc))
-        return fail(deps, state, f"select_action: {exc}")
+        return fail(deps, state, f"select_action: 决定下一步时模型没答成：{exc}")
 
     record_usage(deps, state["run_id"], completion.usage, completion.model, deps.capability.thinking, step_id=step_id)
     messages = list(state.get("messages") or [])
@@ -560,7 +560,7 @@ async def synthesize(deps: AgentDeps, state: RunState) -> RunState:
                 step_id=step_id,
             )
         close_step(deps, state["run_id"], step_id, error=str(exc))
-        return fail(deps, state, f"synthesize: {exc}")
+        return fail(deps, state, f"synthesize: 整理结论时模型没答成：{exc}")
 
     record_usage(deps, state["run_id"], completion.usage, completion.model, deps.capability.thinking, step_id=step_id)
     close_step(deps, state["run_id"], step_id, summary=draft.conclusion[:160])
@@ -717,7 +717,7 @@ def finalize(deps: AgentDeps, state: RunState) -> RunState:
         run.finished_at = utcnow()
         # Never overwrite a cause that an earlier node already recorded.
         if outcome == "error" and not run.error:
-            run.error = "finalize: proposal could not be applied"
+            run.error = "finalize: 提案没能写入，这一轮按失败收尾。"
         session.commit()
     finally:
         session.close()

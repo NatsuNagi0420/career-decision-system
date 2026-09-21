@@ -11,6 +11,7 @@
  * internal machinery (which node ran, how many tokens it spent) is real and worth
  * keeping, but it is not what a student reads first.
  */
+import { formatFailure } from "./failure";
 
 export type FrameKind =
   | "run_started"
@@ -336,7 +337,9 @@ export function reduceFrame(state: ShellState, frame: Frame): ShellState {
       return push(item(frame, `结束 · ${str(frame, "status")}`), { status: str(frame, "status") === "completed" ? "completed" : "failed" });
 
     case "run_failed":
-      return push(item(frame, "失败", str(frame, "error"), "bad"), {
+      // The raw error keeps its stage token in `errors` for whoever debugs the run;
+      // what the timeline shows is the same labelled sentence the ribbon uses.
+      return push(item(frame, "失败", formatFailure(str(frame, "error"), "这一轮失败了"), "bad"), {
         status: "failed",
         errors: [...state.errors, str(frame, "error")],
       });

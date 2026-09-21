@@ -18,6 +18,7 @@ import { DecisionCard } from "./components/DecisionCard";
 import { EvidenceDrawer } from "./components/EvidenceDrawer";
 import { Login } from "./components/Login";
 import { Ms } from "./components/Ms";
+import { formatFailure } from "./state/failure";
 import { Swap } from "./components/Swap";
 import { TaskDeck } from "./components/TaskDeck";
 import { Timeline } from "./components/Timeline";
@@ -784,7 +785,7 @@ function ribbonState(snapshot: Snapshot, groups: TraceGroup[], running: boolean)
     return `思考推演中 · 已查 ${calls} 次资料`;
   }
   if (snapshot.run.status === "failed") {
-    return snapshot.run.error ?? "这一轮失败了";
+    return formatFailure(snapshot.run.error, "这一轮失败了");
   }
   return `思考推演完成 · ${groups.length} 步 · 深度查调 ${calls} 次资料`;
 }

@@ -67,6 +67,7 @@ def sample_frames() -> dict[str, Any]:
         "tool_call": _frame(
             ToolCallFinished, "tool_call", step_id="s2", name="get_run_history",
             arguments={"limit": 3}, truncated=False, source_refs=[{"table": "agent_runs", "id": "r1"}],
+            result_summary='{"ok": true, "data": {"count": 1}}',
         ),
         "artifact_created": _frame(
             ArtifactCreated, "artifact_created", artifact_id="a1", artifact_type="RunDigest",

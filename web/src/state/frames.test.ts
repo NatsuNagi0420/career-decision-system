@@ -113,6 +113,18 @@ describe("reduceFrame", () => {
     expect(state.items.at(-1)?.detail).toContain("裁剪");
   });
 
+  it("keeps the reply text the model read, so the audit trail is not just row counts", () => {
+    const state = applyAll([
+      frame("run_started", 0, { goal: "g" }),
+      frame("tool_call", 1, {
+        name: "search_directions",
+        source_refs: [{ table: "career_directions", id: 7 }],
+        result_summary: '{"ok": true, "data": {"directions": [{"line": "后端开发（技术研发）"}]}}',
+      }),
+    ]);
+    expect(state.items.at(-1)?.toolEcho).toContain("后端开发（技术研发）");
+  });
+
   it("makes a withheld write as visible as a proposal", () => {
     const state = applyAll([
       frame("run_started", 0, { goal: "g" }),

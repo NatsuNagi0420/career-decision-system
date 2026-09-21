@@ -857,6 +857,40 @@ details[open] .thought__chev {
   font-variant-numeric: tabular-nums;
 }
 
+/* What the tool handed back is long and full of braces; keep it folded and scrollable. */
+.thought__echo {
+  margin-top: var(--sp-xs);
+  color: var(--md-outline);
+  font: 400 11px/16px var(--md-font);
+}
+
+.thought__echo summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.thought__echo summary::-webkit-details-marker {
+  display: none;
+}
+
+.thought__echo div {
+  display: grid;
+  gap: 2px;
+  margin-top: var(--sp-xs);
+}
+
+.thought__echo code {
+  max-height: 140px;
+  padding: 6px 8px;
+  overflow: auto;
+  border-radius: var(--r-sm);
+  background: var(--md-surface-low);
+  color: var(--md-on-surface-variant);
+  font: 400 11px/16px var(--md-font);
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
 .thought__notes {
   display: grid;
   gap: 3px;

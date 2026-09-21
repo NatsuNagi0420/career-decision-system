@@ -61,6 +61,8 @@ export interface TimelineItem {
   /** Tool calls carry these so the trace rail can render a chip without re-reading prose. */
   toolName?: string;
   refCount?: number;
+  /** What the tool actually handed back — the text the model read. */
+  toolEcho?: string;
 }
 
 export interface TraceGroup {
@@ -236,6 +238,9 @@ export function reduceFrame(state: ShellState, frame: Frame): ShellState {
     case "tool_call": {
       const truncated = bool(frame, "truncated");
       const refs = Array.isArray(frame.source_refs) ? (frame.source_refs as unknown[]) : [];
+      // The server keeps the reply text it handed to the model. Without this the audit
+      // trail says "it read 3 rows" and never what the model was shown.
+      const echo = str(frame, "result_summary").slice(0, 4000);
       return push(
         item(
           frame,
@@ -246,7 +251,12 @@ export function reduceFrame(state: ShellState, frame: Frame): ShellState {
           // The rail renders the tool as a chip, so it needs the parts rather than the
           // sentence — parsing back out of prose would break the first time the
           // wording changes.
-          { stepId: str(frame, "step_id"), toolName: labelForTool(str(frame, "name")), refCount: refs.length },
+          {
+            stepId: str(frame, "step_id"),
+            toolName: labelForTool(str(frame, "name")),
+            refCount: refs.length,
+            toolEcho: echo || undefined,
+          },
         ),
       );
     }

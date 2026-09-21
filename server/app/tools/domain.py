@@ -79,6 +79,13 @@ class SearchDirections(Tool):
                         "category": row.category,
                         "summary": row.summary[:240],
                         "common_skills": row.common_skills[:12],
+                        # The one spelling of this row that is worth quoting. Without it
+                        # the model stitches the fields into its own template, and that
+                        # sentence then exists nowhere — measured in §33.
+                        "line": (
+                            f"{row.name}（{row.category}）：{row.summary[:240]}"
+                            f"常见技能：{'、'.join(row.common_skills[:12])}。"
+                        ),
                     }
                     for row in rows
                 ],
@@ -173,6 +180,9 @@ class GetJobSamples(Tool):
                         "salary_max": job.salary_max,
                         "experience": job.experience_level,
                         "education": job.education,
+                        "line": "｜".join(
+                            part for part in (job.title, job.company, job.city, job.salary_text, job.experience_level) if part
+                        ),
                     }
                     for job in jobs
                 ],
@@ -292,6 +302,11 @@ class ListCandidates(Tool):
                         "status": row.status,
                         "source": row.source_type,
                         "rationale": row.rationale[:200],
+                        "line": (
+                            f"{row.name}（{row.source_type}）：{row.rationale[:200]}"
+                            if row.rationale.strip()
+                            else f"{row.name}（{row.source_type}）"
+                        ),
                     }
                     for row in rows
                 ],

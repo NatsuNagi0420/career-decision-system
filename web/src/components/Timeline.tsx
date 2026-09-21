@@ -445,6 +445,7 @@ function Thought({ groups, live, standalone = false }: { groups: TraceGroup[]; l
         {groups.map((group, step) => {
           const span = spans[step];
           const tools = group.items.filter((entry) => entry.kind === "tool_call");
+          const echoes = tools.filter((entry) => entry.toolEcho);
           const notes = group.items.filter((entry) => entry.kind !== "tool_call" && entry.kind !== "step_started");
           return (
             <div className="thought__step" data-state={group.done ? (group.failed ? "failed" : "done") : "running"} key={group.stepId}>
@@ -472,6 +473,17 @@ function Thought({ groups, live, standalone = false }: { groups: TraceGroup[]; l
                       </span>
                     ))}
                   </div>
+                ) : null}
+                {echoes.length ? (
+                  <details className="thought__echo">
+                    <summary>{`模型看到的工具回执（${echoes.length} 次）`}</summary>
+                    {echoes.map((entry) => (
+                      <div key={entry.eventId}>
+                        <b>{entry.toolName ?? "资料"}</b>
+                        <code>{entry.toolEcho}</code>
+                      </div>
+                    ))}
+                  </details>
                 ) : null}
                 {notes.length ? (
                   <div className="thought__notes">

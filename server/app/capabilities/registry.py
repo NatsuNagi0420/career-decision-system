@@ -82,6 +82,12 @@ CAPABILITIES: tuple[CapabilitySpec, ...] = (
         requires_approval=True,
         evidence_required=True,
         thinking="on",
+        synthesis_notes=(
+            "每个候选都要有一句出处：evidence_basis 的 quote 整行照抄 search_directions / "
+            "get_job_samples / list_candidates 返回的 line 字段，"
+            "不要把 name、category、summary 自己拼成一句（拼出来的话数据里没有）。"
+            "没有 line 可引的候选写进 uncertainties，不要补描述。"
+        ),
         next_capabilities=["evidence_collect"],
     ),
     CapabilitySpec(
@@ -130,7 +136,9 @@ CAPABILITIES: tuple[CapabilitySpec, ...] = (
             "opposes 填 evidence_ids 里的证据 id，note 不超过 40 字。"
             "没有反方证据就整个 cells 留空——矩阵本身由程序按存量证据算，"
             "你不要给分、不要改判、不要复述整张表。"
-            "如果这轮结论和上一版不同，在 conclusion 里点名是哪条新证据让它变的。"
+            "如果这轮结论和上一版不同，在 conclusion 里点名是哪条新证据让它变的。\n"
+            "evidence_basis 的 quote 从 matrix.cells[].quotes 或 get_evidence 的 quote 里"
+            "整条照抄；转述库里的状态（例如「source = user，rationale 为空」）不是证据。"
         ),
         next_capabilities=["action_plan"],
     ),

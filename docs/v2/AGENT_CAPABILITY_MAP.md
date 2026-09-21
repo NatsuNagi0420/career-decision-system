@@ -1179,3 +1179,37 @@ run.error        : restart: 上次进程退出时它还停在这一步，已按�
 要改的是工具侧：字段字典型工具（`search_directions`、`get_job_samples`、`list_candidates`、`compare_candidates`）每行附一个服务端渲染好的 `line` 字段——这一种写法是唯一该被引用的写法，`synthesis_notes` 里点名"照抄 line，不要自己拼字段"。`compare_decide` 另加一条：结论转述不算证据，矩阵里已有的 `quotes` 才是。
 
 **不改检查器**：给 `recomposed` 开"容忍连接字"的口子能让这两格当场变绿，但那正是 §32 末尾拒绝的那类事——一旦允许模型自加的字眼，"逐字命中"就不再意味着这句话真在数据里。这条修完 `--rescore` 不会反映（库里存的还是旧引文），必须重跑这几个能力的案例才算数。
+
+## §34 P3-3 落地：给引用一个可照抄的对象，同批 12 例的 unmatched 从一批变成 0
+
+### 改了什么
+
+`search_directions` / `get_job_samples` / `list_candidates` 每行多带一个服务端渲染好的 `line`；全局合成提示词把"抄哪一个"说死（一条 quote 只装一个字段的原值，或整行照抄 `line`，并点名 `常用技能：` 这类自加字）；`candidate_source` 补了 `synthesis_notes`、`compare_decide` 的补一句"转述库里状态不算证据，要引 `matrix.cells[].quotes`"。前端补了一格：`ToolCallFinished.result_summary` 从此在推理链里可展开（`frames.ts` 存 `toolEcho`，`Timeline.tsx` 折叠渲染），审计面不再只报"读了 N 条来源"。
+
+### 配对实测（同一批 12 例，`var/eval-0921-062445-live.json`，`script exit=0`）
+
+| | 基线（§32 全量那轮） | 这一轮 |
+| --- | --- | --- |
+| `candidate_source` 引用可核对均值 | 0.25 | 5 例 63 条引用，**unmatched 0** |
+| `compare_decide` 引用可核对均值 | 0.10 | 7 例 11 条引用，**unmatched 0** |
+
+12 例合计 70 条引用全部有出处、`too_short` 与 `unresolvable` 都 0，案例逐条 `pass=true`。这是同批案例的前后对比，不是两次不同集合的比较。
+
+**没被这句话藏起来的部分**：`candidate_source` 那 63 条里有 44 条的出处只到"工具回执正文"（`only_in_payload`），也就是"工具确实这么回的"而不是"成果物自己挂的 ref 对得上"。这比基线诚实且强（基线是"哪儿都找不到"），但逐 claim 绑 ref 那条老债还在——要让一个模型说 `line` 而不是这一行的 37 个字段。
+
+### 负向验证（摘掉守卫必须变红）
+
+| 摘掉的东西 | 结果 |
+| --- | --- |
+| `_tier_of` 整个短路成 `return "verbatim"` | **8 条红**：新增 2 条各自红在自己那句（一条红在 `found_in="payload"`，一条红在"拼接句仍算没出处"），另有 `test_citation_tiers` 4 条与 `test_evals` 2 条同时红 |
+| 工具不再输出 `line` | `test_quotable_lines` 取不到键即红（KeyError 路线，未逐测） |
+
+摘完复原后 `pytest tests/test_quotable_lines.py tests/test_citation_tiers.py tests/test_evals.py` 回绿；前端 `tsc --noEmit` 与 `vitest` 37 条全绿。
+
+### HTTP 产品面复核（不改别人的 8100）
+
+8100 那个 uvicorn 是别人 10:33 起的、且无 `--reload`，所以我另起 8123 跑 `python -m scripts.demo_e2e --chain`：注册→授权→`decision_frame`→批准→`candidate_source`，`script exit=0`，四项断言（A4 取到没交过的数据、产出成果物、确认门按写入等级、瞬时事件 seq 连续）全过。两处值得记：`DecisionFrame` 落库时 `覆盖度=0 / 数据不足=True`（`_coverage` 的新语义在真实 HTTP 路径上生效，不再拿"工具答了"当"证据够了"）；模型这轮发的 `add_candidate` 少了 `name`，被 payload 校验当场拒收（`unsupported`）而不是写坏数据。
+
+仍未闭合：8100 上跑的还是它自己那版代码，我不动别人的进程；Prompt/Capability 版本戳还没有，所以两轮基线之间的差异无法归因到"哪句提示词变了"。
+
+浏览器实测（另起 vite 5199 → 代理到我自己的 8123，验完只关这两个进程，8100 未动）：注册→登录→发一条真实困惑，推理链里渲染出 4 个可展开的回执块、10 个工具 chip，块内是真实回执（`实施工程师 / 永洪科技 / 上海 / 5000-10000元`），代码块按 140px 截断且 `scrollHeight > clientHeight` 说明滚动生效。这一格从此不再是"列在、值在、没人读"。

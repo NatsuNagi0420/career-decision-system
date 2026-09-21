@@ -72,10 +72,12 @@ powershell -File scripts\verify.ps1 -Quick   # 跳过 pytest
   .venv\Scripts\python.exe -m scripts.run_evals --check                       # 只核对案例集，不连库不花钱
   .venv\Scripts\python.exe -m scripts.run_evals --limit 5                     # 假模型，只验机器本身转不转
   .venv\Scripts\python.exe -m scripts.run_evals --live                        # 真模型出基线，38 例约 $0.14
+  .venv\Scripts\python.exe -m scripts.run_evals --live --only candidates_from_profile,compare_two_directions
+                                                                                # 只重跑改过口径的那几例，和基线做配对比较
   .venv\Scripts\python.exe -m scripts.run_evals --rescore var\eval-xxx-live.json   # 改了评分器就重算引用，不再花钱
   ```
 
-  当前基线与七条指标的口径都记在 `docs/v2/AGENT_CAPABILITY_MAP.md` §31–§32。**离线跑故意过不了阈值**（报告末尾会自己说明），只有 `--live` 的数字才拿来比较。
+  当前基线与七条指标的口径都记在 `docs/v2/AGENT_CAPABILITY_MAP.md` §31–§34（§33–§34 是引用质量的成因与第一次提升）。**离线跑故意过不了阈值**（报告末尾会自己说明），只有 `--live` 的数字才拿来比较。
 - **不要同时开两个 pytest 会话**：它们共享 `career_v2_test`，`TRUNCATE` 会互相打断。评测跑 `career_v2_eval`，但仍不能与别人的全量 pytest 并发（MySQL 1684 并发改表）。
 
 ## 文档

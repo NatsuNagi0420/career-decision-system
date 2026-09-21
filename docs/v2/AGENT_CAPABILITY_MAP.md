@@ -1336,3 +1336,13 @@ run.error        : restart: 上次进程退出时它还停在这一步，已按�
 负向验证（照 §37 的规矩做）：把 `filled` 退回 `if value` → 新增的两条各自红在自己的断言上（`0 == 100`、`50 == 100`），摘对了守卫才叫改对了东西；恢复后覆盖相关 54 条测试全绿，ruff 干净。
 
 **没测到的部分，写清楚**：这条改动在真模型上的分布效应仍未测——哪些案例会从"确定"变"临时"、`uncertain_as_certain` 会不会跟着动、`evidence_cited` 分母会不会因 `provisional` 判定变化而变，都要等账户恢复后那轮**带指纹**的基线（§35）。现在能负责的只有两句：产品不再把空查询报成 100 覆盖度；这个判断由代码做，不问模型。顺带把 #54 那条度量债的具体算法定下来了：`ToolCallFinished.source_refs` 空不空就能数出"答了但 0 行"，不需要迁移。
+
+## 39. 成果物自己说不出出处的那一行，现在由代码认出来（P2-10）
+
+目标二第一条是"所有要求证据的 Artifact 都包含来源引用"。之前它只在弱意义上成立：`persist_draft` 写进 `artifact.source_refs` 的**只有** `agent_runs` 加一串工具名（`graph.py:628`，§36 记下过），一句岗位原句要追到它来自哪一行，必须去回放这一轮的耐久事件——§34 那次重跑 70 条引用里 44 条停在 `only_in_payload`，量的就是这个缺口。
+
+做法（`_attribute_quotes`）：每条 `evidence_basis.quote` 归一化后（NFKC + casefold + 只留字母数字，与 §34 的"换标点不算造假"同一口径）在**这一轮真正递给模型的回执文本**里找；命中哪个工具，就把那个工具 `source_refs` 里的业务行并进 `artifact.source_refs`，并在该条 claim 上写 `source_tools`。**由代码认，不由模型声明**——模型点名一行它没读过的记录，这条路走不通；一条在任何回执里都找不到的引文**什么都不绑**（宁可空着，不许编一个像样的出处）。
+
+两个当场改掉的形状问题：`tool_trace` 里 `ok=False` 的调用被排除在 `traced` 之外（失败的回执不能供出处）；`get_requirement_items` 原先发的 ref 是 `{table, job_id, text}`，**没有条目自己的 id**，所以要求条目的引文永远绑不到 `job_requirement_items` 的具体一行——补上 `"id": item.id`（`JobRequirementItem` 本来就是 BigInteger 单列主键）。
+
+未覆盖的部分说清楚：4 条新测试打在 `_attribute_quotes` 这个判断上，`scripts.validate` 19 条不变；**没有**一条端到端测试断"一次真 run 写出的 artifact.source_refs 里出现了岗位行"——wiring 只靠 `run_tools` 返回 `tool_trace`（`graph.py:420`）这处读码保证。端到端那条要连 MySQL 夹具一起写，排在 #56 剩余项里；同样要等账户恢复才能看的，是 `only_in_payload` 会不会因此真的掉下来——那是这条改动的唯一成功标准，不是"代码写了"。

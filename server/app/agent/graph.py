@@ -18,6 +18,7 @@ import functools
 import json
 import re
 import time
+import unicodedata
 from dataclasses import dataclass, field
 from datetime import timedelta
 from typing import Any, Literal
@@ -609,25 +610,87 @@ async def synthesize(deps: AgentDeps, state: RunState) -> RunState:
     return {"synthesis": draft.model_dump(mode="json")}
 
 
+def _quote_key(value: str) -> str:
+    """The comparison form of a quote: alphanumerics only, width- and case-normalised.
+
+    A copied sentence keeps its words and loses its separators, because the model renders
+    `、` as `,` and full width as half — the scorer calls that tier 换标点 and does not
+    treat it as fabrication (§34), so binding must agree with it or every honest quote
+    binds nothing.
+    """
+    return "".join(char for char in unicodedata.normalize("NFKC", value).casefold() if char.isalnum())
+
+
+def _strings(value: Any) -> list[str]:
+    if isinstance(value, dict):
+        return [part for item in value.values() for part in _strings(item)]
+    if isinstance(value, (list, tuple)):
+        return [part for item in value for part in _strings(item)]
+    return [str(value)] if isinstance(value, str) else []
+
+
+def _attribute_quotes(
+    quotes: dict[str, str],
+    facts: dict[str, Any],
+    traced: dict[str, list[dict[str, Any]]],
+) -> tuple[dict[str, list[str]], list[dict[str, Any]]]:
+    """Which tools answered with each quote, and the business rows those tools read.
+
+    目标二's first line says an evidence-bearing artifact must carry source references, and
+    until now it carried only the run id plus tool names: the quoted sentence was traceable
+    by replaying the run's events, not by looking at the artifact (`only_in_payload` counted
+    exactly that gap in §34). Attribution is made by code from the payloads the model was
+    handed, so a model cannot name a row it never saw — and a quote found in no payload
+    binds nothing at all, which is the honest answer rather than a plausible one.
+    """
+    per_claim: dict[str, list[str]] = {}
+    refs: list[dict[str, Any]] = []
+    seen: set[tuple[str, str]] = set()
+    for claim, quote in quotes.items():
+        needle = _quote_key(quote)
+        if not needle:
+            continue
+        for name, payload in facts.items():
+            if any(needle in _quote_key(text) for text in _strings(payload)):
+                per_claim.setdefault(claim, []).append(name)
+                for ref in traced.get(name, []):
+                    key = (str(ref.get("table")), str(ref.get("id")))
+                    if ref.get("id") and key not in seen:
+                        seen.add(key)
+                        refs.append({"table": str(ref["table"]), "id": str(ref["id"])})
+    return per_claim, refs
+
+
 def persist_draft(deps: AgentDeps, state: RunState) -> RunState:
     synthesis = state.get("synthesis") or {}
     facts = state.get("tool_facts") or {}
     coverage = _coverage(facts)
     quotes = {line["claim"]: line["quote"] for line in synthesis.get("evidence_basis") or [] if (line.get("quote") or "").strip()}
+    traced = {
+        str(item.get("name")): list(item.get("source_refs") or [])
+        for item in state.get("tool_trace") or []
+        if item.get("ok")
+    }
+    per_claim, bound_refs = _attribute_quotes(quotes, facts, traced)
     fabricated = _fabricated_numbers(synthesis, facts)
     provisional = bool(
         fabricated
         or (deps.capability.evidence_required and not quotes)
         or coverage < deps.capability.min_data_coverage
     )
+    basis = [
+        {**line, "source_tools": per_claim.get(str(line.get("claim")), [])}
+        for line in synthesis.get("evidence_basis") or []
+    ]
     content = {
         **synthesis,
+        "evidence_basis": basis,
         "fact_check": {"numbers_not_in_tool_facts": fabricated},
         "computed": {"data_coverage": coverage, "is_provisional": provisional},
     }
     source_refs = [{"table": "agent_runs", "id": state["run_id"]}] + [
         {"table": "tool", "id": name} for name in sorted(facts)
-    ]
+    ] + bound_refs
 
     session = deps.session_factory()
     try:

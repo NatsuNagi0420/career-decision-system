@@ -232,7 +232,10 @@ class GetRequirementItems(Tool):
                     for item, job in rows
                 ],
             },
-            source_refs=[{"table": "job_requirement_items", "job_id": job.id, "text": item.original_text[:60]} for item, job in rows],
+            source_refs=[
+                {"table": "job_requirement_items", "id": item.id, "job_id": job.id, "text": item.original_text[:60]}
+                for item, job in rows
+            ],
         )
 
 

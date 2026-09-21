@@ -7,7 +7,7 @@ const rise = (index: number): CSSProperties => ({ "--i": String(index) }) as CSS
 const VERDICT: Record<string, { label: string; cls: string; glyph: string }> = {
   supported: { label: "有证据支持", cls: "tag tag--primary", glyph: "verified_user" },
   partial: { label: "只对上一点", cls: "tag tag--secondary", glyph: "contrast" },
-  missing: { label: "还缺证据", cls: "tag", glyph: "help" },
+  missing: { label: "还缺证据", cls: "tag tag--missing", glyph: "help" },
   contradicted: { label: "有证据反对", cls: "tag tag--bad", glyph: "report" },
 };
 

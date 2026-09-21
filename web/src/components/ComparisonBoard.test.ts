@@ -61,6 +61,8 @@ describe("stored comparison board", () => {
 
   it("falls back to the raw verdict instead of mislabelling an unknown one", () => {
     expect(verdictOf("missing").label).toBe("还缺证据");
+    // Absence gets its own mark: "no evidence yet" must not render like a settled verdict.
+    expect(verdictOf("missing").cls).toContain("tag--missing");
     expect(verdictOf(null).label).toBe("未判定");
     expect(verdictOf("contradicted").cls).toContain("tag--bad");
     expect(verdictOf("something_new").label).toBe("something_new");

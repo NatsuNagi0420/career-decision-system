@@ -12,6 +12,7 @@ import {
   type SessionUser,
   type Snapshot,
 } from "./api/client";
+import { evidencePill } from "./state/readable";
 import { BrandMark, SuinaiFace } from "./components/Brand";
 import { ComparisonBoard } from "./components/ComparisonBoard";
 import { DecisionCard } from "./components/DecisionCard";
@@ -582,7 +583,7 @@ function WorkbenchShell({ onSignedOut }: Props) {
                 <div className="ribbon__end">
                   <span className={`pill ${evidenceCount ? "pill--primary" : "pill--quiet"}`}>
                     <Ms g="verified" size={14} />
-                    <span>{`${snapshot.run.status === "completed" ? 100 : 0}% 证据可溯源`}</span>
+                    <span>{evidencePill({ coverage: latest?.data_coverage ?? null, quotes: evidenceCount, provisional: Boolean(latest?.is_provisional) })}</span>
                   </span>
                   <button className="minibtn" title="复制这一轮的链接" onClick={() => void share()}>
                     <Ms g="share" size={20} />

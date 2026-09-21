@@ -184,6 +184,10 @@ function CellRow({ cell, index, open, roundNo, onToggle }: RowProps) {
                 cites.map(({ cite, against }, position) => (
                   <p className="ev__quote" key={`${id}-c${position}`}>
                     {`${against ? "反对：" : "支持："}「${cite.quote}」`}
+                    {/* The sentence alone is only half of 目标二: a quote whose origin is
+                        not stated cannot be checked, which is the difference between a
+                        source and a confident-sounding line. */}
+                    {cite.origin ? <span className="ev__origin">{`— ${cite.origin}`}</span> : null}
                   </p>
                 ))
               ) : (

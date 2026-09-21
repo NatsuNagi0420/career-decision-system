@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from app.agent.approvals import ApprovalRepository
 from app.agent.checkpointer import open_checkpointer
 from app.agent.events import EventLog
+from app.agent.provenance import capability_fingerprint
 from app.agent.service import GraphRegistry, RunService
 from app.api import routes
 from app.capabilities.registry import get_capability
@@ -117,6 +118,28 @@ def _kinds(session_factory: sessionmaker[Session], run_id: str) -> list[str]:
             event.kind
             for event in session.scalars(select(Event).where(Event.run_id == run_id).order_by(Event.seq))
         ]
+
+
+async def test_run_started_frame_says_which_prompt_generation_answered(
+    session_factory, settings, tmp_path, owner
+) -> None:
+    """目标五 asks for Prompt/Capability 版本管理. A stamp that is only recomputed from
+    today's code cannot answer that question about last week's run, so the value has to
+    be carried by the durable frame the run wrote at the time."""
+    script = [
+        tool_payload("get_run_history", {"limit": 3}),
+        text_payload("已经看过历史"),
+        digest_payload("先补两条真实岗位证据再比较", actions=["记录：找两条广州数据分析JD逐字对照"]),
+    ]
+    async with build_service(settings, session_factory, script, tmp_path / "cp-stamp.sqlite") as (service, _provider):
+        run = service.create_run(owner, GOAL)
+        await service.start(run, allow_external_ai=True)
+
+        with session_factory() as session:
+            started = session.scalars(
+                select(Event).where(Event.run_id == run.id, Event.kind == "run_started")
+            ).one()
+        assert started.payload["prompt_fingerprint"] == capability_fingerprint(get_capability(run.capability_id))
 
 
 async def test_run_interrupts_waits_and_then_writes_the_row(session_factory, settings, tmp_path, owner) -> None:

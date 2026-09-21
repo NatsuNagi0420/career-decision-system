@@ -1213,3 +1213,106 @@ run.error        : restart: 上次进程退出时它还停在这一步，已按�
 仍未闭合：8100 上跑的还是它自己那版代码，我不动别人的进程；Prompt/Capability 版本戳还没有，所以两轮基线之间的差异无法归因到"哪句提示词变了"。
 
 浏览器实测（另起 vite 5199 → 代理到我自己的 8123，验完只关这两个进程，8100 未动）：注册→登录→发一条真实困惑，推理链里渲染出 4 个可展开的回执块、10 个工具 chip，块内是真实回执（`实施工程师 / 永洪科技 / 上海 / 5000-10000元`），代码块按 140px 截断且 `scrollHeight > clientHeight` 说明滚动生效。这一格从此不再是"列在、值在、没人读"。
+
+---
+
+## 35. 提示词指纹：让"这轮比上轮好"这句话有主语（P3-4）
+
+### 为什么先做这个而不是先改提示词
+
+§32→§34 三次引用率变化里，最贵的一次（0.447→0.895）不是模型变好，是我改了评分器；§34 又量到一次真实的能力变化（`candidate_source` 0.25→满）来自**工具回执形状**。两件事在同一批报告里长得一模一样：一个数字动了，没人能说清是谁动的。目标五最后一条"Prompt 和 Capability 版本管理"欠的就是这个主语——所以先补它，再谈下一轮提示词改动。
+
+### 指纹覆盖什么（`app/agent/provenance.py`）
+
+一个能力一段 `capability_material`，sha256 取前 12 位。里面按顺序是：
+
+1. `persona.SYSTEM_PROMPT`（穗奈身份 + 硬规 + 禁语）；
+2. `synthesis_system_prompt(能力名)`；
+3. **渲染后的合成提示词**——`graph.synthesize()` 里那段固定的话（含 §34 那句"一条 quote 只装一个字段的原值／整行照抄 `line`"）+ 该能力的 `synthesis_notes` + 可承诺能力清单 + 两个占位（目标、工具事实）；
+4. `DigestDraft` 的 JSON Schema（模型必须满足的输出形状）；
+5. 规划节点的 thinking / 有效 max_tokens；
+6. 能力自己：描述、工具名、必需上下文、风险级、是否要求证据、覆盖度地板、链条、思考模式、合成 token 上限；
+7. 每个允许工具的名字 + 描述 + 参数 JSON Schema。
+
+跑第 3 条的前提是**它被抽成了一个函数**：那段提示词原先是 `synthesize()` 里的内联 f-string，`provenance` 只能抄一份去 hash——抄的副本会在下一次改 wording 时静默脱钩。现在 `graph.synthesis_prompt(...)` 是唯一装配点，`synthesize()` 也调它，拼出来的字符串与抽取前逐字相同（顺序、`sorted()` 的 repr、`（尚无项目）` 分支都保留）。
+
+第 3 条是这一节的全部意义。§34 动的就是那句话：如果指纹只盖 1/2/7，那轮改动在报告里仍是"提示词没变"。
+
+### 谁读它（三处，都不是写了自己看）
+
+- **耐久帧**：`RunStarted.prompt_fingerprint`，随 run 落 `events` 表。读的是当时那版码写下的值，不是今天重算的——旧报告因此也能归因。`tests/support.py` 的契约样本带上了这个字段，所以 `validate.py` 第 16 条（帧要能 JSON 往返）替它看着两端。
+- **评测报告**：`scripts/run_evals.py` 从每条 run 自己的 `run_started` 帧取指纹，写进该例的 `prompt_fingerprint`、汇总成 `report["prompt_fingerprints"]`，门槛表下方打印一行。`--rescore 报告.json` 也读它：按能力列出这批数字出自哪个指纹，并如实说"N 例早于该字段，无法归因"。
+- **门禁**：`validate.py` 第 17 条（现 19 条检查）——已实现能力的指纹非空、互不撞车，且**每个能力的 pre-image 里查得到那段合成规则**；这条专门防"以后有人不走 `synthesis_prompt()` 了，指纹从此描述一句没人发的话"。
+
+### 实测
+
+`python -m scripts.validate` → `19 passed, 0 failed`；`pytest tests/test_run_lifecycle.py tests/test_provenance.py` → `script exit=0`，18 条全绿。
+
+负向验证（摘守卫必红）：把 `capability_material` 里那段 synthesis_prompt 滤掉后——
+
+| 摘掉守卫 | 结果 |
+| --- | --- |
+| 指纹不再含合成提示词 | `validate` 第 17 条 **FAIL** 并点名全部 9 个已实现能力（18 passed / 1 failed，`exit=1`）；`pytest tests/test_provenance.py` **3 条红**：改一个字不动指纹、哈希的提示词不是发出去的那句、占位渲染那条 |
+
+复原后两处回绿。另外三条严格性由测试自己钉：`synthesis_notes` 加一个句号、工具描述加一句、persona 加一行——各自必须让指纹移动，缺一即红。
+
+**测出来的一处纠正**：我原以为"planned 能力点了没实现的工具"是常态（`resume_build`/`interview_prep` 其实都只点了已存在的工具），于是把"尚未实现"分支写进了那条通用断言，测试当场红。分支保留——`validate.py` 明说 planned 允许点名未来工具——但改用一个显式构造的假工具名来测，不再假设注册表里此刻存在这种能力。
+
+**测出来的自我纠正（第二处，且是这类缺陷的第 12 次现身）**：`run_case` 把指纹写进 `CaseResult`、`print_report` 也打得出，但 `CaseResult.as_row()` 是**逐键手列**的——报告文件里那一格会静默缺字段，而文件才是一周后唯一还有人读的东西。补进 `as_row`，并加一条测试直接钉 `as_row()["prompt_fingerprint"]`；`main()` 里同时把去重后的指纹集合写进 `report["prompt_fingerprints"]`。这条是写完代码自查时读 `to_json`/`summarise` 发现的，不是跑出来的——所以本轮那次 38 例全量（在这处修复之前启动）的**文件里没有逐例指纹**，它的归因走 `--rescore`：指纹从库里各 run 的 `run_started` 帧读，不依赖报告字段，免费。
+
+### 还没被这条覆盖的变化
+
+指纹不含：模型名/温度等网关侧配置（`deepseek-flash` 换了版本不会动指纹，靠 `usage_recorded.model` 帧归因）、检索到的**数据本身**（目录灌新岗位会让引用率变，指纹不变，这是对的）、`MAX_FACTS_CHARS` 之类的裁剪参数（改动它属于上下文策略，P3 还欠一条"长上下文裁剪策略"）。基线之间可比的含义是"提示词与工具契约同一代"，不是"这一轮世界一样"。
+
+### 带指纹的第一轮全量基线：作废，原因在墙外（`var/eval-0921-073034-live.json`，`script exit=1`）
+
+38 例真模型跑完是红的，但红不在代码上：`structured_success 0.444（16/36）`、`case_pass 0.526`、成本反而只有 \$0.078。逐条读红项，十几种不同症状背后是同一句 `error=select_action: 决定下一步时模型没答成：model request failed: Client error '402 Payment Required' for url https://api.deepseek.com/chat/completions`——**账户余额用尽**。`action_plan` 那格"均模型调用 0.0"就是这个意思：run 连第一次调用都没拿到回答。所以这一轮不能当质量数字用，`evidence_cited=1.0（54/54）` 也只是"活着跑完的 6 例都有出处"，不是"引用率到了 1.0"——分母从基线的 129 条掉到 54 条是余额造成的，不是改进。
+
+顺带这一轮反过来验证了两件运行可靠性的事：模型侧 402 全程没被伪装成成功（`fake_success_artifacts=0`、`unapproved_writes=0`），失败都带阶段名停在 `select_action`，`run_completed` 没有出现在没跑完的 run 上。指纹这边也拿到了它的第一份产出：门槛表下打印出 8 个不同指纹（每能力一个，本轮 8 种能力都有 run 跑起来），报告文件里逐例那格当时还没有（见上面 `as_row` 那条），但 `--rescore` 从库里读得到。
+
+### 这一轮真正抓到的一个假红：整数号撞车被当成越权读取
+
+唯一那条"必须为 0"变红的是 `candidates_three_or_more`：**读别人 user_profiles：['295']**。逐帧查那条 run（`var/p34_xuser_probe.py`，只读）——它的 26 帧里 `user_profiles` 引用**一条都没有**，`295` 出现的位置是 `{'table': 'jobs', 'id': 295}`，公共岗位目录的一行；而该 run 的 user 是 294、绊线用户画像行的号是 295。也就是 §31 我把整数主键补进 haystack 之后留下的另一半问题：**按值匹配、不看表名**，于是公共表与私表共用数字空间就会误报。
+
+改法：`_walk_id_cells` 现在返回 `(表提示, 值)`——提示只从 ref 自己的 `table` 字段取、且只用于 `id` 这个键（`user_id` 这类外键本身就点名了目标表，继续按未知表处理，宁滥勿漏）；绊线匹配变成 `未标注值的集合 ∪ 标注为该表的值集合`。新增测试 `test_a_public_row_number_is_not_a_cross_user_read` 钉住这一条，同文件那两条真泄漏测试（字符串 uuid 走 artifact、整数主键走工具回执）必须继续红。**门槛的两个"必须为 0"仍然永不校准**——这次不是把标准改成能过，是把度量本身改准：一条会误报的安全指标，真正泄漏那次没人会去看。
+
+## 36. 界面上两处"看起来有出处"的假话（P3-6）
+
+做一次只读的前端审计（问的是目标二那句"用户可以查看证据来源，而不只是看到最终分数"），两处当场不合格，而且都不是新代码的 bug，是**一直在那儿的显示**：
+
+**① 顶栏 pill 写着"100% 证据可溯源"**。原表达式是 `run.status === "completed" ? 100 : 0`——一个跑完的 run 与"结论有没有出处"没有任何关系，这是把状态当度量。`web/src/state/readable.ts` 新增 `evidencePill()`：只有成果物自己测出来的 `data_coverage` 才允许以百分号出现；没测到就写"覆盖度未测"，一条原句都没比对过就写"还没有可比对的原文"；临时结论跟在后面说出来。两条 vitest 钉住"任何分支都不许从 run 状态读出百分号"。旁边那张卡本来就有真实的覆盖度环，这个 pill 是第二处会撒谎的地方。
+
+**② 比较矩阵的引文没有来源**。`_cite()` 回的是 `{id, kind, statement, quote}`——引文逐字没错，但"这句话来自哪一条岗位"整个丢了，学生看到的仍然是"一个像出处的句子"。现在服务端把指针解析成人话（`origin`）：`job_requirement_items` → `初级数据分析师｜岗位要求第 2 条`，`jobs` → `后端开发工程师｜C 公司｜广州｜12-18k`，`task_results` → `你交回的任务结果`，什么都没挂 → `未挂来源行（只记了渠道：你给的画像事实）`。渠道码 `user/job/requirement` 在库里是 16 字符的列，不翻译就永远读不懂——这一格属于老毛病"值在、语义在、没人翻译"。`ComparisonCite.origin` 进了 TS 类型（`tsc` 从此要求每根引文都带来源），`ComparisonBoard` 在引文下面一行用次要色显示它。
+
+**"未挂来源行"这一支是故意的**：空白会被读成"有来源只是没显示"，写出来才会被读成"这条没有来源"。
+
+### 实测
+
+`ruff` 全绿；`tsc --noEmit` 全绿；`vitest` 39 条全绿（新增 2 条 `evidencePill`）；`tests/test_citation_origin.py` 3 条钉住三种 origin 与降级分支。七条门禁的最终结果记在本节末（跑完补）。
+
+### 审计里剩下的、这次没修的
+
+`artifact.source_refs` 里只有 `agent_runs` 和工具名（`graph.py:628`），从来没有岗位行——成果物级的逐 claim 绑 ref 仍是老债（§34 那条 `only_in_payload` 的同一件事）；`Timeline` 仍把工具引用折成"N 条"，table+id 在前端被丢弃（`frames.ts:240-247`）；证据抽屉只挂在最新一个成果物上。这三条都在"能看懂"这一侧，不在"结论说谎"这一侧，所以排在真基线之后。
+
+## 37. 一次门禁红，查出来的结论比我先写的更难看（P2-8，含两处自我更正）
+
+门禁 `script exit=1`，只红一条：`tests/test_obligations.py::test_a_project_scoped_promise_is_visible_but_never_autostarted`。**先查归属**：同一条测试原地连跑三次 = 红、绿、红（代码未动）→ 不是并行工人，也不是我这轮改动，是它自己不确定。
+
+表层根因：`ObligationRepository.due()` 的 docstring 写着 "oldest first"，`order_by(Obligation.created_at)` 而并列没有下界；测试断言的是**插入顺序**（`[False, True]`），并列一出现它就翻。`continuation()` 又取"第一条可开工的承诺"自动起 run，所以这个列表的顺序不是排版问题。
+
+第一版修法：`due()` 补 `order_by(Obligation.created_at, Obligation.id)`，测试改成按行自身差别断言，并额外钉一条"两次读同序 + 返回顺序等于 id 序"。原地连跑 5 次全绿 → 我就把它当修好写进了文档。**同一批改动第二次过门禁时，我钉的这条新断言自己红了**：`created_at` 是 `DATETIME(fsp=6)`、默认值每行各调一次 `utcnow()`，两条承诺的时间戳**常常并不相同**，"等于 id 序"只在它们相等时成立。也就是说我钉了一条靠运气成立的断言，还把它写成了结论——这是本轮第一次更正。
+
+最终形态：不靠自然发生的并列去撞，测试**把 `created_at` 显式钉成同一个 tick**，三行按"时间优先、id 破并列"排布——最晚写入但时间最早的那行必须排第一；另外两行时间相同，id 小的必须在前，且插入顺序故意反过来，这样"表里返回什么就是什么"也蒙不过去；再断 `continuation()` 自动开工挑的正是最早那条。连跑 3 次全绿。
+
+负向验证（摘掉守卫看它红不红）——这是本轮第二次更正，也是对 §37 原先那句结论的否定：
+
+| 摘掉的守卫 | 结果 | 说明 |
+| --- | --- | --- |
+| `order_by(created_at, id)` → `order_by(id)` | **红**（期望 `[8…,1…,f…]` 变 `[1…,8…,f…]`） | 时间优先是真守卫 |
+| `order_by(created_at, id)` → `order_by(created_at)` | **仍然全绿** | InnoDB 按主键聚簇，并列行返回的就是 id 序 |
+
+所以诚实的说法是：**`due()` 这行改动在当前引擎上不改变任何可观测行为**，`id` 破并列是"把巧合升级为契约"（换执行计划、换引擎就没有这个巧合了），红绿红真正的病根是那条测试断言了插入顺序。被这行改动覆盖的输入是"同一 tick 内的多条承诺"，而同一 tick 的先后对用户本来就没有意义——**没有用户可见的错误被这次改动修好**。上一版文档里"自动开工挑哪条本来取决于存储引擎的心情"这句话，我没有证据支撑，撤回。
+
+顺带一处自己写反的期望：`candidate_source` 的 `required_context` 含 `project`，所以 `startable` 是 `{没项目: False, 有项目: True}`——第一版我写成"没项目的才能开工"，测试当场打回。（同一轮里 `continuation()` 还教我：项目级承诺不给 `project_id` 就永远不进 actionable，于是那三行都得挂上项目。）
+
+**这条属于目标四"任务可恢复"的同一族**：凡"取第一个"的地方，都要有一个**由 ORDER BY 说出来**的全序，而不是让引擎的聚簇习惯代劳；`created_at` 单独不是全序。同时留下一条更一般的教训：**"连跑 N 次全绿"不是守卫的证据**，只有摘掉它变红才是——本轮第二次门禁红就是我自己那条绿出来的断言招的。还没查的同类：`get_run_history` / feed 里按时间排序的列表、`scripts/run_evals.py::_pending_approval`（`order_by(Approval.created_at)` 取第一条，同一 tick 的多张审批靠巧合）。

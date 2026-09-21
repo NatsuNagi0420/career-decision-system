@@ -115,7 +115,19 @@ async def run_case(
     with session_factory() as session:
         fresh = session.get(Run, run.id)
         assert fresh is not None, "run 行不见了，评分无从谈起"
-        return score_case(session, case, run=fresh, world=world, before=before)
+        result = score_case(session, case, run=fresh, world=world, before=before)
+        result.prompt_fingerprint = _prompt_stamp(session, run.id)
+        return result
+
+
+def _prompt_stamp(session: Session, run_id: str) -> str:
+    """Read the stamp off the run's own `run_started` frame rather than recomputing it
+    from today's code. The question the field answers is "which generation produced
+    *that* answer", and a value recomputed tomorrow cannot answer it for yesterday."""
+    payload = session.scalar(
+        select(Event.payload).where(Event.run_id == run_id, Event.kind == "run_started")
+    ) or {}
+    return str(payload.get("prompt_fingerprint") or "")
 
 
 def _pending_approval(session_factory: sessionmaker[Session], run_id: str) -> str | None:
@@ -131,6 +143,11 @@ def print_report(results: list[CaseResult], report: dict[str, Any], *, live: boo
         shown = "未测到" if value is None else value
         print(f"  {name:24} {shown!s:>8}   {report['metric_denominators'][name]}")
     print(f"  {'合计成本(峰时上限/USD)':22} {report['total_cost_usd_peak']}")
+    stamps = sorted({item.prompt_fingerprint for item in results if item.prompt_fingerprint})
+    print(
+        f"  {'提示词指纹':22} "
+        + ("、".join(stamps) if stamps else "这批 run 没有指纹（早于该字段，跨它比较只能当传闻）")
+    )
 
     print("\n════════ 引用核对样本（前 8 条对不上的原句）════════")
     shown = 0
@@ -191,6 +208,8 @@ def rescore(report_path: Path) -> int:
     totals = EvidenceScore()
     buckets = totals.__class__
     per_capability: dict[str, EvidenceScore] = {}
+    stamps: dict[str, set[str]] = {}
+    unstamped = 0
     skipped = 0
     for row in previous["cases"]:
         run_id = str(row.get("run_id") or "")
@@ -201,6 +220,11 @@ def rescore(report_path: Path) -> int:
         if run is None:
             skipped += 1
             continue
+        stamp = _prompt_stamp(session, run_id)
+        if stamp:
+            stamps.setdefault(run.capability_id, set()).add(stamp)
+        else:
+            unstamped += 1
         cells = CellIndex(session)
         payloads = [event.payload or {} for event in session.scalars(select(Event).where(Event.run_id == run_id))]
         run_refs = _collected_refs(payloads)
@@ -228,7 +252,13 @@ def rescore(report_path: Path) -> int:
     print(f"  短到核对不了 {totals.too_short} 条不计入分母；其中 {totals.only_in_run} 条的出处没写进成果物自己的 source_refs")
     print("\n  每个能力的引用可核对率：")
     for capability, score in sorted(per_capability.items()):
-        print(f"    {capability:18} {score.valid:>3}/{score.verifiable:<3} {score.ratio:.3f} · 找不到 {score.unmatched}")
+        seen = "、".join(sorted(stamps.get(capability, {"（这批 run 没有指纹）"})))
+        print(
+            f"    {capability:18} {score.valid:>3}/{score.verifiable:<3} {score.ratio:.3f}"
+            f" · 找不到 {score.unmatched} · 指纹 {seen}"
+        )
+    if unstamped:
+        print(f"  注意：{unstamped} 例的 run 早于提示词指纹字段，它们的质量数字无法归因到某一版提示词。")
     return 0
 
 
@@ -282,6 +312,7 @@ async def main(args: argparse.Namespace) -> int:
                 raise
 
     report = summarise(results)
+    report["prompt_fingerprints"] = sorted({item.prompt_fingerprint for item in results if item.prompt_fingerprint})
     report["provider"] = eval_settings.llm_provider
     report["model"] = eval_settings.llm_model
     report["live"] = args.live

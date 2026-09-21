@@ -3379,3 +3379,12 @@ details[open] .thought__chev {
     margin-left: 0;
   }
 }
+
+/* Where a comparison quote came from. Same muted register as the other provenance
+   lines: it is the least interesting-looking text on the card and the most load-bearing. */
+.ev__origin {
+  display: block;
+  margin-top: var(--sp-xs);
+  color: var(--md-on-surface-variant);
+  font-size: 0.82rem;
+}

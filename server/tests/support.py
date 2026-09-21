@@ -61,7 +61,13 @@ def sample_frames() -> dict[str, Any]:
     by the SSE tests, so a frame that cannot serialise fails the gate offline."""
     moment = utcnow()
     return {
-        "run_started": _frame(RunStarted, "run_started", goal="在数据分析和后端之间做选择", capability_id="skeleton_probe"),
+        "run_started": _frame(
+            RunStarted,
+            "run_started",
+            goal="在数据分析和后端之间做选择",
+            capability_id="skeleton_probe",
+            prompt_fingerprint="0f4a2b7c9d1e",
+        ),
         "step_started": _frame(StepStarted, "step_started", step_id="s1", step_kind="plan", name="select_action"),
         "step_completed": _frame(StepCompleted, "step_completed", step_id="s1", summary="1 tool call(s)"),
         "tool_call": _frame(

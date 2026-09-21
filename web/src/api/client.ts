@@ -205,6 +205,8 @@ export interface ComparisonCite {
   statement: string;
   /** The verbatim source text, not a paraphrase of it. */
   quote: string;
+  /** Where that sentence came from, already in words a student can read. */
+  origin: string;
 }
 
 export interface ComparisonCell {

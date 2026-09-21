@@ -195,6 +195,30 @@ def validate() -> Report:
         hint_drift,
     )
 
+    from app.agent.graph import SYNTHESIS_RULES
+    from app.agent.provenance import capability_fingerprint, capability_material
+
+    stamps = {spec.id: capability_fingerprint(spec) for spec in implemented}
+    report.check(
+        all(stamps.values()),
+        "implemented capabilities have a prompt fingerprint",
+        f"blank={sorted(id_ for id_, stamp in stamps.items() if not stamp)}",
+    )
+    report.check(
+        len(set(stamps.values())) == len(stamps),
+        "prompt fingerprints tell the capabilities apart",
+        f"collision={sorted(stamp for stamp in set(stamps.values()) if list(stamps.values()).count(stamp) > 1)}",
+    )
+    # The stamp is only worth having for the text it claims to cover. If the drafting
+    # node stops routing through `synthesis_prompt`, the rules below silently leave the
+    # pre-image and every future baseline keeps reporting "same prompt".
+    unhashed = sorted(spec.id for spec in implemented if SYNTHESIS_RULES not in capability_material(spec))
+    report.check(
+        not unhashed,
+        "prompt fingerprints cover the synthesis rules",
+        f"这些能力的指纹里查不到那段话={unhashed}",
+    )
+
     from tests.support import sample_frames
 
     frames = sample_frames()

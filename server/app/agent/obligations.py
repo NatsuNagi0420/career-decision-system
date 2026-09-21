@@ -67,13 +67,19 @@ class ObligationRepository:
 
         A promise that is not eligible stays in the feed rather than disappearing:
         "需要先有一个决策项目" is information, whereas silence reads as forgetfulness.
+
+        `id` breaks the tie so the order is stated, not inherited. Without it the
+        result for two promises sharing a `created_at` belongs to the engine — InnoDB
+        happens to hand tied rows back in primary-key order, which is a coincidence a
+        query must not lean on, because `continuation()` acts on the first row it is
+        handed.
         """
         moment = now or utcnow()
         rows = list(
             session.scalars(
                 select(Obligation)
                 .where(Obligation.user_id == user_id, Obligation.status == "open")
-                .order_by(Obligation.created_at)
+                .order_by(Obligation.created_at, Obligation.id)
             )
         )
         return [row for row in rows if self.fireable(row, moment)]

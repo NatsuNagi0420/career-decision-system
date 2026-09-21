@@ -16,6 +16,7 @@ from app.agent.approvals import ApprovalRepository
 from app.agent.events import EventLog, RunCompleted, RunFailed, RunStarted
 from app.agent.graph import AgentDeps, build_agent_graph
 from app.agent.obligations import ObligationRepository
+from app.agent.provenance import fingerprint_for
 from app.agent.state import RunState
 from app.capabilities.registry import get_capability
 from app.capabilities.spec import CapabilitySpec
@@ -27,6 +28,8 @@ from app.db.domain import (
     DecisionCandidate,
     DecisionProject,
     EvidenceItem,
+    Job,
+    JobRequirementItem,
     PlanTask,
     TaskResult,
     WeeklyReview,
@@ -351,6 +354,7 @@ class RunService:
                     goal=fresh.goal,
                     capability_id=fresh.capability_id,
                     entry_point=fresh.entry_point,
+                    prompt_fingerprint=fingerprint_for(fresh.capability_id),
                 ),
             )
             session.commit()
@@ -463,8 +467,8 @@ class RunService:
                                 "verdict": cell.verdict,
                                 "score": cell.score,
                                 "note": cell.note,
-                                "for_it": [_cite(sources[ref["id"]]) for ref in cell.evidence_refs if ref.get("id") in sources],
-                                "against": [_cite(sources[ref["id"]]) for ref in cell.counter_refs if ref.get("id") in sources],
+                                "for_it": [_cite(session, sources[ref["id"]]) for ref in cell.evidence_refs if ref.get("id") in sources],
+                                "against": [_cite(session, sources[ref["id"]]) for ref in cell.counter_refs if ref.get("id") in sources],
                             }
                             for cell in mine
                         ],
@@ -776,10 +780,49 @@ def _run_json(run: Run) -> dict[str, Any]:
     }
 
 
-def _cite(item: EvidenceItem) -> dict[str, str]:
+def _cite(session: Session, item: EvidenceItem) -> dict[str, str]:
     """A cell's pointer resolved into the sentence a person can actually read. The quote
-    is the stored verbatim text, so a cell never shows more than a row really says."""
-    return {"id": item.id, "kind": item.kind, "statement": item.statement, "quote": item.quote or item.statement}
+    is the stored verbatim text, so a cell never shows more than a row really says.
+
+    `origin` exists because 目标二 asks for where the sentence came from, not just the
+    sentence: a quote with no stated source is the score-without-provenance case this
+    product exists to avoid, and the comparison board was showing exactly that.
+    """
+    return {
+        "id": item.id,
+        "kind": item.kind,
+        "statement": item.statement,
+        "quote": item.quote or item.statement,
+        "origin": _origin(session, item),
+    }
+
+
+#: The channel an evidence row came from, in the words a student reads. `EvidenceItem.source`
+#: is a 16-char code, so translating it is the only way it can be shown at all.
+_SOURCE_CHANNEL = {"user": "你给的画像事实", "job": "岗位样本", "requirement": "岗位要求", "task": "你交回的任务结果"}
+
+
+def _origin(session: Session, item: EvidenceItem) -> str:
+    ref = item.source_ref or {}
+    table = str(ref.get("table") or "")
+    raw = ref.get("id")
+    if table == "jobs" and raw is not None:
+        job = session.get(Job, int(raw))
+        if job is not None:
+            return "｜".join(part for part in (job.title, job.company, job.city, job.salary_text) if part)
+    if table == "job_requirement_items" and raw is not None:
+        row = session.get(JobRequirementItem, int(raw))
+        if row is not None:
+            job = session.get(Job, row.job_id) if row.job_id else None
+            label = f"{_SOURCE_CHANNEL.get('requirement', '岗位要求')}第 {row.sort_order} 条"
+            return f"{job.title}｜{label}" if job is not None else label
+    if table == "task_results" and raw is not None:
+        return _SOURCE_CHANNEL["task"]
+    channel = _SOURCE_CHANNEL.get(item.source, item.source)
+    if not table:
+        # Say the gap out loud: the alternative is a quote that looks sourced and isn't.
+        return f"未挂来源行（只记了渠道：{channel}）"
+    return f"{channel}（{table} #{raw}）"
 
 
 def _artifact_json(artifact: Artifact) -> dict[str, Any]:

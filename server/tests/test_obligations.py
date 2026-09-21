@@ -8,7 +8,7 @@ over, and a project-scoped promise being started without a project to work in.
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any
 
 import pytest
@@ -261,7 +261,48 @@ def test_a_project_scoped_promise_is_visible_but_never_autostarted(session_facto
         due = repo.due(session, user_id=owner.id)
 
     assert len(due) == 2, "both are due; only one of them is doable"
-    assert [repo.startable(row) for row in due] == [False, True]
+    # Keyed by scope, not by position: which of the two rows comes back first is the
+    # thing the next test pins down, so this one must not depend on it.
+    assert {bool(row.project_id): repo.startable(row) for row in due} == {False: False, True: True}
+
+
+def test_due_promises_are_ordered_by_time_and_a_tie_by_id(session_factory, owner) -> None:
+    """`continuation()` auto-starts the first row `due()` hands it, so that list needs a
+    total order the storage engine does not get to choose.
+
+    Two rules, three rows, each row placed so that honouring one rule breaks the other:
+    `oldest` was written last and must still come first (created_at dominates), and
+    `low`/`high` share a tick so only `id` can separate them — `low` is written second,
+    which is what stops "whatever comes out of the table" from passing. A tie really
+    happens: `created_at` is DATETIME(6), but rows flushed together read the same clock
+    tick, and before the tiebreaker existed this shape came back fail / pass / fail on
+    identical code.
+    """
+    repo = ObligationRepository()
+    tick = utcnow().replace(microsecond=0)
+    high, low, oldest = "f" * 32, "1" * 32, "8" * 32
+
+    def promise(row_id: str, made_at: datetime) -> Obligation:
+        return Obligation(
+            id=row_id,
+            user_id=owner.id,
+            capability_id="candidate_source",
+            intent=PROMISE,
+            project_id=new_id(),
+            created_at=made_at,
+        )
+
+    with session_factory() as session:
+        session.add_all([promise(high, tick), promise(low, tick), promise(oldest, tick - timedelta(seconds=1))])
+        session.commit()
+        ids = [row.id for row in repo.due(session, user_id=owner.id)]
+        again = [row.id for row in repo.due(session, user_id=owner.id)]
+        picked, reason = repo.continuation(
+            session, user_id=owner.id, last_autorun_at=None, cooldown=timedelta(0)
+        )
+
+    assert ids == again == [oldest, low, high], "先承诺的先做；同一刻的并列由 id 定，不由物理顺序定"
+    assert reason is None and picked is not None and picked.id == oldest
 
 
 def test_scheduled_promises_stay_quiet_until_their_hour(session_factory, owner) -> None:

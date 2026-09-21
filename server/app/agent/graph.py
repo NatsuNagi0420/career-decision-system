@@ -507,6 +507,59 @@ def streamed_conclusion(buffer: str) -> str:
     return "".join(out)
 
 
+#: The sentences the drafting call is given that do not depend on this run's data.
+#: Held as a constant because `provenance` hashes it — see `synthesis_prompt`.
+SYNTHESIS_RULES = (
+    "只基于上述事实整理。没有依据的部分写进 uncertainties，不要补数字或经历。\n"
+    "如果你想推进一次写入，把它放进 proposed 字段（例如 name/statement/title/body），"
+    "由程序校验并交给人确认；不确定就不填，不要编造字段。\n"
+    "把用户交回的任务结果归档成证据时，proposed 里带 result_id（get_plan 返回的 "
+    "results[].id）：程序会用那条记录里他的原话替换你写的 quote，"
+    "你只负责挑哪一条值得归档、以及它支持或推翻哪个判断。\n"
+    "evidence_basis 里的 quote 必须是工具返回内容中面向人的那句原话"
+    "（岗位描述、要求条目、记录正文），不是整个响应体；"
+    "一条 quote 只装一个字段的原值，或者整行照抄工具给的 line 字段——"
+    "不要把几个字段拼成一句，也不要加「常用技能：」这类工具回执里没有的字："
+    "拼出来的那句话在数据里并不存在，审计时只能判它没出处。也不要贴 JSON 字符串。\n"
+)
+
+
+def synthesis_prompt(
+    *,
+    goal: str,
+    project_id: object,
+    facts: dict[str, Any],
+    notes: str,
+    budget_note: str,
+    promise_targets: list[str],
+) -> str:
+    """Assemble what the drafting node tells the model, in one place.
+
+    Extracted so `app.agent.provenance` can hash the string the model actually
+    receives rather than a hand-kept summary of it. That matters because the
+    measured citation jump in §34 came from wording: a fingerprint over the persona
+    and the tool schemas alone would have gone on reporting "same prompt" through
+    the one edit that moved the number.
+    """
+    prompt = (
+        f"用户目标：{goal}\n"
+        f"当前决策项目 id：{project_id or '（尚无项目）'}\n\n"
+        f"工具实际返回的事实（这是唯一可用依据）：\n{json.dumps(facts, ensure_ascii=False, default=str)[:MAX_FACTS_CHARS]}\n\n"
+        f"{SYNTHESIS_RULES}"
+        f"next_step 是你对下一步的承诺：capability_id 只能从这些里选 {promise_targets}，"
+        "intent 一句话说清「去做什么、拿什么回来」，"
+        "确实没有可承诺的下一步就留空（不要为了填而编）。\n"
+    )
+    if notes:
+        # Every capability used to be drafted with the same instructions, so a week
+        # review was asked for as if it were a digest. What differs now belongs to
+        # the capability, where the integrity checks can see it.
+        prompt += f"{notes}\n"
+    if budget_note:
+        prompt += f"{budget_note}\n"
+    return prompt
+
+
 async def synthesize(deps: AgentDeps, state: RunState) -> RunState:
     facts = state.get("tool_facts") or {}
     ceiling, note = _ceiling(deps, state["run_id"])
@@ -515,32 +568,14 @@ async def synthesize(deps: AgentDeps, state: RunState) -> RunState:
         # budget that no longer exists is how a run starts inventing things.
         return fail(deps, state, note)
     step_id = open_step(deps, state["run_id"], "synthesize", "draft_digest")
-    user_prompt = (
-        f"用户目标：{state.get('goal')}\n"
-        f"当前决策项目 id：{state.get('project_id') or '（尚无项目）'}\n\n"
-        f"工具实际返回的事实（这是唯一可用依据）：\n{json.dumps(facts, ensure_ascii=False, default=str)[:MAX_FACTS_CHARS]}\n\n"
-        "只基于上述事实整理。没有依据的部分写进 uncertainties，不要补数字或经历。\n"
-        "如果你想推进一次写入，把它放进 proposed 字段（例如 name/statement/title/body），"
-        "由程序校验并交给人确认；不确定就不填，不要编造字段。\n"
-        "把用户交回的任务结果归档成证据时，proposed 里带 result_id（get_plan 返回的 "
-        "results[].id）：程序会用那条记录里他的原话替换你写的 quote，"
-        "你只负责挑哪一条值得归档、以及它支持或推翻哪个判断。\n"
-        "evidence_basis 里的 quote 必须是工具返回内容中面向人的那句原话"
-        "（岗位描述、要求条目、记录正文），不是整个响应体；"
-        "一条 quote 只装一个字段的原值，或者整行照抄工具给的 line 字段——"
-        "不要把几个字段拼成一句，也不要加「常用技能：」这类工具回执里没有的字："
-        "拼出来的那句话在数据里并不存在，审计时只能判它没出处。也不要贴 JSON 字符串。\n"
-        f"next_step 是你对下一步的承诺：capability_id 只能从这些里选 "
-        f"{sorted(_obligation_targets(deps))}，intent 一句话说清「去做什么、拿什么回来」，"
-        "确实没有可承诺的下一步就留空（不要为了填而编）。\n"
+    user_prompt = synthesis_prompt(
+        goal=str(state.get("goal")),
+        project_id=state.get("project_id"),
+        facts=facts,
+        notes=deps.capability.synthesis_notes,
+        budget_note=str(state.get("budget_note") or ""),
+        promise_targets=sorted(_obligation_targets(deps)),
     )
-    if deps.capability.synthesis_notes:
-        # Every capability used to be drafted with the same instructions, so a week
-        # review was asked for as if it were a digest. What differs now belongs to
-        # the capability, where the integrity checks can see it.
-        user_prompt += f"{deps.capability.synthesis_notes}\n"
-    if state.get("budget_note"):
-        user_prompt += f"{state['budget_note']}\n"
     try:
         answer = _AnswerStream(deps.events, state["run_id"])
 
@@ -743,14 +778,18 @@ def finalize(deps: AgentDeps, state: RunState) -> RunState:
     return {"applied": applied, "status": run_status, "obligation_id": obligation_id}
 
 
-def _obligation_targets(deps: AgentDeps) -> set[str]:
+def obligation_targets(capability: CapabilitySpec) -> set[str]:
     """Which capabilities a promise may point at. The declared chain comes first
     because that ordering was designed; a model is never offered a step the registry
     has not marked runnable and student-visible."""
-    declared = {cid for cid in deps.capability.next_capabilities if is_valid_obligation_target(cid)}
+    declared = {cid for cid in capability.next_capabilities if is_valid_obligation_target(cid)}
     if declared:
         return declared
     return {spec.id for spec in CAPABILITIES if is_valid_obligation_target(spec.id)}
+
+
+def _obligation_targets(deps: AgentDeps) -> set[str]:
+    return obligation_targets(deps.capability)
 
 
 def _record_obligation(deps: AgentDeps, state: RunState) -> str:

@@ -38,6 +38,9 @@ class RunStarted(_Frame):
     goal: str
     capability_id: str | None = None
     entry_point: str = "shell"
+    #: Which generation of prompt, tool descriptions and argument schemas this answer
+    #: came from. Empty for runs started before the stamp existed.
+    prompt_fingerprint: str = ""
 
 
 class StepStarted(_Frame):

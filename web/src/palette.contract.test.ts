@@ -73,11 +73,32 @@ function colourPairs(): Array<{ sel: string; fg: string; bg: string; fgRaw: stri
   return out;
 }
 
+/** CIE Lab chroma — the same unit the ramp is specified in: white is C*0.01,
+ *  every stop of this theme's ramp measures C*2.3–3.9. */
+function chroma(hex: string) {
+  const [R, G, B] = [1, 3, 5]
+    .map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
+    .map((v) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+  const X = (0.4124 * R + 0.3576 * G + 0.1805 * B) / 0.95047;
+  const Y = 0.2126 * R + 0.7152 * G + 0.0722 * B;
+  const Z = (0.0193 * R + 0.1192 * G + 0.9505 * B) / 1.08883;
+  const f = (t: number) => (t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116);
+  return Math.hypot(500 * (f(X) - f(Y)), 200 * (f(Y) - f(Z)));
+}
+
+function asHex(value: string): string | undefined {
+  const token = resolve(value);
+  if (token) return token;
+  const rgb = value.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+  if (rgb) return `#${rgb.slice(1, 4).map((n) => Number(n).toString(16).padStart(2, "0")).join("")}`;
+  return /^#[0-9a-f]{6}$/i.test(value) ? value.toLowerCase() : undefined;
+}
+
 describe("palette", () => {
   it("the surface ramp keeps the brand hue: no zero-chroma white sneaks back in", () => {
     const flat = Object.entries(TOKENS)
-      .filter(([name, hex]) => name.startsWith("--md-surface") && hsl(hex).s < 0.05)
-      .map(([name, hex]) => `${name} ${hex} (saturation ${(hsl(hex).s * 100).toFixed(0)}%)`);
+      .filter(([name, hex]) => name.startsWith("--md-surface") && chroma(hex) < 1.5)
+      .map(([name, hex]) => `${name} ${hex} (C*${chroma(hex).toFixed(2)})`);
     expect(flat).toEqual([]);
   });
 
@@ -91,6 +112,19 @@ describe("palette", () => {
       }
     }
     expect(Math.max(...distances)).toBeGreaterThanOrEqual(60);
+  });
+
+  it("no background paints itself achromatic, token or literal", () => {
+    const declared = [...SOURCE.matchAll(/^\s+background(?:-color)?:\s*([^;]+);$/gm)].map((m) => m[1].trim());
+    const checked = declared.map(asHex).filter(Boolean) as string[];
+    expect(checked.length).toBeGreaterThan(20);
+    const flat = declared
+      .filter((value) => {
+        const hex = asHex(value);
+        return hex !== undefined && chroma(hex) < 1.5;
+      })
+      .map((value) => `${value} (C*${chroma(asHex(value) as string).toFixed(2)})`);
+    expect([...new Set(flat)]).toEqual([]);
   });
 
   it("every solid text-on-fill pair in the stylesheet clears body-text contrast", () => {

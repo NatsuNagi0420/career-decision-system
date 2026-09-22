@@ -55,6 +55,9 @@
   --md-surface-dim: #d3dcd8;
   --md-surface-bright: #f2fbf7;
   --md-surface-lowest: #f9fefb;
+  /* The dock and the inspector buttons float, so they are translucent — but the
+     glass has to carry the same hue as the ramp, or it reads as a white slab. */
+  --surface-glass: rgba(249, 254, 251, 0.95);
   --md-surface-low: #edf6f2;
   --md-surface-container: #e7f0ec;
   --md-surface-high: #e1eae6;
@@ -1163,7 +1166,7 @@ details[open] .thought__chev {
   padding: var(--sp-sm);
   border-radius: var(--r-lg);
   border: 1px solid rgba(190, 201, 198, 0.2);
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--surface-glass);
   backdrop-filter: blur(32px);
   box-shadow: var(--sh-dock);
   display: flex;
@@ -2101,7 +2104,7 @@ details[open] .thought__chev {
   padding: 10px var(--sp-md);
   border-radius: var(--r-full);
   border: 1px solid var(--md-surface-container-high);
-  background: rgba(255, 255, 255, 0.94);
+  background: var(--surface-glass);
   box-shadow: var(--sh-card);
   color: var(--md-on-surface);
   backdrop-filter: blur(12px);
@@ -2786,7 +2789,7 @@ details[open] .thought__chev {
   padding: var(--sp-sm);
   border-radius: var(--r-md);
   border: 1px solid var(--md-surface-container-high);
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--surface-glass);
   backdrop-filter: blur(12px);
   box-shadow: var(--sh-dock);
 }

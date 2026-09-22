@@ -60,8 +60,8 @@ export function TaskDeck({ tasks, onSubmitted }: Props) {
           <Ms g="checklist_rtl" size={18} />
         </span>
         <div>
-          <h3 className="t-title-sm">行动清单</h3>
-          <p className="t-label-sm faint">{pending ? `${pending} 项待你去做，做完把结果交回来` : "这一轮任务都已交回结果"}</p>
+          <h3 className="t-title-sm">接下来要做的事</h3>
+          <p className="t-label-sm faint">{pending ? `${pending} 件还没做，做完跟我说一句结果` : "这一轮的事你都带回了消息"}</p>
         </div>
       </div>
 
@@ -76,7 +76,7 @@ export function TaskDeck({ tasks, onSubmitted }: Props) {
               <span className="pill pill--quiet">第 {task.week_no} 周</span>
               <span className="task__title t-body-md">{task.title}</span>
               <span className={task.status === "done" ? "pill pill--primary" : "pill pill--warn"}>
-                {task.status === "done" ? "已交回" : "未交回"}
+                {task.status === "done" ? "已带回" : "还没带回"}
               </span>
             </div>
 
@@ -113,7 +113,7 @@ export function TaskDeck({ tasks, onSubmitted }: Props) {
                 <div className="actions">
                   <button className="btn btn--primary" disabled={busy || body.trim().length < 2} onClick={() => void submit(task.id)}>
                     <Ms g="upload_file" size={18} />
-                    <span>{busy ? "提交中…" : "交回结果"}</span>
+                    <span>{busy ? "正在记…" : "说说你那边怎么样了"}</span>
                   </button>
                   <button className="btn btn--soft" disabled={busy} onClick={() => setExpanded(null)}>
                     <Ms g="close" size={18} />
@@ -125,7 +125,7 @@ export function TaskDeck({ tasks, onSubmitted }: Props) {
             ) : (
               <button className="btn btn--outline task__btn" onClick={() => setExpanded(task.id)}>
                 <Ms g="edit_note" size={18} />
-                <span>{task.results.length ? "再补一条" : "交回结果"}</span>
+                <span>{task.results.length ? "再补一条" : "说说你那边怎么样了"}</span>
               </button>
             )}
           </li>

@@ -114,7 +114,7 @@ export function ArtifactCard({ artifact, usage, steps, model, projectId, onFiled
       </div>
 
       {coverage !== null ? (
-        <section className="panel card-in" style={rise(1)}>
+        <section className="panel research-only card-in" style={rise(1)}>
           <div className="panel__head">
             <div className="panel__title">
               <Ms g="query_stats" size={20} />
@@ -196,14 +196,14 @@ export function ArtifactCard({ artifact, usage, steps, model, projectId, onFiled
           <div className="panel__head">
             <div className="panel__title">
               <Ms g="help" size={20} />
-              <span>还不确定</span>
+              <span>还有件事得你说一句</span>
             </div>
-            <span className="pill pill--warn">{`${uncertainties.length} 项`}</span>
           </div>
+          {/* No "疑 01 / 疑 02" numbering: a student reads numbered open questions as
+              numbered bugs. The list itself is the count. */}
           {uncertainties.map((entry, index) => (
             <div className="ev" key={`${artifact.id}-u${index}`}>
               <div className="ev__lead">
-                <span className="ev__index">{`疑 ${String(index + 1).padStart(2, "0")}`}</span>
                 <div className="ev__main">
                   <p className="ev__body">{entry}</p>
                 </div>
@@ -275,9 +275,9 @@ function EvidenceRow({ line, ordinal, verified }: { line: EvidenceLine; ordinal:
             <div className="ev__titles">
               <span className="ev__title">{line.claim}</span>
               {quote.text ? (
-                <span className={verified ? "tag tag--primary" : "tag"}>{verified ? "已核验逐字引文" : "引文已附"}</span>
+                <span className={verified ? "tag tag--primary" : "tag"}>{verified ? "原话一字一句对上了" : "原话附在后面"}</span>
               ) : (
-                <span className="tag tag--bad">没有原句可引</span>
+                <span className="tag tag--bad">这条没有原话可引</span>
               )}
             </div>
             <div className="ev__chips">

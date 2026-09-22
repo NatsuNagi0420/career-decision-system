@@ -3369,6 +3369,16 @@ details[open] .thought__chev {
   color: var(--md-tertiary);
 }
 
+/* Researcher view. Off by default: a job seeker came for an answer, and these are the
+   surfaces that show our work rather than give it — the step chain with its per-step
+   latency, the token/coverage readout, and the row-pointer line. Nothing is deleted;
+   the switch in the top bar puts all of it back for the person debugging a pilot run. */
+[data-research="off"] .thought,
+[data-research="off"] .research-only,
+[data-research="off"] .drawer__cap {
+  display: none;
+}
+
 /* -------------------------------- responsive ------------------------------- */
 
 @media (max-width: 1180px) {

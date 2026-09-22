@@ -28,12 +28,12 @@ export function EvidenceDrawer({ open, artifact, onClose }: Props) {
 
   return (
     <>
-      {open ? <button aria-label="关闭证据核验" className="scrim" onClick={onClose} /> : null}
+      {open ? <button aria-label="关闭原话列表" className="scrim" onClick={onClose} /> : null}
       <aside className={`drawer${open ? " drawer--open" : ""}`} aria-hidden={!open}>
         <div className="drawer__head">
           <div className="panel__title">
             <Ms g="fact_check" size={20} />
-            <span>{`${lines.length} 份证据原文核验`}</span>
+            <span>{`这些结论的原话（${lines.length} 条）`}</span>
           </div>
           <button className="minibtn" onClick={onClose} title="收起">
             <Ms g="close" size={20} />
@@ -45,7 +45,7 @@ export function EvidenceDrawer({ open, artifact, onClose }: Props) {
               ? `系统记下的真实出处：${pointers}`
               : "这一轮的出处只记到「哪个工具答过」，没有落到具体行——下面写的来源都是模型自己的说法。"}
           </p>
-          {lines.length ? null : <p className="empty">这一轮还没有可核验的原句。</p>}
+          {lines.length ? null : <p className="empty">这一轮还没有能拿给你看的原话。</p>}
           {lines.map((line, index) => {
             const quote = readableQuote(line.quote ?? "");
             return (

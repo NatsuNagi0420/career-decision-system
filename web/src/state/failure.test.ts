@@ -4,7 +4,7 @@ import { describeFailure, formatFailure } from "./failure";
 describe("describeFailure", () => {
   it("names the stage a run stopped on", () => {
     expect(describeFailure("budget: 这次任务的 token 预算 40000 已经用尽")).toEqual({
-      stage: "token 预算",
+      stage: "想到的量超了上限",
       detail: "这次任务的 token 预算 40000 已经用尽",
     });
   });

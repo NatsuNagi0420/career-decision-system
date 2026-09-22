@@ -178,19 +178,14 @@ export function pointerDetail(refs: Array<Record<string, unknown>>): string {
     .join(" ");
 }
 
-/**
- * The run-header pill. A finished run says nothing about provenance, so this must never
- * read a percentage off `run.status` — the shell used to print "100% 证据可溯源" for any
- * completed run, which is a made-up number in the one place the product promises evidence.
- * Only a 成果物's own measured coverage may appear as a percent; otherwise say what is
- * actually known (how many sentences were checked against source text) and name the gap.
- */
+/** Counts, never a percentage. arXiv 2402.07632: admitting uncertainty through a
+ *  number makes people trust the answer less while helping them catch errors, so the
+ *  consumer view states how many quotes line up and leaves the ratio to researcher mode
+ *  (the coverage figure is still printed on the usage panel). */
 export function evidencePill(input: { coverage: number | null; quotes: number; provisional: boolean }): string {
-  const tail = input.provisional ? " · 临时结论" : "";
+  const tail = input.provisional ? " · 这条还只是初步" : "";
   if (!input.quotes) {
-    return `还没有可比对的原文${tail}`;
+    return `还没有能对上的原话${tail}`;
   }
-  return input.coverage === null
-    ? `${input.quotes} 条原句可比对 · 覆盖度未测${tail}`
-    : `${input.quotes} 条原句可比对 · 覆盖度 ${String(input.coverage)}%${tail}`;
+  return `${input.quotes} 条原话能对上了${tail}`;
 }

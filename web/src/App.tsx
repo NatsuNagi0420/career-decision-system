@@ -81,6 +81,10 @@ function WorkbenchShell({ onSignedOut }: Props) {
   const [stream, setStream] = useState<{ answer: string; reasoning: string } | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  /** Researcher view, off by default. The audit surface (step counts, latency, tokens,
+   *  row pointers, coverage ratio) is how the owner debugs a pilot run — it is not what a
+   *  job seeker opens the page for, so it is one switch away rather than the first screen. */
+  const [research, setResearch] = useState<boolean>(() => localStorage.getItem("career.research") === "1");
   /** Bumped with every feed reload so the stored comparison board re-reads the table
    *  right after the approval that wrote a round. */
   const [boardTick, setBoardTick] = useState(0);
@@ -364,7 +368,7 @@ function WorkbenchShell({ onSignedOut }: Props) {
   };
 
   return (
-    <div className="app">
+    <div className="app" data-research={research ? "on" : "off"}>
       <aside className="sidebar">
         <div className="sidebar__scroll">
           <div className="brand">
@@ -414,7 +418,7 @@ function WorkbenchShell({ onSignedOut }: Props) {
             <div className="treehead">
               <div className="treehead__lead">
                 <Ms g="account_tree" size={16} />
-                <span>目标赛道与对话</span>
+                <span>这周的方向</span>
               </div>
             </div>
             <nav className="history">
@@ -439,7 +443,7 @@ function WorkbenchShell({ onSignedOut }: Props) {
 
           <div style={{ display: "flex", flexDirection: "column" }}>
             <div className="group">
-              <span>决策项目（写入目标）</span>
+              <span>你现在要定的这件事</span>
               <Ms g="folder_open" size={16} />
             </div>
             {feed?.projects.length ? (
@@ -461,7 +465,7 @@ function WorkbenchShell({ onSignedOut }: Props) {
               ))
             ) : (
               <p className="muted t-body-sm" style={{ padding: "4px 16px" }}>
-                还没有决策项目。让穗奈帮你把纠结的问题框成一个。
+                还没定要比较什么。跟穗奈说说你在纠结什么，她帮你框成一个问题。
               </p>
             )}
           </div>
@@ -502,6 +506,19 @@ function WorkbenchShell({ onSignedOut }: Props) {
                 {user?.external_ai_consent ? "云端模型已连接" : "未授权 · 走确定性路径"}
               </Swap>
             </span>
+            <button
+              className="minibtn"
+              aria-pressed={research}
+              title="把每一步走了多久、花了多少字、依据挂在哪一行也显示出来。这是给调试的人看的。"
+              onClick={() => {
+                const next = !research;
+                localStorage.setItem("career.research", next ? "1" : "0");
+                setResearch(next);
+              }}
+            >
+              <Ms g={research ? "engineering" : "psychology"} size={16} />
+              <span>研究员视图</span>
+            </button>
             <div className="topbar__own">
               <button className="iconbtn" title="账号与授权" aria-expanded={menuOpen} onClick={() => setMenuOpen((current) => !current)}>
                 <Ms g="tune" size={22} />
@@ -520,7 +537,7 @@ function WorkbenchShell({ onSignedOut }: Props) {
                     <span>{user?.external_ai_consent ? "已连接 · 点击撤销" : "未授权 · 点击同意"}</span>
                   </button>
                   <div className="menu__head">这一轮</div>
-                  <button className="menu__row" onClick={() => runId && void refresh(runId)}>
+                  <button className="menu__row research-only" onClick={() => runId && void refresh(runId)}>
                     <Ms g="query_stats" size={18} />
                     <span>
                       {snapshot?.run.usage
@@ -700,12 +717,12 @@ function WorkbenchShell({ onSignedOut }: Props) {
 
         {evidenceCount ? (
           <div className="inspector">
-            <button className="inspector__btn" onClick={() => setDrawerOpen(true)} title="展开核验原文">
+            <button className="inspector__btn" onClick={() => setDrawerOpen(true)} title="看看这些结论的原话">
               <span className="inspector__icon">
                 <Ms g="fact_check" size={16} />
               </span>
               <span className="inspector__text">
-                <span className="t-title-sm">{`${evidenceCount} 份证据原文核验`}</span>
+                <span className="t-title-sm">{`对上了 ${evidenceCount} 条原话`}</span>
                 <span className="faint t-label-sm">(可点击展开)</span>
               </span>
               <Ms g="chevron_left" size={18} />
@@ -903,7 +920,7 @@ function Dock({
         <div className="dock__rigor">
           <span className="dock__readout">
             <Ms g="verified" size={16} />
-            <Swap when={`${consented}-${evidenceCount}`}>{`${consented ? "严谨溯源模式" : "确定性路径"} · ${evidenceCount} 条全文比对`}</Swap>
+            <Swap when={`${consented}-${evidenceCount}`}>{`${consented ? "她会去查原话" : "她不查原话"} · ${evidenceCount} 条原话比对`}</Swap>
           </span>
           <div className="seg" title="穗奈这一轮实际走到的阶段">
             {PHASES.map((entry) => (
@@ -928,7 +945,7 @@ function Dock({
                 onSend();
               }
             }}
-            placeholder="向穗奈提问，或要求对特定职位做原句证据核验…"
+            placeholder="想知道什么直接问；也可以让她去查某个岗位的原话"
             rows={1}
           />
           <button

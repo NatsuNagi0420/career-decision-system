@@ -8,7 +8,7 @@ const STAGE_LABELS: Record<string, string> = {
   select_action: "决定下一步",
   synthesize: "整理结论",
   finalize: "收尾写入",
-  budget: "token 预算",
+  budget: "想到的量超了上限",
   restart: "重启后对账",
   approval: "确认过期",
   background: "后台任务",

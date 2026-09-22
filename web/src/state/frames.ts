@@ -158,7 +158,7 @@ const TOOL_LABEL: Record<string, string> = {
   get_requirement_items: "岗位要求原句",
   get_profile: "你的画像",
   list_candidates: "项目里的候选",
-  get_evidence: "已归档证据",
+  get_evidence: "以前存下的依据",
   compare_candidates: "候选比较",
   estimate_load: "任务量估算",
   get_plan: "现有计划",

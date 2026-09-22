@@ -148,7 +148,7 @@ export function WeeklyReviewCard({ artifact, projectId, onFiled }: Props) {
           <Ms g={filed ? "task_alt" : "event_note"} size={18} />
         </span>
         <div>
-          <h3 className="t-title-sm">{filed ? "本周复盘已写入" : "穗奈起草了本周复盘"}</h3>
+          <h3 className="t-title-sm">{filed ? "这一周记好了" : "穗奈把这一周起草好了"}</h3>
           <p className="t-label-sm faint">
             {filed === "duplicate"
               ? "这一周已经记上了，同一件事没有写第二遍。"
@@ -160,7 +160,7 @@ export function WeeklyReviewCard({ artifact, projectId, onFiled }: Props) {
       </div>
 
       <label className="wreview__field">
-        <span className="wreview__label">本周复盘正文</span>
+        <span className="wreview__label">这一周怎么样</span>
         <textarea
           disabled={busy || Boolean(filed)}
           maxLength={4000}
@@ -245,7 +245,7 @@ export function WeeklyReviewCard({ artifact, projectId, onFiled }: Props) {
       {filed ? null : (
         <p className="wreview__claim">
           <Ms g="person" size={14} />
-          <span>{projectId ? "这一步穗奈做不了：写入本周复盘的只能是你。" : "先在左边选一个决策项目，这一周才有地方落。"}</span>
+          <span>{projectId ? "这一步只能你自己来：把这一周记下来的只能是你。" : "先在左边选一件正在定的事，这一周才有地方落。"}</span>
         </p>
       )}
 
@@ -256,7 +256,7 @@ export function WeeklyReviewCard({ artifact, projectId, onFiled }: Props) {
           onClick={() => void submit()}
         >
           <Ms g={filed ? "check" : "edit_calendar"} size={18} />
-          <span>{filed ? "已写入本周复盘" : busy ? "写入中…" : "确认并写入本周复盘"}</span>
+          <span>{filed ? "已经记下了" : busy ? "正在记…" : "确认，记进这一周"}</span>
         </button>
       </div>
     </section>

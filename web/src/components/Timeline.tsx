@@ -312,7 +312,7 @@ function AgentTurn({
             {artifact ? (
               <span className={`pill ${provisional ? "pill--warn" : "pill--primary"}`}>
                 <span className={provisional ? "" : "dot"} />
-                {provisional ? "依据不足，写入已暂缓" : `${quotes} 条原句已核验`}
+                {provisional ? "这条还没把握，先没写进去" : `${quotes} 条原话对上了`}
               </span>
             ) : promise && tag ? (
               <span className="pill">{tag}</span>
@@ -560,8 +560,8 @@ function PromiseBlock({
             {obligation && !obligation.startable ? (
               <p className="ev__body">
                 {hasProjectTarget
-                  ? "它需要挂在决策项目下；左边已经选好了，这一轮会带着项目去做。"
-                  : "要先有一个决策项目才能自动接上；它不会自己开始。在左边选一个项目，就能手动开始。"}
+                  ? "它要挂在你正在定的那件事下面；左边已经选好了，这一轮会带着项目去做。"
+                  : "得先有那件事才能自动接上；它不会自己开始。在左边选一个项目，就能手动开始。"}
               </p>
             ) : null}
           </div>

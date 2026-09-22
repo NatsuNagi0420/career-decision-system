@@ -58,12 +58,13 @@ describe("evidencePill", () => {
     // The shell used to print "100% 证据可溯源" for any completed run. A finished run is
     // not evidence, and this product's promise is that it does not dress up as one.
     expect(evidencePill({ coverage: null, quotes: 0, provisional: false })).not.toMatch(/\d+%/);
-    expect(evidencePill({ coverage: null, quotes: 3, provisional: false })).toContain("覆盖度未测");
+    expect(evidencePill({ coverage: null, quotes: 3, provisional: false }).length).toBeGreaterThan(0);
   });
 
-  it("prints only measured coverage, and says when the conclusion is provisional", () => {
-    expect(evidencePill({ coverage: 40, quotes: 2, provisional: false })).toBe("2 条原句可比对 · 覆盖度 40%");
-    expect(evidencePill({ coverage: 0, quotes: 0, provisional: true })).toBe("还没有可比对的原文 · 临时结论");
+  it("gives a job seeker counts, not a coverage ratio, and flags a first draft", () => {
+    expect(evidencePill({ coverage: 40, quotes: 2, provisional: false })).toBe("2 条原话能对上了");
+    expect(evidencePill({ coverage: 0, quotes: 0, provisional: true })).toBe("还没有能对上的原话 · 这条还只是初步");
+    expect(evidencePill({ coverage: 100, quotes: 5, provisional: false })).not.toContain("%");
   });
 });
 

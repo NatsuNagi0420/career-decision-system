@@ -24,7 +24,7 @@ const KEY_LABEL: Record<string, string> = {
   quote: "引文",
   // The write replaces this draft line with the row's own text, so the card has to say
   // whose words end up stored — otherwise it reads as approval of the paraphrase.
-  result_id: "引自你交回的结果（写入时用你的原话）",
+  result_id: "引自你带回的原话（写入时一字不改）",
 };
 
 /**

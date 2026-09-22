@@ -75,6 +75,7 @@ interface Props {
  * they are shown as data rather than folded into prose.
  */
 export function ArtifactCard({ artifact, usage, steps, model, projectId, onFiled, onRunAction }: Props) {
+  const [allOpen, setAllOpen] = useState(false);
   if (artifact.artifact_type === "WeeklyReviewDraft") {
     return <WeeklyReviewCard artifact={artifact} projectId={projectId} onFiled={onFiled} />;
   }
@@ -180,14 +181,28 @@ export function ArtifactCard({ artifact, usage, steps, model, projectId, onFiled
           <div className="panel__head">
             <div className="panel__title">
               <Ms g="menu_book" size={20} />
-              <span>逐条提取的决策依据流</span>
+              <span>她引用的原话</span>
             </div>
-            <span className="faint t-label-sm">{`共 ${evidence.length} 条核心提炼 · 点开卡片看对应原句`}</span>
+            <span className="faint t-label-sm">{`共 ${evidence.length} 条`}</span>
           </div>
 
-          {evidence.map((line, index) => (
+          {/* Three, not eleven. This list measured 1,045 characters against a 514-character
+              answer — the evidence was the loudest thing on the page, which is the inversion
+              the owner called out. The rest stays one tap away, not on the page by default. */}
+          {evidence.slice(0, 3).map((line, index) => (
             <EvidenceRow key={`${artifact.id}-e${index}`} line={line} ordinal={index + 1} verified={verified.has(line.claim)} />
           ))}
+          {evidence.length > 3 ? (
+            <button className="ev__link" onClick={() => setAllOpen(!allOpen)}>
+              <span>{allOpen ? "收起" : `还有 ${evidence.length - 3} 条，展开看`}</span>
+              <Ms g={allOpen ? "expand_less" : "expand_more"} size={16} />
+            </button>
+          ) : null}
+          {allOpen
+            ? evidence.slice(3).map((line, index) => (
+                <EvidenceRow key={`${artifact.id}-ex${index}`} line={line} ordinal={index + 4} verified={verified.has(line.claim)} />
+              ))
+            : null}
         </section>
       ) : null}
 

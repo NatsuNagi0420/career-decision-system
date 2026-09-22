@@ -3466,6 +3466,26 @@ details[open] .thought__chev {
     max-width: 100%;
   }
 
+  /* The composer is the one thing worth a full row on a phone. Side by side, the
+     capability chip measured 152px against the textarea's 146px — the control took
+     more room than the place you type. Stack: input first, controls under it. */
+  .dock__field {
+    flex-wrap: wrap;
+    gap: var(--sp-xs) var(--sp-sm);
+    padding: var(--sp-sm);
+    border-radius: var(--r-lg);
+  }
+
+  .dock__field textarea {
+    order: -1;
+    flex: 1 1 100%;
+    min-height: 34px;
+  }
+
+  .dock__field .send {
+    margin-left: auto;
+  }
+
   .inspector {
     display: none;
   }

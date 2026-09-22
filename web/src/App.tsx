@@ -374,6 +374,10 @@ function WorkbenchShell({ onSignedOut }: Props) {
     }
   };
 
+  // The pill shows this text on desktop and only a coloured dot below 980px, so the same
+  // words have to ride on the element itself or the dot means nothing on a phone.
+  const consentLine = user?.external_ai_consent ? "云端模型已连接，她会去查原话" : "未授权 · 走确定性路径，她不查原话";
+
   return (
     <div className="app" data-research={research ? "on" : "off"}>
       <aside className="sidebar">
@@ -507,7 +511,12 @@ function WorkbenchShell({ onSignedOut }: Props) {
             />
           </div>
           <div className="topbar__end">
-            <span className={`status ${user?.external_ai_consent ? "status--on" : "status--quiet"}`} title="云端模型授权状态">
+            <span
+              className={`status ${user?.external_ai_consent ? "status--on" : "status--quiet"}`}
+              role="status"
+              title={consentLine}
+              aria-label={consentLine}
+            >
               <span className={`dot${running ? " dot--live" : ""}`} />
               <span className="status__label">
                 <Swap when={user?.external_ai_consent ? "on" : "off"}>

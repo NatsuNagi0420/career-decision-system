@@ -71,6 +71,14 @@ async function wrappedLabels(page) {
   }, WIDE_ENOUGH);
 }
 
+/** The composer's two competing claims on a phone's width, in px. */
+async function composerWidths(page) {
+  return page.evaluate(() => {
+    const w = (sel) => Math.round(document.querySelector(sel)?.getBoundingClientRect().width ?? 0);
+    return { input: w("#composer"), picker: w(".picker") };
+  });
+}
+
 /** Log the fixture in; only the very first run on an empty database creates it. */
 async function fixtureToken() {
   const post = async (path, body) => {
@@ -148,6 +156,12 @@ try {
     const body = await page.evaluate(() => document.body.innerText.replace(/\s/g, "").length);
     const isLogin = await page.locator(".auth__wrap").count();
     check(`fixture lands on the workspace (${vp.name})`, isLogin === 0 && body > 40, `${body} chars → ${file}`);
+    const widths = await composerWidths(page);
+    check(
+      `the input out-widths the capability chip (${vp.name})`,
+      widths.input > widths.picker,
+      `输入 ${widths.input}px vs 能力下拉 ${widths.picker}px`,
+    );
     check(`workspace makes no failing calls (${vp.name})`, problems.length === 0, problems.slice(0, 3).join(" | "));
     const wrapped = await wrappedLabels(page);
     check(

@@ -1,6 +1,6 @@
 import type { ArtifactEntry } from "../api/client";
 import { Ms } from "./Ms";
-import { pointerSummary, readableQuote } from "../state/readable";
+import { pointerDetail, pointerSummary, readableQuote } from "../state/readable";
 
 interface Props {
   open: boolean;
@@ -23,7 +23,8 @@ export function EvidenceDrawer({ open, artifact, onClose }: Props) {
   const lines = Array.isArray((artifact?.content as Record<string, unknown> | undefined)?.evidence_basis)
     ? (((artifact?.content as Record<string, unknown>).evidence_basis ?? []) as EvidenceLine[])
     : [];
-  const pointers = pointerSummary(artifact?.source_refs ?? [], 6);
+  const pointers = pointerSummary(artifact?.source_refs ?? []);
+  const pointerIds = pointerDetail(artifact?.source_refs ?? []);
 
   return (
     <>
@@ -39,7 +40,7 @@ export function EvidenceDrawer({ open, artifact, onClose }: Props) {
           </button>
         </div>
         <div className="drawer__body">
-          <p className="drawer__cap">
+          <p className="drawer__cap" title={pointerIds || undefined}>
             {pointers
               ? `系统记下的真实出处：${pointers}`
               : "这一轮的出处只记到「哪个工具答过」，没有落到具体行——下面写的来源都是模型自己的说法。"}

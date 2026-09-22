@@ -123,9 +123,10 @@ describe("reduceFrame", () => {
       }),
     ]);
     expect(state.items.at(-1)?.toolEcho).toContain("后端开发（技术研发）");
-    // The chip used to render only "1 条". A count is something the student has to
-    // trust; the named row is the thing they can go and check.
-    expect(state.items.at(-1)?.refSummary).toBe("职业方向 #7");
+    // A chip that printed "1 条" asked the student to trust a count; a chip that printed
+    // "职业方向 #7" showed them a row id they cannot open. This is the count half only —
+    // the ids live in pointerDetail(), behind the affordance that can actually resolve.
+    expect(state.items.at(-1)?.refSummary).toBe("职业方向 1 条");
   });
 
   it("makes a withheld write as visible as a proposal", () => {

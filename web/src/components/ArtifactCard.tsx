@@ -231,7 +231,9 @@ export function ArtifactCard({ artifact, usage, steps, model, projectId, onFiled
                     <span className="ev__index">{`行动 ${String(index + 1).padStart(2, "0")}`}</span>
                     <div className="ev__main">
                       <div className="ev__titles">
-                        <span className="ev__title">{title || entry}</span>
+                        <span className="ev__title" title={title ? undefined : entry}>
+                          {title || "这一步穗奈还没写清楚"}
+                        </span>
                         <span className="tag tag--secondary">
                           <Ms g={ROW_GLYPHS[index % ROW_GLYPHS.length]} size={12} />
                           <span>穗奈可以自己去做</span>

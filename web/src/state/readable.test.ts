@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { evidencePill, pointerSummary, readableQuote, rowPointers } from "./readable";
+import { evidencePill, pointerDetail, pointerSummary, readableQuote, rowPointers } from "./readable";
 
 /**
  * Pinned because it shipped once: the first real run rendered
@@ -90,13 +90,24 @@ describe("rowPointers", () => {
     expect(rowPointers([{ table: "salary_benchmarks", id: 3 }])[0].label).toBe("salary_benchmarks");
   });
 
-  it("drops a ref with no id rather than rendering 岗位样本 #undefined", () => {
+  it("drops a ref with no id instead of naming a row that does not exist", () => {
     expect(rowPointers([{ table: "jobs" }, { table: "jobs", id: "" }])).toEqual([]);
   });
 
-  it("caps the list but says how many rows there were", () => {
+  it("counts the rows per kind, which is what a job seeker can use", () => {
     const refs = [{ table: "jobs", id: 1 }, { table: "evidence_items", id: 2 }, { table: "plan_tasks", id: 3 }];
-    expect(pointerSummary(refs)).toBe("岗位样本 #1 · 证据条目 #2 等 3 行");
+    expect(pointerSummary(refs)).toBe("岗位样本 1 条 · 证据条目 1 条 · 计划任务 1 条");
+    expect(pointerSummary([{ table: "jobs", id: 1 }, { table: "jobs", id: 2 }])).toBe("岗位样本 2 条");
     expect(pointerSummary([{ table: "tool", id: "get_plan" }])).toBe("");
+  });
+
+  it("never prints a row identifier: these ids are 32-char hex and read as a bug", () => {
+    const refs = [
+      { table: "jobs", id: "32a6c0b590d6474f8d98b1546e354a7a" },
+      { table: "evidence_items", id: "ee8deb8483094146b5ad1f2426f63d37" },
+    ];
+    expect(pointerSummary(refs)).toBe("岗位样本 1 条 · 证据条目 1 条");
+    // The ids are not lost, only unprinted: a researcher still reaches them.
+    expect(pointerDetail(refs)).toContain("jobs#32a6c0b590d6474f8d98b1546e354a7a");
   });
 });

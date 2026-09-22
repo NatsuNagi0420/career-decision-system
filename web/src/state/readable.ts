@@ -160,17 +160,22 @@ export function rowPointers(refs: Array<Record<string, unknown>>): SourcePointer
   return rows;
 }
 
-/** Named rows, in the order the server recorded them, capped so a chip stays a chip. */
-export function pointerSummary(refs: Array<Record<string, unknown>>, cap = 2): string {
-  const rows = rowPointers(refs);
-  if (!rows.length) {
-    return "";
+/** What a job seeker reads: which kinds of rows, and how many. Never an identifier —
+ *  these ids are 32-char hex, and printing them turned the honesty feature into noise.
+ *  The full pointer stays available through pointerDetail() (hover / researcher mode). */
+export function pointerSummary(refs: Array<Record<string, unknown>>): string {
+  const counts = new Map<string, number>();
+  for (const row of rowPointers(refs)) {
+    counts.set(row.label, (counts.get(row.label) ?? 0) + 1);
   }
-  const head = rows
-    .slice(0, cap)
-    .map((row) => `${row.label} #${row.id}`)
-    .join(" · ");
-  return rows.length > cap ? `${head} 等 ${String(rows.length)} 行` : head;
+  return [...counts].map(([label, n]) => `${label} ${n} 条`).join(" · ");
+}
+
+/** The same pointers with their ids, for the attribute a researcher can open. */
+export function pointerDetail(refs: Array<Record<string, unknown>>): string {
+  return rowPointers(refs)
+    .map((row) => `${row.table}#${row.id}`)
+    .join(" ");
 }
 
 /**

@@ -48,3 +48,6 @@ server/var/
 
 # Scratch: unzipped .docx review material
 .docx-review-*/
+
+# Playwright output: screenshots and the last run report
+web/e2e/.shots/

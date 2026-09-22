@@ -1530,3 +1530,18 @@ for proposal in proposals:
 修法：`client.ts` 里 `request()` 收到 **401 且不是登录/注册本身**时，清 token 并回调一个 `onUnauthorized` 处理器；`App` 订阅它 → `setSignedIn(false)`。两条测试钉住两端（`api/client.test.ts`：死令牌→清掉且触发登出；**密码错→不许把别人的令牌清掉**）。实测刷新后落到登录页（`h1 = 开始一次规划`，`localStorage` 里令牌已空）。`tsc` 0、`vitest` 63/63、`build` 绿。
 
 **留在地上的两件事**：① `var/checkpoints.sqlite` 13.7MB 里的检查点现在全是孤儿（对应的 run 已删）——它们**惰性无害**（自动接续读的是 MySQL 的 obligations，实测 `continuations` 返回 `no_due_obligation`），但要清干净得连 WAL/SHM 一起处理，而 8100 进程正开着这个文件，我没动；② 我为验证建了一个新账号 `pilot_59377`（id 18，无数据）。备份表 `zz_bak_*` 还在库里，确认不需要回滚后一句 `drop table` 就能清掉。
+
+## 51. 装了 Playwright：第一轮就抓到三个数值量不出来的缺陷（S4）
+
+问"能不能自动化测试"之前先查了仓库——**同领域参考项目里就有两个现成做法**：`参考开源项目/01_职业领域与产品闭环/JobSync`（`@playwright/test` + `e2e/*.spec.ts`，config 里注释写着 workers 要压到 4、timeout 60s，理由是**单个 dev server + SQLite 会被并行上下文饿死**——和我们共享的 8100 同一处境）；`MyOfferAgent`（不用 runner，只用 `playwright` 库 + 4 个 verify 脚本共 864 行，查的是 placeholder 对比度 4.5:1、dialog 焦点陷阱/Escape/焦点归还、侧栏不许叠在聊天上）。
+
+**装在哪**：`web/` 的 devDependency（`playwright ^1.63`，进 `web/node_modules` 与 lockfile），Python 侧零改动，不进用户拿到的 bundle。**不下载浏览器**——本机 Chrome 在 `C:/Program Files/Google/Chrome/Application/chrome.exe`，`channel: "chrome"` 直接用。脚本 `web/e2e/shots.mjs`（`npm run verify:e2e`），截图写 `web/e2e/.shots/`（已 gitignore）。两条硬约束写进脚本注释：**只用自己注册的账号**（刚才清库证明删 `session_tokens` 会立刻把别人踢下线）、**不与共享的 8100 并发**。**不进默认七门门禁**（它要求服务活着，性质同评测台架，显式跑）。
+
+**为什么值得装：它抓到的三个问题，前 50 节的所有数值探针都看不见**——
+1. **每个匿名访客都会留一个 404**：`index.html` 没有 `<link rel="icon">`，浏览器默认要 `/favicon.ico`（实测 404）。已指向既有的 `/brand/logo-head.webp`。
+2. **我自己上一节造的按钮是坏的**：「研究员视图」复用了 `.minibtn`——那是个 **32×32 固定圆型图标位**，文字被挤成一列一个字（截图里竖排"究/员/视/图"）。新增 `.pillbtn`（自动宽 + `white-space: nowrap`），标签缩短为"研究员"。`getComputedStyle` 那套普查**永远不会报这个**，因为它量的是圆角和颜色，不是"有没有换行"。
+3. **手机上顶栏状态胶囊早就竖排过**（不是我引入的）：`.status` 没有 `nowrap`，430px 下"未授权 · 走确定性路径"一个字一行并压到内容上。修成窄屏只留那颗圆点（`.status__label` 在 ≤980px 隐藏）。
+
+**截图我能读**——这解掉了这两轮一直卡着的"审美判断只能等你手动截图"：`Read` 一张 PNG 就能看。修完复跑 `9/9`，`tsc` 0、`vitest` 63/63、`build` 绿。
+
+**手机上还剩一个结构性问题，是要他拍的**：`@media (max-width: 980px)` 把 `.sidebar` 与 `.inspector` **整个 display:none**，所以 430px 上**没有任何导航**——新建会话、这周的方向、等你确认、账号入口全部到不了。他说求职者是碎片化手机使用，这条会直接决定试点能不能在手机上做。补法要么照国内求职产品的底部 tab（BOSS直聘：职位/公司/消息/我的），要么一个抽屉式菜单；这是选形态，不是修 bug，我没自己定。

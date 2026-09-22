@@ -509,12 +509,14 @@ function WorkbenchShell({ onSignedOut }: Props) {
           <div className="topbar__end">
             <span className={`status ${user?.external_ai_consent ? "status--on" : "status--quiet"}`} title="云端模型授权状态">
               <span className={`dot${running ? " dot--live" : ""}`} />
-              <Swap when={user?.external_ai_consent ? "on" : "off"}>
-                {user?.external_ai_consent ? "云端模型已连接" : "未授权 · 走确定性路径"}
-              </Swap>
+              <span className="status__label">
+                <Swap when={user?.external_ai_consent ? "on" : "off"}>
+                  {user?.external_ai_consent ? "云端模型已连接" : "未授权 · 走确定性路径"}
+                </Swap>
+              </span>
             </span>
             <button
-              className="minibtn"
+              className="pillbtn"
               aria-pressed={research}
               title="把每一步走了多久、花了多少字、依据挂在哪一行也显示出来。这是给调试的人看的。"
               onClick={() => {
@@ -524,7 +526,7 @@ function WorkbenchShell({ onSignedOut }: Props) {
               }}
             >
               <Ms g={research ? "engineering" : "psychology"} size={16} />
-              <span>研究员视图</span>
+              <span>研究员</span>
             </button>
             <div className="topbar__own">
               <button className="iconbtn" title="账号与授权" aria-expanded={menuOpen} onClick={() => setMenuOpen((current) => !current)}>

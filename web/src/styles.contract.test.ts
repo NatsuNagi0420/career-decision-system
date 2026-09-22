@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 const css = readFileSync(fileURLToPath(new URL("./styles.css", import.meta.url)), "utf8");
-const SOURCE = css.replace(/\/\*[\s\S]*?\*\//g, "");
+const SOURCE = css.replace(/\r\n/g, "\n").replace(/\/\*[\s\S]*?\*\//g, "");
 
 // Names outside the size ladder: 9999 is a shape, 2px is the speech-bubble corner.
 const LADDER = ["--r-sm", "--r-md", "--r-lg"] as const;
@@ -71,10 +71,9 @@ describe("the one signal colour", () => {
     expect([...SOURCE.matchAll(/(?:^|[;\s])color:\s*var\(--signal\)/g)]).toEqual([]);
   });
 
-  it("is the only new colour role, and both halves get read", () => {
-    for (const name of ["--signal", "--signal-ink"]) {
-      expect(SOURCE.includes(`${name}:`), `${name} is not defined`).toBe(true);
-      expect(SOURCE.includes(`var(${name})`), `${name} is defined but unused`).toBe(true);
-    }
+  it("is the only mark colour left, and somebody reads it", () => {
+    expect(SOURCE.includes("--signal:")).toBe(true);
+    expect(SOURCE.includes("var(--signal)")).toBe(true);
+    expect(SOURCE.includes("--signal-ink")).toBe(false);
   });
 });

@@ -34,13 +34,15 @@
   --md-secondary-fixed: #cde8e1;
   --md-on-secondary-fixed: #06201b;
 
-  --md-tertiary: #244b58;
-  --md-on-tertiary: #ffffff;
-  --md-tertiary-container: #3d6370;
-  --md-on-tertiary-container: #b6deed;
-  --md-tertiary-fixed: #c1e9f8;
-  --md-on-tertiary-fixed: #001f28;
-  --md-on-tertiary-fixed-variant: #254c58;
+  /* 青 is the brand and stays primary; the wheat family is the second hue and it
+     carries one meaning — 穗奈欠下的与还没补上的 (promises, pending, evidence gaps). */
+  --md-tertiary: #6b5320;
+  --md-on-tertiary: #fff8e6;
+  --md-tertiary-container: #7d631d;
+  --md-on-tertiary-container: #fff3d6;
+  --md-tertiary-fixed: #f0dfae;
+  --md-on-tertiary-fixed: #23190a;
+  --md-on-tertiary-fixed-variant: #6b5320;
 
   --md-error: #ba1a1a;
   --md-on-error: #ffffff;
@@ -52,7 +54,7 @@
   --md-surface: #f2fbf7;
   --md-surface-dim: #d3dcd8;
   --md-surface-bright: #f2fbf7;
-  --md-surface-lowest: #ffffff;
+  --md-surface-lowest: #f9fefb;
   --md-surface-low: #edf6f2;
   --md-surface-container: #e7f0ec;
   --md-surface-high: #e1eae6;
@@ -61,6 +63,8 @@
 
   --md-on-surface: #151d1b;
   --md-on-surface-variant: #3e4947;
+  /* outline is a border colour; text that wants to be faint still owes 4.5:1. */
+  --md-on-surface-faint: #586462;
   --md-outline: #6e7977;
   --md-outline-variant: #bec9c6;
 
@@ -85,9 +89,8 @@
   --r-full: 9999px;
   --r-tail: 2px;
   /* --- one signal colour, and it is a mark, never text: #ffd802 on this paper is
-         1.32:1, so the readable gold is the darkened #6b5d00 at 6.24:1. --- */
+         1.32:1. Anything readable in this family is --md-tertiary. --- */
   --signal: #ffd802;
-  --signal-ink: #6b5d00;
 
   /* --- shadows --- */
   --sh-sidebar: 0 1px 8px rgba(0, 80, 72, 0.06);
@@ -200,7 +203,7 @@ a {
 }
 
 .faint {
-  color: var(--md-outline);
+  color: var(--md-on-surface-faint);
 }
 
 .mono {
@@ -281,8 +284,8 @@ a {
 }
 
 .pill--warn {
-  background: var(--md-wheat, #f7e9d3);
-  color: #6b4a12;
+  background: var(--md-tertiary-fixed);
+  color: var(--md-tertiary);
 }
 
 .pill--quiet {
@@ -402,7 +405,7 @@ a {
 
 .item__sub {
   display: block;
-  color: var(--md-outline);
+  color: var(--md-on-surface-faint);
   font: 600 11px/16px var(--md-font);
 }
 
@@ -461,7 +464,7 @@ a {
   padding: 4px var(--sp-md);
   border-radius: var(--r-full);
   background: var(--md-surface-low);
-  color: var(--md-outline);
+  color: var(--md-on-surface-faint);
 }
 
 .search input {
@@ -520,7 +523,7 @@ a {
   padding: 4px var(--sp-md);
   border-radius: var(--r-full);
   background: var(--md-surface-container);
-  color: var(--md-outline);
+  color: var(--md-on-surface-faint);
   font: 600 11px/16px var(--md-font);
   letter-spacing: 0.5px;
 }
@@ -597,7 +600,7 @@ a {
   align-items: center;
   gap: var(--sp-xs);
   padding-right: var(--sp-sm);
-  color: var(--md-outline);
+  color: var(--md-on-surface-faint);
   font: 600 11px/16px var(--md-font);
   letter-spacing: 0.5px;
 }
@@ -710,7 +713,7 @@ details[open] .thought__chev {
 
 .thought__cap {
   padding: var(--sp-xs) 0 var(--sp-sm);
-  color: var(--md-outline);
+  color: var(--md-on-surface-faint);
   font: 600 11px/16px var(--md-font);
   letter-spacing: 0.5px;
 }
@@ -789,7 +792,7 @@ details[open] .thought__chev {
 .thought__row b {
   font-family: var(--mono);
   font-size: 11px;
-  color: var(--md-outline);
+  color: var(--md-on-surface-faint);
   font-weight: 600;
 }
 
@@ -866,7 +869,7 @@ details[open] .thought__chev {
 /* What the tool handed back is long and full of braces; keep it folded and scrollable. */
 .thought__echo {
   margin-top: var(--sp-xs);
-  color: var(--md-outline);
+  color: var(--md-on-surface-faint);
   font: 400 11px/16px var(--md-font);
 }
 
@@ -900,7 +903,7 @@ details[open] .thought__chev {
 .thought__notes {
   display: grid;
   gap: 3px;
-  color: var(--md-outline);
+  color: var(--md-on-surface-faint);
   font: 400 12px/17px var(--md-font);
 }
 
@@ -1053,7 +1056,7 @@ details[open] .thought__chev {
 
 .probe__label {
   margin-right: var(--sp-xs);
-  color: var(--md-outline);
+  color: var(--md-on-surface-faint);
   font: 600 11px/16px var(--md-font);
   letter-spacing: 0.5px;
 }
@@ -1115,12 +1118,12 @@ details[open] .thought__chev {
 }
 
 .note[data-tone="warn"] {
-  background: #f7e9d3;
-  color: #4a3208;
+  background: var(--md-tertiary-fixed);
+  color: var(--md-tertiary);
 }
 
 .note[data-tone="warn"] p {
-  color: #4a3208;
+  color: var(--md-on-tertiary-fixed);
 }
 
 .note[data-tone="bad"] {
@@ -1197,13 +1200,13 @@ details[open] .thought__chev {
 
 .send:disabled {
   background: var(--md-surface-highest);
-  color: var(--md-outline);
+  color: var(--md-on-surface-faint);
   cursor: not-allowed;
 }
 
 .dock__hint {
   padding: 0 var(--sp-md) 4px;
-  color: var(--md-outline);
+  color: var(--md-on-surface-faint);
   font: 600 11px/16px var(--md-font);
   letter-spacing: 0.5px;
 }
@@ -1298,7 +1301,7 @@ details[open] .thought__chev {
 
 .task__aim {
   margin: 0;
-  color: var(--md-outline);
+  color: var(--md-on-surface-faint);
   font: 400 13px/19px var(--md-font);
 }
 
@@ -1500,7 +1503,7 @@ details[open] .thought__chev {
 }
 
 .decision dt {
-  color: var(--md-outline);
+  color: var(--md-on-surface-faint);
 }
 
 .decision dd {
@@ -1777,7 +1780,7 @@ details[open] .thought__chev {
 }
 
 .session__sub--quiet {
-  color: var(--md-outline);
+  color: var(--md-on-surface-faint);
 }
 
 .session__dot {
@@ -1793,7 +1796,7 @@ details[open] .thought__chev {
   align-items: center;
   gap: var(--sp-xs);
   padding: 2px var(--sp-xs) 0 26px;
-  color: var(--md-outline);
+  color: var(--md-on-surface-faint);
   font: 400 10px/14px var(--md-font);
 }
 
@@ -1952,7 +1955,7 @@ details[open] .thought__chev {
 
 .menu__head {
   padding: 6px var(--sp-sm) var(--sp-xs);
-  color: var(--md-outline);
+  color: var(--md-on-surface-faint);
   font: 600 11px/16px var(--md-font);
   letter-spacing: 0.5px;
 }
@@ -2015,7 +2018,7 @@ details[open] .thought__chev {
   padding: 2px var(--sp-xs);
   border-radius: var(--r-full);
   background: var(--md-surface-container);
-  color: var(--md-outline);
+  color: var(--md-on-surface-faint);
   font-family: var(--mono);
   font-size: 11px;
   letter-spacing: 0.5px;
@@ -2801,7 +2804,7 @@ details[open] .thought__chev {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: var(--md-outline);
+  color: var(--md-on-surface-faint);
   font: 600 11px/16px var(--md-font);
   letter-spacing: 0.5px;
   min-width: 0;
@@ -2857,7 +2860,7 @@ details[open] .thought__chev {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--md-outline);
+  color: var(--md-on-surface-faint);
   flex: 0 0 auto;
 }
 
@@ -2884,7 +2887,7 @@ details[open] .thought__chev {
 }
 
 .dock__field textarea::placeholder {
-  color: var(--md-outline);
+  color: var(--md-on-surface-faint);
 }
 
 .send {
@@ -2970,7 +2973,7 @@ details[open] .thought__chev {
   align-items: center;
   gap: 6px;
   padding: var(--sp-sm) var(--sp-sm) 2px;
-  color: var(--md-outline);
+  color: var(--md-on-surface-faint);
   font: 600 11px/16px var(--md-font);
   letter-spacing: 0.5px;
 }
@@ -3324,7 +3327,7 @@ details[open] .thought__chev {
 }
 
 .auth__art span {
-  color: var(--md-outline);
+  color: var(--md-on-surface-faint);
   font: 400 13px/20px var(--md-font);
 }
 
@@ -3348,11 +3351,19 @@ details[open] .thought__chev {
 
 /* "还缺证据" is an absence, not a judgement against the direction — Cochrane ch.15:
    no evidence of an effect is not evidence of no effect. So it is drawn as a gap, and
-   never as a filled grey block or the same skin a settled verdict wears. The gold text
-   stays 4.72:1 on a stripe and 6.24:1 on the paper. */
+   never as a filled grey block or the same skin a settled verdict wears. The wheat text
+   stays 5.23:1 on a stripe and 6.91:1 on the paper. */
 .tag--missing {
-  color: var(--signal-ink);
+  color: var(--md-tertiary);
   background: repeating-linear-gradient(-45deg, transparent 0 3px, var(--signal) 3px 5px);
+}
+
+/* Where the system is waiting on the person before a write lands. Wheat, not teal:
+   teal is also what a finished thing wears, and this one is not finished. A promise
+   穗奈 made to herself later stays neutral — pending is not a warning. */
+.count--wait {
+  background: var(--md-tertiary-fixed);
+  color: var(--md-tertiary);
 }
 
 /* -------------------------------- responsive ------------------------------- */

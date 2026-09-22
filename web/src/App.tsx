@@ -405,7 +405,7 @@ function WorkbenchShell({ onSignedOut }: Props) {
                   <Ms g="check_circle" size={16} />
                   <span>等你确认</span>
                 </span>
-                <span className="count">{pendingApprovals.length}</span>
+                <span className={pendingApprovals.length ? "count count--wait" : "count"}>{pendingApprovals.length}</span>
               </button>
             </div>
           </div>

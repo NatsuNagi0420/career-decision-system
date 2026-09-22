@@ -1520,3 +1520,13 @@ for proposal in proposals:
 **同日接着量"信息流还是太多"**（他说的是对的，而且元凶具体）：研究员视图关掉之后 feed 渲染文本 2626 字，逐块量下来——**答案 `.insight` 514 字，而"逐条提取的决策依据流"一栏 1045 字**，是答案的两倍；剩下的 287（还有件事）/238（想追一句）/173（下一步）都比答案小。所以"本末倒置"在关掉过程层之后**依然存在，只是换了主角**：主角是那条 11 行的引文列表。改法是按三层模型只留 3 行 + 一个「还有 8 条，展开看」（就地展开，不依赖抽屉）。**改后实测：feed 2626 → 1884 字（−28%），那一栏 1045 → 303 字（−71%），此刻屏幕上最大的块重新变回答案本身（514 字）。** 新增 `ArtifactCard.test.ts` 两条钉住"默认只列三条、没有可展开项时不加控件"——组件第一次就渲染对了，红的是我的测试夹具（引文在折叠行里不出现，我拿它当断言目标）。
 
 **关于"删掉测试账号的历史"**：先量了能不能重建，结论是**不建议删**。`scripts/demo_e2e.py` 确实能造场景，但它**明写要烧真模型调用**（"a mocked demo would prove nothing"），而这个账户欠费、真模型评测已经由他取消——删掉那 71 轮 / 55 份成果物，短期内**换不回来**。而且"看起来像新用户"这件事不需要删数据：注册新账号即可（实测新账号 `/feed` 六个键全 0，走的就是空状态路径）。要真删也可以，但顺序是：先 `mysqldump` 一份增量备份、确认没有在飞的 run（实测 `finished_at is null` 为 0、pending 审批 0），且**只动历史表**（agent_runs/artifacts/proposals/approvals/obligations/projects/candidates/comparison/evidence/plans/tasks/task_results/weekly_reviews/profile_facts），**不碰 `jobs` 808 行与 `career_directions` 25 行**——那是另一条会话正在建的目录数据。
+
+## 50. 清库这一刀删对了：它当场删出一个真 bug（测试账号清理 + 死令牌）
+
+我上一条把两件事混了：**历史**删了难重建（要烧真模型调用），**测试账号**本身就是噪音。他追问"测试账号太多了不是也要删除么"，这条我照做，并按上面写的顺序做：先查有没有在飞的活（`processlist` 里 career_v2 全是 Sleep，无 >2s 查询；`finished_at is null` 0、pending 审批 0）→ **在同库里给 20 张表各建一张 `zz_bak_<表>`**（逐表断言行数与删前一致才继续，比 dump 到文件更快且可 `INSERT ... SELECT` 还原）→ 子表到父表顺序清空 → 复点。结果：**2,573 行清空（agent_events 1784 / agent_steps 425 / agent_runs 71 / artifacts 55 / proposals 41 / obligations 33 / approvals 32 / session_tokens 67 / users 17 …），目录数据一行没动**（jobs 808、career_directions 25、job_requirement_items 6032、career_direction_job_rel 1022、comparison_criteria 3 全部原数）。
+
+**清完立刻暴露一个不是样式的 bug**：刷新页面 → **不是登录页，是一个 390 字的空壳 + 控制台 16 个 401**。根因在 `App.tsx`：`signedIn` 只看 `Boolean(tokenStore.get())`——**本地有 token 就当已登录**，从不问服务器认不认。所以任何一次令牌失效（我们刚把 session_tokens 删了、将来服务器换库/过期同理）都会把用户扔在一个既不报错也不给入口的页面上。**这正是"删掉历史重新测"才能撞到的那类问题**，也说明他要这个清理是对的。
+
+修法：`client.ts` 里 `request()` 收到 **401 且不是登录/注册本身**时，清 token 并回调一个 `onUnauthorized` 处理器；`App` 订阅它 → `setSignedIn(false)`。两条测试钉住两端（`api/client.test.ts`：死令牌→清掉且触发登出；**密码错→不许把别人的令牌清掉**）。实测刷新后落到登录页（`h1 = 开始一次规划`，`localStorage` 里令牌已空）。`tsc` 0、`vitest` 63/63、`build` 绿。
+
+**留在地上的两件事**：① `var/checkpoints.sqlite` 13.7MB 里的检查点现在全是孤儿（对应的 run 已删）——它们**惰性无害**（自动接续读的是 MySQL 的 obligations，实测 `continuations` 返回 `no_due_obligation`），但要清干净得连 WAL/SHM 一起处理，而 8100 进程正开着这个文件，我没动；② 我为验证建了一个新账号 `pilot_59377`（id 18，无数据）。备份表 `zz_bak_*` 还在库里，确认不需要回滚后一句 `drop table` 就能清掉。

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import {
   api,
+  onUnauthorized,
   readRunStream,
   tokenStore,
   type ArtifactEntry,
@@ -27,6 +28,12 @@ import { emptyState, groupTrace, reduceFrame, type Frame, type ShellState, type 
 
 export function App() {
   const [signedIn, setSignedIn] = useState<boolean>(() => Boolean(tokenStore.get()));
+  /** A token the server no longer knows about is not a session. Without this the shell
+   *  stayed mounted on an empty feed and every call kept 401ing. */
+  useEffect(() => {
+    onUnauthorized(() => setSignedIn(false));
+    return () => onUnauthorized(null);
+  }, []);
 
   if (!signedIn) {
     return <Login onSuccess={() => setSignedIn(true)} />;

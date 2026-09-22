@@ -22,6 +22,19 @@ export const tokenStore = {
   clear: (): void => localStorage.removeItem(TOKEN_KEY),
 };
 
+/**
+ * A dead token has to end up back at the door, not on an empty shell. The shell used to
+ * decide "signed in" from the mere presence of a stored token, so after a session row
+ * disappeared every call 401ed and the page rendered a 390-character nothing.
+ */
+let onExpired: (() => void) | null = null;
+
+export function onUnauthorized(handler: (() => void) | null): void {
+  onExpired = handler;
+}
+
+const CREDENTIAL_PATHS = ["/api/v1/auth/login", "/api/v1/auth/register"];
+
 export class ApiError extends Error {
   constructor(
     readonly status: number,
@@ -41,6 +54,11 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 
   const response = await fetch(path, { ...init, headers });
   if (!response.ok) {
+    const dead = response.status === 401 && !CREDENTIAL_PATHS.some((p) => path.startsWith(p));
+    if (dead) {
+      tokenStore.clear();
+      onExpired?.();
+    }
     throw new ApiError(response.status, await describe(response));
   }
   if (response.status === 204) {

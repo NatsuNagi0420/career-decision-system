@@ -2,15 +2,18 @@
  * Screenshot matrix and console check, driven by the installed Chrome (no browser
  * download). Run: npm run verify:e2e [url]
  *
- * It always works in its own account and its own browser context: the dev database is
- * shared with a second session and with whatever the owner has open in his browser, so
- * nothing here may reuse a session token or touch rows it did not create.
+ * It signs in as one fixed fixture account rather than registering a new one per run,
+ * so the dev database does not accumulate a user every time someone looks at the UI.
+ * The fixture is read-only by contract: this script must never create runs, projects or
+ * rows under it, or the screenshots stop being comparable between runs. The dev database
+ * is shared with a second session, so nothing here may touch any other account.
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 
 const BASE = process.argv[2] || "http://127.0.0.1:5199";
+const FIXTURE = { username: "e2e_probe", password: "e2e-probe-password-1", external_ai_consent: false };
 const OUT = new URL("./.shots/", import.meta.url);
 mkdirSync(OUT, { recursive: true });
 
@@ -30,8 +33,82 @@ async function shoot(page, label) {
   return `${label}.png`;
 }
 
+/**
+ * Labels that wrap to one character per line — the shape a four-character button gets
+ * when it is given a 32px slot. Computed-style普查 (radius, colour, contrast) never sees
+ * this, and both times it happened it was found by a screenshot, so it is checked here.
+ * A line box is one client rect of the text range; an element is an offender only when
+ * every line is about one glyph wide, which a normal wrapped paragraph never is.
+ */
+const WIDE_ENOUGH = 1.9;
+async function wrappedLabels(page) {
+  return page.evaluate((ratio) => {
+    const offenders = [];
+    let scanned = 0;
+    // Text nodes, not elements: the button that broke was a label sharing its box with
+    // an icon span, so an element-level walk would skip it for having children.
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      const text = (node.textContent || "").replace(/\s+/g, "");
+      if (text.length < 2) continue;
+      const host = node.parentElement;
+      if (!host || host.closest("script, style")) continue;
+      const size = parseFloat(getComputedStyle(host).fontSize) || 16;
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      const lines = [...range.getClientRects()].filter((r) => r.width > 0 && r.height > 0);
+      const box = host.getBoundingClientRect();
+      if (box.width < 1 || box.height < 1) continue;
+      scanned += 1;
+      // Both halves matter: a normal paragraph can end on a one-character line, but it
+      // will never have as many lines as it has characters.
+      const oneGlyphWide = lines.length >= 2 && lines.every((r) => r.width < size * ratio);
+      if (oneGlyphWide && lines.length >= Math.ceil(text.length * 0.6)) {
+        offenders.push(`${host.tagName.toLowerCase()}.${(host.className || "").split(" ")[0]} "${text.slice(0, 8)}" ${Math.round(box.width)}px/${lines.length}行`);
+      }
+    }
+    return { offenders: offenders.slice(0, 4), scanned };
+  }, WIDE_ENOUGH);
+}
+
+/** Log the fixture in; only the very first run on an empty database creates it. */
+async function fixtureToken() {
+  const post = async (path, body) => {
+    const r = await fetch(`${BASE}${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    return { status: r.status, json: await r.json().catch(() => ({})) };
+  };
+  const login = await post("/api/v1/auth/login", { username: FIXTURE.username, password: FIXTURE.password });
+  if (login.json.token) {
+    return { token: login.json.token, created: false, detail: "login reused" };
+  }
+  const register = await post("/api/v1/auth/register", FIXTURE);
+  return { token: register.json.token, created: true, detail: `login ${login.status} → register ${register.status}` };
+}
+
 const browser = await chromium.launch({ channel: "chrome", headless: true });
 try {
+  // 0. Prove the wrap detector can go red. A guard that has never fired on purpose is
+  //    the same as no guard — this is the only reason its PASS on a real page means anything.
+  {
+    const page = await browser.newPage();
+    await page.setContent(`
+      <div style="font-size:13px;width:430px">
+        <button style="width:32px;padding:0 8px;font-size:13px"><span>研究员视图</span></button>
+        <div style="width:400px">研究员视图：要写进业务库的动作会停下来等你确认，这样你看到的每一句都能追到原话。</div>
+      </div>`);
+    const probe = await wrappedLabels(page);
+    check(
+      "wrap detector fires on a squeezed label and spares a wrapped paragraph",
+      probe.offenders.length === 1,
+      `${probe.offenders.join(" | ")} — ${probe.scanned} text nodes scanned`,
+    );
+    await page.close();
+  }
+
   // 1. The door: what an anonymous visitor gets.
   for (const vp of VIEWPORTS) {
     const ctx = await browser.newContext({ viewport: { width: vp.width, height: vp.height } });
@@ -46,18 +123,18 @@ try {
     const heading = await page.locator("h1").first().innerText().catch(() => "");
     check(`login renders (${vp.name})`, heading.length > 0, `${heading} → ${file}`);
     check(`login has no failed requests (${vp.name})`, problems.length === 0, problems.slice(0, 3).join(" | "));
+    const wrapped = await wrappedLabels(page);
+    check(
+      `login labels stay horizontal (${vp.name})`,
+      wrapped.offenders.length === 0,
+      wrapped.offenders.length ? wrapped.offenders.join(" | ") : `${wrapped.scanned} text nodes scanned`,
+    );
     await ctx.close();
   }
 
-  // 2. A brand-new account: the first screen a pilot student actually sees.
-  const username = `e2e_${Date.now().toString(36).slice(-6)}`;
-  const password = "e2e-password-1";
-  const register = await (await fetch(`${BASE}/api/v1/auth/register`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password, external_ai_consent: false }),
-  })).json();
-  check("registered its own account", Boolean(register.token), username);
+  // 2. The fixture account: the first screen a pilot student actually sees.
+  const fixture = await fixtureToken();
+  check("signed in as the fixture account", Boolean(fixture.token), `${FIXTURE.username} — ${fixture.detail}`);
 
   for (const vp of VIEWPORTS) {
     const ctx = await browser.newContext({ viewport: { width: vp.width, height: vp.height } });
@@ -65,13 +142,19 @@ try {
     const problems = [];
     page.on("response", (r) => r.status() >= 400 && problems.push(`http ${r.status()} ${new URL(r.url()).pathname}`));
     // Seed the token before the app boots, so it starts signed in as our own user.
-    await page.addInitScript((token) => localStorage.setItem("career.session.token", token), register.token);
+    await page.addInitScript((token) => localStorage.setItem("career.session.token", token), fixture.token);
     await page.goto(BASE, { waitUntil: "networkidle" });
     const file = await shoot(page, `empty-${vp.name}`);
     const body = await page.evaluate(() => document.body.innerText.replace(/\s/g, "").length);
     const isLogin = await page.locator(".auth__wrap").count();
-    check(`new account reaches the workspace (${vp.name})`, isLogin === 0 && body > 40, `${body} chars → ${file}`);
-    check(`empty workspace makes no failing calls (${vp.name})`, problems.length === 0, problems.slice(0, 3).join(" | "));
+    check(`fixture lands on the workspace (${vp.name})`, isLogin === 0 && body > 40, `${body} chars → ${file}`);
+    check(`workspace makes no failing calls (${vp.name})`, problems.length === 0, problems.slice(0, 3).join(" | "));
+    const wrapped = await wrappedLabels(page);
+    check(
+      `workspace labels stay horizontal (${vp.name})`,
+      wrapped.offenders.length === 0,
+      wrapped.offenders.length ? wrapped.offenders.join(" | ") : `${wrapped.scanned} text nodes scanned`,
+    );
     await ctx.close();
   }
 } finally {

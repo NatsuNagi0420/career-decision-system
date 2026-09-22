@@ -3494,6 +3494,34 @@ details[open] .thought__chev {
     border-radius: var(--r-lg);
   }
 
+  /* One line of words carries the position on a phone, so the track collapses to its
+     dots. Same state, less room — nothing is behind a tap. */
+  .spine {
+    gap: var(--sp-sm);
+    margin-bottom: var(--sp-md);
+    padding: var(--sp-sm) var(--sp-sm) var(--sp-md);
+  }
+
+  .spine__name,
+  .spine__hint,
+  .spine__link {
+    display: none;
+  }
+
+  .spine__node {
+    flex: 0 0 auto;
+  }
+
+  .spine__mark {
+    width: 24px;
+    height: 24px;
+  }
+
+  .spine__cta {
+    width: 100%;
+    justify-content: center;
+  }
+
   .auth__art {
     display: none;
   }
@@ -3515,3 +3543,188 @@ details[open] .thought__chev {
   color: var(--md-on-surface-variant);
   font-size: 0.82rem;
 }
+
+/* ── 闭环主线 ─────────────────────────────────────────────────────────────
+   The one block on the screen whose job is "you are here, this is next". It is
+   the loudest surface on purpose: everything else on the page is either an
+   answer or a receipt. A station is filled only because a row exists that
+   proves it — see web/src/state/loop.ts. */
+.spine {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-sm);
+  margin-bottom: var(--sp-lg);
+  padding: var(--sp-md);
+  border: 1px solid var(--md-primary-fixed-dim);
+  border-radius: var(--r-lg);
+  background: var(--md-surface-low);
+  box-shadow: var(--sh-card);
+}
+
+.spine__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-sm);
+}
+
+.spine__cap {
+  padding: 3px 10px;
+  border-radius: var(--r-full);
+  background: var(--md-primary-fixed);
+  color: var(--md-on-primary-fixed-variant);
+  font: 600 12px/16px var(--md-font);
+  letter-spacing: 0.4px;
+}
+
+.spine__pos {
+  font: 500 13px/18px var(--md-font);
+  color: var(--md-on-primary-fixed-variant);
+}
+
+.spine__track {
+  display: flex;
+  list-style: none;
+}
+
+.spine__node {
+  position: relative;
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-xs);
+  padding: 0 var(--sp-xs);
+}
+
+/* The rail between stations sits behind the marks, so it reads as one line the
+   dots are threaded on rather than five separate underlines. */
+.spine__link {
+  position: absolute;
+  top: 15px;
+  right: calc(-50% + 24px);
+  left: calc(50% + 24px);
+  height: 2px;
+  border-radius: var(--r-tail);
+  background: var(--md-outline-variant);
+}
+
+/* The path already walked is the loudest part of the rail — that, not a
+   percentage, is what "走到哪" is made of. */
+.spine__node--done .spine__link {
+  background: var(--md-primary);
+}
+
+.spine__mark {
+  position: relative;
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid var(--md-outline-variant);
+  border-radius: var(--r-full);
+  background: var(--md-surface-lowest);
+  color: var(--md-on-surface-faint);
+}
+
+.spine__name {
+  font: 600 13px/18px var(--md-font);
+  color: var(--md-on-surface-variant);
+}
+
+.spine__hint {
+  font: 400 11px/15px var(--md-font);
+  color: var(--md-on-surface-faint);
+  text-align: center;
+}
+
+.spine__node--done .spine__mark {
+  border-color: transparent;
+  background: var(--md-secondary-fixed);
+  color: var(--md-on-secondary-fixed);
+}
+
+/* The station she is at: filled the way a finished thing is filled, plus the
+   signal notch. The notch is a mark, never text — 1.32:1 on this paper. */
+.spine__node--now .spine__mark {
+  border-color: transparent;
+  background: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+  box-shadow: 0 0 0 4px var(--md-primary-fixed);
+}
+
+.spine__node--now .spine__mark::after {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 9px;
+  height: 9px;
+  border-radius: var(--r-full);
+  background: var(--signal);
+  content: "";
+}
+
+.spine__node--now .spine__name {
+  color: var(--md-on-primary-fixed-variant);
+}
+
+.spine__next {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-sm);
+}
+
+.spine__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-sm);
+  padding: 10px var(--sp-md);
+  border: none;
+  border-radius: var(--r-full);
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+  box-shadow: var(--sh-card);
+  font: 600 14px/20px var(--md-font);
+  letter-spacing: 0.2px;
+}
+
+.spine__cta:hover {
+  filter: brightness(1.08);
+}
+
+.spine__more {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px var(--sp-sm);
+  border: none;
+  border-radius: var(--r-full);
+  background: transparent;
+  color: var(--md-on-primary-fixed-variant);
+  font: 500 13px/18px var(--md-font);
+}
+
+.spine__more:hover {
+  background: var(--surface-glass);
+}
+
+.spine__alt {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-sm);
+  width: 100%;
+  padding: var(--sp-sm) 10px;
+  border: 1px solid var(--md-primary-fixed-dim);
+  border-radius: var(--r-md);
+  background: var(--surface-glass);
+  color: var(--md-on-surface-variant);
+  font: 400 13px/18px var(--md-font);
+  text-align: left;
+}
+
+.spine__alt + .spine__alt {
+  margin-top: var(--sp-xs);
+}
+

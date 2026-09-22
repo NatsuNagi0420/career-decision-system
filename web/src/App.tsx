@@ -19,8 +19,10 @@ import { ComparisonBoard } from "./components/ComparisonBoard";
 import { DecisionCard } from "./components/DecisionCard";
 import { EvidenceDrawer } from "./components/EvidenceDrawer";
 import { Login } from "./components/Login";
+import { LoopSpine } from "./components/LoopSpine";
 import { Ms } from "./components/Ms";
 import { formatFailure } from "./state/failure";
+import { currentStation, loopStations } from "./state/loop";
 import { Swap } from "./components/Swap";
 import { TaskDeck } from "./components/TaskDeck";
 import { Timeline } from "./components/Timeline";
@@ -342,6 +344,16 @@ function WorkbenchShell({ onSignedOut }: Props) {
   const focusProject = project ?? feed?.projects[0]?.id ?? null;
   const focusTasks = (feed?.tasks ?? []).filter((entry) => entry.project_id === focusProject);
 
+  // The spine reads the same project the deck does, so a discharged question cannot
+  // make 去做一件 look finished.
+  const stations = loopStations(feed ? { ...feed, tasks: focusTasks } : null);
+  const spineNow = currentStation(stations);
+  const takeStep = (goalText: string, capabilityId: string) => {
+    setGoal(goalText);
+    setChosen(capabilityId);
+    document.getElementById("composer")?.focus();
+  };
+
   const taskSubmitted = useCallback(
     (woken: string | null) => {
       // The deck has to show the words the person just typed, immediately: their own
@@ -589,6 +601,12 @@ function WorkbenchShell({ onSignedOut }: Props) {
           {/* Keyed by the run: switching conversations remounts the thread, so the
               entrance animations replay instead of content silently mutating. */}
           <div className="feed" data-swap="" key={runId ?? "none"}>
+            <LoopSpine
+              stations={stations}
+              current={spineNow}
+              onTake={takeStep}
+              alternatives={state.items.length || running ? [] : EXAMPLES}
+            />
             {snapshot ? null : waitingForRun ? (
               <div className="ribbon">
                 <div className="ribbon__lead">
@@ -644,50 +662,20 @@ function WorkbenchShell({ onSignedOut }: Props) {
             ) : null}
 
             {state.items.length === 0 && !running && !waitingForRun ? (
-              <>
-                <div className="anchor">
-                  <span>还没有开始的任务</span>
-                </div>
-                <section className="stream">
-                  <div className="panel__head">
-                    <div className="panel__title">
-                      <SuinaiFace face="listen" size={28} />
-                      <span>把你在纠结的职业问题交给穗奈</span>
-                    </div>
-                    <span className="faint t-label-sm">她先去查真实岗位与要求原句</span>
+              <section className="stream">
+                <div className="panel__head">
+                  <div className="panel__title">
+                    <SuinaiFace face="listen" size={28} />
+                    <span>把你在纠结的职业问题交给穗奈</span>
                   </div>
-                  <p className="ev__body">
-                    {continuation?.reason === "cooling_down"
-                      ? "穗奈今天已经自己跑过一轮了，不再自动打扰你。想让她现在开始，写个目标，或者在左边点「接着做」。"
-                      : "她会把结果落成能点回原文的成果物，要写进业务库的动作会停下来等你确认。"}
-                  </p>
-                  {EXAMPLES.map((example) => (
-                    <button className="ev" key={example.capability} onClick={() => {
-                      setGoal(example.goal);
-                      setChosen(example.capability);
-                    }}>
-                      <div className="ev__lead">
-                        <span className="ev__index">
-                          <Ms g={example.glyph} size={16} />
-                        </span>
-                        <div className="ev__main">
-                          <span className="ev__title">{example.goal}</span>
-                          <div className="ev__chips">
-                            <span className="srcchip">
-                              <Ms g="bolt" size={14} />
-                              <span>{capabilityNames[example.capability] ?? example.capability}</span>
-                            </span>
-                          </div>
-                        </div>
-                        <span className="ev__link">
-                          <span>用这个</span>
-                          <Ms g="arrow_outward" size={16} />
-                        </span>
-                      </div>
-                    </button>
-                  ))}
-                </section>
-              </>
+                  <span className="faint t-label-sm">她先去查真实岗位与要求原句</span>
+                </div>
+                <p className="ev__body">
+                  {continuation?.reason === "cooling_down"
+                    ? "穗奈今天已经自己跑过一轮了，不再自动打扰你。想让她现在开始，写个目标，或者在左边点「接着做」。"
+                    : "她会把结果落成能点回原文的成果物，要写进业务库的动作会停下来等你确认。"}
+                </p>
+              </section>
             ) : null}
 
             <Timeline

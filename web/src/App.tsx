@@ -14,7 +14,7 @@ import {
   type Snapshot,
 } from "./api/client";
 import { evidencePill } from "./state/readable";
-import { BrandMark, SuinaiFace } from "./components/Brand";
+import { BrandMark } from "./components/Brand";
 import { ComparisonBoard } from "./components/ComparisonBoard";
 import { DecisionCard } from "./components/DecisionCard";
 import { EvidenceDrawer } from "./components/EvidenceDrawer";
@@ -353,6 +353,8 @@ function WorkbenchShell({ onSignedOut }: Props) {
     setChosen(capabilityId);
     document.getElementById("composer")?.focus();
   };
+  // The first screen is the only one that still needs an introduction to how she works.
+  const firstScreen = state.items.length === 0 && !running && !waitingForRun;
 
   const taskSubmitted = useCallback(
     (woken: string | null) => {
@@ -605,7 +607,14 @@ function WorkbenchShell({ onSignedOut }: Props) {
               stations={stations}
               current={spineNow}
               onTake={takeStep}
-              alternatives={state.items.length || running ? [] : EXAMPLES}
+              alternatives={firstScreen ? EXAMPLES : []}
+              lead={
+                firstScreen
+                  ? continuation?.reason === "cooling_down"
+                    ? "穗奈今天已经自己跑过一轮了，不再自动打扰你。想让她现在开始，写个目标，或者在左边点「接着做」。"
+                    : "她会把结果落成能点回原文的成果物，要写进业务库的动作会停下来等你确认。"
+                  : null
+              }
             />
             {snapshot ? null : waitingForRun ? (
               <div className="ribbon">
@@ -659,23 +668,6 @@ function WorkbenchShell({ onSignedOut }: Props) {
               <div className="anchor">
                 <span>正在取回这一轮…</span>
               </div>
-            ) : null}
-
-            {state.items.length === 0 && !running && !waitingForRun ? (
-              <section className="stream">
-                <div className="panel__head">
-                  <div className="panel__title">
-                    <SuinaiFace face="listen" size={28} />
-                    <span>把你在纠结的职业问题交给穗奈</span>
-                  </div>
-                  <span className="faint t-label-sm">她先去查真实岗位与要求原句</span>
-                </div>
-                <p className="ev__body">
-                  {continuation?.reason === "cooling_down"
-                    ? "穗奈今天已经自己跑过一轮了，不再自动打扰你。想让她现在开始，写个目标，或者在左边点「接着做」。"
-                    : "她会把结果落成能点回原文的成果物，要写进业务库的动作会停下来等你确认。"}
-                </p>
-              </section>
             ) : null}
 
             <Timeline

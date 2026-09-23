@@ -3676,6 +3676,23 @@ details[open] .thought__chev {
   gap: var(--sp-sm);
 }
 
+/* Her one line, inside the card rather than in a second block under it. */
+.spine__lead {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-sm);
+  margin: 0;
+  padding-top: var(--sp-xs);
+  border-top: 1px solid var(--md-primary-fixed-dim);
+  color: var(--md-on-surface-variant);
+  font: 400 13px/20px var(--md-font);
+}
+
+.spine__lead > :first-child {
+  flex: 0 0 auto;
+  margin-top: -2px;
+}
+
 .spine__cta {
   display: inline-flex;
   align-items: center;

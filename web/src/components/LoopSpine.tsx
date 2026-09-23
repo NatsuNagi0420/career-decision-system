@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Station } from "../state/loop";
+import { SuinaiFace } from "./Brand";
 import { Ms } from "./Ms";
 
 interface Props {
@@ -9,6 +10,8 @@ interface Props {
   onTake: (goal: string, capability: string) => void;
   /** Only the first screen passes these: the other ways in, kept one tap away. */
   alternatives?: Array<{ goal: string; capability: string; glyph: string }>;
+  /** Her one line about how she works. Said once, on the first screen, inside this card. */
+  lead?: string | null;
 }
 
 /**
@@ -16,7 +19,7 @@ interface Props {
  * collapses the same state to "第 2 / 5 步 · 说清比什么" plus the dots, so nothing is
  * hidden behind a tap on either side.
  */
-export function LoopSpine({ stations, current, onTake, alternatives = [] }: Props) {
+export function LoopSpine({ stations, current, onTake, alternatives = [], lead = null }: Props) {
   const [open, setOpen] = useState(false);
   const index = current ? stations.indexOf(current) : stations.length;
 
@@ -45,6 +48,13 @@ export function LoopSpine({ stations, current, onTake, alternatives = [] }: Prop
           );
         })}
       </ol>
+
+      {lead ? (
+        <p className="spine__lead">
+          <SuinaiFace face="listen" size={26} />
+          <span>{lead}</span>
+        </p>
+      ) : null}
 
       {current ? (
         <div className="spine__next">

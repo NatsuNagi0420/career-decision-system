@@ -26,6 +26,7 @@ import { currentStation, loopStations } from "./state/loop";
 import { Swap } from "./components/Swap";
 import { TaskDeck } from "./components/TaskDeck";
 import { Timeline } from "./components/Timeline";
+import { WheatField } from "./components/WheatField";
 import { emptyState, groupTrace, reduceFrame, type Frame, type ShellState, type TraceGroup } from "./state/frames";
 
 export function App() {
@@ -94,6 +95,9 @@ function WorkbenchShell({ onSignedOut }: Props) {
    *  row pointers, coverage ratio) is how the owner debugs a pilot run — it is not what a
    *  job seeker opens the page for, so it is one switch away rather than the first screen. */
   const [research, setResearch] = useState<boolean>(() => localStorage.getItem("career.research") === "1");
+  /** The moving field is decoration, and decoration has to be stoppable by the person
+   *  looking at it — so this defaults on and stays their choice, not ours. */
+  const [motion, setMotion] = useState<boolean>(() => localStorage.getItem("career.motion") !== "0");
   /** Bumped with every feed reload so the stored comparison board re-reads the table
    *  right after the approval that wrote a round. */
   const [boardTick, setBoardTick] = useState(0);
@@ -393,7 +397,13 @@ function WorkbenchShell({ onSignedOut }: Props) {
   const consentLine = user?.external_ai_consent ? "云端模型已连接，她会去查原话" : "未授权 · 走确定性路径，她不查原话";
 
   return (
-    <div className="app" data-research={research ? "on" : "off"}>
+    <div
+      className="app"
+      data-research={research ? "on" : "off"}
+      data-motion={motion ? "on" : "off"}
+      data-busy={running ? "true" : "false"}
+    >
+      <WheatField />
       <aside className="sidebar">
         <div className="sidebar__scroll">
           <div className="brand">
@@ -576,6 +586,19 @@ function WorkbenchShell({ onSignedOut }: Props) {
                         ? `刷新用量 · ${(snapshot.run.usage.prompt + snapshot.run.usage.completion).toLocaleString()} tokens`
                         : "还没有用量记录"}
                     </span>
+                  </button>
+                  <div className="menu__head">界面</div>
+                  <button
+                    className="menu__row"
+                    aria-pressed={motion}
+                    onClick={() => {
+                      const next = !motion;
+                      localStorage.setItem("career.motion", next ? "1" : "0");
+                      setMotion(next);
+                    }}
+                  >
+                    <Ms g={motion ? "air" : "pause_circle"} size={18} />
+                    <span>{motion ? "背景麦浪开着 · 点击让它停下" : "背景麦浪已停下 · 点击让它再动"}</span>
                   </button>
                   <button className="menu__row" onClick={signOut}>
                     <Ms g="logout" size={18} />

@@ -3338,6 +3338,14 @@ details[open] .thought__chev {
     animation-delay: 0ms !important;
     transition-duration: 1ms !important;
   }
+
+  /* The blanket 1ms above would leave the field cycling a thousand times a second —
+     a flicker, which is worse than the motion. Replace it with a still frame instead
+     of removing it, so the page keeps its horizon. */
+  .field__wave {
+    animation-name: none !important;
+    transform: translate3d(-25%, 0, 0);
+  }
 }
 
 /* Login with the IP art */
@@ -3494,6 +3502,16 @@ details[open] .thought__chev {
     border-radius: var(--r-lg);
   }
 
+  /* One row less on a phone: the tightest sine is the busiest to composite, and a
+     mid-range Android has better things to spend its frames on. */
+  .field {
+    height: min(24vh, 190px);
+  }
+
+  .field__wave--2 {
+    display: none;
+  }
+
   /* One line of words carries the position on a phone, so the track collapses to its
      dots. Same state, less room — nothing is behind a tap. */
   .spine {
@@ -3542,6 +3560,67 @@ details[open] .thought__chev {
   margin-top: var(--sp-xs);
   color: var(--md-on-surface-variant);
   font-size: 0.82rem;
+}
+
+/* ── 风吹麦浪 ─────────────────────────────────────────────────────────────
+   The brand's field, three sines sliding behind the page. Only `transform`
+   animates, so it costs the main thread nothing while someone reads. z-index -1
+   puts it above the paper and under every card; the sidebar and dock paint over
+   it, which is what makes it read as a background rather than a decoration. */
+.field {
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: -1;
+  display: block;
+  width: 100%;
+  height: min(38vh, 320px);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.field__wave {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+  fill: var(--md-tertiary);
+  animation-name: field-drift;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+  will-change: transform;
+}
+
+@keyframes field-drift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+/* Far rows paler than near ones. At 5% the bands read as a grey smudge rather than
+   wheat over the mint paper — the warmth needs enough alpha to beat the green. */
+.field__wave--0 {
+  opacity: 0.07;
+}
+
+.field__wave--1 {
+  opacity: 0.1;
+}
+
+.field__wave--2 {
+  opacity: 0.13;
+}
+
+/* WCAG 2.2.2 asks for a mechanism, not a preference: the account menu can switch the
+   field off entirely, and it holds still on its own while a run is in flight — text is
+   already arriving then, it does not also need to compete with the background. */
+.app[data-motion="off"] .field__wave,
+.app[data-busy="true"] .field__wave {
+  animation-play-state: paused;
 }
 
 /* ── 闭环主线 ─────────────────────────────────────────────────────────────

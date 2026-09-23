@@ -79,6 +79,15 @@ async function composerWidths(page) {
   });
 }
 
+/** Two samples of the animated transform, far enough apart that a moving layer differs. */
+async function fieldDrift(page) {
+  const read = () => page.evaluate(() => getComputedStyle(document.querySelector(".field__wave")).transform);
+  const before = await read();
+  await page.waitForTimeout(600);
+  const after = await read();
+  return { before, after, moved: before !== after };
+}
+
 /** Log the fixture in; only the very first run on an empty database creates it. */
 async function fixtureToken() {
   const post = async (path, body) => {
@@ -169,6 +178,27 @@ try {
       wrapped.offenders.length === 0,
       wrapped.offenders.length ? wrapped.offenders.join(" | ") : `${wrapped.scanned} text nodes scanned`,
     );
+
+    if (vp.name === "desktop") {
+      // A background that silently stopped animating still photographs fine, so the
+      // only proof worth having is two samples of the transform a moment apart — and
+      // the same pair taken with the switch off, which must NOT differ.
+      const drift = await fieldDrift(page);
+      const x = (matrix) => matrix.match(/matrix\([^,]+,[^,]+,[^,]+,[^,]+,\s*(-?[\d.]+)/)?.[1] ?? matrix;
+      check("the field drifts while she is idle", drift.moved, `x ${x(drift.before)}px → ${x(drift.after)}px`);
+      const stopped = await page.evaluate(async () => {
+        document.querySelector(".app").setAttribute("data-motion", "off");
+        const read = () => getComputedStyle(document.querySelector(".field__wave")).transform;
+        // Give the style recalc a beat. Reading in the same task as the attribute write
+        // returns the pre-pause value, and the two samples then differ for the wrong
+        // reason — which is exactly how this check first reported a false red.
+        await new Promise((done) => setTimeout(done, 200));
+        const first = read();
+        await new Promise((done) => setTimeout(done, 600));
+        return { first, second: read() };
+      });
+      check("the menu switch really stops it", stopped.first === stopped.second, x(stopped.second));
+    }
     await ctx.close();
   }
 } finally {

@@ -1561,3 +1561,27 @@ for proposal in proposals:
 **仍然没做的两件事**：① 手机上**没有任何导航**（`.sidebar`/`.inspector` 整个 `display:none`），底部 tab 还是抽屉是选形态，等他拍；② 建议问题卡标题在 430px 上折到第三行只剩两个字（"…到底要什么"的"么"单独一行），是 widow 不是缺陷，但三张卡连着看很乱，等左栏改版一起处理。
 
 **把这两轮靠截图才看见的那类缺陷变成门禁**：`shots.mjs` 里加了一个"逐字竖排"探针——遍历**文本节点**（不是元素：坏掉的那个按钮是"图标 span + 标签"共用一个盒子，按元素走会因为它有子节点而整个跳过），用 `Range.getClientRects()` 数行盒，**每行宽度都 < 1.9em 且行数 ≥ 字符数×0.6** 才算命中（后半个条件是为了放过"正常段落最后一行只剩一个字"）。**守卫必须自己证明能红**：每次跑先用一段合成 DOM 打它一次——32px 圆按钮里塞"研究员视图"必须命中、400px 段落必须不命中，`offenders.length === 1` 才继续。第一版这个自测**是红的**（我把 32px 当成内容宽，实际 13px 字号下每行放得下两个字，探针按定义不算竖排），改成按真实按钮的 16px 内容宽造夹具才通过——**如果哪天 `getClientRects` 行为变了，这条会先红，而不是让后面所有 PASS 变成空话**。真页面上扫到 60（桌面）/ 42（手机）个文本节点，0 命中。矩阵从 9 条长成 16 条，`16/16`。
+
+## 53. 界面两片：穗奈那句并进主线卡，背景改成会动的麦浪（S5-1/S5-2）
+
+他先判"外观还是不太行，**核心链路不够明显**"。这句是准的，而且原因具体：屏幕上唯一表示流程的东西是输入框上方那排灰胶囊，而那三个词（`决定下一步 / 查资料 / 整理结论`，`App.tsx` 的 `PHASES`）是**一次 run 的内部阶段**，不是用户要走的那五步——真正的闭环在数据里活着（9 个 implemented 能力、13 个环节），在屏幕上无处可看。
+
+**第一片：主线卡（`9fd705dd`）。** 内容区第一块变成「这一轮走到哪」：看方向 → 说清比什么 → 摆开比一比 → 去做一件 → 回头看，每格下面写它**凭什么算走过**（`对上了 4 条原话`、`1 / 2 件带回了结果`）。派生逻辑放在 `web/src/state/loop.ts`（纯函数，所以 vitest 收得到），点亮一格只因为 feed 里有一行证明它：**没有百分比，没有"预计进度"**，当前格是屏幕上唯一强 CTA，点一下只把话填进输入框。窄屏收成「第 3 / 5 步 · 摆开比一比」＋五个点，同一份状态两种密度。五条能力 id 与注册表逐一对上，由 `loop.test.ts` 钉住；另一条钉住"后面的格子不会因为前面的格子是空的就亮"（只有 ComparisonMatrix 时，主线仍然指着看方向）。
+
+**第二片：穗奈那句并进去（`de0c302d`）。** 原来首屏有两块都在说"从这儿进"——主线卡，和下面那张「把你在纠结的职业问题交给穗奈」。合成一块，且**只在首屏出现**：这一轮一旦有内容就不再自我介绍。首屏文本节点 42 → 32。
+
+## 54. 背景为什么是三条 CSS 正弦，不是 canvas 也不是 Lottie（S5-3）
+
+他说想要"数学函数背景动画，或者 Lottie 文字动画，更灵动一点"。**先查再动**，两路都量了代价：
+
+- **Lottie 不做**。`lottie-web` 5.13.0 gzip **76.8 KB**（`lottie_light` 46.6 KB、`lottie-react` 3.1.2 **196 KB**、`@lottiefiles/dotlottie-web` 0.80.0 JS 33 KB **＋必带 wasm 497.6 KB ≈ 530 KB**）。按 Lighthouse 代表中端移动的 1.6 Mbps（≈200 KB/s）算，光下载就是 0.24 s / 1.0 s / 2.6 s，还没算解码。更致命的是**中文文字动画**：Lottie 规范只给两条路——`fonts`（`origin` 枚举只有 None/Google/Typekit/URL，等于再拉一个字体 URL，实测 Noto Sans SC 400 全量是 **101 个 woff2 切片 / 2.31 MB**，正撞我们那条"别依赖 Google CDN"的 #63），或者 `chars` **逐字转曲**（代价是文字不可选中、读屏读不到）。
+- **canvas 也不做**，虽然仓库里就有现成的：`参考开源项目/…/Career-Agents/apps/web/src/components/react-bits/GradientWaves.tsx`（192 行多层正弦）。但它**每帧跑 150 次 `Math.random` 画颗粒**（≈9000 次 fillRect/秒），而且**既不查 `prefers-reduced-motion` 也不挂 `visibilitychange`**——同目录 14 个动画组件共 3264 行都是这个毛病。canvas 每帧重绘走主线程，正是 web.dev animations-guide 点名反对的那类。
+- **旁证**：curl 取证 kimi.ai 入口 HTML 73,753 B，`canvas` 出现 **0** 次、`@keyframes` 14 次，并且有一条 `[data-phase="idle"] .LeftBarAnimatedIcon-svg * { animation: none !important }`——**按状态停动**；notion.so 241,392 B 三者皆 0；doubao 的 lottie 只是懒加载 chunk 不在首屏。没有一个消费级 AI 产品用满屏 canvas 背景。
+
+**落地做法**：三层填色正弦 SVG，每张 `width: 200%`，只动 `transform: translate3d(0 → -50%)`（合成器干活，主线程 0 工作），麦色 `--md-tertiary` 填充、透明度 0.07 / 0.10 / 0.13，周期 34 s / 23 s / 15 s，挂在 `position: fixed; inset: auto 0 0 0; z-index: -1; pointer-events: none`——`body` 有底色而 `.app`/`.frame`/`.main` 都没有，所以 -1 正好压在纸上、卡片之下。**零依赖，代价 +0.75 KB gzip**（bundle 93.96 → 94.48），对比 Lottie 的 46.6–196 KB。
+
+**三条让它"能关"的约束**（WCAG 2.2 的 SC 2.2.2 要的是**机制**，不是偏好）：① 账号菜单里一行「背景麦浪开着 · 点击让它停下」（`career.motion` 持久化）；② **有 run 在飞的时候自动定住**（那时已经有文字在动，不该再抢）；③ `prefers-reduced-motion: reduce` 下**换成一张静止帧**而不是删掉。第③条有个真陷阱：`styles.css` 里那条通杀的 `animation-duration: 1ms !important` 对普通动画是"立刻结束"，对无限循环的麦浪却是**每秒转一千圈＝闪烁**，所以必须显式 `animation-name: none !important` 并给一个固定 `translate`。同一条规则也解释了为什么 canvas 方案更糟——**CSS 那条通杀管不到 rAF**，减动效偏好下它照样跑。
+
+**周期是个不变量，而且有测试守着**：元素宽 200%、位移 −50%，走完一圈看到的是**右半边**，所以右半边必须等于左半边——`cycles` 必须是偶数。`wheatfield.test.ts` 逐点比对左右两半，并且**自带负向对照**（拿 `cycles: 3` 的层算一遍，断言一半以上的点不相等），否则这条断言可能只是解析器什么都没读到。写这个测试时我先错了一次：拿"路径首点 y ＝ 末点 y"当接缝条件，而那个对任意整数周期都成立，**绿的，但什么也没测**。
+
+**e2e 里那条"停动开关"先报了个假红**：`setAttribute("data-motion","off")` 之后**同一个 task 里**读 `getComputedStyle`，拿到的是重算之前的旧值，两次采样自然不相等。加 200 ms 沉降后 `a === b`，实测三层 `Animation.playState` 全是 `paused`。矩阵现在 18 条：`the field drifts while she is idle`（x −61.0 → −86.2）与 `the menu switch really stops it` 成对出现——**只有一条"会动"的断言，永远挡不住"根本不会动"的回归**。

@@ -10,6 +10,9 @@ Modelled fresh, but carrying v1's hard-won lessons rather than rediscovering the
     without a WHERE clause and so guarded nothing
   * no unique key on (source_platform, source_job_code): the imported snapshot had
     800 rows with 799 distinct codes, and adding one would have broken the import
+  * dedup of the job library keys on `content_hash` over the raw payload kept in
+    `job_raw_records`, not on a title two employers can both write; the imported
+    slice keeps `captured_at` NULL rather than being back-filled with a plausible date
   * aggregate versioning: editing a candidate bumps its project's version, so two
     devices editing one decision project collide instead of merging silently
 """
@@ -41,6 +44,15 @@ EVIDENCE_SOURCES = ("user", "assessment", "resume", "task_result", "agent", "cat
 PROJECT_STATUSES = ("framing", "exploring", "comparing", "decided", "acting", "reviewing", "archived")
 CANDIDATE_STATUSES = ("active", "shortlisted", "target", "dropped")
 TASK_STATUSES = ("todo", "doing", "blocked", "done", "skipped")
+
+#: The catalogue's own vocabulary. `superseded` exists because the same source job
+#: code can legitimately carry two different texts over time: the old row stays for
+#: audit, the new one is what retrieval may return.
+JOB_STATUSES = ("active", "superseded", "rejected")
+JOB_WORK_TYPES = ("intern", "campus", "fulltime", "unknown")
+BATCH_SOURCE_TYPES = ("dump", "school", "user_paste", "user_url")
+BATCH_STATUSES = ("running", "committed", "failed", "reverted")
+RAW_FETCH_STATUSES = ("provided", "fetched", "failed")
 
 
 class CareerDirection(Base):
@@ -89,6 +101,19 @@ class Job(Base):
     source_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     quality_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
     status: Mapped[str] = mapped_column(String(16), nullable=False, default="active")
+    #: Provenance, added by the catalogue slice rather than inferred later. The three
+    #: timestamps are nullable because the imported 2025 snapshot genuinely has no
+    #: capture date to report; `app.db.catalogue` is what turns them into rules.
+    captured_at: Mapped[datetime | None] = mapped_column(Timestamp, nullable=True)
+    last_seen_at: Mapped[datetime | None] = mapped_column(Timestamp, nullable=True)
+    expires_at: Mapped[datetime | None] = mapped_column(Timestamp, nullable=True)
+    content_hash: Mapped[str | None] = mapped_column(String(64), nullable=True, unique=True)
+    work_type: Mapped[str] = mapped_column(String(16), nullable=False, default="unknown")
+    source_type: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    quality_flags: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    batch_id: Mapped[int | None] = mapped_column(
+        ForeignKey("job_import_batches.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     requirement_items: Mapped[list[JobRequirementItem]] = relationship(
         back_populates="job", cascade="all, delete-orphan", order_by="JobRequirementItem.sort_order"
     )
@@ -129,6 +154,53 @@ class DirectionJobLink(Base):
 
     direction: Mapped[CareerDirection] = relationship(back_populates="jobs")
     job: Mapped[Job] = relationship(foreign_keys=[job_id])
+
+
+class JobImportBatch(Base):
+    """One ingest run, as a row.
+
+    The batch is the unit of *replacing* the library: a run either commits or is
+    marked failed, so the agent never reads a half-written market. `license_note`
+    carries the right to store the rows — the reason a `dump` batch with no note is
+    refused in `app.db.catalogue.new_import_batch` instead of being caught by an
+    audit after the fact.
+    """
+
+    __tablename__ = "job_import_batches"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    #: Who ran it, kept after the account goes: an unattributable write is unauditable.
+    operator_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    source_type: Mapped[str] = mapped_column(String(24), nullable=False)
+    source_label: Mapped[str] = mapped_column(String(96), nullable=False, default="")
+    license_note: Mapped[str] = mapped_column(String(500), nullable=False, default="")
+    stats_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    status: Mapped[str] = mapped_column(String(16), nullable=False, default="running")
+    created_at: Mapped[datetime] = mapped_column(Timestamp, nullable=False, default=utcnow)
+    finished_at: Mapped[datetime | None] = mapped_column(Timestamp, nullable=True)
+
+    raw_records: Mapped[list[JobRawRecord]] = relationship(back_populates="batch", cascade="all, delete-orphan")
+
+
+class JobRawRecord(Base):
+    """The verbatim payload, append-only. `jobs` is derived state; this is the ledger.
+
+    Deliberately not deduplicated: "we saw this exact text again on 3 March" is a
+    fact about the market that a merge into `jobs` would erase, and it is what
+    `last_seen_at` is computed from.
+    """
+
+    __tablename__ = "job_raw_records"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    batch_id: Mapped[int] = mapped_column(ForeignKey("job_import_batches.id", ondelete="CASCADE"), nullable=False, index=True)
+    payload: Mapped[str] = mapped_column(Text, nullable=False)
+    content_hash: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    source_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    captured_at: Mapped[datetime] = mapped_column(Timestamp, nullable=False, default=utcnow)
+    fetch_status: Mapped[str] = mapped_column(String(16), nullable=False, default="provided")
+
+    batch: Mapped[JobImportBatch] = relationship(back_populates="raw_records")
 
 
 class UserProfile(Base):

@@ -53,7 +53,7 @@ export function EvidenceDrawer({ open, artifact, onClose }: Props) {
                 <span className="drawer__claim">{`${String(index + 1).padStart(2, "0")} · ${line.claim}`}</span>
                 {quote.text ? <p className="drawer__quote">「{quote.text}」</p> : null}
                 <span className="drawer__src">
-                  <Ms g="source" size={14} />
+                  <Ms g="source_notes" size={14} />
                   <span>{line.source ? `模型自述来源：${line.source}` : "模型没有说来源"}</span>
                 </span>
                 {quote.raw ? (

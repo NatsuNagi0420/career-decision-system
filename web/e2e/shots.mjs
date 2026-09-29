@@ -157,7 +157,11 @@ try {
     const ctx = await browser.newContext({ viewport: { width: vp.width, height: vp.height } });
     const page = await ctx.newPage();
     const problems = [];
+    const cdn = [];
     page.on("response", (r) => r.status() >= 400 && problems.push(`http ${r.status()} ${new URL(r.url()).pathname}`));
+    // The webfonts are vendored; a request to a third-party font host means either the
+    // CDN crept back into index.html or something added a remote @font-face.
+    page.on("request", (r) => /fonts\.(googleapis|gstatic)\.com/.test(r.url()) && cdn.push(r.url()));
     // Seed the token before the app boots, so it starts signed in as our own user.
     await page.addInitScript((token) => localStorage.setItem("career.session.token", token), fixture.token);
     await page.goto(BASE, { waitUntil: "networkidle" });
@@ -172,6 +176,29 @@ try {
       `输入 ${widths.input}px vs 能力下拉 ${widths.picker}px`,
     );
     check(`workspace makes no failing calls (${vp.name})`, problems.length === 0, problems.slice(0, 3).join(" | "));
+    check(`nothing is fetched from a font CDN (${vp.name})`, cdn.length === 0, cdn.slice(0, 2).join(" | "));
+    // The shipped icon font is a subset, so its failure mode is an icon drawing its own
+    // name as words. Every substituted ligature measures exactly 1em here (24 of them,
+    // min=median=max), while the same string in a text font runs 6–17em — 1.6 sits far
+    // from both. The control proves the detector still bites: same text, icon font taken
+    // away, and the check must see it.
+    const icons = await page.evaluate(() => {
+      const em = (el) => el.getBoundingClientRect().width / (parseFloat(getComputedStyle(el).fontSize) || 24);
+      const offenders = [...document.querySelectorAll(".ms")]
+        .filter((el) => (el.textContent || "").trim().length > 1 && em(el) > 1.6)
+        .map((el) => el.textContent.trim());
+      const probe = Object.assign(document.createElement("span"), { className: "ms", textContent: "arrow_upward" });
+      probe.style.fontFamily = "serif";
+      document.body.appendChild(probe);
+      const control = +em(probe).toFixed(1);
+      probe.remove();
+      return { offenders, control, seen: document.querySelectorAll(".ms").length };
+    });
+    check(
+      `no icon draws its own name as text (${vp.name})`,
+      icons.offenders.length === 0 && icons.control > 1.6,
+      icons.offenders.length ? icons.offenders.slice(0, 3).join(" | ") : `${icons.seen} 个图标 · 对照 ${icons.control}em`,
+    );
     const wrapped = await wrappedLabels(page);
     check(
       `workspace labels stay horizontal (${vp.name})`,
@@ -195,9 +222,32 @@ try {
         await new Promise((done) => setTimeout(done, 200));
         const first = read();
         await new Promise((done) => setTimeout(done, 600));
-        return { first, second: read() };
+        const second = read();
+        // Restore only after both samples are in hand — writing the attribute and
+        // reading in the same task is what made this check lie the other way.
+        document.querySelector(".app").setAttribute("data-motion", "on");
+        return { first, second };
       });
       check("the menu switch really stops it", stopped.first === stopped.second, x(stopped.second));
+
+      const rim = await page.evaluate(async () => {
+        // `::before` is not a node — querySelector returns null for it, which threw here
+        // before it ever compared anything. Pseudo styles need the two-argument form.
+        const read = () => getComputedStyle(document.querySelector(".dock__glow"), "::before").rotate;
+        const first = read();
+        await new Promise((done) => setTimeout(done, 600));
+        return { first, second: read() };
+      });
+      check("the composer rim travels", rim.first !== rim.second, `rotate ${rim.first} → ${rim.second}`);
+
+      const lit = await page.evaluate(async () => {
+        const read = () => getComputedStyle(document.querySelector(".dock__glow")).opacity;
+        const dim = read();
+        document.getElementById("composer").focus();
+        await new Promise((done) => setTimeout(done, 400));
+        return { dim, lit: read() };
+      });
+      check("the rim brightens when the box has focus", Number(lit.lit) > Number(lit.dim), `${lit.dim} → ${lit.lit}`);
     }
     await ctx.close();
   }

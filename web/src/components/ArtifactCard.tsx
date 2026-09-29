@@ -1,6 +1,7 @@
 import { useState, type CSSProperties } from "react";
 import type { ArtifactEntry } from "../api/client";
 import { Ms } from "./Ms";
+import { ResumeCard, type ResumeBody } from "./ResumeCard";
 import { WeeklyReviewCard } from "./WeeklyReviewCard";
 import { readableQuote } from "../state/readable";
 
@@ -59,6 +60,9 @@ interface Props {
   steps: number;
   model: string | null;
   onRunAction?: (goal: string) => void;
+  /** Puts a sentence into the composer without sending it. The resume uses it for the
+   *  sections that came back empty, so "还没有依据" is one click from being filled. */
+  onAsk?: (goal: string) => void;
   /** A weekly review draft is the one artifact that is not an answer but a form, and
    *  only the person can file it — so the write needs the project and a way to say
    *  "the feed changed". Every other artifact type ignores both. */
@@ -74,10 +78,14 @@ interface Props {
  * Coverage, provisional and the fabrication list come from code, never the model, so
  * they are shown as data rather than folded into prose.
  */
-export function ArtifactCard({ artifact, usage, steps, model, projectId, onFiled, onRunAction }: Props) {
+export function ArtifactCard({ artifact, usage, steps, model, projectId, onFiled, onRunAction, onAsk }: Props) {
   const [allOpen, setAllOpen] = useState(false);
   if (artifact.artifact_type === "WeeklyReviewDraft") {
     return <WeeklyReviewCard artifact={artifact} projectId={projectId} onFiled={onFiled} />;
+  }
+  if (artifact.artifact_type === "ResumeDraft") {
+    // The body was assembled from rows by the server; this card only lays it out.
+    return <ResumeCard resume={(((artifact.content ?? {}) as Record<string, unknown>).resume ?? {}) as ResumeBody} onAsk={onAsk} />;
   }
 
   const body = (artifact.content ?? {}) as Record<string, unknown>;
@@ -297,7 +305,7 @@ function EvidenceRow({ line, ordinal, verified }: { line: EvidenceLine; ordinal:
             </div>
             <div className="ev__chips">
               <span className="srcchip">
-                <Ms g="source" size={14} />
+                <Ms g="source_notes" size={14} />
                 <span>{line.source || "工具返回"}</span>
               </span>
             </div>

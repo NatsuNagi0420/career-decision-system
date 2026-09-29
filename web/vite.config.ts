@@ -15,5 +15,7 @@ export default defineConfig({
       "/healthz": { target: backend, changeOrigin: true },
     },
   },
-  test: { environment: "node", include: ["src/**/*.test.ts"] },
+  // scripts/*.test.mjs holds the webfont-subset contract: it is about build artefacts,
+  // not app runtime, so it lives beside the script it checks rather than in src/.
+  test: { environment: "node", include: ["src/**/*.test.ts", "scripts/**/*.test.mjs"] },
 });

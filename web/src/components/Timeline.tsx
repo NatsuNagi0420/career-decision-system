@@ -337,6 +337,7 @@ function AgentTurn({
                 usage={usage}
                 onFiled={onReviewFiled}
                 onRunAction={onRunAction}
+                onAsk={onAsk}
               />
               <FollowUps artifact={artifact} goal={goal} onAsk={onAsk} />
             </>

@@ -1330,6 +1330,7 @@ details[open] .thought__chev {
   display: flex;
   flex-direction: column;
   gap: var(--sp-xs);
+  animation: card-in 420ms cubic-bezier(0.2, 0, 0, 1) both;
 }
 
 /* The person's words, unedited: this quote is what an evidence row points at. */
@@ -1565,6 +1566,7 @@ details[open] .thought__chev {
   background: var(--md-error-container);
   color: var(--md-on-error-container);
   font: 400 14px/20px var(--md-font);
+  animation: card-in 260ms cubic-bezier(0.2, 0, 0, 1) both;
 }
 
 .empty {
@@ -1994,6 +1996,14 @@ details[open] .thought__chev {
   color: var(--md-on-primary);
   font: 600 10px/16px var(--md-font);
   text-align: center;
+  animation: badge-in 260ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+@keyframes badge-in {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
 }
 
 /* Breadcrumb & status ribbon */
@@ -2825,6 +2835,9 @@ details[open] .thought__chev {
 /* Dock: rigor readout + segmented state, then the field, then the capability tray */
 
 .dock__inner {
+  /* The rim comet anchors here, not on the input strip — the big frame is what the
+     eye reads as "the box you type into". */
+  position: relative;
   gap: 6px;
   padding: var(--sp-sm);
   border-radius: var(--r-md);
@@ -2894,6 +2907,76 @@ details[open] .thought__chev {
   border-radius: var(--r-full);
   border: 1px solid var(--md-surface-container);
   background: var(--md-surface-low);
+}
+
+/* 流动光效 — a comet of light travelling around the dock's outer frame.
+   The ring is cut with a mask (border-box minus content-box), so it can sit in the
+   normal paint order and leave the glass panel's own surface untouched; only `rotate`
+   animates, which stays on the compositor. It brightens when anything in the frame has
+   focus and speeds up while a run is in flight — the two states worth showing without
+   words. Radius follows `.dock__inner`'s winning declaration (--r-md, the later of the
+   two blocks), not the one at the top of the file. */
+.dock__glow {
+  position: absolute;
+  inset: -3px;
+  padding: 3px;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0.7;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  transition: opacity 260ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Two arcs, both running cool into warm: the long one is the comet, the short one
+   opposite it keeps a lit side on the frame at every instant. Stops are the theme's
+   own ramp — 169.9°/174.0° teal through 44.5° wheat, closing on --signal at 50.8°
+   (C*87.2, the most chromatic colour this skin has, and it is sanctioned as a mark,
+   never as text). The dark golds (--md-tertiary/-container, C*33–42 at 41–44°) are
+   deliberately absent: pressed to 3px over mint paper they read as a brown smear. */
+.dock__glow::before {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 170%;
+  aspect-ratio: 1 / 1;
+  translate: -50% -50%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0 3%,
+    var(--md-primary-fixed-dim) 9%,
+    var(--md-tertiary-fixed) 15%,
+    transparent 22% 46%,
+    var(--md-primary) 53%,
+    var(--md-primary-fixed-dim) 63%,
+    var(--md-primary-fixed) 72%,
+    var(--md-tertiary-fixed) 84%,
+    var(--signal) 92%,
+    transparent 98%
+  );
+  animation: glow-orbit 7s linear infinite;
+  content: "";
+}
+
+@keyframes glow-orbit {
+  to {
+    rotate: 360deg;
+  }
+}
+
+.dock__inner:focus-within .dock__glow {
+  opacity: 1;
+}
+
+.app[data-busy="true"] .dock__glow::before {
+  animation-duration: 2.4s;
 }
 
 .fieldbtn {
@@ -3346,6 +3429,13 @@ details[open] .thought__chev {
     animation-name: none !important;
     transform: translate3d(-25%, 0, 0);
   }
+
+  /* Same trap for the composer's rim: an infinite rotation at 1ms is a strobe. Park
+     the comet at an angle instead so the rim still reads as lit. */
+  .dock__glow::before {
+    animation-name: none !important;
+    rotate: 200deg;
+  }
 }
 
 /* Login with the IP art */
@@ -3687,6 +3777,7 @@ details[open] .thought__chev {
   height: 2px;
   border-radius: var(--r-tail);
   background: var(--md-outline-variant);
+  transition: background-color 320ms cubic-bezier(0.2, 0, 0, 1);
 }
 
 /* The path already walked is the loudest part of the rail — that, not a
@@ -3705,11 +3796,17 @@ details[open] .thought__chev {
   border-radius: var(--r-full);
   background: var(--md-surface-lowest);
   color: var(--md-on-surface-faint);
+  transition:
+    background-color 320ms cubic-bezier(0.2, 0, 0, 1),
+    border-color 320ms cubic-bezier(0.2, 0, 0, 1),
+    box-shadow 320ms cubic-bezier(0.2, 0, 0, 1),
+    color 320ms cubic-bezier(0.2, 0, 0, 1);
 }
 
 .spine__name {
   font: 600 13px/18px var(--md-font);
   color: var(--md-on-surface-variant);
+  transition: color 320ms cubic-bezier(0.2, 0, 0, 1);
 }
 
 .spine__hint {
@@ -3742,6 +3839,16 @@ details[open] .thought__chev {
   border-radius: var(--r-full);
   background: var(--signal);
   content: "";
+  animation: notch-in 320ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+/* The notch is the one thing that says "this is where she is", so it arrives rather
+   than simply being there — it only mounts when a station becomes current. */
+@keyframes notch-in {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+  }
 }
 
 .spine__node--now .spine__name {
@@ -3822,5 +3929,206 @@ details[open] .thought__chev {
 
 .spine__alt + .spine__alt {
   margin-top: var(--sp-xs);
+}
+
+/* ── 简历：模板条、纸面、打印 ───────────────────────────────────────────────
+   The sheet is the one surface in this app whose job is to leave the browser, so
+   screen and paper must share typography: the same `--rs-*` custom properties drive
+   both, and the toolbar is the only thing that disappears on print. */
+.resume-bar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-xs);
+  padding: var(--sp-sm);
+  border: 1px solid var(--md-surface-container-high);
+  border-radius: var(--r-md);
+  background: var(--md-surface-low);
+}
+
+.resume-bar__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-sm);
+}
+
+.resume-bar__field {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-xs);
+  color: var(--md-on-surface-variant);
+  font: 500 11px/16px var(--md-font);
+}
+
+.resume-bar__field input[type="range"] {
+  width: 92px;
+  accent-color: var(--md-primary);
+}
+
+.resume-bar__fallback {
+  color: var(--md-on-surface-variant);
+  font: 400 12px/18px var(--md-font);
+}
+
+.fieldbtn--wide {
+  width: auto;
+  padding: 0 var(--sp-sm);
+  gap: var(--sp-xs);
+  font: 600 12px/16px var(--md-font);
+}
+
+.linkbtn {
+  margin-left: var(--sp-xs);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--md-primary);
+  font: 600 12px/18px var(--md-font);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.resume-sheet {
+  /* A4 at the pt sizes the format table produces, so the on-screen column is the same
+     width the paper will be. `--md-surface-lowest` and not white: an achromatic sheet
+     trips the palette contract and reads as a foreign object on this paper. */
+  width: min(100%, 595pt);
+  margin-inline: auto;
+  padding: var(--rs-margin);
+  border: 1px solid var(--md-surface-container-high);
+  border-radius: var(--r-md);
+  background: var(--md-surface-lowest);
+  color: var(--md-on-surface);
+  font-size: var(--rs-font);
+  line-height: var(--rs-leading);
+  box-shadow: var(--sh-card);
+}
+
+.resume-sheet__head {
+  margin-bottom: var(--rs-section);
+}
+
+.resume-sheet__contact {
+  padding-bottom: var(--sp-xs);
+  border-bottom: 1px solid var(--md-outline-variant);
+}
+
+.resume-sheet__section {
+  margin-bottom: var(--rs-section);
+}
+
+.resume-sheet h3 {
+  margin: 0 0 var(--sp-xs);
+  font: 600 1.05em/1.4 var(--md-font);
+  letter-spacing: 0.4px;
+  border-bottom: 2px solid var(--md-primary-fixed-dim);
+}
+
+.resume-sheet ul {
+  margin: 0;
+  padding-left: 1.1em;
+}
+
+.resume-sheet li {
+  margin-bottom: var(--rs-entry);
+}
+
+.resume-sheet__quote {
+  display: block;
+  color: var(--md-on-surface-faint);
+  font-size: 0.9em;
+}
+
+.resume-sheet__empty {
+  margin: 0;
+}
+
+/* Paper. `@page margin` stays 0 on purpose: Chrome adds its own header/footer (and
+   prints them into the PDF) once the page margin exceeds roughly 8mm, so the printable
+   margin is carried by the sheet's padding instead. Borrowed from MyOfferAgent's
+   `render/print-html.ts`, along with the break and orphan rules. */
+@media print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  .sidebar,
+  .topbar,
+  .dock,
+  .spine,
+  /* An on-screen affordance: on paper it is a sentence about a button that is not there. */
+  .linkbtn,
+  .no-print,
+  .auth__art {
+    display: none !important;
+  }
+
+  html,
+  body,
+  #root,
+  .frame,
+  .feed {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: none !important;
+  }
+
+  .resume-sheet {
+    width: auto;
+    max-width: none;
+    border: 0;
+    /* --r-tail, not 0: the radius contract reserves "starts with 0" for the one
+       half-rounded quote block, and 2px is invisible on paper anyway. */
+    border-radius: var(--r-tail);
+    box-shadow: none;
+    background: none;
+    print-color-adjust: exact;
+  }
+
+  .resume-sheet h3 {
+    break-after: avoid;
+  }
+
+  .resume-sheet li,
+  .resume-sheet__section {
+    break-inside: avoid;
+  }
+
+  .resume-sheet p {
+    orphans: 2;
+    widows: 2;
+  }
+
+  /* Only the paper leaves the browser. Everything else on the feed — the turns, the
+     other artifact cards, 穗奈's follow-ups, the 接着做 buttons — is conversation, and
+     a resume printed with its own chat log attached is not a resume.
+     `visibility` rather than `display`: the sheet is nested arbitrarily deep inside the
+     timeline, and a rule that depends on which ancestor we are on is a rule that breaks
+     the next time the markup moves. The sheet is then lifted to the page origin so the
+     hidden blocks above it do not push the paper down a screen. */
+  .feed,
+  .feed * {
+    visibility: hidden !important;
+  }
+
+  .resume-sheet,
+  .resume-sheet * {
+    visibility: visible !important;
+  }
+
+  .resume-sheet {
+    position: absolute;
+    top: 0;
+    /* An absolutely positioned box shrink-to-fits, which measured 324px wide and turned
+       the A4 sheet into a column. The page is 210mm and `@page margin` is 0, so the
+       sheet is the page and its own padding is the printable margin. */
+    width: 210mm;
+    left: 50%;
+    translate: -50% 0;
+  }
 }
 

@@ -9,6 +9,8 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "fonts": "node scripts/fonts.mjs",
+    "fonts:check": "node scripts/fonts.mjs --check",
     "verify:e2e": "node e2e/shots.mjs",
     "verify:states": "node e2e/states.mjs"
   },

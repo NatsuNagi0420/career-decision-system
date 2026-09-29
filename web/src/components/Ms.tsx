@@ -1,9 +1,11 @@
 /**
  * Material Symbols ligature span, the same mechanism the reference uses.
  *
- * The text content *is* the icon name, so adding an icon costs nothing here. The font
- * is loaded from Google Fonts in index.html to match the reference 1:1; before this is
- * deployed anywhere real, those files should be vendored (see the note in index.html).
+ * The text content *is* the icon name, so adding an icon costs nothing here — but the
+ * shipped font is a subset, so it must be a name that exists. `npm run fonts` rebuilds
+ * it from `scripts/icons.used.txt`, and `fonts.contract.test.mjs` fails when a name
+ * in the source is not in that list. `fill` needs the FILL variation axis, which the
+ * build script asserts survives the cut.
  */
 
 export function Ms({

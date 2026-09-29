@@ -54,3 +54,59 @@ describe("answer card density", () => {
     expect(html).not.toContain("展开看");
   });
 });
+
+describe("the resume draft card", () => {
+  const resumeArtifact = (sections: unknown[]) =>
+    renderToStaticMarkup(
+      createElement(ArtifactCard, {
+        artifact: {
+          id: "r-1",
+          run_id: "run-1",
+          artifact_type: "ResumeDraft",
+          title: "简历生成与优化：先做后端",
+          status: "committed",
+          version: 1,
+          data_coverage: null,
+          is_provisional: false,
+          generation_mode: "fallback",
+          content: { resume: { sections, completeness: "1/4 节有内容，其余是还没问过你，不是「你没有」" } },
+          evidence_quotes: {},
+          source_refs: [],
+          supersedes_id: null,
+        } as ArtifactEntry,
+        usage: null,
+        steps: 0,
+        model: null,
+        projectId: null,
+        onFiled: () => {},
+      }),
+    );
+
+  const section = (key: string, title: string, lines: { text: string; ref: { table: string; id: string } }[]) => ({
+    key,
+    title,
+    lines,
+    empty: lines.length === 0,
+    ask: `去补${title}`,
+  });
+
+  it("keeps an empty section on the page and says what would fill it", () => {
+    const html = resumeArtifact([
+      section("education", "教育", []),
+      section("skills", "技能", [{ text: "会用 SQL 做数据清洗", ref: { table: "profile_facts", id: "f1" } }]),
+    ]);
+
+    expect(html).toContain("教育");
+    expect(html).toContain("还没有依据 · 去补教育");
+    expect(html).toContain("会用 SQL 做数据清洗");
+    expect(html).toContain("1/4 节有内容");
+  });
+
+  it("never prints the row id behind a line", () => {
+    const html = resumeArtifact([section("skills", "技能", [{ text: "处理过 12 万行", ref: { table: "profile_facts", id: "3d24b6ab0f0e4a5f9a1c2b3d4e5f6071" } }])]);
+
+    expect(html).toContain("处理过 12 万行");
+    expect(html).not.toContain("3d24b6ab");
+    expect(html).not.toContain("profile_facts");
+  });
+});

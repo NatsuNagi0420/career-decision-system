@@ -51,3 +51,7 @@ server/var/
 
 # Playwright output: screenshots and the last run report
 web/e2e/.shots/
+
+# Whole-font downloads that `npm run fonts` cuts down to the shipped subset. Never
+# served, always regenerable — 450 KB of Material Symbols has no business in history.
+web/.font-src/

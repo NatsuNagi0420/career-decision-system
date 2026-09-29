@@ -1,7 +1,9 @@
 import { useState } from "react";
 import type { Station } from "../state/loop";
+import { rise } from "../state/motion";
 import { SuinaiFace } from "./Brand";
 import { Ms } from "./Ms";
+import { Swap } from "./Swap";
 
 interface Props {
   stations: Station[];
@@ -28,7 +30,9 @@ export function LoopSpine({ stations, current, onTake, alternatives = [], lead =
       <div className="spine__head">
         <span className="spine__cap">这一轮走到哪</span>
         <span className="spine__pos">
-          {current ? `第 ${index + 1} / ${stations.length} 步 · ${current.name}` : "五步都走完了 · 可以开下一轮"}
+          <Swap when={current?.key ?? "done"}>
+            {current ? `第 ${index + 1} / ${stations.length} 步 · ${current.name}` : "五步都走完了 · 可以开下一轮"}
+          </Swap>
         </span>
       </div>
 
@@ -39,10 +43,17 @@ export function LoopSpine({ stations, current, onTake, alternatives = [], lead =
           return (
             <li className={`spine__node spine__node--${state}`} key={station.key}>
               <span className="spine__mark">
-                <Ms g={station.done ? "check_circle" : station.glyph} size={18} />
+                {/* The glyph changes when a station lights, and the hint changes with
+                    whatever the feed says now — both are content changes, so both
+                    animate rather than mutate in place. */}
+                <Swap when={state}>
+                  <Ms g={station.done ? "check_circle" : station.glyph} size={18} />
+                </Swap>
               </span>
               <span className="spine__name">{station.name}</span>
-              <span className="spine__hint">{station.hint}</span>
+              <span className="spine__hint">
+                <Swap when={station.hint}>{station.hint}</Swap>
+              </span>
               {position < stations.length - 1 ? <span className="spine__link" /> : null}
             </li>
           );
@@ -50,7 +61,7 @@ export function LoopSpine({ stations, current, onTake, alternatives = [], lead =
       </ol>
 
       {lead ? (
-        <p className="spine__lead">
+        <p className="spine__lead card-in">
           <SuinaiFace face="listen" size={26} />
           <span>{lead}</span>
         </p>
@@ -63,12 +74,16 @@ export function LoopSpine({ stations, current, onTake, alternatives = [], lead =
             onClick={() => onTake(current.goal, current.capability)}
             title="这句话会填进下面的输入框，你可以先改再发"
           >
-            <span>{`先做这一步：${current.name}`}</span>
+            <Swap when={current.key}>
+              <span>{`先做这一步：${current.name}`}</span>
+            </Swap>
             <Ms g="arrow_forward" size={18} />
           </button>
           {alternatives.length ? (
             <button className="spine__more" onClick={() => setOpen(!open)} aria-expanded={open}>
-              <span>{open ? "收起别的问法" : "想换个问法"}</span>
+              <Swap when={open ? "open" : "closed"}>
+                <span>{open ? "收起别的问法" : "想换个问法"}</span>
+              </Swap>
               <Ms g={open ? "expand_less" : "expand_more"} size={16} />
             </button>
           ) : null}
@@ -76,8 +91,13 @@ export function LoopSpine({ stations, current, onTake, alternatives = [], lead =
       ) : null}
 
       {open
-        ? alternatives.map((example) => (
-            <button className="spine__alt" key={example.capability} onClick={() => onTake(example.goal, example.capability)}>
+        ? alternatives.map((example, position) => (
+            <button
+              className="spine__alt card-in"
+              style={rise(position)}
+              key={example.capability}
+              onClick={() => onTake(example.goal, example.capability)}
+            >
               <Ms g={example.glyph} size={16} />
               <span>{example.goal}</span>
             </button>

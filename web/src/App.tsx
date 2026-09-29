@@ -444,7 +444,9 @@ function WorkbenchShell({ onSignedOut }: Props) {
                   <Ms g="check_circle" size={16} />
                   <span>等你确认</span>
                 </span>
-                <span className={pendingApprovals.length ? "count count--wait" : "count"}>{pendingApprovals.length}</span>
+                <span className={pendingApprovals.length ? "count count--wait" : "count"}>
+                  <Swap when={String(pendingApprovals.length)}>{pendingApprovals.length}</Swap>
+                </span>
               </button>
             </div>
           </div>
@@ -511,9 +513,11 @@ function WorkbenchShell({ onSignedOut }: Props) {
           <div className="usercard__body">
             <div className="t-title-sm">{user?.username ?? "未登录"}</div>
             <div className="muted t-label-sm">
-              {openObligations.length
-                ? `穗奈答应过要接着做 ${openObligations.length} 件事`
-                : "穗奈手上没有欠着的下一步"}
+              <Swap when={String(openObligations.length)}>
+                {openObligations.length
+                  ? `穗奈答应过要接着做 ${openObligations.length} 件事`
+                  : "穗奈手上没有欠着的下一步"}
+              </Swap>
             </div>
           </div>
           <button className="fieldbtn" title="退出登录" onClick={signOut}>
@@ -658,7 +662,7 @@ function WorkbenchShell({ onSignedOut }: Props) {
                     <span>{capabilityNames[snapshot.run.capability_id ?? ""] ?? "自由目标"}</span>
                   </div>
                   <span className="ribbon__sep">/</span>
-                  <span className="ribbon__id">{`ID: ${snapshot.run.id.slice(0, 8)}`}</span>
+                  <span className="ribbon__id research-only">{`ID: ${snapshot.run.id.slice(0, 8)}`}</span>
                   <span className="ribbon__sep">/</span>
                   <div className="ribbon__state">
                     <span className={`dot${running ? " dot--live" : snapshot.run.status === "failed" ? " dot--bad" : ""}`} />
@@ -869,7 +873,7 @@ function TrackCard({
             return (
               <div key={run.id}>
                 <button className={`session${isCurrent ? " session--on" : ""}`} onClick={() => onOpen(run.id)}>
-                  <Ms className="session__icon" g={isCurrent ? "chat_bubble" : "chat_bubble_outline"} size={16} />
+                  <Ms className="session__icon" g="chat_bubble" fill={isCurrent} size={16} />
                   <span className="session__body">
                     <span className="session__title">
                       <span>{run.goal.slice(0, 20) || run.id.slice(0, 8)}</span>
@@ -938,6 +942,7 @@ function Dock({
   return (
     <div className="dock">
       <div className="dock__inner">
+        <span className="dock__glow" aria-hidden="true" />
         <div className="dock__rigor">
           <span className="dock__readout">
             <Ms g="verified" size={16} />

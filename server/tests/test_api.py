@@ -69,9 +69,11 @@ def test_capabilities_expose_what_is_actually_wired(client: TestClient) -> None:
         "compare_decide",
         "action_plan",
         "weekly_review",
+        "resume_build",
     }
-    # Nothing the agent cannot actually finish may be advertised as live.
-    assert "resume_build" not in implemented
+    # Nothing the agent cannot actually finish may be advertised as live. The set above
+    # is that assertion; a still-planned capability must not appear in it.
+    assert "interview_prep" not in implemented
 
 
 def test_consent_can_be_granted_and_revoked(client: TestClient) -> None:

@@ -37,6 +37,15 @@ CAPABILITIES: tuple[CapabilitySpec, ...] = (
         risk_tier="R2",
         requires_approval=True,
         thinking="off",
+        # Measured live: without this the model filed one 200-character sentence under
+        # the default `context`, so every downstream consumer that reads a specific
+        # dimension (the resume reads education / skills / awards) got nothing.
+        synthesis_notes=(
+            "proposed 一次只记一条事实，dimension 只能取 education、skills、awards、"
+            "constraints、interests、values、context 之一；一个人说了几件事就分几条记，"
+            "不要把学校、技能、获奖塞进同一句。statement 用一句人话复述本人说过的内容，"
+            "数字与名称照他原话，不要补造。"
+        ),
         next_capabilities=["direction_explore"],
     ),
     CapabilitySpec(
@@ -140,7 +149,9 @@ CAPABILITIES: tuple[CapabilitySpec, ...] = (
             "evidence_basis 的 quote 从 matrix.cells[].quotes 或 get_evidence 的 quote 里"
             "整条照抄；转述库里的状态（例如「source = user，rationale 为空」）不是证据。"
         ),
-        next_capabilities=["action_plan"],
+        # The resume hangs off the decision, not off the plan: "which direction" is what
+        # a resume is for, and it is settled here rather than in action_plan.
+        next_capabilities=["action_plan", "resume_build"],
     ),
     CapabilitySpec(
         id="action_plan",
@@ -214,14 +225,17 @@ CAPABILITIES: tuple[CapabilitySpec, ...] = (
         id="resume_build",
         domain="resume",
         name="简历生成与优化",
+        # The body is assembled from rows by app/agent/resume.py, not written by the
+        # model — which is what makes "数字一律取回原文" a property of the code rather
+        # than a instruction the model may ignore.
         description="基于画像与证据起草简历，数字一律取回原文，不补造。",
-        status="planned",
+        status="implemented",
         required_context=["user", "project"],
         tools=["get_profile", "get_evidence"],
         artifact_type="ResumeDraft",
-        proposal_types=["create_resume_draft"],
-        risk_tier="R2",
-        requires_approval=True,
+        # No proposal: a resume drafts nothing into the business tables, so there is
+        # nothing to confirm. Declaring one would also force R2 by the spec invariants.
+        risk_tier="R1",
         evidence_required=True,
         thinking="on",
     ),

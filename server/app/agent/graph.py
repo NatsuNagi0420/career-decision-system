@@ -47,6 +47,7 @@ from app.agent.events import (
 )
 from app.agent.executors import apply_executor, build_proposal
 from app.agent.persona import synthesis_system_prompt
+from app.agent.resume import DETERMINISTIC_BODIES
 from app.agent.state import RunState
 from app.capabilities.registry import CAPABILITIES, is_valid_obligation_target
 from app.capabilities.spec import CapabilitySpec
@@ -290,6 +291,13 @@ def domain_gate(deps: AgentDeps, state: RunState) -> RunState:
 
 
 async def select_action(deps: AgentDeps, state: RunState) -> RunState:
+    if not state.get("allow_external_ai"):
+        # AI_NATIVE_ARCHITECTURE §2: an unauthorised run 只走确定性路径. The gate was
+        # implemented and the deterministic half was not — every such run died here on a
+        # refused call while the login screen promised it would still work. Routing past
+        # both model nodes is the second half; `persist_draft` stamps the result
+        # `generation_mode="fallback"` and the provisional flag says 依据有限.
+        return {"pending_tool_calls": [], "rounds_used": int(state.get("rounds_used") or 0)}
     rounds = int(state.get("rounds_used") or 0)
     ceiling, note = _ceiling(deps, state["run_id"])
     if ceiling == "tokens":
@@ -562,6 +570,18 @@ def synthesis_prompt(
 
 
 async def synthesize(deps: AgentDeps, state: RunState) -> RunState:
+    if not state.get("allow_external_ai"):
+        # No model, so no digest prose. What still lands is whatever a capability's code
+        # body assembles from rows (see DETERMINISTIC_BODIES) — the resume is the one
+        # that produces a real document this way — plus this note saying what is missing.
+        return {
+            "synthesis": {
+                "conclusion": "这一轮没拿到云端模型授权，所以没有分析、也没有替你写任何判断。下面只有她能直接从你已经填过的记录里算出来的部分。",
+                "evidence_basis": [],
+                "uncertainties": ["要她查真实岗位原话，或者要一段分析，得在账号菜单里同意把决策上下文交给云端模型。"],
+                "next_actions": [],
+            }
+        }
     facts = state.get("tool_facts") or {}
     ceiling, note = _ceiling(deps, state["run_id"])
     if ceiling == "tokens":
@@ -695,6 +715,11 @@ def persist_draft(deps: AgentDeps, state: RunState) -> RunState:
     session = deps.session_factory()
     try:
         run = session.get(Run, state["run_id"])
+        # Some artifacts must not be writable prose: the resume is laid out from rows so
+        # that "every figure came from somewhere" is structural, not a promise.
+        shaper = DETERMINISTIC_BODIES.get(deps.capability.id)
+        if shaper is not None:
+            content["resume"] = shaper(session, user_id=run.user_id, project_id=run.project_id)
         artifact = Artifact(
             run_id=run.id,
             user_id=run.user_id,
@@ -706,7 +731,9 @@ def persist_draft(deps: AgentDeps, state: RunState) -> RunState:
             evidence_quotes=quotes,
             data_coverage=coverage,
             is_provisional=provisional,
-            generation_mode="llm" if synthesis else "fallback",
+            # `fallback` means "no model wrote this". The offline digest above is also
+            # not from a model, so a truthy `synthesis` alone must not decide this.
+            generation_mode="llm" if (synthesis and state.get("allow_external_ai")) else "fallback",
         )
         session.add(artifact)
         session.flush()

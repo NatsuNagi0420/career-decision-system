@@ -325,7 +325,7 @@ def test_replaying_the_same_proposal_does_not_duplicate_evidence(session_factory
         assert len(list(check.scalars(select(EvidenceItem).where(EvidenceItem.project_id == project_id)))) == 1
 
 
-def test_agent_profile_fact_arrives_unconfirmed(session_factory, student) -> None:
+def test_an_approved_profile_fact_lands_confirmed(session_factory, student) -> None:
     capability = get_capability("profile_diagnose")
     project_id = _project(session_factory, student.id, candidates={"数据分析师": "x"})
     run, artifact = _run_and_artifact(session_factory, student, project_id)
@@ -341,7 +341,11 @@ def test_agent_profile_fact_arrives_unconfirmed(session_factory, student) -> Non
         session.flush()
         result = apply_executor(session, run, session.get(Proposal, proposal.id))
         fact = session.get(ProfileFact, result["fact_id"])
-        assert fact.confirmed is False, "an agent-supplied fact is a claim until the user confirms it"
+        # The card carrying this exact statement was already approved by a human — that
+        # is the only way this executor runs. It used to write `confirmed=False`, and
+        # since nothing else ever flips the column, the resume (which asks for confirmed
+        # facts) could never see a single one. That was the bug this assertion now pins.
+        assert fact.confirmed is True, "an approved write is a confirmed fact"
         assert fact.source == "agent"
 
 

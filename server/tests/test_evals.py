@@ -90,7 +90,10 @@ def test_a_typo_in_an_expectation_key_is_rejected_as_a_problem() -> None:
 
 
 def test_a_capability_that_cannot_run_is_not_allowed_as_a_case() -> None:
-    planned = make_case(capability="resume_build")
+    # `interview_prep`, not `resume_build`: the latter became implemented, and this case
+    # exists to prove a capability with no executor cannot be an eval target. If every
+    # capability were implemented this test would need deleting, not softening.
+    planned = make_case(capability="interview_prep")
     assert any("不能当评测目标" in line for line in validate([planned, *load_cases()]))
 
 

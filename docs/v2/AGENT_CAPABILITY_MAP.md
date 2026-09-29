@@ -57,7 +57,7 @@ class CapabilitySpec(BaseModel):
 | 6 | `compare_decide` | 多标准对比 + 反方论证 + 不确定项 | `ComparisonMatrix` | `list_candidates` `get_evidence` `compare_candidates` | R1 | – | **是** | on |
 | 7 | `action_plan` | 4 周行动计划、里程碑、任务 | `ActionPlan` | `get_target` `get_plan` `estimate_load` | R2 | 是（`create_job_search_task`） | 否 | on |
 | 8 | `weekly_review` | 周复盘、置信度趋势、下周聚焦 | `WeeklyReviewDraft` | `get_plan` `get_task_results` `get_review_history` | R3 | **禁止自动**（提交即终局） | 否 | on |
-| 9 | `resume_build` | 简历生成/优化，JD 对齐，逐条改写 | `ResumeDraft` | `get_profile` `get_evidence` `get_jd` `match_jd` | R2 | 是（`create_resume_draft`） | **是** | on |
+| 9 | `resume_build` | 简历草稿：正文由代码从画像事实、证据与带回的结果逐行组装，缺的节明说"还没有依据" | `ResumeDraft` | `get_profile` `get_evidence` | R1 | – | 否 | on |
 | 10 | `interview_prep` | 行为/技术题、追问、 STAR 素材组织 | `InterviewKit` | `get_resume` `match_jd` `get_evidence` | R1 | – | **是** | on |
 
 `job_search_ops`（投递台账与转化统计）故意不列进第一版：它本质是 tracker，v1 已有页面形态，属于"表单一等公民"而非"Agent 一等公民"，先由 Artifact 面板承担。

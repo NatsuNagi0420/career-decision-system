@@ -358,13 +358,17 @@ def _record_profile_fact(session: Session, run: Run, proposal: Proposal) -> dict
         statement=payload.statement,
         source="agent",
         source_ref={"run_id": run.id},
-        # An agent-supplied fact is a claim until the user confirms it.
-        confirmed=False,
+        # This executor only runs from `_apply_proposal`, which only runs after a human
+        # clicked 确认 on the card that displayed this exact statement. So the fact is
+        # confirmed here — and it has to be, because nothing else ever flips the column:
+        # there is no confirm route or UI, so `False` meant every downstream consumer
+        # that asks for confirmed facts (the resume) was silently starved.
+        confirmed=True,
     )
     session.add(fact)
     profile.touch()
     session.flush()
-    return {"fact_id": fact.id, "needs_confirmation": True}
+    return {"fact_id": fact.id}
 
 
 def _project_for(session: Session, run: Run, proposal: Proposal) -> DecisionProject:

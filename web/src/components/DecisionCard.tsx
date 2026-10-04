@@ -22,10 +22,34 @@ const KEY_LABEL: Record<string, string> = {
   url: "链接",
   kind: "证据类型",
   quote: "引文",
+  facts: "画像事实",
+  plan_tasks: "行动任务",
   // The write replaces this draft line with the row's own text, so the card has to say
   // whose words end up stored — otherwise it reads as approval of the paraphrase.
   result_id: "引自你带回的原话（写入时一字不改）",
 };
+
+/**
+ * Payload keys that write several rows at once, and how to say one row in a line.
+ *
+ * Without this the card printed the array as JSON — which is a real problem now that a
+ * single approval can file six profile facts: `{"facts":[{"dimension":…` is not
+ * something a person can read and then be held to have agreed to.
+ */
+const ROW_LISTS: Record<string, (row: Record<string, unknown>) => string> = {
+  facts: (row) => `${String(row.statement ?? "")}（${String(row.dimension ?? "context")}）`,
+  plan_tasks: (row) => `第 ${String(row.week_no ?? "?")} 周 · ${String(row.title ?? "")} — 带回：${String(row.expected_output ?? "")}`,
+};
+
+function payloadRows(payload: Record<string, unknown>): Array<[string, unknown]> {
+  // `project_id` is plumbing the person cannot read, and the card already sits inside
+  // that project's thread — printing a 32-hex key on a C-facing confirmation is the
+  // exact "别印裸 id" rule this app already paid down once.
+  const hidden = new Set(["project_id"]);
+  return Object.entries(payload).filter(
+    ([key, value]) => !hidden.has(key) && !(Array.isArray(value) && value.every((entry) => entry && typeof entry === "object")),
+  );
+}
 
 /**
  * The confirmation gate. It sits in the thread rather than in a side panel because
@@ -51,11 +75,19 @@ export function DecisionCard({ title, rationale, riskTier, criteria, payload, on
         <dt>将写入</dt>
         <dd>
           <ul>
-            {Object.entries(payload).map(([key, value]) => (
+            {payloadRows(payload).map(([key, value]) => (
               <li key={key}>
                 {KEY_LABEL[key] ?? key}：{describe(value)}
               </li>
             ))}
+            {Object.entries(ROW_LISTS).flatMap(([key, line]) => {
+              const rows = Array.isArray(payload[key]) ? (payload[key] as Record<string, unknown>[]) : [];
+              return rows.map((row, index) => (
+                <li key={`${key}-${index}`}>
+                  {KEY_LABEL[key] ?? key}：{line(row)}
+                </li>
+              ));
+            })}
           </ul>
         </dd>
         {criteria.length ? (

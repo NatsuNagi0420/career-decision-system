@@ -132,9 +132,20 @@ class CreateJobSearchTaskPayload(BaseModel):
     plan_id: str | None = Field(default=None, max_length=32)
 
 
-class RecordProfileFactPayload(BaseModel):
+class ProfileFactItem(BaseModel):
     dimension: str = Field(default="context", max_length=24)
     statement: str = Field(min_length=2, max_length=500)
+
+
+class RecordProfileFactPayload(BaseModel):
+    """One card, several facts.
+
+    A person states six things in one sentence; the old shape could only propose one,
+    so filling a profile (and therefore a resume) cost six runs and six approvals. The
+    ceiling exists because a card a person cannot read is not a card they can approve.
+    """
+
+    facts: list[ProfileFactItem] = Field(min_length=1, max_length=12)
 
 
 PAYLOAD_SCHEMAS: dict[str, type[BaseModel]] = {
@@ -153,7 +164,7 @@ PROPOSAL_LABELS = {
     "collect_evidence": "归档一条证据",
     "create_decision_project": "新建决策项目",
     "create_job_search_task": "排下一周期的行动任务",
-    "record_profile_fact": "补充一条画像事实",
+    "record_profile_fact": "补充画像事实",
     "record_comparison": "落一版多标准比较",
 }
 
@@ -343,32 +354,43 @@ def _record_profile_fact(session: Session, run: Run, proposal: Proposal) -> dict
         profile = UserProfile(user_id=proposal.user_id)
         session.add(profile)
         session.flush()
-    duplicate = session.scalar(
-        select(ProfileFact).where(
-            ProfileFact.user_id == proposal.user_id,
-            ProfileFact.dimension == payload.dimension,
-            ProfileFact.statement == payload.statement,
+
+    written: list[str] = []
+    already: list[str] = []
+    for item in payload.facts:
+        duplicate = session.scalar(
+            select(ProfileFact).where(
+                ProfileFact.user_id == proposal.user_id,
+                ProfileFact.dimension == item.dimension,
+                ProfileFact.statement == item.statement,
+            )
         )
-    )
-    if duplicate is not None:
-        return {"fact_id": duplicate.id, "already_present": True}
-    fact = ProfileFact(
-        user_id=proposal.user_id,
-        dimension=payload.dimension,
-        statement=payload.statement,
-        source="agent",
-        source_ref={"run_id": run.id},
-        # This executor only runs from `_apply_proposal`, which only runs after a human
-        # clicked 确认 on the card that displayed this exact statement. So the fact is
-        # confirmed here — and it has to be, because nothing else ever flips the column:
-        # there is no confirm route or UI, so `False` meant every downstream consumer
-        # that asks for confirmed facts (the resume) was silently starved.
-        confirmed=True,
-    )
-    session.add(fact)
-    profile.touch()
-    session.flush()
-    return {"fact_id": fact.id}
+        if duplicate is not None:
+            # Re-approving the same draft must not double-file it — the same guard the
+            # task card has, for the same reason.
+            already.append(duplicate.id)
+            continue
+        fact = ProfileFact(
+            user_id=proposal.user_id,
+            dimension=item.dimension,
+            statement=item.statement,
+            source="agent",
+            source_ref={"run_id": run.id},
+            # This executor only runs from `_apply_proposal`, which only runs after a
+            # human clicked 确认 on the card that displayed this exact statement. So the
+            # fact is confirmed here — and it has to be, because nothing else ever flips
+            # the column: there is no confirm route or UI, so `False` meant every
+            # downstream consumer that asks for confirmed facts (the resume) starved.
+            confirmed=True,
+        )
+        session.add(fact)
+        session.flush()
+        written.append(fact.id)
+
+    if written:
+        profile.touch()
+        session.flush()
+    return {"fact_ids": written, "already_present": already, "added": len(written)}
 
 
 def _project_for(session: Session, run: Run, proposal: Proposal) -> DecisionProject:
@@ -585,15 +607,19 @@ def build_proposal(capability: CapabilitySpec, run: Run, artifact: Artifact, syn
     # proposal as unsupported rather than inventing a candidate name or an evidence
     # statement the model never justified.
     error = payload_error(proposal_type, payload)
-    tasks = [item for item in payload.get("plan_tasks") or [] if isinstance(item, dict)]
+    # A card can write several rows at once (the week's tasks, several profile facts).
+    # The subject has to name the first one and say how many follow, because the count
+    # is the only hint a person gets that this one approval writes more than it shows.
+    lists = {key: [item for item in payload.get(key) or [] if isinstance(item, dict)] for key in ("plan_tasks", "facts")}
+    items = next((found for found in lists.values() if found), [])
+    first_label = "statement" if lists["facts"] else "title"
     subject = str(
         payload.get("name") or payload.get("title") or payload.get("statement") or payload.get("body")
-        or (tasks[0].get("title") if tasks else "")
+        or (items[0].get(first_label) if items else "")
         or (actions[0] if actions else "")
     )
-    # One card writes the whole plan, so the card has to say how much it writes.
-    if len(tasks) > 1:
-        subject = f"{subject} 等 {len(tasks)} 条"
+    if len(items) > 1:
+        subject = f"{subject} 等 {len(items)} 条"
     return Proposal(
         run_id=run.id,
         artifact_id=artifact.id,

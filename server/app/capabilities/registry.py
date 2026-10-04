@@ -41,10 +41,11 @@ CAPABILITIES: tuple[CapabilitySpec, ...] = (
         # the default `context`, so every downstream consumer that reads a specific
         # dimension (the resume reads education / skills / awards) got nothing.
         synthesis_notes=(
-            "proposed 一次只记一条事实，dimension 只能取 education、skills、awards、"
-            "constraints、interests、values、context 之一；一个人说了几件事就分几条记，"
-            "不要把学校、技能、获奖塞进同一句。statement 用一句人话复述本人说过的内容，"
-            "数字与名称照他原话，不要补造。"
+            "proposed.facts 是一个列表：本人这一句里说了几件事，就分几条记，一条一件事，"
+            "不要把学校、技能、获奖塞进同一句。每条的 dimension 只能取 education、skills、"
+            "awards、constraints、interests、values、context 之一；statement 用一句人话复述"
+            "本人说过的内容，数字与名称照他原话，不要补造。一次确认卡会一次写入这些条，"
+            "所以宁可少列，也不要列进他没说的话。"
         ),
         next_capabilities=["direction_explore"],
     ),

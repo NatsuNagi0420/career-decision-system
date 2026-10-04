@@ -325,7 +325,12 @@ def test_replaying_the_same_proposal_does_not_duplicate_evidence(session_factory
         assert len(list(check.scalars(select(EvidenceItem).where(EvidenceItem.project_id == project_id)))) == 1
 
 
-def test_an_approved_profile_fact_lands_confirmed(session_factory, student) -> None:
+def test_one_card_files_several_profile_facts_at_once(session_factory, student) -> None:
+    """A person states six things in one sentence; that must cost one approval, not six.
+
+    The card is the gate, so the gate has to show every row it writes — the count in the
+    title is the only hint a person gets that one click files more than one line.
+    """
     capability = get_capability("profile_diagnose")
     project_id = _project(session_factory, student.id, candidates={"数据分析师": "x"})
     run, artifact = _run_and_artifact(session_factory, student, project_id)
@@ -333,20 +338,51 @@ def test_an_approved_profile_fact_lands_confirmed(session_factory, student) -> N
         capability,
         run,
         artifact,
-        {"conclusion": "记一条", "proposed": {"dimension": "constraints", "statement": "不能离开广州"}},
+        {
+            "conclusion": "记三条",
+            "proposed": {
+                "facts": [
+                    {"dimension": "education", "statement": "南方学院 信息管理与信息系统，2027 年毕业"},
+                    {"dimension": "skills", "statement": "会用 SQL 和 pandas 做数据清洗"},
+                    {"dimension": "awards", "statement": "拿过校级数学建模二等奖"},
+                ]
+            },
+        },
     )
     assert proposal is not None
+    assert "等 3 条" in proposal.title, "一张卡写三行，卡片标题必须说清写几行"
     with session_factory() as session:
         session.add(proposal)
         session.flush()
         result = apply_executor(session, run, session.get(Proposal, proposal.id))
-        fact = session.get(ProfileFact, result["fact_id"])
-        # The card carrying this exact statement was already approved by a human — that
-        # is the only way this executor runs. It used to write `confirmed=False`, and
-        # since nothing else ever flips the column, the resume (which asks for confirmed
-        # facts) could never see a single one. That was the bug this assertion now pins.
-        assert fact.confirmed is True, "an approved write is a confirmed fact"
-        assert fact.source == "agent"
+        assert len(result["fact_ids"]) == 3
+        facts = [session.get(ProfileFact, fact_id) for fact_id in result["fact_ids"]]
+        assert [fact.dimension for fact in facts] == ["education", "skills", "awards"]
+        # The card carrying these exact statements was already approved by a human —
+        # that is the only way this executor runs. It used to write `confirmed=False`,
+        # and since nothing else ever flips the column, the resume (which asks for
+        # confirmed facts) could never see a single one. That was the bug.
+        assert all(fact.confirmed is True for fact in facts), "an approved write is a confirmed fact"
+        assert all(fact.source == "agent" for fact in facts)
+
+        # Re-approving the same draft must not double-file it.
+        again = apply_executor(session, run, session.get(Proposal, proposal.id))
+        assert again["added"] == 0 and len(again["already_present"]) == 3
+
+
+def test_a_fact_list_over_the_card_limit_is_refused_not_truncated(session_factory, student) -> None:
+    capability = get_capability("profile_diagnose")
+    project_id = _project(session_factory, student.id, candidates={"数据分析师": "x"})
+    run, artifact = _run_and_artifact(session_factory, student, project_id)
+    proposal = build_proposal(
+        capability,
+        run,
+        artifact,
+        {"conclusion": "记一堆", "proposed": {"facts": [{"dimension": "context", "statement": f"第 {i} 条"} for i in range(13)]}},
+    )
+    # A card a person cannot read is not a card they can agree to: the overflow has to
+    # surface as an unsupported proposal, never as a silently shortened write.
+    assert proposal is not None and proposal.status == "unsupported"
 
 
 def test_missing_payload_field_is_flagged_unsupported_not_guessed(session_factory, student, catalogue) -> None:

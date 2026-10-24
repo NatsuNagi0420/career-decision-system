@@ -1,5 +1,5 @@
 /**
- * Minimal API client plus the SSE reader.
+ * 青穗集 · 统一 API 与进度流：登录鉴权、断线续传与明确中断反馈，不把传输结束当作任务完成。
  *
  * EventSource cannot send an Authorization header, so the stream is read over
  * fetch and parsed by hand. Reconnect resumes from the last seq actually applied,
@@ -15,6 +15,28 @@ export interface SessionUser {
   username: string;
   external_ai_consent: boolean;
 }
+
+export interface ProfileFact {
+  id: string;
+  dimension: string;
+  statement: string;
+  source: string;
+  created_at: string;
+}
+
+export interface PersonalProfile {
+  version: number;
+  school: string;
+  major: string;
+  graduation_year: number | null;
+  city_targets: string[];
+  summary: string;
+  updated_at: string | null;
+  facts: ProfileFact[];
+}
+
+export type ProfileInput = Pick<PersonalProfile, "school" | "major" | "graduation_year" | "city_targets" | "summary"> & { expected_version: number };
+export type ProfileFactInput = Pick<ProfileFact, "dimension" | "statement"> & { expected_version: number };
 
 export const tokenStore = {
   get: (): string | null => localStorage.getItem(TOKEN_KEY),
@@ -99,6 +121,13 @@ export const api = {
     request<{ external_ai_consent: boolean }>("/api/v1/auth/ai-consent", { method: "POST", body: JSON.stringify({ granted }) }),
   capabilities: () => request<Capability[]>("/api/v1/capabilities"),
   me: () => request<SessionUser>("/api/v1/auth/me"),
+  profile: (signal?: AbortSignal) => request<PersonalProfile>("/api/v1/profile", { signal }),
+  updateProfile: (input: ProfileInput) => request<PersonalProfile>("/api/v1/profile", { method: "PUT", body: JSON.stringify(input) }),
+  addProfileFact: (input: ProfileFactInput) => request<PersonalProfile>("/api/v1/profile/facts", { method: "POST", body: JSON.stringify(input) }),
+  updateProfileFact: (id: string, input: ProfileFactInput) =>
+    request<PersonalProfile>(`/api/v1/profile/facts/${encodeURIComponent(id)}`, { method: "PUT", body: JSON.stringify(input) }),
+  retractProfileFact: (id: string, version: number) =>
+    request<PersonalProfile>(`/api/v1/profile/facts/${encodeURIComponent(id)}?expected_version=${version}`, { method: "DELETE" }),
   feed: () => request<Feed>("/api/v1/feed"),
   continuation: () => request<Continuation>("/api/v1/continuations"),
   abandonObligation: (obligationId: string) =>
@@ -360,6 +389,7 @@ export async function* readRunStream(
   let cursor = options.afterSeq ?? -1;
   let attempts = 0;
   const limit = options.maxReconnects ?? 5;
+  let lastError: unknown;
 
   while (attempts <= limit) {
     let sawTerminal = false;
@@ -377,15 +407,18 @@ export async function* readRunStream(
         yield frame;
       }
     } catch (error) {
-      if (options.signal?.aborted) {
-        return;
-      }
+      if (options.signal?.aborted) return;
+      lastError = error;
     }
-    if (sawTerminal || options.signal?.aborted) {
-      return;
-    }
+    if (sawTerminal || options.signal?.aborted) return;
     attempts += 1;
-    await sleep(400 * attempts);
+    if (attempts <= limit) await sleep(400 * attempts);
+  }
+  // Exhaustion is not successful completion: the shell must stop pretending that it
+  // is still receiving progress. This is a connection issue, not a failed backend run.
+  if (!options.signal?.aborted) {
+    const reason = lastError instanceof Error ? `（${lastError.message}）` : "";
+    throw new Error(`任务进度连接已中断，请重新打开当前对话核对${reason}`);
   }
 }
 

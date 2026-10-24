@@ -1,0 +1,11 @@
+{
+  "_comment": "青穗集 · 人工复核的开掌拇指/中指端回归点：L/R均指角色自身；只约束已复核的四张开掌，不冒充自动解剖评分。",
+  "canvas": [1536, 1536],
+  "palms": [
+    {"asset": "arm-l-H02", "side": "l", "hand": "H02", "wrist": [946, 730], "original": {"thumb": [913, 777], "middle": [946, 817]}, "expected": {"thumb": [978, 777], "middle": [945, 817]}, "areaSign": -1},
+    {"asset": "arm-r-H02", "side": "r", "hand": "H02", "wrist": [570, 730], "original": {"thumb": [600, 777], "middle": [574, 817]}, "expected": {"thumb": [539, 777], "middle": [565, 817]}, "areaSign": 1},
+    {"asset": "arm-l-H03", "side": "l", "hand": "H03", "wrist": [946, 730], "original": {"thumb": [977, 782], "middle": [931, 819]}, "expected": {"thumb": [977, 782], "middle": [931, 819]}, "areaSign": -1},
+    {"asset": "arm-r-H03", "side": "r", "hand": "H03", "wrist": [570, 730], "original": {"thumb": [601, 790], "middle": [576, 824]}, "expected": {"thumb": [537, 790], "middle": [562, 824]}, "areaSign": 1}
+  ]
+}
+

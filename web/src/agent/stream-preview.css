@@ -1,0 +1,13 @@
+/** 青穗集 · 粒子解码预览布局：保留真实消息样式，只提供样例和重播入口。 */
+.career-workspace.stream-preview { display: flex; align-items: center; justify-content: center; padding: 28px; min-height: 480px; }
+.stream-preview__window { display: flex; flex-direction: column; width: min(1000px, 100%); min-height: min(640px, 90dvh); max-height: 94dvh; background: #fefcff; border: 1px solid #e5daef; border-radius: 15px; box-shadow: 0 16px 80px #82639c14; overflow: hidden; }
+.stream-preview__header { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 16px 23px; border-bottom: 1px solid #f0e9f8; color: #81619f; }
+.stream-preview__header strong { font-weight: 400; }
+.stream-preview__messages { flex: 1; overflow: auto; padding: 32px 28px; }
+.stream-preview .agent-message { max-width: 100%; width: 100%; }
+.stream-preview .career-draft-content { min-height: 64px; }
+.stream-preview__empty { padding: 60px 0; color: #b19bc5; text-align: center; }
+.stream-preview__controls { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; padding: 18px 23px; border-top: 1px solid #f0e9f8; }
+.stream-preview__controls button { padding: 8px 15px; border: 1px solid #d9c9e9; border-radius: 7px; background: #faf6ff; color: #8d6baa; font: inherit; cursor: pointer; }
+.stream-preview__controls button:last-child { background: #9b7fbd; border-color: #9b7fbd; color: #fff; }
+@media (max-width: 760px) { .career-workspace.stream-preview { padding: 12px; } .stream-preview__messages { padding: 25px 16px; } }

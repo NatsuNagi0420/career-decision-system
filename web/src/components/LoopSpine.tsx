@@ -1,3 +1,4 @@
+/** 青穗集 · 研究员视图里的求职主线；求职者第一屏不再走这里。 */
 import { useState } from "react";
 import type { Station } from "../state/loop";
 import { rise } from "../state/motion";
@@ -18,7 +19,7 @@ interface Props {
 
 /**
  * The loop as the first thing on the screen. Desktop draws the whole track; a phone
- * collapses the same state to "第 2 / 5 步 · 说清比什么" plus the dots, so nothing is
+ * collapses the same state to the current station plus the dots, so nothing is
  * hidden behind a tap on either side.
  */
 export function LoopSpine({ stations, current, onTake, alternatives = [], lead = null }: Props) {
@@ -31,7 +32,7 @@ export function LoopSpine({ stations, current, onTake, alternatives = [], lead =
         <span className="spine__cap">这一轮走到哪</span>
         <span className="spine__pos">
           <Swap when={current?.key ?? "done"}>
-            {current ? `第 ${index + 1} / ${stations.length} 步 · ${current.name}` : "五步都走完了 · 可以开下一轮"}
+            {current ? `第 ${index + 1} / ${stations.length} 步 · ${current.name}` : "主线都走完了 · 可以开下一轮"}
           </Swap>
         </span>
       </div>
@@ -95,7 +96,7 @@ export function LoopSpine({ stations, current, onTake, alternatives = [], lead =
             <button
               className="spine__alt card-in"
               style={rise(position)}
-              key={example.capability}
+              key={example.goal}
               onClick={() => onTake(example.goal, example.capability)}
             >
               <Ms g={example.glyph} size={16} />

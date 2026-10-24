@@ -1,109 +1,70 @@
-# 青穗集 · 职业决策 Agent（v2）
+<!-- 青穗集 · 当前项目入口；默认运行 TypeScript Agent + React 穗奈桌面。 -->
+# 青穗集 · 穗奈 Agent
 
-面向大学生与初入职场者的**证据驱动职业决策**产品。用户带着一个模糊的职业困惑进来，Agent（穗奈）在授权与代码约束内自主查资料、整理结论、提出写入并等用户确认，并且**跨会话记住自己承诺的下一步**。
+青穗集是一个面向求职成长的本机 Agent：穗奈通过持续对话整理用户画像、匹配岗位、解释技能差距、规划行动，并逐步协助完成简历等成果。当前运行主线是 React/Vite 前端 + TypeScript Agent + SQLite。
 
-产品目标与本阶段范围的唯一权威表述见 [`docs/v2/PROJECT_GOAL.md`](docs/v2/PROJECT_GOAL.md)。
+## 启动
 
-## 一句话架构
-
-**一个 Python 进程拥有全部服务端能力，一个 React 壳只负责呈现与交互。**
-
-```text
-React (Vite, 5173)  ──/api──►  FastAPI + LangGraph (8100)  ──►  MySQL career_v2   业务事实
-                                   │                              （Alembic 迁移）
-                                   ├──►  SQLite var/checkpoints.sqlite   可恢复执行状态
-                                   └──►  OpenAI-compatible 模型（deepseek-flash 等）
-```
-
-- 没有 Java 后端、没有 Android 客户端、没有独立的 Agent 服务。v1 的四层结构已于 2026-09-19 整体删除，历史文档归档在 `docs/v1-历史/`。
-- 浏览器与 Python 服务同源（Vite 代理 `/api`、`/healthz`），因此不需要 CORS。
-
-## 核心对象
-
-| 对象 | 含义 | 为什么存在 |
-| --- | --- | --- |
-| `Run` / `Step` | 一次推进及其步骤 | 任务可恢复、可审计 |
-| `Event` | 只追加的事件流，`(run_id, seq)` 唯一 | SSE 断线后从最后序号续传，重放不重复 |
-| `Artifact` | 成果物，带 `data_coverage` / `is_provisional` / 逐字引文 | 结论必须能回指原句 |
-| `Proposal` + `Approval` | 想写入什么 + 人是否批准 | 重要业务写入必须过人 |
-| `Obligation` | Agent 对自己的下一步承诺 | 推进权在 Agent 手上，跨会话不失忆 |
-
-公理是：**模型决定下一步做什么，代码决定能不能做**。风险分级 R0–R3 写在 `CapabilitySpec` 里，R2/R3 一律需要审批，R3 不允许携带写入——这些由校验器强制，不靠提示词自觉。
-
-## 本地启动
-
-前置：Python 3.12–3.13、Node 20+、一个可连的 MySQL 8。迁移会自己建库，但只允许建/写库名以 `career_v2` 开头的库，其他目标一律被 `assert_safe_target` 拒绝。
+首次安装：
 
 ```powershell
-# 1) 服务端
-cd server
-uv sync --extra dev
-copy .env.example .env       # 填 DB_URL；LLM_PROVIDER=mock 可完全离线跑通
-.venv\Scripts\python.exe -m alembic upgrade head   # 库不存在时先 CREATE DATABASE career_v2
-.venv\Scripts\python.exe scripts\import_catalog.py   # 载入职业方向/岗位目录
-.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8100
-
-# 2) 前端（另开终端）
-cd web
-npm ci
-npm run dev                  # http://127.0.0.1:5173
+npm run setup
 ```
 
-注册账号时勾选"同意把决策上下文交给云端模型处理"才会调用真实模型；不勾选则走确定性路径，并在结果上明确标注依据有限。真实模型配置见 `server/.env.example` 的 `LLM_*` 项。
-
-## 一条命令验证全部
+开发模式（前端 `5173`，Agent `8110`）：
 
 ```powershell
-powershell -File scripts\verify.ps1          # 含真实 MySQL 测试库，约 7 分钟
-powershell -File scripts\verify.ps1 -Quick   # 跳过 pytest
+npm run dev
 ```
 
-它依次跑：ruff、能力与契约完整性（`server/scripts/validate.py` 19 项）、Alembic 漂移检查、pytest、`tsc --noEmit`、vitest、生产构建，并给出逐项结论。
+生产构建并启动 Agent：
 
-`validate.py` 里有几条是**跨语言契约**：后端帧类型集合必须等于前端 `FrameKind`、每种帧都要有序列化样本、能力链不能通向没有实现的能力。这类不一致以前靠人眼发现。
+```powershell
+npm run build
+npm start
+```
 
-**界面截图矩阵不在七门里**（它要求 8100 与 vite 都活着，性质同评测台架）：`cd web` 后 `npm run verify:e2e [url]`，用本机 Chrome（`channel: "chrome"`，不下载浏览器）在 1440/430 两档视口各拍登录页与工作区首屏到 `web/e2e/.shots/`，断言无 4xx、无控制台报错、没有"逐字竖排"的标签、输入框比能力下拉宽、背景麦浪**真的在动且开关真的能停**（这两条成对出现，只有一条"会动"的断言挡不住"根本不会动"的回归；前一条竖排守卫每次跑之前先用一段合成 DOM 证明它自己会红）。**它只用一个固定账号 `e2e_probe`**：首跑创建、之后一律登录复用，且约定只读——不许在它名下建 run 或任何业务行，否则截图就不再是"新用户看到的第一屏"。
+浏览器平时打开 `http://127.0.0.1:5173/`。8110 是前端代理到的本机 API，配置官方模型时还需要单独运行 8120 官方中转；这三个端口不是三套用户或三套数据库。
 
-前端的同类守卫放在 vitest 里：`web/src/styles.contract.test.ts` 直接读 `styles.css`，钉住"圆角只能来自令牌表、令牌表恰好五个名字且互不同值、定义了就必有人读、引用块四处同形"——形状漂移和帧契约一样，不靠人眼。
-
-## 测试与评测的边界
-
-- `server/tests/` 用真实 MySQL（`career_v2_test`，缺失时同样自动建库）+ `ScriptedProvider`，覆盖结构、权限、审批、事件与承诺，**不调用真实模型**。
-- 真实模型的质量门禁在 `server/evals/`：38 条固定案例 + 引用溯源校验器，只写专用库 `career_v2_eval`（`career_v2`/`career_v2_test`/两个 v1 库被硬性禁止写入）。
-
-  ```powershell
-  cd server
-  .venv\Scripts\python.exe -m scripts.run_evals --check                       # 只核对案例集，不连库不花钱
-  .venv\Scripts\python.exe -m scripts.run_evals --limit 5                     # 假模型，只验机器本身转不转
-  .venv\Scripts\python.exe -m scripts.run_evals --live                        # 真模型出基线，38 例约 $0.14
-  .venv\Scripts\python.exe -m scripts.run_evals --live --only candidates_from_profile,compare_two_directions
-                                                                                # 只重跑改过口径的那几例，和基线做配对比较
-  .venv\Scripts\python.exe -m scripts.run_evals --rescore var\eval-xxx-live.json   # 改了评分器就重算引用，不再花钱
-  ```
-
-  当前基线与八格指标的口径都记在 `docs/v2/AGENT_CAPABILITY_MAP.md` §31–§54（八格里 §41 新增的 `empty_result_reads` **只进报告、不进门槛**，所以门槛数没变多。§33–§34 引用质量的成因与第一次提升，§35 提示词指纹：跨轮差异才能归因到"哪一版提示词/工具契约"，§36 界面上两处把状态当出处的假话，§37 一次自激门禁红的负向验证——它证明了自己先前那句结论说重了，§38 基线唯一红项的根因：空查询被 `if value` 记成"有数据"，§39 成果物自己绑上它引过的那一行，§40 那条绑定的端到端测试与两处被测试否掉的假设，§41 "工具答了但结果为空"终于有一个数，§42 版本链的上一条只认用户真见过的结论，§43 界面上的"来源"换成系统绑定的行指针，模型自己写的那句被明确标成"模型自述"，§44 读到 `unapproved_writes` 量得比名字窄——绕过提案直接落库它看不见，修法与负向验证已记为待做，§45 界面圆角：令牌表自己就有两个名字同值，所以"圆的圆方的方"是定义问题不是审美问题，§46 试过"形状承载语义"（轨道/控件/标签改方）——数值全绿但被眼睛否掉，方角同日整体撤销、令牌回到五名并加断言防回潮，留下的是焦点环修复、等宽数字与"还缺证据"画成斜纹缺口，§47 配色：全站色相只落在 43° 弧上且色阶里有一个零饱和的白档，于是第三色相换成麦色、白档染色，并新增 palette 契约（含"守卫必须自证数到了东西"一条），§48 用户判词：这套界面是给研究员看的而求职者是 C 端——答案只占正文 8%、7 个裸 id 上屏（两个是我自己印的），已止血成"按种类数条数"，§49 全量改 C 端：研究员开关（默认关）+ 25 条换词 + 一条扫字符串字面量的 copy 契约，屏幕文字量 −19%，§50 清库当场删出一个真 bug——本地有 token 就当已登录，令牌失效会把人扔进空壳页，§51 装 Playwright 只为看截图，第一轮抓到三个数值量不出来的缺陷（每个访客一个 favicon 404、我上一节造的按钮逐字竖排、手机上顶栏胶囊早就竖排过），§52 截图脚本改成固定只读账号；删一次性账号时被自己的列名假设打回（指向 users 的外键列不都叫 `user_id`，按列名猜会永远数不到那张表），并把"逐字竖排"做成会自证能红的守卫，§53 决策闭环终于有了形状：内容区第一块是「这一轮走到哪」五格，点亮只因为 feed 里有一行证明它（无百分比），穗奈那句并进同一张卡、只在首屏出现，§54 背景是三条 CSS 正弦（麦浪）而不是 canvas/Lottie——实测 Lottie 要 46.6–196 KB gzip 且中文文字动画必须再拉字体或逐字转曲，我们只花 0.75 KB，并留了三条"能关"的机制（菜单开关 / 有 run 在飞自动定住 / 减动效偏好下换静止帧）。**离线跑故意过不了阈值**（报告末尾会自己说明），只有 `--live` 的数字才拿来比较。
-- **不要同时开两个 pytest 会话**：它们共享 `career_v2_test`，`TRUNCATE` 会互相打断。评测跑 `career_v2_eval`，但仍不能与别人的全量 pytest 并发（MySQL 1684 并发改表）。
-
-## 文档
-
-| 位置 | 内容 |
-| --- | --- |
-| `docs/v2/PROJECT_GOAL.md` | 项目目标、验收标准、P0–P4 优先级、明确不做的事 |
-| `docs/v2/PILOT_PROTOCOL.md` | P4 小规模试点的观察口径与判读规则（全部可用现有表算出，缺的是人不是代码） |
-| `docs/v2/AI_NATIVE_ARCHITECTURE.md` | AI 原生公理、对象模型、事件与审批契约、§11 试点与运维约定 |
-| `docs/v2/AGENT_CAPABILITY_MAP.md` | 能力地图与**逐里程碑落地记录**（含实测发现的缺陷） |
-| `docs/v1-历史/` | v1 四层架构时期的规格与计划，仅供追溯，**不描述当前系统** |
-| `docs/品牌形象/` | 品牌与穗奈 IP 素材（`BgSub_*` 为透明底） |
+模型配置和沙箱边界见 [Agent 使用说明](agent/README.md)。上游官方密钥只放在中转服务端，不放入前端或 `VITE_*` 配置。
 
 ## 目录
 
-```text
-server/   FastAPI + LangGraph 服务：API、鉴权、能力注册表、工具、事件、审批、承诺
-  scripts/   validate.py（契约校验）、run_evals.py（真模型评测入口）、import_catalog.py（职业目录）、brand_assets.py（品牌素材切图）、demo_e2e.py
-  evals/     38 条固定评测案例、引用溯源校验器、指标探测与报告
-web/      React 19 + Vite 应用壳：对话流、成果物、确认门、对象层侧栏
-spikes/   一次性技术验证（模型行为、checkpoint 一致性），结论已并入文档
-scripts/  verify.ps1 —— 唯一验证入口
-docs/     v2 现行文档 + v1 历史归档 + 品牌形象素材
-参考开源项目/  只读研究材料，不入库、不参与构建，其自带的 AGENTS.md 不适用于本项目
+详细边界见 [仓库结构与重构基线](docs/architecture/REPOSITORY_LAYOUT.md)。
+
+- `agent/`：当前 TypeScript Agent、模型适配、工具执行、审批、文件成果和唯一 SQLite 主库。
+- `web/`：当前 React/Vite 穗奈桌面、对话交互、个人页和岗位/简历组件。
+- `assets/web/`：运行时公共网页素材；页面通过 Agent 的只读素材接口读取。
+- `docs/`：产品决策、架构说明、岗位库导入规则、研究笔记和品牌交接文档。
+- `scripts/`：开发启动、验证、岗位库导入和数据库维护脚本。
+- `legacy/server-python/`：已退休的 Python/FastAPI/LangGraph/MySQL 实现，只供追溯，不参与默认启动。
+- `spikes/`：一次性验证，不作为运行时依赖。
+
+## 唯一主库
+
+默认位置：`agent/var/agent.sqlite`。
+
+账号、会话、执行记录、职业资料、简历状态和岗位参考库共用这一份 SQLite 主库。运行时数据库、日志、备份、原始岗位交付、模型密钥和个人会话不会提交到 Git。新环境不会悄悄填入演示账号或岗位，需要恢复受控备份或明确导入。
+
+岗位批次导入：
+
+```powershell
+npm run catalogue:import -- --archive "docs/岗位库扩充/待导入/新批次.zip" --review "docs/岗位库扩充/对应批次清洗规则.json"
 ```
+
+导入规则、数据库备份和边界见 [数据库统一维护](docs/agent-foundation/DATABASE_20261024.md)。
+
+## 验证
+
+```powershell
+npm run check
+npm test
+npm run build
+python scripts/test-merge-job-catalogue.py
+```
+
+测试使用临时数据库和明确的模型替身；通过不代表任意真实模型都能稳定完成职业任务。真实模型请求会产生费用，并受第三方隐私、接口兼容性和本地沙箱权限影响。
+
+## 当前边界
+
+当前系统已经具备对话、流式事件、模型连接测试、工具执行、审批、文件成果、岗位库读取、画像记录和本地下载等底座能力。职业规划的深度匹配、证据质量、简历结构化生成和正式投递仍需要在后续工作流重构中继续打磨。

@@ -1,5 +1,5 @@
 /**
- * Run stream state, as a pure reducer.
+ * 青穗集 · 任务事件状态：保留可重放的事实，供消息、确认卡和正式角色共同读取。
  *
  * This is the state machine we took on by not adopting the official streaming hook,
  * so it is deliberately the most tested file in the front end: replayed frames must
@@ -118,7 +118,9 @@ export interface UsageView {
 }
 
 export interface ShellState {
-  status: "idle" | "running" | "awaiting_approval" | "completed" | "failed";
+  status: "idle" | "running" | "awaiting_approval" | "completed" | "cancelled" | "failed";
+  runId?: string;
+  capabilityId?: string;
   goal?: string;
   items: TimelineItem[];
   artifacts: ArtifactView[];
@@ -205,6 +207,7 @@ const labelForStep = (name: string): string => STEP_LABEL[name] ?? name;
 const labelForTool = (name: string): string => TOOL_LABEL[name] ?? name;
 
 export function reduceFrame(state: ShellState, frame: Frame): ShellState {
+  if (state.runId && frame.run_id !== state.runId) return state;
   // Replay is normal, not exceptional: the server replays committed history to a
   // late subscriber, and a reconnect replays the tail again.
   if (frame.seq <= state.lastSeq) {
@@ -220,7 +223,7 @@ export function reduceFrame(state: ShellState, frame: Frame): ShellState {
 
   switch (frame.kind) {
     case "run_started":
-      return push(item(frame, "接到目标", str(frame, "goal")), { status: "running", goal: str(frame, "goal") });
+      return push(item(frame, "接到目标", str(frame, "goal")), { status: "running", runId: frame.run_id, capabilityId: str(frame, "capability_id"), goal: str(frame, "goal") });
 
     case "step_started":
       // Opened, not announced: a step that started says nothing the reader can use
@@ -350,7 +353,7 @@ export function reduceFrame(state: ShellState, frame: Frame): ShellState {
     }
 
     case "run_completed":
-      return push(item(frame, `结束 · ${str(frame, "status")}`), { status: str(frame, "status") === "completed" ? "completed" : "failed" });
+      return push(item(frame, `结束 · ${str(frame, "status")}`), { status: str(frame, "status") === "completed" ? "completed" : str(frame, "status") === "cancelled" ? "cancelled" : "failed" });
 
     case "run_failed":
       // The raw error keeps its stage token in `errors` for whoever debugs the run;

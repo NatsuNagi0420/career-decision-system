@@ -1,0 +1,407 @@
+{
+  "_comment": "青穗集 · 场景动作与模型文件诚实分离；拿笔动作是专注整理替代。",
+  "modelStatus": "NOT_CREATED",
+  "requiresOriginalSuinaiMoc3": true,
+  "motions": [
+    {
+      "id": "A01",
+      "label": "初次见面问好",
+      "gesture": "G02",
+      "requestedGesture": "G02",
+      "file": "motions/A01.motion3.json",
+      "playback": "one_shot_then_idle",
+      "substitution": "",
+      "trigger": "进入当前会话且首次显示角色"
+    },
+    {
+      "id": "A02",
+      "label": "安静陪伴",
+      "gesture": "G01",
+      "requestedGesture": "G01",
+      "file": "motions/A02.motion3.json",
+      "playback": "quiet_loop",
+      "substitution": "",
+      "trigger": "没有进行中的任务或用户正在阅读"
+    },
+    {
+      "id": "A03",
+      "label": "认真听你输入",
+      "gesture": "G04",
+      "requestedGesture": "G04",
+      "file": "motions/A03.motion3.json",
+      "playback": "enter_then_hold",
+      "substitution": "",
+      "trigger": "用户在输入框持续输入"
+    },
+    {
+      "id": "A04",
+      "label": "听懂后的点头",
+      "gesture": "G03",
+      "requestedGesture": "G03",
+      "file": "motions/A04.motion3.json",
+      "playback": "one_shot_then_idle",
+      "substitution": "",
+      "trigger": "用户提交的信息已成功接收"
+    },
+    {
+      "id": "A05",
+      "label": "邀请补充一句",
+      "gesture": "G07",
+      "requestedGesture": "G07",
+      "file": "motions/A05.motion3.json",
+      "playback": "enter_then_hold",
+      "substitution": "",
+      "trigger": "系统发现一个明确的资料缺项并展示提问"
+    },
+    {
+      "id": "A06",
+      "label": "请你做个选择",
+      "gesture": "G07",
+      "requestedGesture": "G07",
+      "file": "motions/A06.motion3.json",
+      "playback": "enter_then_hold",
+      "substitution": "",
+      "trigger": "界面确有两个以上可选项且需要选择"
+    },
+    {
+      "id": "A07",
+      "label": "接住用户的困惑",
+      "gesture": "G11",
+      "requestedGesture": "G11",
+      "file": "motions/A07.motion3.json",
+      "playback": "one_shot_then_idle",
+      "substitution": "",
+      "trigger": "用户主动表达求职困惑或焦虑"
+    },
+    {
+      "id": "A08",
+      "label": "解释接下来步骤",
+      "gesture": "G10",
+      "requestedGesture": "G10",
+      "file": "motions/A08.motion3.json",
+      "playback": "one_shot_then_idle",
+      "substitution": "",
+      "trigger": "已列出接下来要做的两三步"
+    },
+    {
+      "id": "A09",
+      "label": "开始整理画像",
+      "gesture": "G05",
+      "requestedGesture": "G05",
+      "file": "motions/A09.motion3.json",
+      "playback": "enter_then_hold",
+      "substitution": "",
+      "trigger": "profile_diagnose 对应任务实际运行"
+    },
+    {
+      "id": "A10",
+      "label": "记录一条经历",
+      "gesture": "G05",
+      "requestedGesture": "G13",
+      "file": "motions/A10.motion3.json",
+      "playback": "one_shot_then_idle",
+      "substitution": "缺少笔与便签：先用专注整理动作替代，不呈现写字。",
+      "trigger": "经历写入或明确展示记录动作"
+    },
+    {
+      "id": "A11",
+      "label": "画像整理完成",
+      "gesture": "G08",
+      "requestedGesture": "G08",
+      "file": "motions/A11.motion3.json",
+      "playback": "one_shot_then_idle",
+      "substitution": "",
+      "trigger": "画像结果已生成且可见；临时稿必须标出"
+    },
+    {
+      "id": "A12",
+      "label": "核对不确定信息",
+      "gesture": "G09",
+      "requestedGesture": "G09",
+      "file": "motions/A12.motion3.json",
+      "playback": "enter_then_hold",
+      "substitution": "",
+      "trigger": "存在待用户核实的具体画像字段"
+    },
+    {
+      "id": "A13",
+      "label": "确认画像修正",
+      "gesture": "G03",
+      "requestedGesture": "G03",
+      "file": "motions/A13.motion3.json",
+      "playback": "one_shot_then_idle",
+      "substitution": "",
+      "trigger": "用户修正已被成功保存"
+    },
+    {
+      "id": "A14",
+      "label": "正在匹配方向",
+      "gesture": "G05",
+      "requestedGesture": "G05",
+      "file": "motions/A14.motion3.json",
+      "playback": "enter_then_hold",
+      "substitution": "",
+      "trigger": "job_match 任务实际运行"
+    },
+    {
+      "id": "A15",
+      "label": "展示推荐岗位",
+      "gesture": "G06",
+      "requestedGesture": "G06",
+      "file": "motions/A15.motion3.json",
+      "playback": "one_shot_then_idle",
+      "substitution": "",
+      "trigger": "岗位结果已显示；参考样本有清晰标记"
+    },
+    {
+      "id": "A16",
+      "label": "比较两个选择",
+      "gesture": "G10",
+      "requestedGesture": "G10",
+      "file": "motions/A16.motion3.json",
+      "playback": "one_shot_then_idle",
+      "substitution": "",
+      "trigger": "用户选定的两个岗位与比较内容均可见"
+    },
+    {
+      "id": "A17",
+      "label": "指出一个差距",
+      "gesture": "G09",
+      "requestedGesture": "G09",
+      "file": "motions/A17.motion3.json",
+      "playback": "one_shot_then_idle",
+      "substitution": "",
+      "trigger": "显示一条有根据的岗位技能差距"
+    },
+    {
+      "id": "A18",
+      "label": "给出备选方向",
+      "gesture": "G07",
+      "requestedGesture": "G07",
+      "file": "motions/A18.motion3.json",
+      "playback": "enter_then_hold",
+      "substitution": "",
+      "trigger": "新方向仅为备选且已解释依据与不确定性"
+    },
+    {
+      "id": "A19",
+      "label": "圈出关键知识缺口",
+      "gesture": "G09",
+      "requestedGesture": "G09",
+      "file": "motions/A19.motion3.json",
+      "playback": "one_shot_then_idle",
+      "substitution": "",
+      "trigger": "learning_path 已给出明确技能项"
+    },
+    {
+      "id": "A20",
+      "label": "讲解一个知识点",
+      "gesture": "G06",
+      "requestedGesture": "G06",
+      "file": "motions/A20.motion3.json",
+      "playback": "one_shot_then_idle",
+      "substitution": "",
+      "trigger": "已有实际知识解释内容"
+    },
+    {
+      "id": "A21",
+      "label": "邀请先做一道题",
+      "gesture": "G07",
+      "requestedGesture": "G07",
+      "file": "motions/A21.motion3.json",
+      "playback": "one_shot_then_idle",
+      "substitution": "",
+      "trigger": "页面有可实际作答的练习"
+    },
+    {
+      "id": "A22",
+      "label": "等待作答",
+      "gesture": "G04",
+      "requestedGesture": "G04",
+      "file": "motions/A22.motion3.json",
+      "playback": "enter_then_hold",
+      "substitution": "",
+      "trigger": "用户正在作答或思考"
+    },
+    {
+      "id": "A23",
+      "label": "回答正确的认可",
+      "gesture": "G12",
+      "requestedGesture": "G12",
+      "file": "motions/A23.motion3.json",
+      "playback": "one_shot_then_idle",
+      "substitution": "",
+      "trigger": "当前题目经实际判定为正确"
+    },
+    {
+      "id": "A24",
+      "label": "答错后的安抚",
+      "gesture": "G11",
+      "requestedGesture": "G11",
+      "file": "motions/A24.motion3.json",
+      "playback": "one_shot_then_idle",
+      "substitution": "",
+      "trigger": "判定错误且已给出可理解的反馈"
+    },
+    {
+      "id": "A25",
+      "label": "给一条提示",
+      "gesture": "G09",
+      "requestedGesture": "G09",
+      "file": "motions/A25.motion3.json",
+      "playback": "one_shot_then_idle",
+      "substitution": "",
+      "trigger": "已展示一条不直接泄题的提示"
+    },
+    {
+      "id": "A26",
+      "label": "讲清阶段路线",
+      "gesture": "G10",
+      "requestedGesture": "G10",
+      "file": "motions/A26.motion3.json",
+      "playback": "one_shot_then_idle",
+      "substitution": "",
+      "trigger": "发展路线或学习阶段已实际生成"
+    },
+    {
+      "id": "A27",
+      "label": "先走下一小步",
+      "gesture": "G09",
+      "requestedGesture": "G09",
+      "file": "motions/A27.motion3.json",
+      "playback": "one_shot_then_idle",
+      "substitution": "",
+      "trigger": "用户有一个可执行的明确下一步"
+    },
+    {
+      "id": "A28",
+      "label": "里程碑达成",
+      "gesture": "G12",
+      "requestedGesture": "G12",
+      "file": "motions/A28.motion3.json",
+      "playback": "one_shot_then_idle",
+      "substitution": "",
+      "trigger": "里程碑已经由用户确认或系统验证完成"
+    },
+    {
+      "id": "A29",
+      "label": "回顾与收尾",
+      "gesture": "G14",
+      "requestedGesture": "G14",
+      "file": "motions/A29.motion3.json",
+      "playback": "one_shot_then_idle",
+      "substitution": "",
+      "trigger": "用户请求回顾或主动结束这轮任务"
+    },
+    {
+      "id": "A30",
+      "label": "收到简历文件",
+      "gesture": "G03",
+      "requestedGesture": "G03",
+      "file": "motions/A30.motion3.json",
+      "playback": "enter_then_hold",
+      "substitution": "",
+      "trigger": "实际上传成功；解析未必完成"
+    },
+    {
+      "id": "A31",
+      "label": "专注检查简历",
+      "gesture": "G05",
+      "requestedGesture": "G05",
+      "file": "motions/A31.motion3.json",
+      "playback": "enter_then_hold",
+      "substitution": "",
+      "trigger": "resume_build 或简历解析任务实际运行"
+    },
+    {
+      "id": "A32",
+      "label": "指出一处可改进",
+      "gesture": "G09",
+      "requestedGesture": "G09",
+      "file": "motions/A32.motion3.json",
+      "playback": "one_shot_then_idle",
+      "substitution": "",
+      "trigger": "已展示具体原句与修改理由"
+    },
+    {
+      "id": "A33",
+      "label": "介绍优化方案",
+      "gesture": "G06",
+      "requestedGesture": "G06",
+      "file": "motions/A33.motion3.json",
+      "playback": "one_shot_then_idle",
+      "substitution": "",
+      "trigger": "有可对照的修改建议或新版本"
+    },
+    {
+      "id": "A34",
+      "label": "帮助挑选模板",
+      "gesture": "G10",
+      "requestedGesture": "G10",
+      "file": "motions/A34.motion3.json",
+      "playback": "one_shot_then_idle",
+      "substitution": "",
+      "trigger": "页面有真实可选简历模板"
+    },
+    {
+      "id": "A35",
+      "label": "根据经历撰写简历",
+      "gesture": "G05",
+      "requestedGesture": "G13",
+      "file": "motions/A35.motion3.json",
+      "playback": "one_shot_then_idle",
+      "substitution": "缺少笔与便签：先用专注整理动作替代，不呈现写字。",
+      "trigger": "简历生成任务实际运行且资料可用"
+    },
+    {
+      "id": "A36",
+      "label": "导出文件成功",
+      "gesture": "G08",
+      "requestedGesture": "G08",
+      "file": "motions/A36.motion3.json",
+      "playback": "one_shot_then_idle",
+      "substitution": "",
+      "trigger": "实际导出接口成功且可下载文件已就绪"
+    },
+    {
+      "id": "A37",
+      "label": "等待用户确认",
+      "gesture": "G07",
+      "requestedGesture": "G07",
+      "file": "motions/A37.motion3.json",
+      "playback": "enter_then_hold",
+      "substitution": "",
+      "trigger": "approval_required 或实际需要用户决策"
+    },
+    {
+      "id": "A38",
+      "label": "处理中稍等",
+      "gesture": "G11",
+      "requestedGesture": "G11",
+      "file": "motions/A38.motion3.json",
+      "playback": "enter_then_hold",
+      "substitution": "",
+      "trigger": "任务仍在运行且耗时超过产品设定阈值"
+    },
+    {
+      "id": "A39",
+      "label": "失败后的关切",
+      "gesture": "G11",
+      "requestedGesture": "G11",
+      "file": "motions/A39.motion3.json",
+      "playback": "one_shot_then_idle",
+      "substitution": "",
+      "trigger": "run_failed 或可靠的上传/导出失败信号"
+    },
+    {
+      "id": "A40",
+      "label": "恢复后可以继续",
+      "gesture": "G03",
+      "requestedGesture": "G03",
+      "file": "motions/A40.motion3.json",
+      "playback": "one_shot_then_idle",
+      "substitution": "拇指素材未采用：改为轻握拳认可。",
+      "trigger": "故障已恢复或下一步可执行；重试未成功时不可庆祝"
+    }
+  ]
+}

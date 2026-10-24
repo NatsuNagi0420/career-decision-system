@@ -1,0 +1,198 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "青穗集外部岗位采集交换格式 v1",
+  "description": "每一条 JSONL 记录按此格式。不是现有运行时历史快照格式；入库前另行校验引文、日期、去重和来源。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "source_job_id",
+    "title",
+    "company",
+    "direction_code",
+    "direction_review_status",
+    "locations",
+    "recruitment_type",
+    "education_text",
+    "experience_text",
+    "graduation_eligibility_text",
+    "salary_text",
+    "jd_text",
+    "source_url",
+    "source_type",
+    "published_at",
+    "captured_at",
+    "expires_at",
+    "recruitment_status",
+    "record_use",
+    "evidence"
+  ],
+  "properties": {
+    "source_job_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "education_text": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "experience_text": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "graduation_eligibility_text": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "salary_text": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "company": {
+      "type": "string",
+      "minLength": 1
+    },
+    "direction_code": {
+      "enum": [
+        "frontend",
+        "backend",
+        "testing-quality",
+        "data-analysis",
+        "ai-application"
+      ]
+    },
+    "direction_review_status": {
+      "const": "unreviewed"
+    },
+    "locations": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "recruitment_type": {
+      "enum": [
+        "internship",
+        "campus",
+        "experienced",
+        "unknown"
+      ]
+    },
+    "jd_text": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_url": {
+      "type": "string",
+      "format": "uri",
+      "pattern": "^https?://"
+    },
+    "source_type": {
+      "enum": [
+        "official_employer",
+        "employer_ats",
+        "university_job_board",
+        "government_job_board",
+        "other_public"
+      ]
+    },
+    "published_at": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "captured_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expires_at": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "recruitment_status": {
+      "enum": [
+        "open_explicit",
+        "closed_explicit",
+        "unknown"
+      ]
+    },
+    "record_use": {
+      "enum": [
+        "recent_sample",
+        "undated_reference",
+        "historical_reference"
+      ]
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "field",
+          "quote"
+        ],
+        "properties": {
+          "field": {
+            "enum": [
+              "title",
+              "company",
+              "direction_code",
+              "locations",
+              "recruitment_type",
+              "education_text",
+              "experience_text",
+              "graduation_eligibility_text",
+              "salary_text",
+              "published_at",
+              "expires_at",
+              "recruitment_status"
+            ]
+          },
+          "quote": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

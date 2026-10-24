@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>青穗集 · 决策桌面（方向草图）</title>
+<style>
+/* 方向草图，不是生产样式：只用来回答「参照《主播女孩重度依赖》的桌面/窗口/数值板/单条裁决，
+   放进青穗集会是什么样」。配色只取 styles.css 里受 palette 契约保护的纸/麦/青三色。 */
+@font-face{font-family:"Fusion Pixel";src:url("fusion-pixel.woff2") format("woff2");font-display:swap}
+:root{
+  --ink:#1c1914; --ink-2:#4a453c; --ink-3:#6e647b;
+  --paper:#f6f3ea; --paper-lo:#f1ece1; --paper-hi:#fbf8f0;
+  --teal:#005048; --teal-2:#30665d; --teal-soft:#cae6de; --teal-pale:#e4f1ec;
+  --wheat:#8a6d1f; --wheat-soft:#f3e8c9; --wheat-pale:#faf3dd;
+  --line:#c9c1b2; --line-soft:#ded6c6;
+  --px:"Fusion Pixel","Microsoft YaHei","PingFang SC",monospace;
+  --ui:"Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif;
+  --r:2px;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{
+  background:
+    linear-gradient(0deg,rgba(0,80,72,.035) 1px,transparent 1px) 0 0/100% 26px,
+    linear-gradient(90deg,rgba(0,80,72,.035) 1px,transparent 1px) 0 0/26px 100%,
+    radial-gradient(120% 80% at 50% 108%,#efe6d2 0%,var(--paper) 58%,#f2eee2 100%);
+  color:var(--ink); font-family:var(--ui); font-size:13px; overflow:hidden;
+}
+.desk{position:relative;width:1440px;height:900px;margin:0 auto}
+
+/* ── 窗框：2px 硬边 + 内高光 + 3px 硬阴影，尺度是 95 风，颜色全在纸/青里 ── */
+.win{border:2px solid var(--teal-2);border-radius:var(--r);background:var(--paper-hi);
+     box-shadow:inset 1px 1px 0 #fffdf7,4px 4px 0 rgba(48,102,93,.22)}
+.win--soft{border-color:var(--line);box-shadow:inset 1px 1px 0 #fffdf7,3px 3px 0 rgba(120,108,86,.16)}
+.bar{display:flex;align-items:center;gap:8px;height:30px;padding:0 8px 0 10px;background:var(--teal-soft);
+     border-bottom:2px solid var(--teal-2);font-family:var(--px);font-size:13px;color:var(--teal);letter-spacing:.5px}
+.bar small{font-size:10px;color:var(--teal-2);opacity:.75;letter-spacing:1.2px}
+.bar .grip{margin-left:auto;display:flex;gap:4px}
+.bar .grip i{display:block;width:16px;height:16px;border:1px solid var(--teal-2);border-radius:var(--r);
+  background:var(--paper-hi);box-shadow:inset 1px 1px 0 #fff}
+.bar .grip i.x{font-style:normal;font:11px/14px var(--px);text-align:center;color:var(--teal)}
+
+/* ── 顶部 ── */
+.mast{position:absolute;left:30px;right:30px;top:18px;display:flex;align-items:center;gap:14px}
+.mark{width:36px;height:36px;display:grid;place-items:center;background:var(--teal-soft);
+  border:1px solid var(--teal);border-radius:var(--r);box-shadow:2px 2px 0 #a9cfc4;color:var(--teal);font-size:17px}
+.wordmark{font-family:var(--px);font-size:22px;letter-spacing:3px;color:var(--teal)}
+.wordmark em{display:block;font:400 9px/1 var(--px);letter-spacing:2px;color:var(--ink-3);font-style:normal;margin-top:4px}
+.mast .week{margin-left:auto;display:flex;align-items:center;gap:10px;font-family:var(--px);font-size:12px;color:var(--teal-2)}
+.mast .week b{font-weight:400;color:var(--teal);border-bottom:2px solid var(--wheat);padding-bottom:2px}
+
+/* ── 左栏应用 ── */
+.apps{position:absolute;left:24px;top:82px;width:104px;display:flex;flex-direction:column;gap:12px}
+.app{border:1px solid transparent;border-radius:var(--r);padding:7px 2px;text-align:center;font-family:var(--px);font-size:13px;color:var(--teal)}
+.app .ico{width:44px;height:42px;margin:0 auto 5px;display:grid;place-items:center;border-radius:var(--r);
+  border:1px solid var(--teal-2);background:var(--teal-pale);box-shadow:inset 2px 2px 0 #f2fbf7,3px 3px 0 rgba(48,102,93,.2);color:var(--teal);font-size:19px}
+.app small{display:block;font-size:9px;letter-spacing:1.1px;color:var(--ink-3)}
+.app[data-on="true"]{background:var(--teal-pale);border-color:var(--teal-soft)}
+.app[data-kind="jobs"] .ico{background:#e6eef2;border-color:#7d97a7;color:#3e6378;box-shadow:inset 2px 2px 0 #f7fdff,3px 3px 0 rgba(90,120,140,.2)}
+.app[data-kind="growth"] .ico{background:#e6eedd;border-color:#8ea780;color:#4d6844;box-shadow:inset 2px 2px 0 #f8fdf2,3px 3px 0 rgba(100,125,90,.2)}
+.app[data-kind="resume"] .ico{background:var(--wheat-pale);border-color:#bca077;color:#7a5f33;box-shadow:inset 2px 2px 0 #fffcf0,3px 3px 0 rgba(150,125,80,.2)}
+.app .badge{position:absolute;margin:-46px 0 0 46px;min-width:15px;height:15px;border-radius:var(--r);background:var(--wheat);
+  color:#fff;font:10px/15px var(--px);text-align:center;padding:0 3px}
+
+/* ── 中间：穗奈消息 ── */
+.msg{position:absolute;left:146px;top:82px;width:666px;height:664px;display:flex;flex-direction:column}
+.msg__body{flex:1;min-height:0;padding:18px 20px;display:flex;flex-direction:column;gap:13px;overflow:hidden}
+.who{display:flex;align-items:center;gap:8px;font-family:var(--px);font-size:11px;color:var(--ink-3);letter-spacing:1px}
+.who img{width:22px;height:22px;object-fit:contain;filter:drop-shadow(0 1px 0 #fff)}
+.say{max-width:88%;padding:10px 13px;border:1px solid var(--line);border-radius:var(--r);background:var(--paper-lo);
+  font-size:13.5px;line-height:1.75;color:var(--ink)}
+.say--me{margin-left:auto;background:var(--teal-pale);border-color:var(--teal-soft)}
+.say b{font-weight:600;color:var(--teal)}
+
+/* 单条裁决：交互性的最小单位，一次只问一句 */
+.verdict{border:2px solid var(--wheat);border-radius:var(--r);background:var(--wheat-pale);
+  box-shadow:inset 1px 1px 0 #fffdf3,3px 3px 0 rgba(150,125,80,.2);padding:12px 14px}
+.verdict__head{display:flex;align-items:center;gap:8px;font-family:var(--px);font-size:11px;letter-spacing:1px;color:var(--wheat)}
+.verdict__head span{margin-left:auto;font-size:10px;color:#8a7a52;letter-spacing:.6px}
+.verdict__quote{margin:9px 0 4px;padding:9px 11px;border-left:3px solid var(--wheat);background:#fffdf4;
+  font-size:13.5px;line-height:1.7;color:#2c2415}
+.verdict__src{font-family:var(--px);font-size:10.5px;color:#8a7a52;letter-spacing:.4px}
+.verdict__ask{margin:11px 0 9px;font-size:13px;color:var(--ink)}
+.verdict__acts{display:flex;gap:8px}
+.btn{border:1px solid var(--teal-2);border-radius:var(--r);background:var(--paper-hi);color:var(--teal);
+  font-family:var(--px);font-size:12.5px;padding:7px 13px;box-shadow:inset 1px 1px 0 #fff,2px 2px 0 rgba(48,102,93,.2)}
+.btn--no{border-color:#a8947a;color:#6b5b45;box-shadow:inset 1px 1px 0 #fff,2px 2px 0 rgba(120,105,80,.18)}
+.verdict__note{margin-top:9px;font-size:11.5px;color:#8a7a52;line-height:1.6}
+
+.msg__dock{border-top:2px solid var(--line-soft);background:var(--paper-lo);padding:10px 12px 12px}
+.dock__row{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:var(--r);background:var(--paper-hi);
+  box-shadow:inset 1px 1px 0 #fff}
+.dock__row .ph{flex:1;color:#9a9282;font-size:13px}
+.dock__row .send{width:26px;height:26px;display:grid;place-items:center;border:1px solid var(--teal);border-radius:var(--r);
+  background:var(--teal-soft);color:var(--teal);font-size:14px}
+.dock__hint{display:flex;gap:7px;align-items:center;margin-top:7px;font-size:11.5px;color:var(--ink-3)}
+.dock__hint u{text-decoration:none;border:1px solid var(--line);border-radius:var(--r);padding:1px 6px;background:var(--paper-hi);font-family:var(--px);font-size:11px}
+
+/* ── 右栏 ── */
+.side{position:absolute;left:828px;top:82px;width:586px;display:flex;flex-direction:column;gap:12px}
+.companion{display:flex;gap:12px;padding:12px 14px 13px}
+.companion__scene{position:relative;width:116px;height:140px;flex:0 0 auto;border:1px solid var(--line);border-radius:var(--r);
+  background:linear-gradient(180deg,#fdfbf3,#f0ead9);display:grid;place-items:end center;overflow:hidden}
+.companion__scene img{width:104px;height:132px;object-fit:contain;object-position:bottom}
+.companion__scene i{position:absolute;left:6px;top:6px;font-family:var(--px);font-size:9px;letter-spacing:1px;color:#a29474;font-style:normal}
+.companion__say{flex:1;min-width:0}
+.face-line{display:flex;align-items:center;gap:7px;font-family:var(--px);font-size:11px;color:var(--teal-2);letter-spacing:.8px}
+.face-line i{width:7px;height:7px;background:var(--teal-2);border-radius:var(--r)}
+.face-line em{margin-left:auto;font-style:normal;font-size:10px;color:#a29474;letter-spacing:.4px}
+.companion__say p{margin:8px 0 9px;font-size:13px;line-height:1.8;color:var(--ink)}
+.attrib{font-size:11px;color:#8a7a52;line-height:1.6;border-top:1px dashed var(--line-soft);padding-top:7px}
+.attrib b{color:var(--wheat);font-weight:400}
+
+/* 过程账本：NSO 的 Task Manager，但四格全是「过程」，没有一格是「你适合谁」 */
+.ledger{padding:0 0 4px}
+.ledger__grid{padding:4px 12px 2px}
+.row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:baseline;padding:9px 2px;border-bottom:1px dashed var(--line-soft)}
+.row:last-child{border-bottom:none}
+.row__k{font-size:13px;color:var(--ink);line-height:1.5}
+.row__k small{display:block;font-size:11px;color:var(--ink-3);margin-top:2px;line-height:1.5}
+.row__v{font-family:var(--px);font-size:19px;color:var(--teal);text-align:right;white-space:nowrap}
+.row__v b{font-weight:400;font-size:12px;color:#9a9282;margin-left:2px}
+.row__v[data-tone="wait"]{color:var(--wheat)}
+.row__v[data-tone="none"]{color:#9a9282;font-size:14px}
+.ledger__foot{padding:8px 14px 10px;border-top:2px solid var(--line-soft);background:var(--paper-lo);
+  font-size:11.5px;color:var(--ink-3);line-height:1.65}
+
+/* 版本链：不做「结局」，只做「你走到第几版」 */
+.versions{padding:11px 14px 13px}
+.chain{display:flex;align-items:center;gap:9px;font-family:var(--px);font-size:12px;color:var(--ink-3)}
+.chain b{color:var(--teal);font-weight:400;font-size:15px}
+.chain .now{border:2px solid var(--teal-2);border-radius:var(--r);padding:3px 8px;background:var(--teal-pale);
+  box-shadow:inset 1px 1px 0 #fff,2px 2px 0 rgba(48,102,93,.2)}
+.chain .old{border:1px solid var(--line);border-radius:var(--r);padding:3px 7px;background:var(--paper-hi)}
+.chain .arw{color:#bdb3a0}
+.versions p{margin:10px 0 0;font-size:12.5px;line-height:1.7;color:var(--ink)}
+.versions p b{color:var(--wheat);font-weight:400}
+.versions .less{margin-top:7px;font-size:11.5px;color:var(--ink-3)}
+
+/* ── 任务栏 ── */
+.taskbar{position:absolute;left:0;right:0;bottom:0;height:56px;display:flex;align-items:center;gap:9px;
+  padding:0 16px;border-top:2px solid var(--teal-2);background:var(--paper-lo);box-shadow:inset 0 1px 0 #fff}
+.start{display:flex;align-items:center;gap:7px;font-family:var(--px);font-size:14px;color:var(--teal);
+  border:1px solid var(--teal-2);border-radius:var(--r);padding:6px 11px;background:var(--teal-soft);
+  box-shadow:inset 1px 1px 0 #fff,2px 2px 0 rgba(48,102,93,.22)}
+.tsep{width:2px;height:26px;background:var(--line);margin:0 4px}
+.task{display:flex;align-items:center;gap:6px;font-family:var(--px);font-size:12px;color:var(--teal-2);
+  border:1px solid var(--line);border-radius:var(--r);padding:5px 10px;background:var(--paper-hi)}
+.task[data-on="true"]{border-color:var(--teal-2);background:var(--teal-pale);color:var(--teal);box-shadow:inset 1px 1px 0 #fff}
+.weeks{margin-left:auto;display:flex;align-items:center;gap:8px;font-family:var(--px);font-size:11px;color:var(--ink-3)}
+.weeks .pip{width:22px;height:8px;border:1px solid var(--line);border-radius:var(--r);background:var(--paper-hi)}
+.weeks .pip[data-fill="1"]{background:var(--teal-soft);border-color:var(--teal-2)}
+.weeks .pip[data-fill="2"]{background:var(--wheat-soft);border-color:#bca077}
+.user{display:flex;align-items:center;gap:7px;font-family:var(--px);font-size:12px;color:var(--teal-2);padding-left:10px;border-left:2px solid var(--line)}
+.user i{width:7px;height:7px;background:var(--teal-2);border-radius:50%}
+</style>
+</head>
+<body>
+<div class="desk">
+
+  <div class="mast">
+    <div class="mark">✳</div>
+    <div class="wordmark">青穗集<em>A LITTLE DESKTOP FOR YOUR NEXT CHAPTER</em></div>
+    <div class="week">第 <b>3</b> / 4 周 · 距上一版结论 <b>4</b> 天 · 穗奈记着 <b>2</b> 件答应过你的事</div>
+  </div>
+
+  <nav class="apps">
+    <div class="app" data-on="true"><div class="ico">✉</div>穗奈消息<small>MESSAGE</small></div>
+    <div class="app" data-kind="profile"><div class="ico">☗</div><span class="badge">1</span>我的档案<small>PROFILE</small></div>
+    <div class="app" data-kind="jobs"><div class="ico">⌕</div>岗位浏览器<small>CAREER</small></div>
+    <div class="app" data-kind="growth"><div class="ico">↗</div><span class="badge">2</span>成长手账<small>GROWTH</small></div>
+    <div class="app" data-kind="resume"><div class="ico">▤</div>简历文件<small>RESUME</small></div>
+  </nav>
+
+  <section class="win msg">
+    <div class="bar">穗奈消息<small>/ MESSAGE</small><span class="grip"><i>−</i><i>□</i><i class="x">×</i></span></div>
+    <div class="msg__body">
+      <div class="who"><img src="suinai-explain.webp" alt="" />穗奈 · 正在对照岗位原话</div>
+      <div class="say">我在「初级数据分析师」里翻到第 2 条要求。先不急着算分，我只想确认一件事：<b>这句话是不是这个岗位真的写的</b>。</div>
+
+      <div class="verdict">
+        <div class="verdict__head">一条一条过 · 第 <b>3</b> / 9 条 <span>裁决只记归属，不动分数</span></div>
+        <div class="verdict__quote">熟悉 SQL，能用统计方法解释业务指标，并能独立完成日报口径的维护。</div>
+        <div class="verdict__src">来源：初级数据分析师 · 岗位要求第 2 条 · 广州 · 8-13k · 目录样本，招聘状态未核实</div>
+        <div class="verdict__ask">这一条，和你的经历对得上吗？</div>
+        <div class="verdict__acts">
+          <button class="btn">对得上，我说得出做过什么</button>
+          <button class="btn btn--no">对不上 / 只是课程作业</button>
+        </div>
+        <div class="verdict__note">「对不上」会被记成这一格的反方证据，不会因此扣分——它只是说明还缺一条真实证据。</div>
+      </div>
+
+      <div class="say say--me">对得上。但只有课程项目里跑过一次周报，没有实习。</div>
+      <div class="say">那就先记成<b>「有对应经历，但只在课程里」</b>。这一格不会因此变绿：要变绿需要一条来自真实岗位或实习的原话，而不是我再多写两句。</div>
+    </div>
+    <div class="msg__dock">
+      <div class="dock__row"><span class="ph">直接说你想做什么；也可以让她去查某个岗位的原话</span><span class="send">↑</span></div>
+      <div class="dock__hint"><u>决定下一步</u><u>查资料</u><u>整理结论</u><span>Shift+Enter 换行 · 穗奈只按你确认过的内容下结论</span></div>
+    </div>
+  </section>
+
+  <div class="side">
+    <section class="win win--soft">
+      <div class="bar">穗奈的小窗<small>/ SUINAI</small><span class="grip"><i>−</i><i>□</i></span></div>
+      <div class="companion">
+        <div class="companion__scene"><i>SUINAI</i><img src="suinai-think.webp" alt="穗奈" /></div>
+        <div class="companion__say">
+          <div class="face-line"><i></i>正在对照岗位原话<em>表情来源：run #4821 · step 4</em></div>
+          <p>「这条我还没法替你判断。要不要把它放到这周的验证任务里，去问一个真的在做这份工作的人？」</p>
+          <div class="attrib">她的每一句话都要能指回来：这句话引的是 <b>初级数据分析师 · 要求第 2 条</b>；表情是 <b>think</b>，因为这一轮读到了 1 条空结果。</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="win win--soft ledger">
+      <div class="bar">过程账本<small>/ THIS ROUND</small><span class="grip"><i>−</i><i>□</i></span></div>
+      <div class="ledger__grid">
+        <div class="row"><div class="row__k">能对上的原话<small>比对过、并且逐字存在的引用</small></div><div class="row__v">7 <b>/ 9</b></div></div>
+        <div class="row"><div class="row__k">还没答上的问题<small>这些是你现在判断不了的地方</small></div><div class="row__v" data-tone="wait">3</div></div>
+        <div class="row"><div class="row__k">等你点头的卡<small>批准后才会写进档案</small></div><div class="row__v" data-tone="wait">1</div></div>
+        <div class="row"><div class="row__k">这周该做还没做<small>过期不会消失，会变成一条欠着的事</small></div><div class="row__v" data-tone="wait">2</div></div>
+      </div>
+      <div class="ledger__foot">四格都能点开出处的行号。这里没有「适合度」「匹配度」「录取概率」——那些数我们不打算造。</div>
+    </section>
+
+    <section class="win win--soft versions">
+      <div class="bar">这一版结论<small>/ VERSION CHAIN</small><span class="grip"><i>−</i><i>□</i></span></div>
+      <div class="chain"><span class="now">v3</span><span class="arw">←</span><span class="old">v2</span><span class="arw">←</span><span class="old">v1</span><b>·</b>共 3 版，都是草稿，都能回看</div>
+      <p>相对 v2，<b>有 2 格判定变了</b>：<b>「SQL 与统计」</b>从「缺证据」变成「有课程级证据」；<b>「业务沟通」</b>仍是缺证据，因为你还没交回那三条 JD。</p>
+      <div class="less">不是结局，只是你走到的第 3 版。上一版为什么被换掉，点开就能看到那一格的原话。</div>
+    </section>
+  </div>
+
+  <footer class="taskbar">
+    <div class="start">✳ 青穗集</div>
+    <div class="tsep"></div>
+    <div class="task" data-on="true">✉ 穗奈消息</div>
+    <div class="task">⌕ 岗位浏览器</div>
+    <div class="weeks">第 3 / 4 周<span class="pip" data-fill="1"></span><span class="pip" data-fill="1"></span><span class="pip" data-fill="2"></span><span class="pip"></span>慢慢来，也在前进</div>
+    <div class="user"><i></i>我的桌面</div>
+  </footer>
+</div>
+</body>
+</html>

@@ -1,13 +1,13 @@
+/** 青穗集 · 求职主线四站：画像、岗位、缺口、简历。一站亮起只因为有对应成果物。 */
 import type { Feed } from "../api/client";
 
 /**
- * The five stations the product actually runs through, in order. A station is `done`
- * only because a row exists that proves it — the artifact type, the task result, the
- * review draft. Nothing here is estimated from how many runs happened, and there is no
- * percentage: a station is lit by a row or it is not lit.
+ * The four stations the product actually runs through, in order. A station is `done`
+ * only because a row exists that proves it — the artifact type. Nothing here is
+ * estimated from how many runs happened, and there is no percentage.
  */
 export interface Station {
-  key: "direction" | "frame" | "compare" | "act" | "review";
+  key: "profile" | "jobs" | "gaps" | "resume";
   /** Four characters or fewer; this is a label on a track, not a sentence. */
   name: string;
   glyph: string;
@@ -26,71 +26,48 @@ const quotes = (rows: { evidence_quotes: Record<string, string> }[]) =>
   rows.reduce((total, entry) => total + Object.keys(entry.evidence_quotes ?? {}).length, 0);
 
 export function loopStations(feed: Feed | null): Station[] {
-  const directions = ofType(feed, "DirectionBrief", "ProfileGapReport");
-  const directionQuotes = quotes(directions);
-
-  const frames = ofType(feed, "DecisionFrame");
-  const matrices = ofType(feed, "ComparisonMatrix");
-  const candidates = feed?.projects?.[0]?.candidate_count ?? 0;
-
-  const tasks = feed?.tasks ?? [];
-  const brought = tasks.filter((task) => task.results.length > 0).length;
-  const reviews = ofType(feed, "WeeklyReviewDraft");
-  const planned = tasks.length > 0 || ofType(feed, "ActionPlanDraft").length > 0;
+  const profiles = ofType(feed, "ProfileGapReport");
+  const jobs = ofType(feed, "JobMatchReport");
+  const gaps = ofType(feed, "LearningPathDraft");
+  const resumes = ofType(feed, "ResumeDraft");
+  const jobQuotes = quotes(jobs);
 
   return [
     {
-      key: "direction",
-      name: "看方向",
+      key: "profile",
+      name: "画像",
+      glyph: "person_search",
+      done: profiles.length > 0,
+      hint: profiles.length ? "已经记下你确认过的经历" : "还没记下经历",
+      capability: "profile_diagnose",
+      goal: "先补我的经历，缺哪条会明说",
+    },
+    {
+      key: "jobs",
+      name: "岗位",
       glyph: "travel_explore",
-      done: directions.length > 0,
-      hint: directionQuotes ? `对上了 ${directionQuotes} 条原话` : "还没有能对上的原话",
-      capability: "direction_explore",
-      goal: "我在两个方向之间犹豫，想先看看真实岗位到底要什么",
+      done: jobs.length > 0,
+      hint: jobQuotes ? `对上了 ${jobQuotes} 条原话` : "还没有能对上的岗位原话",
+      capability: "job_match",
+      goal: "按我现在的经历对照目录里适合我的岗位",
     },
     {
-      key: "frame",
-      name: "说清比什么",
-      glyph: "flag",
-      done: frames.length > 0,
-      hint: frames.length ? "已经框成一个能比较的问题" : "还没说清这次要比什么",
-      capability: "decision_frame",
-      goal: "帮我把这个纠结整理成一个能比较、能行动的问题",
+      key: "gaps",
+      name: "缺口",
+      glyph: "route",
+      done: gaps.length > 0,
+      hint: gaps.length ? "已经对照过缺口和练习" : "还没看缺口和练习",
+      capability: "learning_path",
+      goal: "对照岗位看我还缺什么、有没有题库和练习",
     },
     {
-      key: "compare",
-      name: "摆开比一比",
-      glyph: "balance",
-      done: matrices.length > 0,
-      hint: matrices.length
-        ? candidates
-          ? `${candidates} 个选择摆在一起了`
-          : "有了一个能改的比较结论"
-        : "手上还没有能比的结论",
-      capability: "compare_decide",
-      goal: "把这几个选择按我在乎的标准摆开比一比",
-    },
-    {
-      key: "act",
-      name: "去做一件",
-      glyph: "edit_note",
-      done: brought > 0,
-      hint: tasks.length
-        ? `${brought} / ${tasks.length} 件带回了结果`
-        : planned
-          ? "这周的计划刚排出来，还没派事"
-          : "还没派一件小事给你做",
-      capability: "action_plan",
-      goal: "这周给我一件能在现实中做完的小事",
-    },
-    {
-      key: "review",
-      name: "回头看",
-      glyph: "history",
-      done: reviews.length > 0,
-      hint: reviews.length ? "这一周已经对过一次账" : "还没回头看这一周",
-      capability: "weekly_review",
-      goal: "带我回头看这一周做成了什么、卡在哪",
+      key: "resume",
+      name: "简历",
+      glyph: "article",
+      done: resumes.length > 0,
+      hint: resumes.length ? "已经有一份简历草稿" : "还没写简历",
+      capability: "resume_build",
+      goal: "帮我根据现在的情况写一份简历",
     },
   ];
 }

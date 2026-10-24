@@ -1,0 +1,7 @@
+﻿"name","url","source_type","checked_on","access_result","use","note"
+"麒麟软件校园招聘","https://www.kylinos.cn/about/job/campusRecruitment/index.html","official_employer","2026-10-24","full_text_verified","可继续采集具体岗位；列表页含独立岗位正文和岗位链接","读到标注 2026-09-04 发布的 2027 届条目；开放状态仍需另核对，不证明当前仍在招。"
+"国家大学生就业服务平台职位入口","https://xzyjyw.ncss.cn/student/jobs/index.html","government_job_board","2026-10-24","directory_only","进一步检索职位；本次没有读取具体岗位正文","平台入口不是一条 JD，不能直接当岗位入库。"
+"南开就业网发布的前端校招条目","https://career.nankai.edu.cn/correcruit/content/id/116278.html","university_job_board","2026-10-24","full_text_verified","有岗位正文；按高校平台来源保留，不假装是企业官网","页面标注 2026-09-07；结构化信息与正文可能不一致，需保留冲突并核对。"
+"小红书校园 AI 应用岗位候选","https://job.xiaohongshu.com/campus/position/22021","official_employer","2026-10-24","search_snippet_only","待浏览器核对原文，不可直接入岗位主表","搜索可见岗位摘要，本次页面正文提取为空。"
+"海康威视校园测试岗位候选","https://campushr.hikvision.com/JobDetails.html?batchId=e198653730e14820b9e95b29fbc2223f&id=ce078dd69e77470c934fe76804d3b44a&type=2","official_employer","2026-10-24","partial_template_only","待正常浏览器读取正文，不可把页面通用投递提示当 JD","本次只读到通用页面模板，职位描述与要求部分未加载。"
+"字节跳动 Seed 校招项目公告","https://seed.bytedance.com/zh/blog/bytedance-seed-2027-foundation-model-campus-recruitment-is-now-open-internships-included","official_employer","2026-10-24","announcement_only","用作查找具体岗位的来源入口，不是单条完整 JD","公告标注 2026-04-01；不能把公告日期赋给链接中的所有岗位。"

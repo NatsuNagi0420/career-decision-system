@@ -1,0 +1,793 @@
+{
+  "_comment": "青穗集 · v03坐标裁剪与整臂连续网格素材；不是.moc3，原画ZIP不被修改。",
+  "version": 3,
+  "renderer": "canvas-continuous-mesh",
+  "canvas": [
+    1536,
+    1536
+  ],
+  "sourceSha256": "b81b6bfec2d02649210407e72971833151db81be38df9a3da623c5912be80bd0",
+  "handOrientation": {
+    "revision": 1,
+    "convention": "character-left-is-viewer-right",
+    "corrections": {
+      "arm-l-H02": {
+        "axisX": 945.5,
+        "keepThroughY": 742,
+        "fullFromY": 750
+      },
+      "arm-r-H02": {
+        "axisX": 569.5,
+        "keepThroughY": 742,
+        "fullFromY": 750
+      },
+      "arm-r-H03": {
+        "axisX": 569.0,
+        "keepThroughY": 742,
+        "fullFromY": 750
+      }
+    }
+  },
+  "base": {
+    "back hair": "back hair",
+    "legwear": "legwear",
+    "footwear": "footwear",
+    "neck": "neck",
+    "bottomwear": "bottomwear",
+    "topwear": "topwear",
+    "ears-r": "ears-r",
+    "ears-l": "ears-l",
+    "face": "face",
+    "nose": "nose",
+    "headwear": "headwear",
+    "eyewear": "eyewear",
+    "front hair": "front hair"
+  },
+  "arms": {
+    "l": {
+      "H01": "arm-l-H01",
+      "H02": "arm-l-H02",
+      "H03": "arm-l-H03",
+      "H04": "arm-l-H04",
+      "H05": "arm-l-H05",
+      "H06": "arm-l-H06"
+    },
+    "r": {
+      "H01": "arm-r-H01",
+      "H02": "arm-r-H02",
+      "H03": "arm-r-H03",
+      "H04": "arm-r-H04",
+      "H05": "arm-r-H05",
+      "H06": "arm-r-H06"
+    }
+  },
+  "eyes": {
+    "l": {
+      "sclera": "eye-l-sclera",
+      "iris_highlights": "eye-l-iris_highlights",
+      "iris_clip_mask": "eye-l-iris_clip_mask",
+      "upper_lid": "eye-l-upper_lid",
+      "lower_lid": "eye-l-lower_lid",
+      "closed": "eye-l-closed",
+      "smile": "eye-l-smile",
+      "bounds": [
+        767,
+        132,
+        809,
+        162
+      ],
+      "anchorY": 152.1
+    },
+    "r": {
+      "sclera": "eye-r-sclera",
+      "iris_highlights": "eye-r-iris_highlights",
+      "iris_clip_mask": "eye-r-iris_clip_mask",
+      "upper_lid": "eye-r-upper_lid",
+      "lower_lid": "eye-r-lower_lid",
+      "closed": "eye-r-closed",
+      "smile": "eye-r-smile",
+      "bounds": [
+        699,
+        135,
+        738,
+        164
+      ],
+      "anchorY": 154.43
+    }
+  },
+  "brows": {
+    "B01": "B01",
+    "B02": "B02",
+    "B03": "B03",
+    "B04": "B04",
+    "B05": "B05",
+    "B06": "B06"
+  },
+  "mouths": {
+    "M01": "M01",
+    "M02": "M02",
+    "M03": "M03",
+    "M04": "M04",
+    "M05": "M05",
+    "M06": "M06",
+    "M07": "M07"
+  },
+  "views": {
+    "portrait": [
+      515,
+      0,
+      500,
+      615
+    ],
+    "face": [
+      615,
+      5,
+      300,
+      360
+    ]
+  },
+  "assets": [
+    {
+      "name": "back hair",
+      "url": "/api/assets/brand/suinai-motion-v03/back_hair.png",
+      "bounds": [
+        638,
+        25,
+        874,
+        304
+      ],
+      "source": "source_layers/base/back_hair.png"
+    },
+    {
+      "name": "legwear",
+      "url": "/api/assets/brand/suinai-motion-v03/legwear.png",
+      "bounds": [
+        628,
+        687,
+        889,
+        1406
+      ],
+      "source": "source_layers/base/legwear.png"
+    },
+    {
+      "name": "footwear",
+      "url": "/api/assets/brand/suinai-motion-v03/footwear.png",
+      "bounds": [
+        688,
+        1332,
+        858,
+        1452
+      ],
+      "source": "source_layers/base/footwear.png"
+    },
+    {
+      "name": "neck",
+      "url": "/api/assets/brand/suinai-motion-v03/neck.png",
+      "bounds": [
+        726,
+        171,
+        785,
+        256
+      ],
+      "source": "source_layers/base/neck.png"
+    },
+    {
+      "name": "bottomwear",
+      "url": "/api/assets/brand/suinai-motion-v03/bottomwear.png",
+      "bounds": [
+        574,
+        482,
+        944,
+        854
+      ],
+      "source": "source_layers/base/bottomwear.png"
+    },
+    {
+      "name": "topwear",
+      "url": "/api/assets/brand/suinai-motion-v03/topwear.png",
+      "bounds": [
+        632,
+        234,
+        880,
+        551
+      ],
+      "source": "source_layers/base/topwear.png"
+    },
+    {
+      "name": "ears-r",
+      "url": "/api/assets/brand/suinai-motion-v03/ears-r.png",
+      "bounds": [
+        682,
+        146,
+        712,
+        186
+      ],
+      "source": "source_layers/base/ears-r.png"
+    },
+    {
+      "name": "ears-l",
+      "url": "/api/assets/brand/suinai-motion-v03/ears-l.png",
+      "bounds": [
+        801,
+        137,
+        828,
+        181
+      ],
+      "source": "source_layers/base/ears-l.png"
+    },
+    {
+      "name": "face",
+      "url": "/api/assets/brand/suinai-motion-v03/face.png",
+      "bounds": [
+        693,
+        57,
+        820,
+        222
+      ],
+      "source": "runtime_png/F01.png"
+    },
+    {
+      "name": "nose",
+      "url": "/api/assets/brand/suinai-motion-v03/nose.png",
+      "bounds": [
+        751,
+        168,
+        757,
+        177
+      ],
+      "source": "source_layers/base/nose.png"
+    },
+    {
+      "name": "headwear",
+      "url": "/api/assets/brand/suinai-motion-v03/headwear.png",
+      "bounds": [
+        806,
+        89,
+        832,
+        128
+      ],
+      "source": "source_layers/base/headwear.png"
+    },
+    {
+      "name": "eyewear",
+      "url": "/api/assets/brand/suinai-motion-v03/eyewear.png",
+      "bounds": [
+        692,
+        132,
+        826,
+        177
+      ],
+      "source": "source_layers/base/eyewear.png"
+    },
+    {
+      "name": "front hair",
+      "url": "/api/assets/brand/suinai-motion-v03/front_hair.png",
+      "bounds": [
+        659,
+        36,
+        821,
+        304
+      ],
+      "source": "source_layers/base/front_hair.png"
+    },
+    {
+      "name": "arm-l-H01",
+      "url": "/api/assets/brand/suinai-motion-v03/arm-l-H01.png",
+      "bounds": [
+        825,
+        277,
+        972,
+        812
+      ],
+      "source": [
+        "runtime_png/ARM01_L.png",
+        "runtime_png/H01_L.png"
+      ]
+    },
+    {
+      "name": "arm-l-H02",
+      "url": "/api/assets/brand/suinai-motion-v03/arm-l-H02.png",
+      "bounds": [
+        825,
+        277,
+        983,
+        821
+      ],
+      "source": [
+        "runtime_png/ARM01_L.png",
+        "runtime_png/H02_L.png"
+      ],
+      "derivation": {
+        "operation": "reflect-distal-palm",
+        "axisX": 945.5,
+        "keepThroughY": 742,
+        "fullFromY": 750
+      }
+    },
+    {
+      "name": "arm-l-H03",
+      "url": "/api/assets/brand/suinai-motion-v03/arm-l-H03.png",
+      "bounds": [
+        825,
+        277,
+        980,
+        823
+      ],
+      "source": [
+        "runtime_png/ARM01_L.png",
+        "runtime_png/H03_L.png"
+      ]
+    },
+    {
+      "name": "arm-l-H04",
+      "url": "/api/assets/brand/suinai-motion-v03/arm-l-H04.png",
+      "bounds": [
+        825,
+        277,
+        974,
+        836
+      ],
+      "source": [
+        "runtime_png/ARM01_L.png",
+        "runtime_png/H04_L.png"
+      ]
+    },
+    {
+      "name": "arm-l-H05",
+      "url": "/api/assets/brand/suinai-motion-v03/arm-l-H05.png",
+      "bounds": [
+        825,
+        277,
+        971,
+        830
+      ],
+      "source": [
+        "runtime_png/ARM01_L.png",
+        "runtime_png/H05_L.png"
+      ]
+    },
+    {
+      "name": "arm-l-H06",
+      "url": "/api/assets/brand/suinai-motion-v03/arm-l-H06.png",
+      "bounds": [
+        825,
+        277,
+        977,
+        818
+      ],
+      "source": [
+        "runtime_png/ARM01_L.png",
+        "runtime_png/H06_L.png"
+      ]
+    },
+    {
+      "name": "arm-r-H01",
+      "url": "/api/assets/brand/suinai-motion-v03/arm-r-H01.png",
+      "bounds": [
+        543,
+        277,
+        683,
+        813
+      ],
+      "source": [
+        "runtime_png/ARM01_R.png",
+        "runtime_png/H01_R.png"
+      ]
+    },
+    {
+      "name": "arm-r-H02",
+      "url": "/api/assets/brand/suinai-motion-v03/arm-r-H02.png",
+      "bounds": [
+        535,
+        277,
+        683,
+        822
+      ],
+      "source": [
+        "runtime_png/ARM01_R.png",
+        "runtime_png/H02_R.png"
+      ],
+      "derivation": {
+        "operation": "reflect-distal-palm",
+        "axisX": 569.5,
+        "keepThroughY": 742,
+        "fullFromY": 750
+      }
+    },
+    {
+      "name": "arm-r-H03",
+      "url": "/api/assets/brand/suinai-motion-v03/arm-r-H03.png",
+      "bounds": [
+        534,
+        277,
+        683,
+        830
+      ],
+      "source": [
+        "runtime_png/ARM01_R.png",
+        "runtime_png/H03_R.png"
+      ],
+      "derivation": {
+        "operation": "reflect-distal-palm",
+        "axisX": 569.0,
+        "keepThroughY": 742,
+        "fullFromY": 750
+      }
+    },
+    {
+      "name": "arm-r-H04",
+      "url": "/api/assets/brand/suinai-motion-v03/arm-r-H04.png",
+      "bounds": [
+        546,
+        277,
+        683,
+        836
+      ],
+      "source": [
+        "runtime_png/ARM01_R.png",
+        "runtime_png/H04_R.png"
+      ]
+    },
+    {
+      "name": "arm-r-H05",
+      "url": "/api/assets/brand/suinai-motion-v03/arm-r-H05.png",
+      "bounds": [
+        544,
+        277,
+        683,
+        830
+      ],
+      "source": [
+        "runtime_png/ARM01_R.png",
+        "runtime_png/H05_R.png"
+      ]
+    },
+    {
+      "name": "arm-r-H06",
+      "url": "/api/assets/brand/suinai-motion-v03/arm-r-H06.png",
+      "bounds": [
+        539,
+        277,
+        683,
+        814
+      ],
+      "source": [
+        "runtime_png/ARM01_R.png",
+        "runtime_png/H06_R.png"
+      ]
+    },
+    {
+      "name": "eye-l-sclera",
+      "url": "/api/assets/brand/suinai-motion-v03/eye-l-sclera.png",
+      "bounds": [
+        771,
+        137,
+        801,
+        162
+      ],
+      "source": "source_layers/generated_parts/V02_L_sclera.png"
+    },
+    {
+      "name": "eye-l-iris_highlights",
+      "url": "/api/assets/brand/suinai-motion-v03/eye-l-iris_highlights.png",
+      "bounds": [
+        774,
+        137,
+        794,
+        161
+      ],
+      "source": "source_layers/generated_parts/V02_L_iris_highlights.png"
+    },
+    {
+      "name": "eye-l-iris_clip_mask",
+      "url": "/api/assets/brand/suinai-motion-v03/eye-l-iris_clip_mask.png",
+      "bounds": [
+        771,
+        137,
+        801,
+        162
+      ],
+      "source": "source_layers/generated_parts/V02_L_iris_clip_mask.png"
+    },
+    {
+      "name": "eye-l-upper_lid",
+      "url": "/api/assets/brand/suinai-motion-v03/eye-l-upper_lid.png",
+      "bounds": [
+        767,
+        132,
+        806,
+        144
+      ],
+      "source": "source_layers/generated_parts/V02_L_upper_lid.png"
+    },
+    {
+      "name": "eye-l-lower_lid",
+      "url": "/api/assets/brand/suinai-motion-v03/eye-l-lower_lid.png",
+      "bounds": [
+        769,
+        144,
+        809,
+        157
+      ],
+      "source": "source_layers/generated_parts/V02_L_lower_lid.png"
+    },
+    {
+      "name": "eye-l-closed",
+      "url": "/api/assets/brand/suinai-motion-v03/eye-l-closed.png",
+      "bounds": [
+        767,
+        141,
+        809,
+        153
+      ],
+      "source": "runtime_png/V04_L.png"
+    },
+    {
+      "name": "eye-l-smile",
+      "url": "/api/assets/brand/suinai-motion-v03/eye-l-smile.png",
+      "bounds": [
+        767,
+        140,
+        809,
+        153
+      ],
+      "source": "runtime_png/V05_L.png"
+    },
+    {
+      "name": "eye-r-sclera",
+      "url": "/api/assets/brand/suinai-motion-v03/eye-r-sclera.png",
+      "bounds": [
+        706,
+        140,
+        738,
+        164
+      ],
+      "source": "source_layers/generated_parts/V02_R_sclera.png"
+    },
+    {
+      "name": "eye-r-iris_highlights",
+      "url": "/api/assets/brand/suinai-motion-v03/eye-r-iris_highlights.png",
+      "bounds": [
+        713,
+        141,
+        733,
+        164
+      ],
+      "source": "source_layers/generated_parts/V02_R_iris_highlights.png"
+    },
+    {
+      "name": "eye-r-iris_clip_mask",
+      "url": "/api/assets/brand/suinai-motion-v03/eye-r-iris_clip_mask.png",
+      "bounds": [
+        706,
+        140,
+        738,
+        164
+      ],
+      "source": "source_layers/generated_parts/V02_R_iris_clip_mask.png"
+    },
+    {
+      "name": "eye-r-upper_lid",
+      "url": "/api/assets/brand/suinai-motion-v03/eye-r-upper_lid.png",
+      "bounds": [
+        702,
+        135,
+        736,
+        146
+      ],
+      "source": "source_layers/generated_parts/V02_R_upper_lid.png"
+    },
+    {
+      "name": "eye-r-lower_lid",
+      "url": "/api/assets/brand/suinai-motion-v03/eye-r-lower_lid.png",
+      "bounds": [
+        699,
+        146,
+        736,
+        158
+      ],
+      "source": "source_layers/generated_parts/V02_R_lower_lid.png"
+    },
+    {
+      "name": "eye-r-closed",
+      "url": "/api/assets/brand/suinai-motion-v03/eye-r-closed.png",
+      "bounds": [
+        699,
+        144,
+        738,
+        155
+      ],
+      "source": "runtime_png/V04_R.png"
+    },
+    {
+      "name": "eye-r-smile",
+      "url": "/api/assets/brand/suinai-motion-v03/eye-r-smile.png",
+      "bounds": [
+        699,
+        144,
+        738,
+        156
+      ],
+      "source": "runtime_png/V05_R.png"
+    },
+    {
+      "name": "B01",
+      "url": "/api/assets/brand/suinai-motion-v03/B01.png",
+      "bounds": [
+        702,
+        118,
+        802,
+        129
+      ],
+      "source": [
+        "runtime_png/B01_L.png",
+        "runtime_png/B01_R.png"
+      ]
+    },
+    {
+      "name": "B02",
+      "url": "/api/assets/brand/suinai-motion-v03/B02.png",
+      "bounds": [
+        702,
+        118,
+        802,
+        129
+      ],
+      "source": [
+        "runtime_png/B02_L.png",
+        "runtime_png/B02_R.png"
+      ]
+    },
+    {
+      "name": "B03",
+      "url": "/api/assets/brand/suinai-motion-v03/B03.png",
+      "bounds": [
+        702,
+        118,
+        802,
+        129
+      ],
+      "source": [
+        "runtime_png/B03_L.png",
+        "runtime_png/B03_R.png"
+      ]
+    },
+    {
+      "name": "B04",
+      "url": "/api/assets/brand/suinai-motion-v03/B04.png",
+      "bounds": [
+        702,
+        118,
+        802,
+        129
+      ],
+      "source": [
+        "runtime_png/B04_L.png",
+        "runtime_png/B04_R.png"
+      ]
+    },
+    {
+      "name": "B05",
+      "url": "/api/assets/brand/suinai-motion-v03/B05.png",
+      "bounds": [
+        708,
+        117,
+        799,
+        130
+      ],
+      "source": [
+        "runtime_png/B05_L.png",
+        "runtime_png/B05_R.png"
+      ]
+    },
+    {
+      "name": "B06",
+      "url": "/api/assets/brand/suinai-motion-v03/B06.png",
+      "bounds": [
+        702,
+        119,
+        802,
+        129
+      ],
+      "source": [
+        "runtime_png/B06_L.png",
+        "runtime_png/B06_R.png"
+      ]
+    },
+    {
+      "name": "M01",
+      "url": "/api/assets/brand/suinai-motion-v03/M01.png",
+      "bounds": [
+        742,
+        189,
+        769,
+        198
+      ],
+      "source": "runtime_png/M01.png"
+    },
+    {
+      "name": "M02",
+      "url": "/api/assets/brand/suinai-motion-v03/M02.png",
+      "bounds": [
+        741,
+        190,
+        770,
+        196
+      ],
+      "source": "runtime_png/M02.png"
+    },
+    {
+      "name": "M03",
+      "url": "/api/assets/brand/suinai-motion-v03/M03.png",
+      "bounds": [
+        744,
+        186,
+        768,
+        197
+      ],
+      "source": "runtime_png/M03.png"
+    },
+    {
+      "name": "M04",
+      "url": "/api/assets/brand/suinai-motion-v03/M04.png",
+      "bounds": [
+        746,
+        188,
+        766,
+        199
+      ],
+      "source": "runtime_png/M04.png"
+    },
+    {
+      "name": "M05",
+      "url": "/api/assets/brand/suinai-motion-v03/M05.png",
+      "bounds": [
+        744,
+        189,
+        768,
+        198
+      ],
+      "source": "runtime_png/M05.png"
+    },
+    {
+      "name": "M06",
+      "url": "/api/assets/brand/suinai-motion-v03/M06.png",
+      "bounds": [
+        741,
+        191,
+        770,
+        196
+      ],
+      "source": "runtime_png/M06.png"
+    },
+    {
+      "name": "M07",
+      "url": "/api/assets/brand/suinai-motion-v03/M07.png",
+      "bounds": [
+        741,
+        190,
+        770,
+        197
+      ],
+      "source": "runtime_png/M07.png"
+    },
+    {
+      "name": "blush",
+      "url": "/api/assets/brand/suinai-motion-v03/blush.png",
+      "bounds": [
+        715,
+        164,
+        797,
+        174
+      ],
+      "source": "runtime_png/X01.png"
+    }
+  ],
+  "limitations": [
+    "No moc3/cmo3: native Cubism rigging is still required.",
+    "H07, H08 and P01/P02 are deliberately not loaded.",
+    "Open eyes reuse neutral V02 sources; V03/V06 are not six independent eye shapes.",
+    "Arm and selected hand share a single texture and continuous wrist deformation.",
+    "Only H02_L/H02_R/H03_R distal palms are corrected; original wrist roots and H01 remain unchanged."
+  ]
+}

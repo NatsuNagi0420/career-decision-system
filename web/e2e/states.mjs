@@ -32,19 +32,6 @@ const artifact = (type, quoteCount = 0) => ({
   supersedes_id: null,
 });
 
-const task = (id, withResult) => ({
-  id,
-  project_id: "stub-project",
-  plan_id: "stub-plan",
-  title: "去问一个在职的人他的一天怎么过",
-  expected_output: "一段转述",
-  week_no: 1,
-  kind: "conversation",
-  status: withResult ? "done" : "open",
-  due_date: null,
-  results: withResult ? [{ id: `${id}-r`, body: "他说上午全在开会", link: null, at: "2026-09-22T10:00:00" }] : [],
-});
-
 const feed = (over = {}) => ({
   runs: [],
   projects: [],
@@ -57,14 +44,10 @@ const feed = (over = {}) => ({
 
 const STATES = {
   "mid-loop": feed({
-    projects: [{ id: "stub-project", title: "数据分析师还是后端", question: "哪个更适合我现在的条件", status: "active", primary_target: null, candidate_count: 3, version: 2, updated_at: null }],
-    artifacts: [artifact("DirectionBrief", 4), artifact("DecisionFrame")],
-    tasks: [task("t1", false), task("t2", false)],
+    artifacts: [artifact("ProfileGapReport"), artifact("JobMatchReport", 4)],
   }),
   "near-end": feed({
-    projects: [{ id: "stub-project", title: "数据分析师还是后端", question: "哪个更适合我现在的条件", status: "active", primary_target: null, candidate_count: 3, version: 2, updated_at: null }],
-    artifacts: [artifact("DirectionBrief", 6), artifact("DecisionFrame"), artifact("ComparisonMatrix"), artifact("ActionPlanDraft")],
-    tasks: [task("t1", true), task("t2", false)],
+    artifacts: [artifact("ProfileGapReport"), artifact("JobMatchReport", 6), artifact("LearningPathDraft"), artifact("ResumeDraft")],
   }),
 };
 
@@ -87,7 +70,10 @@ for (const [label, stub] of Object.entries(STATES)) {
   ]) {
     const ctx = await browser.newContext({ viewport: { width: vp.width, height: vp.height } });
     const page = await ctx.newPage();
-    await page.addInitScript((value) => localStorage.setItem("career.session.token", value), token);
+    await page.addInitScript((value) => {
+      localStorage.setItem("career.session.token", value);
+      localStorage.setItem("career.research", "1");
+    }, token);
     await page.route("**/api/v1/feed", (route) => route.fulfill({ json: stub }));
     await page.goto(BASE, { waitUntil: "networkidle" });
     const file = `spine-stub-${label}-${vp.name}.png`;

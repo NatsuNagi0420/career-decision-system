@@ -1,0 +1,863 @@
+{
+  "_comment": "青穗集 · 穗奈40场景动作与补图交接 v01；planned表示待制作，不是已接入业务。",
+  "schemaVersion": 1,
+  "project": "suinai_extensions_v01",
+  "workingCanvas": [
+    1536,
+    1536
+  ],
+  "colorSpace": "sRGB",
+  "baseSourceSha256": "552fbfd323326ef4e3bd6bf320eba0244354e896ed16a7a33672d73668689e86",
+  "sourceProject": null,
+  "assets": [
+    {
+      "id": "F01",
+      "status": "missing",
+      "path": "runtime_png/F01.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": null,
+      "attachPoint": null,
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "ARM01_L",
+      "status": "missing",
+      "path": "runtime_png/ARM01_L.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": null,
+      "attachPoint": [
+        946,
+        730
+      ],
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "ARM01_R",
+      "status": "missing",
+      "path": "runtime_png/ARM01_R.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": null,
+      "attachPoint": [
+        570,
+        730
+      ],
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "H01_L",
+      "status": "missing",
+      "path": "runtime_png/H01_L.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": "L",
+      "attachPoint": [
+        946,
+        730
+      ],
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "H01_R",
+      "status": "missing",
+      "path": "runtime_png/H01_R.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": "R",
+      "attachPoint": [
+        570,
+        730
+      ],
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "H02_L",
+      "status": "missing",
+      "path": "runtime_png/H02_L.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": "L",
+      "attachPoint": [
+        946,
+        730
+      ],
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "H02_R",
+      "status": "missing",
+      "path": "runtime_png/H02_R.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": "R",
+      "attachPoint": [
+        570,
+        730
+      ],
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "H03_L",
+      "status": "missing",
+      "path": "runtime_png/H03_L.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": "L",
+      "attachPoint": [
+        946,
+        730
+      ],
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "H03_R",
+      "status": "missing",
+      "path": "runtime_png/H03_R.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": "R",
+      "attachPoint": [
+        570,
+        730
+      ],
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "H04_L",
+      "status": "missing",
+      "path": "runtime_png/H04_L.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": "L",
+      "attachPoint": [
+        946,
+        730
+      ],
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "H04_R",
+      "status": "missing",
+      "path": "runtime_png/H04_R.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": "R",
+      "attachPoint": [
+        570,
+        730
+      ],
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "H05_L",
+      "status": "missing",
+      "path": "runtime_png/H05_L.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": "L",
+      "attachPoint": [
+        946,
+        730
+      ],
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "H05_R",
+      "status": "missing",
+      "path": "runtime_png/H05_R.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": "R",
+      "attachPoint": [
+        570,
+        730
+      ],
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "H06_L",
+      "status": "missing",
+      "path": "runtime_png/H06_L.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": "L",
+      "attachPoint": [
+        946,
+        730
+      ],
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "H06_R",
+      "status": "missing",
+      "path": "runtime_png/H06_R.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": "R",
+      "attachPoint": [
+        570,
+        730
+      ],
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "H07_L",
+      "status": "missing",
+      "path": "runtime_png/H07_L.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": "L",
+      "attachPoint": [
+        946,
+        730
+      ],
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "H07_R",
+      "status": "missing",
+      "path": "runtime_png/H07_R.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": "R",
+      "attachPoint": [
+        570,
+        730
+      ],
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "H08_L",
+      "status": "missing",
+      "path": "runtime_png/H08_L.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": "L",
+      "attachPoint": [
+        946,
+        730
+      ],
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "H08_R",
+      "status": "missing",
+      "path": "runtime_png/H08_R.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": "R",
+      "attachPoint": [
+        570,
+        730
+      ],
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "V01_L",
+      "status": "missing",
+      "path": "runtime_png/V01_L.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": "L",
+      "attachPoint": null,
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "V01_R",
+      "status": "missing",
+      "path": "runtime_png/V01_R.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": "R",
+      "attachPoint": null,
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "V02_L",
+      "status": "missing",
+      "path": "runtime_png/V02_L.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": "L",
+      "attachPoint": null,
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "V02_R",
+      "status": "missing",
+      "path": "runtime_png/V02_R.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": "R",
+      "attachPoint": null,
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "V03_L",
+      "status": "missing",
+      "path": "runtime_png/V03_L.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": "L",
+      "attachPoint": null,
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "V03_R",
+      "status": "missing",
+      "path": "runtime_png/V03_R.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": "R",
+      "attachPoint": null,
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "V04_L",
+      "status": "missing",
+      "path": "runtime_png/V04_L.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": "L",
+      "attachPoint": null,
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "V04_R",
+      "status": "missing",
+      "path": "runtime_png/V04_R.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": "R",
+      "attachPoint": null,
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "V05_L",
+      "status": "missing",
+      "path": "runtime_png/V05_L.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": "L",
+      "attachPoint": null,
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "V05_R",
+      "status": "missing",
+      "path": "runtime_png/V05_R.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": "R",
+      "attachPoint": null,
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "V06_L",
+      "status": "missing",
+      "path": "runtime_png/V06_L.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": "L",
+      "attachPoint": null,
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "V06_R",
+      "status": "missing",
+      "path": "runtime_png/V06_R.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": "R",
+      "attachPoint": null,
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "B01_L",
+      "status": "missing",
+      "path": "runtime_png/B01_L.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": "L",
+      "attachPoint": null,
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "B01_R",
+      "status": "missing",
+      "path": "runtime_png/B01_R.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": "R",
+      "attachPoint": null,
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "B02_L",
+      "status": "missing",
+      "path": "runtime_png/B02_L.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": "L",
+      "attachPoint": null,
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "B02_R",
+      "status": "missing",
+      "path": "runtime_png/B02_R.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": "R",
+      "attachPoint": null,
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "B03_L",
+      "status": "missing",
+      "path": "runtime_png/B03_L.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": "L",
+      "attachPoint": null,
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "B03_R",
+      "status": "missing",
+      "path": "runtime_png/B03_R.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": "R",
+      "attachPoint": null,
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "B04_L",
+      "status": "missing",
+      "path": "runtime_png/B04_L.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": "L",
+      "attachPoint": null,
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "B04_R",
+      "status": "missing",
+      "path": "runtime_png/B04_R.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": "R",
+      "attachPoint": null,
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "B05_L",
+      "status": "missing",
+      "path": "runtime_png/B05_L.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": "L",
+      "attachPoint": null,
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "B05_R",
+      "status": "missing",
+      "path": "runtime_png/B05_R.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": "R",
+      "attachPoint": null,
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "B06_L",
+      "status": "missing",
+      "path": "runtime_png/B06_L.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": "L",
+      "attachPoint": null,
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "B06_R",
+      "status": "missing",
+      "path": "runtime_png/B06_R.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": "R",
+      "attachPoint": null,
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "M01",
+      "status": "missing",
+      "path": "runtime_png/M01.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": null,
+      "attachPoint": null,
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "M02",
+      "status": "missing",
+      "path": "runtime_png/M02.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": null,
+      "attachPoint": null,
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "M03",
+      "status": "missing",
+      "path": "runtime_png/M03.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": null,
+      "attachPoint": null,
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "M04",
+      "status": "missing",
+      "path": "runtime_png/M04.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": null,
+      "attachPoint": null,
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "M05",
+      "status": "missing",
+      "path": "runtime_png/M05.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": null,
+      "attachPoint": null,
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "M06",
+      "status": "missing",
+      "path": "runtime_png/M06.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": null,
+      "attachPoint": null,
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "M07",
+      "status": "missing",
+      "path": "runtime_png/M07.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": null,
+      "attachPoint": null,
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "X01",
+      "status": "missing",
+      "path": "runtime_png/X01.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": null,
+      "attachPoint": null,
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "P01",
+      "status": "missing",
+      "path": "runtime_png/P01.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": null,
+      "attachPoint": null,
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    },
+    {
+      "id": "P02",
+      "status": "missing",
+      "path": "runtime_png/P02.png",
+      "bounds": null,
+      "canvas": [
+        1536,
+        1536
+      ],
+      "side": null,
+      "attachPoint": null,
+      "sourceLayers": [],
+      "changedFromBase": "",
+      "reason": "模板占位；制作完成并填写真实文件/边界后才可改为completed"
+    }
+  ]
+}

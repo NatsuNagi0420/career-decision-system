@@ -1,5 +1,6 @@
+/** 青穗集 · 客户端回归：会话失效、任务流中断与恢复必须向真实状态收敛，不静默伪装完成。 */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { api, onUnauthorized, tokenStore } from "./client";
+import { api, onUnauthorized, readRunStream, tokenStore } from "./client";
 
 const store = new Map<string, string>();
 const fakeStorage = {
@@ -20,6 +21,7 @@ beforeEach(() => {
 afterEach(() => {
   onUnauthorized(null);
   vi.unstubAllGlobals();
+  vi.useRealTimers();
 });
 
 describe("a dead token", () => {
@@ -43,5 +45,44 @@ describe("a dead token", () => {
     await expect(api.login("someone", "wrong-password")).rejects.toMatchObject({ status: 401 });
     expect(signedOut).not.toHaveBeenCalled();
     expect(tokenStore.get()).toBe("someone-elses-token");
+  });
+});
+
+async function collect(maxReconnects = 0, signal?: AbortSignal) {
+  const frames = [];
+  for await (const frame of readRunStream("r", { maxReconnects, signal })) frames.push(frame);
+  return frames;
+}
+describe("progress transport", () => {
+  it("surfaces an exhausted connection without inventing run failure or success", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network offline")));
+    await expect(collect()).rejects.toThrow("任务进度连接已中断");
+  });
+  it("also reports an early EOF with no terminal frame", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("")));
+    await expect(collect()).rejects.toThrow("重新打开当前对话核对");
+  });
+  it("does not report a connection issue for a terminal result or cancellation", async () => {
+    for (const status of ["completed", "cancelled"]) {
+      const terminal = { kind: "run_completed", run_id: "r", seq: 2, status };
+      vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(`data: ${JSON.stringify(terminal)}\n\n`)));
+      expect(await collect()).toEqual([terminal]);
+    }
+  });
+  it("resumes after the last durable sequence instead of replaying an animation", async () => {
+    vi.useFakeTimers();
+    const started = { kind: "run_started", run_id: "r", seq: 4 };
+    const done = { kind: "run_completed", run_id: "r", seq: 5, status: "completed" };
+    const fetcher = vi.fn().mockResolvedValueOnce(new Response(`data: ${JSON.stringify(started)}\n\n`))
+      .mockResolvedValueOnce(new Response(`data: ${JSON.stringify(done)}\n\n`));
+    vi.stubGlobal("fetch", fetcher);
+    const result = collect(1); await vi.runAllTimersAsync();
+    expect(await result).toEqual([started, done]);
+    expect(fetcher.mock.calls[1][0]).toContain("after_seq=4");
+  });
+  it("silently ends an intentionally aborted stream", async () => {
+    const controller = new AbortController(); controller.abort();
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("aborted")));
+    expect(await collect(0, controller.signal)).toEqual([]);
   });
 });

@@ -139,6 +139,7 @@ try {
     const file = await shoot(page, `login-${vp.name}`);
     const heading = await page.locator("h1").first().innerText().catch(() => "");
     check(`login renders (${vp.name})`, heading.length > 0, `${heading} → ${file}`);
+    check(`login talks about job seeking (${vp.name})`, /求职|简历/.test(heading), heading);
     check(`login has no failed requests (${vp.name})`, problems.length === 0, problems.slice(0, 3).join(" | "));
     const wrapped = await wrappedLabels(page);
     check(
@@ -163,12 +164,31 @@ try {
     // CDN crept back into index.html or something added a remote @font-face.
     page.on("request", (r) => /fonts\.(googleapis|gstatic)\.com/.test(r.url()) && cdn.push(r.url()));
     // Seed the token before the app boots, so it starts signed in as our own user.
-    await page.addInitScript((token) => localStorage.setItem("career.session.token", token), fixture.token);
+    await page.addInitScript((token) => {
+      localStorage.setItem("career.session.token", token);
+      localStorage.removeItem("career.research");
+    }, fixture.token);
     await page.goto(BASE, { waitUntil: "networkidle" });
     const file = await shoot(page, `empty-${vp.name}`);
     const body = await page.evaluate(() => document.body.innerText.replace(/\s/g, "").length);
     const isLogin = await page.locator(".auth__wrap").count();
     check(`fixture lands on the workspace (${vp.name})`, isLogin === 0 && body > 40, `${body} chars → ${file}`);
+    const welcomeCount = await page.locator(".welcome").count();
+    const spineCount = await page.locator(".spine").count();
+    check(
+      `first screen greets a job seeker (${vp.name})`,
+      welcomeCount === 1 && spineCount === 0,
+      `welcome ${welcomeCount} spine ${spineCount}`,
+    );
+    const welcomeText = await page.locator(".welcome").innerText().catch(() => "");
+    check(`greeting offers a resume (${vp.name})`, welcomeText.includes("写一份简历"), welcomeText.slice(0, 48));
+    check(`greeting offers job match (${vp.name})`, welcomeText.includes("对照岗位"), welcomeText.slice(0, 48));
+    const chrome = await page.locator(".app").innerText();
+    check(
+      `researcher chrome stays off (${vp.name})`,
+      !chrome.includes("研究员") && !chrome.includes("这一轮走到哪") && !chrome.includes("新建规划会话"),
+      chrome.includes("研究员") ? "研究员" : chrome.includes("这一轮走到哪") ? "五步轨道" : "",
+    );
     const widths = await composerWidths(page);
     check(
       `the input out-widths the capability chip (${vp.name})`,

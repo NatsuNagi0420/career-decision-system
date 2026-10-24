@@ -1,3 +1,4 @@
+/** 青穗集 · 成果卡验收：保留原话依据、缺项引导和独立的正式打印内容。 */
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
@@ -97,7 +98,9 @@ describe("the resume draft card", () => {
     ]);
 
     expect(html).toContain("教育");
-    expect(html).toContain("还没有依据 · 去补教育");
+    expect(html).toContain("去补教育");
+    expect(html).toContain('class="resume-sheet__section no-print"');
+    expect(html).toContain('class="resume-context no-print"');
     expect(html).toContain("会用 SQL 做数据清洗");
     expect(html).toContain("1/4 节有内容");
   });
@@ -108,5 +111,57 @@ describe("the resume draft card", () => {
     expect(html).toContain("处理过 12 万行");
     expect(html).not.toContain("3d24b6ab");
     expect(html).not.toContain("profile_facts");
+  });
+});
+
+describe("the job match card", () => {
+  it("shows matched words and the reference-sample warning, not a percentage", () => {
+    const html = renderToStaticMarkup(
+      createElement(ArtifactCard, {
+        artifact: {
+          id: "j1",
+          run_id: "r1",
+          artifact_type: "JobMatchReport",
+          title: "对照岗位",
+          status: "committed",
+          version: 1,
+          data_coverage: null,
+          is_provisional: false,
+          generation_mode: "fallback",
+          content: {
+            conclusion: "对上了 1 个参考岗位。这些行没有采集日期，不能当成现在还在招的推荐。",
+            job_match: {
+              reference_only: true,
+              jobs: [
+                {
+                  job_id: 7,
+                  title: "初级数据分析师",
+                  company: "A 公司",
+                  city: "广州",
+                  matched: ["SQL"],
+                  matched_count: 1,
+                  reference_only: true,
+                  quotes: [{ text: "熟练使用 SQL 完成多表关联取数", id: 1 }],
+                },
+              ],
+            },
+          },
+          evidence_quotes: {},
+          source_refs: [],
+          supersedes_id: null,
+        } as ArtifactEntry,
+        usage: null,
+        steps: 0,
+        model: null,
+        projectId: null,
+        onFiled: () => {},
+      }),
+    );
+    expect(html).toContain("初级数据分析师");
+    expect(html).toContain("参考样本");
+    expect(html).toContain("对上 1 个词");
+    expect(html).toContain("熟练使用 SQL");
+    expect(html).not.toContain("%");
+    expect(html).not.toContain("覆盖度");
   });
 });

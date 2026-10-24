@@ -1,0 +1,7 @@
+/* 青穗集 · 分层角色通用画布：正式陪伴窗口与动作试映室复用，不携带预览页主题。 */
+.suinai-motion-character { position: absolute; inset: 0; }
+.suinai-motion-character canvas { display: block; width: 100%; height: 100%; object-fit: contain; }
+.suinai-motion-character__status { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 28px; text-align: center; background: #edf1e9ee; }
+.suinai-motion-character__status > span { font-size: 32px; color: #6b8366; }
+.suinai-motion-character__status > p { color: var(--sm-muted, #64576f); }
+.suinai-motion-character__status > button { margin-top: 6px; border: 1px solid #90aa8b; border-radius: 6px; padding: 7px 16px; background: #fffdf3; }

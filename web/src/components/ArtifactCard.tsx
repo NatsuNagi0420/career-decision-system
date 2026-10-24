@@ -1,6 +1,7 @@
 import { useState, type CSSProperties } from "react";
 import type { ArtifactEntry } from "../api/client";
 import { Ms } from "./Ms";
+import { JobMatchCard, LearningPathCard, type JobMatchBody, type LearningPathBody } from "./JobseekCards";
 import { ResumeCard, type ResumeBody } from "./ResumeCard";
 import { WeeklyReviewCard } from "./WeeklyReviewCard";
 import { readableQuote } from "../state/readable";
@@ -86,6 +87,16 @@ export function ArtifactCard({ artifact, usage, steps, model, projectId, onFiled
   if (artifact.artifact_type === "ResumeDraft") {
     // The body was assembled from rows by the server; this card only lays it out.
     return <ResumeCard resume={(((artifact.content ?? {}) as Record<string, unknown>).resume ?? {}) as ResumeBody} onAsk={onAsk} />;
+  }
+  if (artifact.artifact_type === "JobMatchReport") {
+    const body = (artifact.content ?? {}) as Record<string, unknown>;
+    const pack = { ...((body.job_match ?? body) as JobMatchBody), conclusion: String(body.conclusion ?? "") };
+    return <JobMatchCard pack={pack} onRunAction={onRunAction} />;
+  }
+  if (artifact.artifact_type === "LearningPathDraft") {
+    const body = (artifact.content ?? {}) as Record<string, unknown>;
+    const pack = { ...((body.learning_path ?? body) as LearningPathBody), conclusion: String(body.conclusion ?? "") };
+    return <LearningPathCard pack={pack} onRunAction={onRunAction} onAsk={onAsk} />;
   }
 
   const body = (artifact.content ?? {}) as Record<string, unknown>;

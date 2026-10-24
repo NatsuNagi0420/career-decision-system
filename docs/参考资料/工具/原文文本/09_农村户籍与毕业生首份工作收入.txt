@@ -1,0 +1,649 @@
+The China Quarterly (2024), 259, 677–695 doi:10.1017/S0305741024000274
+RESEARCH ARTICLE
+Estimating the Impact of Rural Hukou Status on Earnings for College Graduates in China
+Huan Wang1 , Claire Cousineau2, Matthew Boswell3 and Hongbin Li4
+1Stanford Center on China’s Economy and Institutions, Freeman Spogli Institute for International Studies, Stanford University, Stanford, USA, 2Stanford Center on China’s Economy and Institutions, Freeman Spogli Institute for International Studies, Stanford University, Stanford, USA, 3Stanford Center on China’s Economy and Institutions, Freeman Spogli Institute for International Studies, Stanford University, Stanford, USA, and 4Stanford Center on China’s Economy and Institutions, Freeman Spogli Institute for International Studies, Stanford University, Stanford, USA Corresponding author: Huan Wang; Email: huanw@stanford.edu
+Abstract A growing body of literature explores the effect of higher education on the urban–rural divide in China. Despite an increasing number of rural students gaining access to college, little is known about their performance in college or their job prospects after graduation. Using nationally representative data from over 40,000 urban and rural college students, we examine rural students’ college performance and estimate the impact of rural status on students’ first job wages in comparison to their urban peers. Our results indicate that once accepted into college, rural students perform equally as well, if not better, than their urban counterparts. Additionally, we discovered that rural students earn a 6.2 per cent wage premium compared to their urban counterparts in their first job after graduation. Our findings suggest the importance of expanding access to higher education for rural students, as it appears to serve as an equalizer between urban and rural students despite their significantly different backgrounds.
+摘要 中国高等教育对城乡差距的影响是值得研究的议题。尽管越来越多的农村学生获得了上大学的机 会，但鲜有文献研究农村学生在大学期间的表现以及毕业后的就业情况。本文利用超过 40,000 名 城市和农村大学生的全国代表性数据，研究农村学生在大学期间的表现，并将农村学生毕业后的 就业情况与城市学生相比，估计农村身份与对工资的影响。研究结果表明，农村学生在大学期间 的表现与城市大学生相当，甚至更好。农村学生首份工作工资的溢价为 6.2%。本文的研究结果 提示高等教育一定程度上可以缩小不同背景的城乡学生之间的差距，因此扩大农村学生接受高等 教育的机会具有重要意义。
+Keywords: human capital; salary wage differentials; college education; social mobility; China 关键词: 人力资本; 工资差异; 高等教育; 社会流动性; 中国
+Rural students’ college attendance rates in China are rising but are still much lower than those of their urban peers.1 Although research indicates that returns to college education in China are high, the impact of rural status on students’ performance in college and on the job market remains unknown.2 Understanding the effect of higher education on the urban–rural divide in China is important, as large gaps between rural and urban populations may lead to greater social and intergenerational inequality and may well have a negative impact on China’s economic development.
+1 Li, Hongbin, et al. 2015. 2 Li, Hongbin, Liu and Zhang 2012. © The Author(s), 2024. Published by Cambridge University Press on behalf of SOAS University of London. This is an Open Access article, distributed under the terms of the Creative Commons Attribution licence (https://creativecommons.org/licenses/by/4.0/), which permits unrestricted re-use, distribution, and reproduction in any medium, provided the original work is properly cited.
+https://doi.org/10.1017/S0305741024000274 Published online by Cambridge University Press
+
+678 Huan Wang et al.
+Thus, the key question is whether China’s colleges benefit rural students to the same degree as they do urban students.
+There are three competing hypotheses on the relationship between college attendance and the urban–rural divide in China. The first hypothesis is that college serves to widen the gap between urban and rural students. This is likely owing to several factors within the education system and job market. It is well documented that rural students are at a significant disadvantage in China’s education system.3 For example, rural students from poor counties were 7 and 11 times, respectively, less likely than urban students to access any college or elite college.4 Despite the unequal rates of access to higher education, other factors also may be holding back rural students once they are enrolled in college, including low socioeconomic status,5 low levels of human capital,6 and informational and financial constraints as well as risk-averse preferences.7 Moreover, the high level of discrimination against rural-to-urban migrants may negatively affect rural students’ performance in the job market following college graduation.8 For these reasons, college may serve to widen the gap between urban and rural students.
+The second hypothesis is that college does not affect the urban–rural divide. Some evidence suggests that college students have limited learning in China’s higher-education system. Using a nationally representative sample, Prashant Loyalka and colleagues find that college students in China experience zero or negative growth in cognitive skills after two years of college.9 In addition, relative to other countries, China has an exceptionally low college drop-out rate.10 The college education system in China is known for being “strict entry, easy out.” Specifically, the entrance exam competition is fierce, but graduation is almost guaranteed once enrolled, which might lower students’ incentive to learn and retain skills in college.11 Assuming that the goal of college is to equip students with skills that will help them to succeed in the job market post-graduation and to keep up with rapid technological change, net zero or negative skill growth suggests that college attendance would only maintain the existing divide between rural and urban students, as both groups fail to learn marketable skills in college.12
+The third hypothesis is that college serves as an equalizer between urban and rural students. Evidence indicates that returns to higher education in China are high and rising.13 Moreover, emerging literature suggests that college education can positively affect students’ social mobility and significantly raise their position with regard to income distribution, regardless of their hukou 户口 (household registration system) status.14 The college admission system in China relies primarily on students’ college entrance exam (CEE) scores, not family income.15 This score-based, incomeneutral college admission process offers an opportunity for students from disadvantaged backgrounds to attend college and advance within the social hierarchy. It is plausible that once rural students are enrolled in college, they could perform equally as well as their urban peers in college and in the job market. Thus, college could serve as an equalizer between urban and rural students.
+Thus, the objective of this paper is to test these hypotheses by estimating the impact of rural status, as defined by rural hukou status upon enrolment in college, on the first job wages of college
+3 Bai et al. 2019; Khor et al. 2016; Li, Angran 2019; Li, Hongbin, Loyalka et al. 2017; Shi et al. 2015; Tam and Jiang 2015. 4 Li, Hongbin, et al. 2015. 5 Ibid.; Liu, Peng and Luo 2020. 6 Gao et al. 2018; Yue et al. 2017. 7 Chen and Kesten 2017; Li, Hongbin, Loyalka et al. 2017; Li, Hongbin, et al. 2012. 8 Kuang and Liu 2012; Tse 2016. 9 Loyalka et al. 2021. 10 Marioulas 2017. 11 Jia and Li 2021; Zhang, Duanhong 2019. 12 Bresnahan, Brynjolfsson and Hitt 2002; Deming and Kahn 2018. 13 Heckman and Li 2004; Li, Qiang, et al. 2005; Zhang, Junsen, et al. 2005. 14 Jia, Li and Meng 2022. 15 Ibid.
+https://doi.org/10.1017/S0305741024000274 Published online by Cambridge University Press
+
+The China Quarterly 679
+graduates. We consider how well rural students perform in college and in the job market compared to their urban peers. It is possible, however, that rural status is entangled with other factors that could affect students’ success in the job market after college, which we aim to control for using rich survey data.
+Using nationally representative data from over 40,000 rural and urban college students who attended 90 elite and non-elite colleges in China, we examine whether rural students are doing as well as their urban peers in college and in the job market post-graduation.16 Included in the data is a diverse set of variables on family socioeconomic background, student human capital accumulation (CEE scores, college GPA and school performance, extracurricular activities, college prestige, and sciences vs social sciences track) and job market performance ( job search effort, first job wages and whether students received help from their social network throughout the job search). Using multivariate ordinary least squares (OLS) regression, we aim to control for possible confounding factors to estimate whether rural status negatively affects students’ college experience and their first job wages.
+Data indicate that once rural students are admitted into college, they perform comparably to their urban peers. Although rural students typically come from lower socioeconomic backgrounds than their urban peers, there is no significant difference between rural and urban students’ total CEE scores, which suggests that there is no gap in students’ ability. When looking at human capital accumulation in college, rural students perform better on certain measures when compared to their urban peers. For example, rural students have higher GPAs (3.167 vs 3.077), obtain more technical certificates (39.5 per cent vs 31.7 per cent), fail fewer courses in college (2.237 vs 2.551) and are more likely to have a part-time job in college (22.8 per cent vs 13.1 per cent). Rural students, however, perform worse in college English tests (432 vs 439) and are less likely to be the leaders of student unions (21.8 per cent vs 28.3 per cent).
+Our multivariate regression results also show that rural students do not get paid less than their urban peers for their first job after graduating from college. We estimate the impact of rural hukou status on the first job wages of college graduates by controlling for relevant observables in our sample, including family socioeconomic background, student human capital accumulation and job market performance ( job search effort, first job wages and whether students receive help from their social network throughout the job search). After controlling for these observables, rural students have a wage premium of 6.2 per cent relative to their urban peers (significant at the 1 per cent level).
+It is important to note that we have at least three caveats. First, we are unable to rule out the possibility of omitted variable and selection biases. Despite the scope of our data, we cannot account for all the potential characteristics that could affect earnings. Notably, we do not have standardized measures of student achievement during college. Second, there could be unobserved benefits associated with certain job positions. Such benefits, like elevated status or job security, may not be reflected in job wages. Third, our study is limited in its scope, as we are able to observe only the students’ first job wages and, thus, are unable to compare their experience in the long term. In addition, because this dataset includes only rural students enrolled in college, it is possible that it is not representative of the broader rural cohort, including those who did not enrol in college.
+Our analyses have important policy implications. In support of the third hypothesis, for example, rural students who are admitted to college seem to perform equally as well or even better than their urban peers. In fact, next to their urban peers, who typically come from more privileged backgrounds, they compare equally or even favourably according to ability and performance in college and the job market. As such, policy should seek to expand access to college for rural students, as it appears to have an equalizing effect vis-à-vis students who enjoy more privileged urban status.
+16 Sample size for each variable differs owing to missing values.
+https://doi.org/10.1017/S0305741024000274 Published online by Cambridge University Press
+
+680 Huan Wang et al.
+By considering the economic outcomes of rural students, this paper contributes to a larger body of literature on the ability of higher education to close the gap between rural and urban students in China. Little empirical work has examined such outcomes of China’s rural population, including their college performance, returns to higher education or first job wages. Instead, the literature has examined the returns for exclusively urban students or has compared the accessibility to college education for both groups.17 Because rural students are steadily gaining access to college education, however, it has become increasingly important to examine their experience and returns.18 Further, this study is unique in its use of a nationally representative dataset and a rich set of covariates that help to shed light on whether rural status has a positive or negative impact on students in college and the job market.
+The remainder of the paper is structured as follows. The following section presents the institutional background of the study. The paper then provides a description of the data and includes the empirical model. It goes on to present the results of the study and a discussion of rural students’ first job wages in comparison to those of their urban peers. It then concludes with the implications of the study’s findings for future research and policy.
+Institutional Background China’s higher education system has undergone rapid expansion in the last two decades.19 In 1999, China began to shift from an “elite” higher education system to a “mass” higher education system. The following decade saw the number of newly admitted college students in China increase by 480 per cent, from 1.1 million to 6.4 million.20 The rapid expansion of higher education institutions, however, did not benefit urban and rural students equally. For example, one study found that in the wake of expansion, rural youth from poor counties were 7 and 11 times less likely, respectively, to access any college and elite colleges compared to their urban counterparts.21
+In 2009, China had 2,305 registered higher education institutions with around 6.4 million firsttime college enrolees.22 These institutions have a clear hierarchy. At the top of the pyramid are 112 elite colleges in Project 211 (including 39 colleges covered by Project 985, which are the very best of those in Project 211). The government invests much more in these elite universities than it does in other tertiary educational institutions. Only students whose scores in the national CEE, the determinant of college admissions, are at the very top of the score distribution in each province can gain admission to these universities.23
+Next to elite colleges are the remaining non-elite, four-year universities that award bachelor’s degrees. These universities also differ substantially in terms of their reputation and financial resources.24 At the bottom of the tertiary educational hierarchy are two-year or three-year vocational colleges. These colleges are similar to community colleges in the United States, awarding sub-baccalaureate or associate degrees. In 2009, China had 1,215 vocational colleges with a combined enrolment of 3.3 million.25 Admission to vocational colleges is also based on CEE scores. All vocational colleges are locally administered and financed by the local government, with short-cycle programmes that are closely linked to local industry and business needs.
+17 Jia and Li 2021; Li, Hongbin, et al. 2012; Yao et al. 2018; Zhang, Junsen, et al. 2005. 18 Li, Hongbin, et al. 2015; Li, Hongbin, Ma et al. 2017. 19 Jia, Li and Meng 2022; Jia and Li 2021. 20 Li, Hongbin, Ma et al. 2017. 21 Li, Hongbin, et al. 2015. 22 China Statistics Press 2010. 23 Jia and Li 2021. 24 Ibid. 25 China Statistics Press 2010.
+https://doi.org/10.1017/S0305741024000274 Published online by Cambridge University Press
+
+The China Quarterly 681
+China’s CEE and college admission
+The college admission system in China, which matches students with colleges and majors, consists of two stages. The first stage is the CEE, or the gaokao 高考. The second stage is a matching mechanism that begins immediately after the exam results are released.
+One essential feature of the system is that the total score in the CEE is the main criterion for college admission and the only criterion for the majority of students. CEE scores can determine a student’s educational path and, thus, students work hard during their three years of senior high school to improve their exam-taking skills. In fact, to achieve high scores, students begin preparing for the CEE as early as primary or junior high school. As a result of its pivotal role in higher educational achievement, CEE scores are well-accepted measures of intelligence and students’ ability within Chinese society.26
+Another distinct feature of the Chinese secondary education system is that high school students must decide whether to focus on the social sciences track or the sciences track for the remainder of their education. Both social science and science students take Chinese, English and mathematics; social science students take geography, history and political science, and science students take physics, chemistry, biology and advanced mathematics. To accommodate this dual track, the CEE also has two sets of exams.
+Although students with higher CEE scores have a greater chance of being admitted by a college, admissions officers also match students with colleges based on the students’ reported preferences. The admissions procedure in most provinces is similar to the Boston mechanism: each college considers only those students who list the college as their first choice in the first round. If quotas remain after the first round, only then will the college consider students who list the college as their second choice. Given the shortage of high-quality institutions, the chance is small for students to be admitted by their second-choice college if they fail to be accepted by their first-choice college. As such, students with the same score may end up in very different universities because filling out the application form is a strategic task. Risk aversion, information about colleges (or lack thereof), connections to colleges and tuition fees all could affect students’ admission to a certain college.27
+The college experience in China
+Chinese students’ experience in college is a significant departure from the arduous admissions process. Once admitted, Chinese students are almost guaranteed to graduate, regardless of their performance in college.28 They are rarely forced out of courses or programmes for poor performance and, as such, may be less motivated to study. Studies have even found that students in China make minimal gains in critical thinking skills and small or negligible academic skill gains from the start of the first year to the end of the second year of college.29 This lack of emphasis on academic performance during Chinese students’ college years may indicate that they spend more time on other activities.
+During college, students can participate in extracurricular activities, acquire technical certificates and have a part-time job. One such option includes joining the student union, which is coordinated by university Communist Party authorities and run by university or faculty youth league committees. Whereas in Western colleges, student associations are typically independently run by students, China’s student union activities are organized primarily by authority figures, which tends to lower student participation.30 In the recruitment process, some employers, such as government agencies
+26 Li, Hongbin, et al. 2012. 27 Khor et al. 2016. 28 Loyalka et al. 2021. 29 Ibid. 30 Ou, Gao and Xu 2018.
+https://doi.org/10.1017/S0305741024000274 Published online by Cambridge University Press
+
+682 Huan Wang et al.
+and state-owned enterprises, may prefer Party members. As a result, students may view Party membership and employment as an opportunity for career advancement and find that membership in activities such as the student union facilitates certain recruitment opportunities.31 Students similarly see part-time jobs or the acquisition of a technical certificate as a mechanism to accrue skills and experience that may help them to find a job post-graduation. One study found that up to 60 per cent of college students in China have part-time jobs and that “gaining work experience” was one of the top reasons for having these jobs.32
+China’s job market The formal job search process begins in students’ senior year of college. First, students seek information about job openings, mainly through job recruitment fairs on and off campus (91 per cent of students), the internet (58 per cent of students) and acquaintances (33 per cent of students).33 They then send résumés to potential employers, are invited for interviews (which could consist of several rounds) and then may receive offers after the interviews. Students can negotiate with potential employers over the terms and conditions of employment. Normally, students have received offers and made their decisions by May, which is before they graduate in June or July. Our survey was conducted at the end of May, by which time most students will have made their decisions.
+After deciding to hire a student, most companies send an offer letter that provides detailed job information, including the wage and basic compensation package. In our data, over 90 per cent of students who had job offers knew the wage and other contents of the compensation package, such as social security, health insurance and housing subsidy. The wage usually refers to the gross wage, or the wage before individual income tax. It includes payroll taxes paid by the employee but not by the employer. Although the offer letter also may mention the terms of a bonus, the amount is uncertain, as these benefits hinge on the employee’s performance. Thus, the monthly wage is unlikely to include a bonus, as that is usually paid at the end of the year based on an individual employee’s annual performance.
+Data
+Our data are derived from the Chinese College Students Survey (CCSS), which was conducted by the China Data Center of Tsinghua University under the direction of one of the authors. The survey was conducted in the months of May and June, 2010–2015, by which time most college graduates who are in the job market will have received a job offer. The sample includes 90 colleges randomly drawn from China’s 2,305 colleges. The study used stratified random sampling, with locations (Beijing, Shanghai, Tianjin, North-East China, East China, Central China and West China) and type of college as stratifying variables. The 90 colleges sampled include 40 elite colleges (12 of which are covered by Project 985), 46 non-elite four-year colleges and 8 community colleges, located across 26 provinces, thus covering all major geographical areas in China. To draw statistical inferences, we weigh all our statistical analyses by reassigning our sampled colleges into eight categories according to two variables: elite colleges (in Project 211) and regions (North-East, East, West, and Central). The weight of each college is the number of that category of college in the population represented by the number of the same category in our sample.
+In each college, approximately 500 students were randomly selected from the graduating class. A total of 40,916 students from the graduating classes were selected: 43.4 per cent from elite colleges; 50.8 per cent from non-elite, four-year colleges; and 5.8 per cent from community colleges.
+31 Guo, Gan 2005. 32 Tam Oi I and Morrison 2005. 33 Li, Hongbin, et al. 2012.
+https://doi.org/10.1017/S0305741024000274 Published online by Cambridge University Press
+
+The China Quarterly 683
+We designed the questionnaire collaboratively with experts in other disciplines, including sociology and education. The questionnaire includes questions on individual characteristics and family background as well as questions regarding CEE scores, college activities and student placement after graduation.
+The survey work in each college was managed by one to three college administrators in charge of teaching or student activities. The intensive multi-day training for survey administrators was completed in Beijing and the data collection was done with care. The sample students were asked to complete the questionnaires, which were then placed into coded envelopes to guarantee anonymity, and then collected by the survey administrators in the college. Our survey team closely monitored the survey in each college during the data entry process.
+Our definition of a rural student is one who has a rural hukou status, as opposed to an urban hukou status, when admitted into college. The hukou system divides the population into two groups, rural and urban, and assigns social benefits to individuals based on their rural or urban status. For instance, rural hukou holders can generally access schooling, healthcare, pensions and other social services only in rural areas. Because services offered in cities to urban hukou holders tend to be much better than those offered in rural areas to rural hukou holders, the system is thought to be a major driver of social inequality in China.
+In Table 1, we report the summary statistics of rural and urban graduating college students’ individual and family characteristics. As seen in the table, 63.77 per cent of the students in the sample are rural. In general, we find that rural students come from lower socioeconomic backgrounds. For example, on average, rural families have a much lower annual income compared to their urban counterparts (53,905 yuan vs 96,436 yuan), are less likely to have at least one parent with a college degree (5.2 per cent vs 34.5 per cent) and are less likely to be Party members (12.6 per cent vs 36.1 per cent).
+
+Table 1. Characteristics of Graduating College Students and their Families
+
+Whole sample
+
+Rural hukou
+
+Variable
+
+Obs.
+
+Rural hukou students
+
+39,828
+
+Male student
+
+39,723
+
+Age, years
+
+38,684
+
+Ethnic minority
+
+39,828
+
+Parental income (yuan)
+
+34,189
+
+Parents borrowed money or obtained a loan for college expenses
+
+38,136
+
+At least one parent has a college degree
+
+36,264
+
+At least one parent is a Party member
+
+36,532
+
+Only child
+
+39,103
+
+Number of siblings
+
+39,238
+
+Family size
+
+39,160
+
+Notes: *p < 0.10, **p < 0.05, ***p < 0.01.
+
+(1) Mean (SD) 0.637 (0.006) 0.515 (0.007) 22.516 (0.015) 0.042 (0.002) 68,894 (1,982) 0.211 (0.006)
+0.159 (0.005)
+0.212 (0.005)
+0.359 (0.006) 0.924 (0.014) 4.594 (0.018)
+
+(2) Mean (SD)
+0.542 (0.009) 22.600 (0.020) 0.034 (0.003) 53,905 (2,298) 0.262 (0.008)
+0.052 (0.004)
+0.126 (0.006)
+0.215 (0.007) 1.168 (0.019) 4.834 (0.022)
+
+Urban hukou
+(3) Mean (SD)
+0.467 (0.010) 22.370 (0.020) 0.057 (0.005) 96,436 (3,689) 0.124 (0.008)
+0.345 (0.009)
+0.361 (0.010)
+0.611 (0.010) 0.498 (0.018) 4.176 (0.026)
+
+Weighted difference
+(2)–(3)
+0.075*** 0.231*** −0.023*** −42530*** 0.138***
+−0.293***
+−0.235***
+−0.397*** 0.670*** 0.658***
+
+https://doi.org/10.1017/S0305741024000274 Published online by Cambridge University Press
+
+684 Huan Wang et al.
+Table 2 shows how rural students differ in terms of human capital pre-college and during college. We find that rural students are more likely to pursue the sciences as their study track (58.7 per cent vs 55.2 per cent). There is no significant difference in total CEE scores between rural and urban students, which suggests that there is no gap in students’ ability.
+Rural students, however, face significant disparities in college access, especially to elite institutions. Specifically, rural students are nearly 20 per cent less likely to attend elite colleges than are urban students. This finding accords with past research indicating that rural students have lower rates of accessing elite colleges.34
+In terms of human capital accumulation in college, rural students perform better on certain measures in comparison to their urban peers. For example, rural students have higher GPAs (3.167 vs 3.077), obtain more technical certificates (39.5 per cent vs 31.7 per cent), have fewer failed courses in college (2.237 vs 2.551) and are more likely to have a part-time job in college (22.8 per cent vs 13.1 per cent). Rural students, however, perform worse in college English tests and are less likely to be the leaders of student unions.
+Table 2 also presents student time allocation in college. On average, rural and urban students spend about 35 minutes per day studying. Rural students, however, spend less time learning English (about half an hour less per week compared to urban students), being online (about 1.6 hours less per week) and engaging in entertainment activities (about an hour less per week). Rural students, however, spend more time in job-related activities. For example, rural students spend about 1.5 hours more per week in their junior year and 2.5 hours more in their senior year working in part-time jobs compared to their urban peers. In their senior year, rural students also spend 2.3 hours more per week as interns than do urban students.
+Table 3 provides job market performance data for rural and urban graduates, including wages, résumés submitted, post-graduation plans and reported discrimination. We find that there is no significant difference between the first job wages of rural and urban college graduates. Rural graduates, however, appear to have a lower expectation when it comes to wages: on average, they expect 1,059 yuan (about 12 per cent) less than do urban students. Rural students seem to expend more effort on the job search, as, on average, they submit more résumés and attend more job interviews. They are less likely to go to graduate school (8 per cent vs 9.2 per cent), and four times less likely to study abroad (0.7 per cent vs 3 per cent). Additionally, a smaller portion of rural students plan to take the public servant exam (10.6 per cent vs 16.2 per cent). Unfortunately, rural students also are more likely to report discrimination in the job search process and are less likely to be helped by their social network.
+
+Empirical Model
+In this section, we set up a simple econometric model to examine the role of rural hukou status on the earnings of new college graduates. We attempt to identify the impact of hukou status by controlling for a whole set of correlates of earnings, leveraging the rich information in the survey. Specifically, earnings are determined by the following equation:
+
+ln W = a + bR + Xg + 1,
+
+(1)
+
+where W refers to college graduates’ first job monthly wage, R is an indicator of having a rural hukou, and X represents other covariates that affect earnings. ε is the error term, and coefficient β is the impact of rural hukou on first job earnings. The OLS estimate is a consistent estimate of β if and only if R is independent of the error term ε. Nevertheless, the independence condition
+may not hold for several reasons.
+
+34 Li, Hongbin, et al. 2015.
+
+https://doi.org/10.1017/S0305741024000274 Published online by Cambridge University Press
+
+The China Quarterly 685
+
+Table 2. Human Capital Levels of Rural and Urban Graduating College Students
+
+Whole sample
+
+Rural hukou
+
+Variable
+Sciences (vs social sciences/arts)
+College entrance exam, score, standardized
+Total score
+Chinese score
+Mathematics score
+English score
+Composite score
+Elite college
+Community college
+Non-elite, four-year college
+College GPA
+College English test score
+Obtained professional certificate (e.g. lawyer, accountant)
+Obtained technical certificate
+Failed course in college
+Number of failed courses
+Borrowed money or obtained loan for college expenses
+Part-time job in college
+Leader of student union
+Party membership
+Rural hukou switched to urban hukou
+Time spent on studying per day, minutes
+Junior year time allocation, hours/week
+Attending class
+Studying
+Learning English
+
+Obs. 39,107
+33,928 33,930 33,929 33,933 33,928 39,828 39,828 39,828 32,076 29,130 34,612
+34,612 38,576 14,077 38,077
+39,828 29,261 39,652 37,353 5,538
+27,482 28,294 33,867
+
+(1) Mean (SD) 0.574 (0.007)
+−0.001 (0.013) 0.001 (0.014) 0.000 (0.014)
+−0.000 (0.014) 0.002 (0.014) 0.434 (0.006) 0.058 (0.001) 0.508 (0.007) 3.134 (0.007)
+434.853 (0.896) 0.213 (0.006)
+0.367 (0.008) 0.358 (0.007) 2.355 (0.036) 0.267 (0.007)
+0.193 (0.006) 0.241 (0.006) 0.192 (0.005) 0.234 (0.006) 35.949 (0.671)
+24.297 (0.228) 12.216 (0.155) 6.917 (0.114)
+
+(2) Mean (SD) 0.587 (0.009)
+0.004 (0.017) −0.025 (0.018)
+0.017 (0.018) −0.003 (0.018)
+0.023 (0.018) 0.405 (0.008) 0.045 (0.001) 0.550 (0.008) 3.167 (0.009) 432.036 (1.122) 0.213 (0.008)
+0.395 (0.010) 0.353 (0.009) 2.237 (0.045) 0.265 (0.008)
+0.228 (0.008) 0.218 (0.008) 0.188 (0.006) 0.363 (0.009) 35.805 (0.847)
+24.521 (0.307) 12.120 (0.205) 6.723 (0.140)
+
+Urban hukou (3)
+Mean (SD) 0.552 (0.010)
+−0.010 (0.022) 0.048 (0.021)
+−0.031 (0.020) 0.005 (0.021)
+−0.035 (0.022) 0.485 (0.010) 0.080 (0.002) 0.435 (0.011) 3.077 (0.011)
+439.895 (1.480) 0.212 (0.009)
+0.317 (0.011) 0.367 (0.010) 2.551 (0.060) 0.272 (0.010)
+0.131 (0.007) 0.283 (0.009) 0.198 (0.007) 0.000 (0.000) 36.178 (1.100)
+23.884 (0.318) 12.395 (0.226) 7.262 (0.194)
+
+Weighted difference
+(2)–(3) 0.035**
+0.014 −0.074***
+0.048* −0.009
+0.058** −0.080*** −0.035***
+0.115***
+0.090*** −7.859***
+0.001
+0.078***
+−0.014 −0.314***
+−0.007
+0.098*** −0.065*** −0.010
+0.363***
+−0.373
+0.638 −0.275 −0.539** (Continued )
+
+https://doi.org/10.1017/S0305741024000274 Published online by Cambridge University Press
+
+686 Huan Wang et al.
+
+Table 2. (Continued.)
+
+Variable
+
+Obs.
+
+Engaging in sports and exercise
+
+33,114
+
+Being online
+
+33,105
+
+Engaging in entertainment activities
+
+32,129
+
+Having a part-time job 29,947
+
+Senior year part-time job (hours/week)
+
+10,508
+
+Senior year intern (hours/week)
+
+10,407
+
+Notes: *p < 0.10, **p < 0.05, ***p < 0.01.
+
+Whole sample (1)
+Mean (SD) 6.069 (0.101) 11.219 (0.142) 8.639 (0.128)
+9.091 (0.215) 25.529 (0.619) 37.037 (0.592)
+
+Rural hukou (2)
+Mean (SD) 6.054 (0.137) 10.619 (0.178) 8.280 (0.165)
+9.602 (0.266) 26.272 (0.778) 37.792 (0.777)
+
+Urban hukou (3)
+Mean (SD) 6.097 (0.142)
+12.267 (0.233) 9.267 (0.198)
+
+Weighted difference
+(2)–(3)
+−0.043
+−1.648*** −0.988***
+
+8.140 (0.366) 23.763 (0.975)
+35.478 (0.837)
+
+1.462*** 2.509**
+2.314**
+
+First, family background variables, which are correlated with hukou status, might systematically affect the first job monthly wages of students. To account for this, we control for student and family background characteristics, such as student gender and age as well as parental income and parental education level.
+Second, earnings could be affected by differing human capital levels between rural and urban students prior to college. We account for this by including variables that measure human capital, including student CEE scores, whether a student is in the sciences or social sciences track, and which type of college a student is enrolled in (elite, non-elite or community college). It is possible that rural students are admitted to less selective colleges or majors than their urban counterparts. Even if hukou status is not directly correlated with college selectivity, we can still observe the independent effect of the selectivity of the attended college on income.35
+Third, we include measures of the students’ human capital during college, such as college English test scores, GPA and social activities in college. Including these variables not only accounts for a potential ability bias but also allows us to view performance in specific subjects, which is useful, as employers might value certain skills over others.
+Finally, the effort that students put into their job search could play a role in their first job earnings. We account for this by controlling for variables that indicate student job search efforts, such as the number of résumés submitted, the number of job interviews attended and whether they received help from their social network during the job search.
+
+Results In this section, by estimating the wage equation as specified in Eq. (1) and controlling for covariates such as student and family background, human capital pre-college and during college, and job search effort, we examine whether rural students are paid less in their first job after graduation. The dependent variable is log wage. All regressions are weighted so that the results represent the population. Survey cohort fixed effects, higher education institution province fixed effects and college fixed effects are controlled for in all models. Robust standard errors are clustered at the school level.
+35 Jia and Li 2021.
+
+https://doi.org/10.1017/S0305741024000274 Published online by Cambridge University Press
+
+The China Quarterly 687
+
+Table 3. Rural and Urban Graduating College Students in the Job Market
+
+Whole sample
+
+Rural hukou
+
+Variable
+
+Obs.
+
+First job offer monthly wage (yuan)
+
+17,514
+
+First job offer monthly wage (log)
+
+17,514
+
+Expected wage (yuan)
+
+24,832
+
+Internship job wage (yuan)
+
+26,353
+
+Job offers urban hukou 18,498
+
+Number of résumé submissions
+
+24,536
+
+Number of job interviews attended
+
+24,841
+
+Post-graduation plan
+
+Search for a job in China
+
+38,483
+
+Failure rate among job hunters
+
+21,220
+
+Graduate school
+
+38,483
+
+Work abroad
+
+38,483
+
+Study abroad
+
+38,483
+
+Unclear
+
+38,483
+
+Take public servant exam
+
+26,459
+
+Experienced discrimination against rural students in job search
+
+23,038
+
+Experienced discrimination against gender in job search
+
+24,957
+
+Job offered housing subsidy
+
+14,486
+
+Social network helped in job search
+
+26,273
+
+Notes: *p < 0.10, **p < 0.05, ***p < 0.01.
+
+(1) Mean (SD) 2511 (290) 7.529 (0.011) 8,757 (214) 1,194 (16) 0.206 (0.007) 24.099 (0.552) 5.535 (0.128)
+0.801 (0.005) 0.249 (0.008) 0.084 (0.002) 0.009 (0.001) 0.015 (0.001) 0.089 (0.004) 0.125 (0.004) 0.117 (0.006)
+0.197 (0.006)
+0.434 (0.011) 0.304 (0.008)
+
+(2) Mean (SD) 2618 (427) 7.529 (0.013) 8,392 (282) 1,215 (20) 0.216 (0.009) 25.532 (0.754) 5.747 (0.153)
+0.815 (0.007) 0.236 (0.010) 0.080 (0.003) 0.010 (0.002) 0.007 (0.002) 0.088 (0.006) 0.106 (0.004) 0.153 (0.009)
+0.208 (0.008)
+0.434 (0.014) 0.279 (0.010)
+
+Urban hukou (3)
+Mean (SD) 2285 (49) 7.531 (0.021) 9,451 (315) 1,150 (25) 0.184 (0.010) 21.291 (0.693) 5.121 (0.230)
+0.777 (0.007) 0.274 (0.012) 0.092 (0.003) 0.009 (0.001) 0.030 (0.002) 0.092 (0.006) 0.162 (0.007) 0.050 (0.006)
+0.179 (0.009)
+0.433 (0.017) 0.352 (0.013)
+
+Weighted difference
+(2)–(3) 333.173 −0.003 −1,058.884** 65.187**
+0.032** 4.242*** 0.627**
+0.039*** −0.037** −0.012***
+0.001 −0.024*** −0.004 −0.055***
+0.103***
+0.029**
+0.001 −0.072***
+
+Basic results
+The regressions reported in Table 4 show that rural students do not get paid less in their first job after graduating from college. In Column 1, we report a regression with the following independent variables: a rural dummy, a sciences (vs social sciences) dummy, and dummies that indicate college
+
+https://doi.org/10.1017/S0305741024000274 Published online by Cambridge University Press
+
+688 Huan Wang et al.
+https://doi.org/10.1017/S0305741024000274 Published online by Cambridge University Press
+
+Table 4. OLS Regressions of Rural hukou Status on College Graduates’ First Job Wages
+
+Dependent Variable: Log (wage)
+
+Variable
+Rural hukou Male student Age, years Ethnic minority Family background
+Parental income (10k yuan) Parental income squared At least one parent had a college degree Human capital College entrance exam, total score, standardized English test score, standardized GPA, standardized Party membership Participant in student union Obtained technical certificate Worked in college Job search effort Number of résumés submitted Number of job interviews attended Social network helped in job search
+
+(1) 0.036 (0.027)
+
+(2)
+0.036 (0.028) 0.084*** (0.023)
+−0.002 (0.006) 0.002 (0.053)
+
+(3)
+0.062** (0.028) 0.087*** (0.024)
+0.000 (0.007) −0.007 (0.054)
+
+(4)
+0.051* (0.028) 0.113*** (0.023)
+0.002 (0.006) 0.030 (0.055)
+
+0.006*** (0.001) −0.0001*** (0.000)
+0.046* (0.024)
+
+0.006*** (0.001) −0.0001*** (0.000)
+0.036 (0.022)
+
+0.053*** (0.013)
+0.109*** (0.008) 0.013 (0.014)
+
+(5) 0.054* (0.028) 0.112*** (0.023) 0.002 (0.006) 0.032 (0.054)
+0.006*** (0.001) −0.0001*** (0.000)
+0.037* (0.022)
+0.054*** (0.013)
+0.105*** (0.007) 0.008 (0.014)
+0.058** (0.024) 0.018 (0.034) 0.040 (0.026)
+−0.019 (0.040)
+
+(6) 0.053* (0.028) 0.109*** (0.023) 0.002 (0.006) 0.030 (0.053)
+0.006*** (0.001) −0.0001*** (0.000)
+0.039* (0.021)
+0.053*** (0.014)
+0.105*** (0.007) 0.006 (0.014)
+0.059** (0.025) 0.018 (0.033) 0.042 (0.027)
+−0.018 (0.040)
+−0.001** (0.000) 0.001 (0.000)
+−0.051* (0.026)
+
+The China Quarterly 689
+https://doi.org/10.1017/S0305741024000274 Published online by Cambridge University Press
+
+Sciences track (vs social sciences/ arts)
+
+0.048 (0.034)
+
+0.024 (0.037)
+
+0.027 (0.036)
+
+0.030 (0.032)
+
+0.027 (0.032)
+
+0.025 (0.032)
+
+Community college (reference)
+
+Non-elite, four-year college
+
+0.296*** (0.051) 0.298*** (0.050)
+
+0.282*** (0.050)
+
+0.152*** (0.037)
+
+0.154*** (0.039)
+
+0.155*** (0.039)
+
+Elite college
+
+0.563*** (0.058) 0.554*** (0.056)
+
+0.538*** (0.055)
+
+0.306*** (0.047)
+
+0.312*** (0.049)
+
+0.310*** (0.048)
+
+Constant
+
+7.186*** (0.075) 7.223*** (0.145)
+
+7.118*** (0.156)
+
+7.211*** (0.134)
+
+7.182*** (0.130)
+
+7.224*** (0.133)
+
+Observations
+
+17,415
+
+17,415
+
+17,415
+
+17,415
+
+17,415
+
+17,415
+
+R-squared
+
+0.280
+
+0.285
+
+0.291
+
+0.315
+
+0.318
+
+0.320
+
+Notes: Robust standard errors in parentheses, with clustering at the school level. All regressions are weighted to represent the population. Survey cohort and province fixed effects are controlled for in all models. *p < 0.10, **p < 0.05, ***p < 0.01.
+
+690 Huan Wang et al.
+type (elite, non-elite or community college). It is important to note that the dummies included to control for the type of college are constructed in reference to community college, the lowest type of college in China. The rural dummy is not significant, indicating that there is no difference between the wages of rural and urban college students in their first job after graduation.
+Rural students may be advantaged or disadvantaged in the job market owing to personal characteristics that systematically differ from those of their urban peers. In Column 2, we include a gender dummy, age variable and ethnic minority dummy. The age variable and ethnic minority dummy were not significant. The gender dummy, however, was significant at the 1 per cent level, and the point estimate of the coefficient implies that male graduates have a wage premium of 8.4 per cent relative to their female peers. More importantly, adding personal characteristic variables does not change our non-significant results in Column 1 with regard to the rural dummy. In fact, our point estimate of the coefficient for the rural dummy remained the same.
+Does family socioeconomic background matter? Research has established the importance of family socioeconomic background in students’ achievement and educational attainment, both of which could factor into students’ success in the job market.36 The regressions in Column 3 include the following independent variables: parental income, parental income squared and a dummy variable that measures whether at least one parent has a college degree. For every additional 10,000 yuan of parental income annually, students receive about a 0.55 per cent wage premium.37 In addition, having at least one parent with a college degree gives students a 4.6 per cent wage premium, significant at the 10 per cent level. When family socioeconomic background factors are controlled for, we estimate a wage premium of 6.2 per cent for rural students. Before controlling for family background factors, however, there was no difference in the first job wages of rural and urban students. This means that family background may disproportionately benefit the wages of urban students, who usually have a more advantageous socioeconomic background, as shown above. As such, regressions indicate that family background can affect graduates’ first job wages.
+Do human capital measures pre-college and during college matter? Levels of human capital could affect first job wages owing to their potential value in the job market.38 Employers may value complex thinking and communication skills, signalled by students’ achievements in mathematics and English. We use test scores and college GPA as relative measures of students’ ability in our regression analysis. We add two standardized test variables: total CEE scores and standardized college English scores. The results indicate that total CEE scores and CEE English scores have 5.4 per cent and 10.5 per cent wage premiums, respectively, but that college GPA has no significant effect on first job earnings (Column 4). GPA might not be considered reliable in the job market because college students in China are almost guaranteed to graduate regardless of their performance in college.39 Nevertheless, the rural premium remains significant at 5.1 per cent after controlling for CEE scores, English scores and GPA. Thus, human capital levels account for a portion of the previously calculated rural premium, but a significant portion of the rural premium still exists.
+36 Liu, Peng and Luo 2020; Poon 2020. 37 The effect of parental income on student first job earnings is calculated as 0.0058-2*0.0000169*6.8 (the average parental
+income in our sample is 68,895 yuan). 38 Guo, Qian, and Sun 2014; Levy and Murnane 2004. 39 Loyalka et al. 2021.
+https://doi.org/10.1017/S0305741024000274 Published online by Cambridge University Press
+
+The China Quarterly 691
+Do college extracurricular activities matter? Because employers may be more inclined to hire college graduates who participated in activities or held part-time jobs during their undergraduate careers, we measured the impact of extracurricular participation on the rural premium.40 Variables for extracurriculars are controlled for in Column 5, including whether the student had Party membership, attended student union activities, obtained a technical certificate or worked in college, all of which were assigned as dummy variables. Almost none of these activities has a wage premium attached to them, apart from Chinese Communist Party membership. Party membership has a wage premium of 5.8 per cent, significant at the 5 per cent level. In addition, the rural premium still exists but at a slightly increased magnitude of 5.4 per cent after controlling for the additional variables of college activity.
+Does job search effort matter? We also measured the impact of students’ job search efforts on the rural premium. Job search effort was measured with two variables: number of résumés submitted and number of job interviews attended. The results show that the number of résumés submitted has a significant negative effect on the wage premium, although the magnitude is only one-tenth of a percentage point (Column 6). The number of job interviews attended is not significantly related to students’ first job wage. Interestingly, receiving help in the job search from students’ social network has a negative correlation with first job wages (-0.5 per cent). After controlling for job search effort, the rural wage premium does not change substantially, remaining at around 5.3 per cent. Therefore, job search effort likely does not affect first job wages.
+Does type of college matter? Extant research indicates the relevance of elite college education in the job search, as employers might value degrees from elite colleges as a signal of a student’s prestige.41 We controlled for the type of college in all regression models using dummies that indicated whether a student went to an elite college, a non-elite, four-year college or a community college. The wage premiums gained from attending an elite college and non-elite college are each calculated in reference to the average incomes of students from community colleges. As seen in Figure 1, we find that the returns of attending noncommunity college are significant, with larger magnitudes of return for those who attend elite schools. With community college as the reference, elite college graduates earn a 56.3 per cent wage premium, while non-elite, four-year college graduates earn a 29.6 per cent wage premium. The wage premiums for attending elite college institutions persist even after controlling for background and human capital variables (Column 5). More importantly, the rural premium exists even when we control for college type and other variables (Columns 3–6), suggesting that there are other unknown factors that influence the existence of the rural premium, estimated at between 5 per cent and 6 per cent.
+Does sciences vs social sciences matter? The students’ chosen study track could affect first job wages, as firms may offer jobs based on their specific skillset.42 All regressions in Table 4 include a dummy variable that separates students based on their track (sciences or social sciences). The chosen track is shown not to be significant in determining first job wages. Although including this dummy variable decreases the rural premium slightly, the rural premium still exists.
+40 Kim and Bastedo 2017; Lau et al. 2014. 41 Jia and Li 2021. 42 Levy and Murnane 2004.
+https://doi.org/10.1017/S0305741024000274 Published online by Cambridge University Press
+
+692 Huan Wang et al.
+Figure 1. Job Wages across College Types
+Why does the rural wage premium remain after controlling for all these factors? Although our study controlled for a wide array of factors, there still may be unobservable factors that affect the rural premium. For example, a possible unobserved factor could be a fundamental difference of mindset between rural and urban graduates. Rural students may prioritize high wages above all else in the job search. In contrast, urban students may strongly consider other factors, such as personal interest, growth or job satisfaction, when deciding on their jobs. Rural students also may be more enterprising or selective in their job searches. The perspective of employers is another consideration. Contrary to evidence that suggests that rural workers face prejudice in the workforce, it may be that employers prefer rural students, as employers (consciously or subconsciously) could perceive them to be stronger or more driven workers, while urban students are viewed as less driven or even less reliable workers.
+Limitations There are several limitations to consider in our study. First, we are unable to rule out the possibility of omitted variables and selection biases. Despite the scope of our data, we cannot account for all the potential characteristics that could affect earnings. One specific concern involves the difference between urban and rural post-graduation plans. For example, urban students are more likely to go into postgraduate education, either in China or abroad. Thus, these urban students could not provide information on their first job wages, even though they could earn high wages in their first job after graduate school.
+Second, there could be unobserved, job-specific benefits. Urban students are more likely to work for the government, as they are more likely to take the public service exam. As such, it is likely that there are certain benefits or privileges that come with working in government that are not reflected in job wages. Benefits may come in the form of an elevated status, job security or premium access to certain services, such as housing, schooling and healthcare.
+Finally, our study is limited in scope. Job market performance in this study is measured as first job wages, which is a proxy for early-career labour income. Although one’s first job is highly predictive of the wage rank of one’s later employment,43 more research is needed to examine the rural– urban differences in career development beyond first job wages. Further, because our dataset
+43 Jia and Li 2021.
+https://doi.org/10.1017/S0305741024000274 Published online by Cambridge University Press
+
+The China Quarterly 693
+includes only rural students enrolled in college, it is possible that it is not representative of the broader rural cohort, including those who did not enrol in college. For this reason, our estimates do not reflect the urban–rural gap in society as a whole.
+Discussion and Conclusion This study contributes to a growing body of literature that explores the urban–rural divide by focusing on the first job earnings of China’s rural populations. We find evidence from a nationally representative survey that compares 20,000 rural college students and 20,000 urban college students and indicates that, despite having poorer family backgrounds, rural students display the same ability as urban students in colleges of the same tier, perform better in college academically than their urban peers, and earn more in their first job when controlling for factors that may affect wages. As such, our results suggest that once enrolled, rural students are not penalized in the job market on the basis of their rural status.
+Our results also support our third hypothesis: rural students who are admitted to college seem to perform as well as or even better than their urban peers. This has important policy implications. Although the hukou system is widely thought to a be a driver of social inequity, data indicate that once rural students access higher education, China’s school system benefits urban and rural students equally and, indeed, may benefit rural students more.
+Our findings add to the literature and inform policy debates about the ongoing education reforms in China and beyond. China is currently making the transition from an upper middle-income economy to a high-income economy, and sufficient human capital is key to this transition.44 As the government is exerting considerable effort to improve human capital in both urban and rural areas, understanding that rural students perform equally well in college and even better in the job market is crucial to narrowing the rural–urban gap.45 As such, we hope that policymakers note the importance of expanding higher education access to rural students based on their performance. Such expansion could entail consolidating or improving the quality of rural pre-tertiary schools, which could ensure that rural students have an equal pathway to higher education, allowing them to secure the benefits that higher education offers.
+Acknowledgements. The authors are thankful to Larry Li, Vincent Zhang and Sabrina Zhu for their assistance.
+Competing interests. None.
+References
+Bai, Yu, Siqi Zhang, Lei Wang, Ruirui Dang, Cody Abbey and Scott Rozelle. 2019. “Past successes and future challenges in rural China’s human capital.” Journal of Contemporary China 28(120), 883–898.
+Bresnahan, Timothy F., Erik Brynjolfsson and Lorin M. Hitt. 2002. “Information technology, workplace organization, and the demand for skilled labor: firm-level evidence.” The Quarterly Journal of Economics 117(1), 339–376.
+Chen, Yan, and Onur Kesten. 2017. “Chinese college admissions and school choice reforms: a theoretical analysis.” Journal of Political Economy 125(1), 99–139.
+China Statistics Press. 2010. China Statistical Yearbook. http://www.stats.gov.cn/tjsj/ndsj/2010/indexeh.htm. Deming, David, and Lisa B. Kahn. 2018. “Skill requirements across firms and labor markets: evidence from job postings for
+professionals.” Journal of Labor Economics 36(S1), S337–S369. Gao, Qiufeng, Huan Wang, Di Mo, Yaojiang Shi, Kaleigh Kenny and Scott Rozelle. 2018. “Can reading programs improve
+reading skills and academic performance in rural China?” China Economic Review 52, 111–125. Guo, Gang. 2005. “Party recruitment of college students in China.” Journal of Contemporary China 14(43), 371–393. Guo, Qian, and Wenkai Sun. 2014. “Economic returns to English proficiency for college graduates in mainland China.”
+China Economic Review 30, 290–300.
+44 Rozelle and Hell 2020; Zhang, Linxiu, et al. 2013. 45 Wang et al. 2018.
+https://doi.org/10.1017/S0305741024000274 Published online by Cambridge University Press
+
+694 Huan Wang et al.
+Heckman, James J., and Xuesong Li. 2004. “Selection bias, comparative advantage and heterogeneous returns to education: evidence from China in 2000.” Pacific Economic Review 9(3), 155–171.
+Jia, Ruixue, and Hongbin Li. 2021. “Just above the exam cutoff score: elite college admission and wages in China.” Journal of Public Economics 196, 104371.
+Jia, Ruixue, Hongbin Li and Lingsheng Meng. 2022. “Can elite college education change one’s fate in China?” SSRN Electronic Journal, https://www.ssrn.com/abstract=4113768. Accessed 25 July 2022.
+Khor, Niny, Lihua Pang, Chengfang Liu, Fang Chang, Di Mo, Prashant Loyalka and Scott Rozelle. 2016. “China’s looming human capital crisis: upper secondary educational attainment rates and the middle-income trap.” The China Quarterly 228, 905–926.
+Kim, Jeongeun, and Michael N. Bastedo. 2017. “Athletics, clubs, or music? The influence of college extracurricular activities on job prestige and satisfaction.” Journal of Education and Work 30(3), 249–269.
+Kuang, Lei, and Li Liu. 2012. “Discrimination against rural-to-urban migrants: the role of the hukou system in China.” PLoS ONE 7 11, e46932.
+Lau, Hsien-Hsien, Hsien-Yuan Hsu, Sandra Acosta and Tze-Li Hsu. 2014. “Impact of participation in extra-curricular activities during college on graduate employability: an empirical study of graduates of Taiwanese business schools.” Educational Studies 40(1), 26–47.
+Levy, Frank, and Richard J. Murnane. 2004. “Education and the changing job market.” Educational Leadership 62(2), 80–83. Li, Angran. 2019. “Unfulfilled promise of educational meritocracy? Academic ability and China’s urban–rural gap in access
+to higher education.” Chinese Sociological Review 51(2), 115–146. Li, Hongbin, Pak Wai Liu and Junsen Zhang. 2012. “Estimating returns to education using twins in urban China.” Journal
+of Development Economics 97(2), 494–504. Li, Hongbin, Prashant Loyalka, Scott Rozelle and Binzhen Wu. 2017. “Human capital and China’s future growth.” Journal
+of Economic Perspectives 31(1), 25–48. Li, Hongbin, Prashant Loyalka, Scott Rozelle, Binzhen Wu and Jieyu Xie. 2015. “Unequal access to college in China: how
+far have poor, rural students been left behind?” The China Quarterly 221, 185–207. Li, Hongbin, Yueyuan Ma, Lingsheng Meng, Xue Qiao and Xinzheng Shi. 2017. “Skill complementarities and returns to
+higher education: evidence from college enrollment expansion in China.” China Economic Review 46, 10–26. Li, Hongbin, Lingsheng Meng, Xinzheng Shi and Binzhen Wu. 2012. “Does having a cadre parent pay? Evidence from the
+first job offers of Chinese college graduates.” Journal of Development Economics 99(2), 513–520. Li, Qiang, Alan de Brauw, Scott Rozelle and Linxiu Zhang. 2005. “Labor market emergence and returns to education in
+rural China.” Review of Agricultural Economics 27(3), 418–424. Liu, Juan, Peng Peng and Liang Luo. 2020. “The relation between family socioeconomic status and academic achievement in
+China: a meta-analysis.” Educational Psychology Review 32(1), 49–76. Loyalka, Prashant, Ou Lydia Liu, Guirong Li, Elena Kardanova, Igor Chirikov, Shangfeng Hu, Ningning Yu et al. 2021.
+“Skill levels and gains in university STEM education in China, India, Russia and the United States.” Nature Human Behaviour 5, 892–904. Marioulas, Julian. 2017. “China: a world leader in graduation rates.” International Higher Education 90, 28–29. Ou, Xiangli, Kang Gao and Congcong Xu. 2018. “A comparative study of student unions inside and outside mainland China.” Asian Social Science 14(7), 99–104. Poon, Kean. 2020. “The impact of socioeconomic status on parental factors in promoting academic achievement in Chinese children.” International Journal of Educational Development 75, 102175. Rozelle, Scott, and Natalie Hell. 2020. Invisible China: How the Urban–Rural Divide Threatens China’s Rise. Chicago: The University of Chicago Press. Shi, Yaojiang, Linxiu Zhang, Yue Ma, Hongmei Yi, Chengfang Liu, Natalie Johnson, James Chu, Prashant Loyalka and Scott Rozelle. 2015. “Dropping out of rural China’s secondary schools: a mixed-methods analysis.” The China Quarterly 224, 1048–69. Tam Oi I, Betty, and Keith Morrison. 2005. “Undergraduate students in part-time employment in China.” Educational Studies 31(2), 169–180. Tam, Tony, and Jin Jiang. 2015. “Divergent urban–rural trends in college attendance: state policy bias and structural exclusion in China.” Sociology of Education 88(2), 160–180. Tse, Chun Wing. 2016. “Urban residents’ prejudice and integration of rural migrants into urban China.” Journal of Contemporary China 25(100), 579–595. Wang, Lei, Mengjie Li, Cody Abbey and Scott Rozelle. 2018. “Human capital and the middle income trap: how many of China’s youth are going to high school? The rise of high school attendance in China.” The Developing Economies 56(2), 82–103. Yao, Yao, George S. Chen, Ruhul Salim and Xiaojun Yu. 2018. “Schooling returns for migrant workers in China: estimations from the perspective of the institutional environment in a rural setting.” China Economic Review 51, 240–256. Yue, Ai, Yaojiang Shi, Renfu Luo, Jamie Chen, James Garth, Jimmy Zhang, Alexis Medina, Sarah Kotb and Scott Rozelle. 2017. “China’s invisible crisis: cognitive delays among rural toddlers and the absence of modern parenting.” The China Journal 78, 50–80.
+https://doi.org/10.1017/S0305741024000274 Published online by Cambridge University Press
+
+The China Quarterly 695
+Zhang, Duanhong. 2019. “The problem with Chinese universities? Not enough dropouts.” SixthTone, 15 January, https:// www.sixthtone.com/news/1003440/the-problem-with-chinese-universities%3F-not-enough-dropouts.
+Zhang, Junsen, Yaohui Zhao, Albert Park and Xiaoqing Song. 2005. “Economic returns to schooling in urban China, 1988 to 2001.” Journal of Comparative Economics 33(4), 730–752.
+Zhang, Linxiu, Hongmei Yi, Renfu Luo, Changfang Liu and Scott Rozelle. 2013. “The human capital roots of the middle-income trap: the case of China.” Agricultural Economics 44(s1), 151–162.
+Huan WANG is a research scholar at the Stanford Center on China’s Economy and Institutions. Her research focuses on assessing educational quality and identifying effective educational programmes and policies to improve student outcomes in rural China. By conducting large-scale randomized controlled trials, she evaluates the impact of social emotional learning on reducing dropouts in rural junior high schools, the impact of independent reading on student performance, and the effect of vision care programmes on learning and schooling paths. Claire COUSINEAU is a writer and project manager at the Stanford Center on China’s Economy and Institutions (SCCEI) in the Freeman Spogli Institute for International Studies at Stanford University. Her work at SCCEI has primarily focused on health, education and public policy. Claire is also currently involved in several initiatives that seek to bring evidence-based insights about China from academia into the hands of policymakers and the general public. Matthew BOSWELL is the associate co-director of the Stanford Center on China’s Economy and Institutions in the Freeman Spogli Institute for International Studies and Stanford Institute for Economic Policy Research at Stanford University. His research focuses on evaluating educational programmes and policies that seek to improve student outcomes. He has extensive experience managing development projects in north-west China and has held research and analysis positions in several US-based think tanks. Hongbin LI is the James Liang chair, faculty co-director of the Stanford Center on China’s Economy and Institutions, and senior fellow of the Stanford Institute for Economic Policy Research and the Freeman Spogli Institute for International Studies, all at Stanford University. His research focuses on China’s development and transition, and he is the co-editor of the Journal of Comparative Economics, a leading economics journal studying economic institutions and the transition to a market economy.
+Cite this article: Wang H, Cousineau C, Boswell M, Li H (2024). Estimating the Impact of Rural Hukou Status on Earnings for College Graduates in China. The China Quarterly 259, 677–695. https://doi.org/10.1017/S0305741024000274
+https://doi.org/10.1017/S0305741024000274 Published online by Cambridge University Press
+
+

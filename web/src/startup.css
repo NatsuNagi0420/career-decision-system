@@ -1,0 +1,51 @@
+/* 青穗集 · 原创启动层：深灰紫底、像素字标与XP节奏色块；不复刻Windows商标或音效。 */
+.startup-screen { position: fixed; inset: 0; z-index: 300; display: flex; align-items: center; justify-content: center; min-height: 320px; overflow: auto; color: #efebfc; background: #171c2f; opacity: 1; transition: opacity 180ms ease-out; }
+.startup-screen[data-exiting="true"] { opacity: 0; pointer-events: none; }
+.startup-screen__center { width: min(580px, 86vw); text-align: center; padding: 48px 0 70px; transform: translateY(-12px); }
+.boot-title { position: relative; width: 100%; aspect-ratio: 640 / 340; }
+.boot-title__poster, .boot-title__animation { position: absolute; inset: 0; width: 100%; height: 100%; }
+.boot-title__poster { display: block; object-fit: contain; opacity: .16; }
+.boot-title[data-status="static"] .boot-title__poster, .boot-title[data-status="fallback"] .boot-title__poster { opacity: 1; }
+.boot-title__animation svg { display: block; width: 100%; height: 100%; }
+.startup-screen__track { width: 154px; height: 15px; margin: 21px auto 0; padding: 2px; border: 1px solid #687496; border-radius: 3px; overflow: hidden; box-shadow: inset 0 1px 3px #090e1b; }
+.startup-screen__track > div { display: flex; gap: 3px; width: max-content; height: 9px; animation: boot-blocks 1.15s linear infinite; }
+.startup-screen__track i { display: block; width: 11px; height: 9px; background: #9baee0; }
+.startup-screen__track i:nth-child(2) { background: #c4b8e6; }
+.startup-screen__track i:nth-child(3) { background: #a1d5c9; }
+.startup-screen[data-motion="off"] .startup-screen__track > div { animation: none; transform: translateX(51px); }
+.startup-screen__status { margin-top: 20px; color: #b6b8ce; font: 400 13px/1.8 var(--desktop-font, "Microsoft YaHei", monospace); letter-spacing: .5px; }
+.startup-screen__skip { position: absolute; top: 28px; right: 32px; border: 0; padding: 8px 10px; color: #b8bdd5; font: 400 12px/1.5 var(--md-font, sans-serif); background: transparent; }
+.startup-screen__skip:hover { color: #efebfc; background: #ffffff08; }
+.startup-screen__retry { margin-top: 16px; border: 1px solid #7f8cac; padding: 7px 16px; border-radius: 3px; color: #e6e0f5; }
+.startup-screen button:focus-visible, .boot-preview__toolbar :focus-visible { outline: 2px solid #a1d5c9; outline-offset: 3px; }
+.startup-screen__footer { position: absolute; left: 34px; right: 34px; bottom: 25px; display: flex; justify-content: space-between; gap: 20px; color: #858ca9; font: 400 11px/1.5 var(--desktop-font, monospace); letter-spacing: .8px; }
+[data-startup-content][inert] { visibility: hidden; }
+.startup-error { display: flex; min-height: 100dvh; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 30px; text-align: center; background: #efecf7; }
+.startup-error button { padding: 10px 22px; background: #4e456f; color: #faf7ff; border-radius: 4px; }
+.boot-preview { min-height: 100dvh; padding-top: 62px; }
+.boot-preview__toolbar { position: fixed; z-index: 400; top: 0; left: 0; right: 0; min-height: 62px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 24px; background: #171c2f; color: #efebfc; font: 400 12px/1.5 var(--md-font, sans-serif); border-bottom: 1px solid #353c58; }
+.boot-preview__toolbar strong { display: block; font-weight: 500; }
+.boot-preview__toolbar div > span { display: block; margin-top: 2px; color: #a5a8c6; font-size: 11px; }
+.boot-preview__toolbar nav { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.boot-preview__toolbar button, .boot-preview__toolbar a { padding: 6px 9px; border: 1px solid #616b8b; border-radius: 3px; color: #e4e1f1; white-space: nowrap; }
+.boot-preview__toolbar a { border-color: transparent; }
+.boot-preview .startup-screen { top: 62px; }
+.boot-preview__login[inert] { position: fixed; inset: 0; visibility: hidden; overflow: hidden; }
+.boot-preview .auth__wrap { min-height: calc(100dvh - 62px); }
+@keyframes boot-blocks { from { transform: translateX(-42px); } to { transform: translateX(153px); } }
+@media (max-width: 680px) {
+  .startup-screen__center { width: 92vw; padding-bottom: 54px; }
+  .startup-screen__track { margin-top: 32px; }
+  .startup-screen__status { font-size: 12px; }
+  .startup-screen__skip { top: 18px; right: 15px; }
+  .startup-screen__footer { left: 22px; right: 22px; bottom: 22px; flex-direction: column; gap: 5px; font-size: 10px; }
+  .boot-preview { padding-top: 108px; }
+  .boot-preview__toolbar { min-height: 108px; align-items: flex-start; flex-direction: column; gap: 9px; padding: 10px 16px; }
+  .boot-preview__toolbar nav { gap: 5px; flex-wrap: wrap; }
+  .boot-preview__toolbar button, .boot-preview__toolbar a { padding: 5px 8px; font-size: 11px; }
+  .boot-preview .startup-screen { top: 108px; }
+  .boot-preview .auth__wrap { min-height: calc(100dvh - 108px); }
+}
+@media (max-height: 480px) and (min-width: 681px) { .startup-screen__center { width: 340px; padding: 20px 0 48px; transform: none; } .startup-screen__track { margin-top: 0; } .startup-screen__footer { bottom: 12px; } }
+@media (prefers-reduced-motion: reduce) { .startup-screen { transition: none; } .startup-screen__track > div { animation: none; transform: translateX(51px); } }
+@media print { .startup-screen, .boot-preview__toolbar { display: none !important; } [data-startup-content][inert] { visibility: visible; } }

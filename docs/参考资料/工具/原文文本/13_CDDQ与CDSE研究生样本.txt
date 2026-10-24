@@ -1,0 +1,459 @@
+TYPE  Original Research PUBLISHED  31 July 2023 DOI 10.3389/fpsyg.2023.1198974
+
+OPEN ACCESS
+EDITED BY
+Antonio P. Gutierrez de Blume, Georgia Southern University, United States
+REVIEWED BY
+Sandra T. Valadas, University of Algarve, Portugal Roxana Maier, Babeș-Bolyai University, Romania
+*CORRESPONDENCE
+Ge Wang 1343255034@qq.com
+RECEIVED 02 April 2023 ACCEPTED 14 July 2023 PUBLISHED 31 July 2023
+CITATION
+Bi Y, Mou S, Wang G and Liao M (2023) The relationship between professional self-concept and career decision-making difficulties among postgraduate nursing students in China: the mediating role of career decision-making self-efficacy. Front. Psychol. 14:1198974. doi: 10.3389/fpsyg.2023.1198974
+COPYRIGHT
+© 2023 Bi, Mou, Wang and Liao. This is an open-access article distributed under the terms of the Creative Commons Attribution License (CC BY). The use, distribution or reproduction in other forums is permitted, provided the original author(s) and the copyright owner(s) are credited and that the original publication in this journal is cited, in accordance with accepted academic practice. No use, distribution or reproduction is permitted which does not comply with these terms.
+
+The relationship between professional self-concept and career decision-making difficulties among postgraduate nursing students in China: the mediating role of career decision-making self-efficacy
+Yaping Bi 1, Shaoyu Mou 2, Ge Wang 1* and Mingyan Liao 1
+1 Department of Hematology, The First Affiliated Hospital of Chongqing Medical University, Chongqing, China, 2 School of Nursing, Chongqing Medical University, Chongqing, China
+Background: In the context of a global shortage, uneven distribution, and structural imbalance of nursing talent, postgraduate nursing students must make appropriate decisions about their careers not only for the nursing profession but also for society as a whole. However, little research has been reported on the current status and factors influencing career decision-making difficulties among postgraduate nursing students.
+Objectives: Exploring the mediating role of career decision-making self-efficacy between professional self-concept and career decision-making difficulties among postgraduate nursing students in China based on the social cognitive career theory.
+Methods: 276 postgraduate nursing students from 25 universities in seven administrative regions of China were selected by stratified random sampling. Data were collected with the Career decision-making difficulties Questionnaire, Career Decision-making Self-Efficacy Scale, and Nursing Professional Self-concept Scale through an online survey, and were analyzed by univariate analysis, correlation analysis, multiple linear regression analysis, and PROCESS macro.
+Results: The score for career decision-making difficulties was 2.84 (SD  =  0.54). Professional self-concept (r  =  −0.496, p  <  0.01) and career decision-making selfefficacy (r  =  −0.551, p  <  0.01) were negatively associated with career decisionmaking difficulties. Career decision-making self-efficacy played a partial mediating role between professional self-concept and career decision-making difficulties (p  <  0.01), with the mediating effect (Effect Value  =  −0.253, Bootstrap 95% CI: −0.349, −0.156) accounting for 53.82% of the total effect. Conclusion: The high scores of career decision-making difficulties among postgraduate nursing students demand widespread attention. Nursing educators need to develop a complete and standardized career counseling curriculum for postgraduate nursing students, and should pay attention to the cultivation and development of positive professional self-concept and career decision-making self-efficacy of postgraduate nursing students to reduce their career decisionmaking difficulties and help them make effective career decision-making.
+
+Frontiers in Psychology
+
+01
+
+frontiersin.org
+
+Bi et al.
+
+10.3389/fpsyg.2023.1198974
+KEYWORDS
+postgraduate nursing students, career decision-making difficulties, career decisionmaking self-efficacy, professional self-concept, mediating role, social cognitive career theory
+
+1. Introduction
+A career has a significant impact on an individual’s life. It is not only a means of making a living but also a way of self-development and selfrealization. Career decision-making difficulties refer to the difficulties that occur when an individual does not know what occupation to pursue or chooses one of several occupations when facing the final decision in the process of a career decision, including three groups of difficulties: lack of readiness, lack of information and inconsistent information, among which lack of readiness occurs before the career decision process begins, the other two tend to occur after the career decision-making process has begun (Gati et al., 1996; Lipshits-Braziler et al., 2016).
+Career decision-making difficulties often have a negative impact on nursing students, making them unable to make a career decision at the right time or causing them make the wrong career decision, which leads to lower professional identity, higher job burnout and turnover intention after work (Gan et al., 2020; Wang, 2020; Ren et al., 2021). Considering that postgraduate nursing students, as high-level nursing talents, are the mainstay of the nursing industry, at the same time, in the context of a global shortage, uneven distribution, and structural imbalance of nursing talent (Hou et al., 2014; WHO, 2020), postgraduate nursing students must make appropriate decisions about their careers not only for the nursing profession but also for society as a whole (Ni et al., 2022). In addition, the value of providing structured courses to help medical students make career decisions has been recognized (Navarro et al., 2011; Park, 2015; Howse et al., 2017). However, the core courses of postgraduates nursing education in China mainly include Advanced Health Assessment, Advanced pathophysiology, Advanced pharmacotherapy, Evidence-based nursing, Nursing Theory, Nursing Research, Nursing pedagogy, etc., and there is a lack of a complete and standardized career counseling curriculum system (Sun et al., 2015; Zhang et al., 2019; Wang et al., 2020). A better understanding of postgraduate nursing students’ career decisionmaking difficulties and its related influencing factors will provide a reference for designing targeted interventions to alleviate postgraduate nursing students’ career decision-making difficulties. However, few studies have focused on the career decision-making difficulties of postgraduate nursing students (Zhou et al., 2021).
+Professional self-concept refers to the individual’s self-evaluation of his or her professional knowledge, value, and skills (Kelly, 1992), which plays an important core and driving role in the individual’s career choice and career development (Yang et al., 2008). Studies have shown that nurses with higher professional self-concept have a stronger professional identity, higher job satisfaction, and lower job burnout and turnover intention (Goliroshan et al., 2021; Li et al., 2021). For nursing students, those with more positive professional self-concept have more adequate preparation for career selection, more positive career selection behavior, and more smooth career selection process (Lee, 2019). However, the mechanism of the influence of professional self-concept on the career decision-making and development of postgraduate nursing students is still unknown.
+
+Self-efficacy is an individual’s belief in his or her ability to organize and execute a series of actions to achieve a specific goal. According to the social cognitive career theory (SCCT) (Lent et al., 1994), career decision-making self-efficacy is the application of self-efficacy in the career field, that is, an individual’s belief in his or her ability to engage in career decision-making activities (such as collecting career information or selecting career goals) (Betz et al., 1996). Taylor and Betz (1983) proposed that the career decision-making self-efficacy can explain the differences in individual career decision-making difficulties. Relevant studies also showed that career decision-making self-efficacy is negatively correlated with career decision-making difficulties (Penn and Lent, 2018; Santos et al., 2018), that is, the stronger the individual’s confidence in choosing a career, the lower the degree of career decision-making difficulties, and the more effective career decision-making can be made. At the same time, studies have reported that career decision-making self-efficacy is positively correlated with professional self-concept (Lv et al., 2014).
+In conclusion, as previous studies have shown, both professional selfconcept and career decision-making self-efficacy can affect individuals’ career decision-making. Moreover, according to SCCT (Lent et al., 1994), individual differences, environmental factors, and individual behavior will affect the confidence of the ability of individuals to implement occupation-related tasks and activities through interaction, thereby affecting the process of individual career choice and shaping occupational behavior. However, so far, no studies have examined the comprehensive effect of professional self-concept and career decision-making selfefficacy on the generation of career decision-making difficulties in postgraduate nursing students, and whether career decision-making selfefficacy plays a mediating role between professional self-concept and career decision-making difficulties. SCCT has been applied to several disciplines (Gao et al., 2021), but it has not been used as a conceptual framework to understand the career decisions and development of postgraduate nursing students.
+Therefore, the objectives of this study were as follows: (1) to determined what major difficulties impair the career decision-making process among postgraduate nursing students, as measured by career decision-making difficulties, (2) to explore the influence of professional self-concept on the career decision-making difficulties among postgraduate nursing students, and (3) to clarify the mediating role of career decision-making self-efficacy between professional selfconcept and career decision-making difficulties among postgraduate nursing students based on SCCT.
+2. Methods
+2.1. Study design and participants
+This study was designed as a cross-sectional study. From April 2022 to May 2022, considering the representativeness of the
+
+Frontiers in Psychology
+
+02
+
+frontiersin.org
+
+Bi et al.
+
+10.3389/fpsyg.2023.1198974
+
+sample, a stratified random sampling method was conducted to select 276 postgraduate nursing students from 25 universities in East China (seven universities), South China (four universities), North China (four universities), Central China (two universities), Northeast China (two universities), Northwest China (two universities), and Southwest China (four universities) according to the geographical distribution of China as the study participants. Eligible participants had to be full-time enrolled postgraduate nursing students who volunteered for this survey. The exclusion criteria for this study included: ① postgraduate nursing students who are part-time education graduate students or are employed and ② off work due to medical leave or personal leave during the investigation period. The mean age of the 276 participants was 24.75 (SD = 2.85) years, with a range from 21 to 35 years old. The majority were female (92.03%). Among them, 89 (32.24%) were in their first grade, 120 (43.47%) in their second grade, and 67 (24.29%) in their third grade (as shown in Table 1).
+The sample size was calculated according to the principle of Kendall estimation of sample size (Ni et al., 2010). This demonstrated that the sample size was 5 ~ 10 times that of the independent variables. This study contained 20 independent variables. Considering a 20% sample loss rate, the minimum sample size was 120 cases. 276 valid questionnaires were finally collected, with a valid recovery rate of 95.17%, which satisfied the minimum sample size required for this study.
+
+experience before enrolling in postgraduate, and experience in a career development program.
+2.2.2. Career decision-making difficulties
+Career decision-making difficulties were measured using a Chinese version of the Career Decision-making Difficulty Questionnaire developed by (Wu et al., 2016). The questionnaire consists of 36 items across three domains: Lack of Readiness (nine items), Lack of Information (fourteen items), and Inconsistent Information (three items). The responses were provided on a 5-point Likert scale ranging from (1) “strongly disagree” to (5) “strongly agree.” A higher score indicates higher career decision-making difficulties. The questionnaire’s Cronbach’s alpha was 0.816. In this study, Cronbach’s alpha was 0.933.
+2.2.3. Career decision-making self-efficacy
+Career decision-making self-efficacy was measured using a Chinese version of the Career Decision-making Self-efficacy scale revised by Long (2003). The scale consists of 25 items across five domains: self-appraisal (five items), goal selection (five items), gathering information (five items), planning (five items), and problem-solving (five items). The responses were provided on a 5-point Likert scale ranging from (1) “not confident at all” to (5) “completely confident.” A higher score indicates higher career decision-making self-efficacy. The scale’s Cronbach’s alpha was 0.89. In this study, Cronbach’s alpha was 0.969.
+
+2.2. Measurements
+2.2.1. Participants’ sociodemographic characteristics
+The sociodemographic characteristics of the participants included gender, age, registered residence, grade, degree type, employment
+
+2.2.4. Nursing professional self-concept
+Nursing professional self-concept was measured using a scale developed by professor Arthur (Yang et al., 2008). The scale consists of 30 items across five domains: flexibility (7 items), skills (5 items), leadership (4 items), satisfaction (9 items), and communication (5 items). The responses were provided on a 4-point Likert scale ranging from (1) “strongly disagree” to (5) “strongly agree.” A higher score
+
+TABLE 1  Participants characteristics and differences of career decision-making difficulties among groups (n=276).
+
+Variable
+Gender Age (years)
+Registered residence Grade
+Degree type Employment experience Experience in a career development program
+
+Group
+Male Female
+<25 25~29 ≥30 Rural Urban
+1 2 3 academic degree professional degree Yes No Yes No
+
+Frequency (percentage)
+22 (7.97) 254 (92.03) 161 (58.33) 88 (31.88) 27 (9.79) 158 (57.24) 118 (42.76) 120 (43.47) 89 (32.24) 67 (24.29) 81 (29.34) 191 (70.66) 86 (31.16) 190 (68.84) 51 (18.47) 225 (81.53)
+
+Career decision-making difficulties (mean  ±  SD)
+2.59 ± 0.55 2.86 ± 0.53 2.89 ± 0.53 2.81 ± 0.55 2.62 ± 0.50 2.85 ± 0.51 2.82 ± 0.58 2.82 ± 0.53 2.82 ± 0.59 2.88 ± 0.48 2.80 ± 0.52 2.85 ± 0.55 2.72 ± 0.52 2.89 ± 0.54 2.60 ± 0.58 2.89 ± 0.52
+
+t/F
+−2.270 3.240
+0.433 0.277
+−0.720 2.429 −3.552
+
+p
+0.024 0.041
+0.665 0.759
+0.472 0.016 0.000
+
+Frontiers in Psychology
+
+03
+
+frontiersin.org
+
+Bi et al.
+
+10.3389/fpsyg.2023.1198974
+
+indicates a more positive nursing professional self-concept. The scale’s Cronbach’s alpha was 0.84. In this study, Cronbach’s alpha was 0.896.
+2.3. Data collection procedures
+The person in charge of the survey was appointed in the selected universities to inform them of the purpose of this study and the inclusion and exclusion criteria of the study subjects, ensure their full understanding and obtain their cooperation, and then they were responsible for mobilizing and instructing the postgraduate nursing students in their universities to fill in the questionnaire. The electronic questionnaires were distributed online through the “Wen Juan Xing” web platform, and the research participants filled out the questionnaires anonymously by opening the web link or scanning the WeChat QR code. The questions were all compulsory, and the participants could only submit the questionnaires after completing all the questions independently. The validity and completeness of the completed questionnaires were verified one by one, and the questionnaires that did not meet the completion requirements were excluded.
+
+was 2.84 (SD = 0.54). For the three dimensions of career decisionmaking difficulties, lack of readiness had the highest score of 2.90 (SD = 0.58), and, lack of information showed the lowest score of 2.76 (SD = 0.59).
+As presented in Table 1, female, younger students, students who were never employed before enrolling in postgraduate education and did not have experience in a career development program had significantly higher scores for career decision-making difficulties (all p < 0.05). Registered residence, grade, and degree type were not significantly associated with career decision-making difficulties.
+3.2. Correlation analysis
+As listed in Table 2, correlation analysis showed that career decision-making self-efficacy had a significant negative correlation with career decision-making difficulties (r = −0.551, p < 0.01), and professional self-concept had a significant positive correlation with career decision-making self-efficacy (r = 0.693, p < 0.01) and a significant negative correlation with career decision-making difficulties (r = −0.496, p < 0.01).
+
+2.4. Data analysis
+The Statistical Package for the Social Sciences (SPSS) software (v26) (IBM Corp., Armonk, NY, United States) was used in all analyses. We calculated descriptive statistics for sociodemographic information, professional self-concept, career decision-making selfefficacy, and career decision-making difficulties. We used a t-test or an analysis of variance to evaluate differences among the participants in terms of career decision-making difficulties, and Pearson’s r was calculated to test correlations among career decision-making difficulties, professional self-concept, and career decision-making selfefficacy among nursing graduate students. Multiple linear regression analysis was used to explore the mediating effects of professional selfconcept, career decision-making self-efficacy, and career decisionmaking difficulties. Finally, a nonparametric resampling method (5,000 iterations) was applied by running the PROCESS plugin in the SPSS Macro to test the statistical significance of the mediating effect. In all analyses, statistically significant was set at p-value < 0.05.
+2.5. Ethical considerations
+This study protocol was approved by the ethics committee of The First Affiliated Hospital of Chongqing Medical University (No. 2022-10) and conformed to the Helsinki Declaration. Via the web, We provided brief purposes and procedures of the study to potential participants, who were also assured that participation was completely voluntary.
+3. Results
+
+3.3. Regression analysis and mediation effect test analysis
+The results of the regression analysis are shown in Table 3. With demographic variables as controlled variables and career decisionmaking difficulties as the dependent variable, professional self-concept and career decision-making self-efficacy were taken as primary predictors in a multiple linear regression analysis. The results showed that professional self-concept could significantly positively predict career decision-making self-efficacy (β = 0.654, p < 0.01), and significantly negatively predict career decision-making difficulties (β = −0.470, p < 0.01). After the introduction of career decisionmaking self-efficacy, the influence coefficient (β = −0.217, p < 0.01) of professional self-concept on career decision-making difficulties decreased. It indicated that career decision-making self-efficacy is a partial mediator in the relationship between professional self-concept and career decision-making difficulties.
+The results of the mediation effect test analysis are displayed in Table 4. Model 4 in the SPSS macro program PROCESS 4.0 developed by Hayes was used to test the mediating effect. After demographic variables were controlled, professional self-concept was used as the independent variable, career decision-making difficulties as the dependent variable, and career decision-making self-efficacy as mediating variables, and the Bootstrap method was used to calculate 95% confidence intervals for each of the 5,000 repeated draws. Result of the mediating effect analysis showed that Bootstrap’s 95% CI of total indirect effect did not contain 0 [Bootstrap 95% CI: −0.349, −0.156], accounting for 53.82% of the total effect. A visualization of the model is displayed in Figure 1.
+
+3.1. Career decision-making difficulties and
+
+its differences among groups
+
+4. Discussion
+
+The mean scores of career decision-making difficulties are listed
+
+This study understands the current situation of career decision-
+
+in Table 2. The total mean score of career decision-making difficulties making difficulties of postgraduate nursing students in China and
+
+Frontiers in Psychology
+
+04
+
+frontiersin.org
+
+Bi et al.
+
+10.3389/fpsyg.2023.1198974
+
+TABLE 2  Descriptive statistics and correlation analysis between variables (n = 276).
+
+Mean  ±  SD
+
+1
+
+2
+
+3
+
+4
+
+5
+
+6
+
+1. CDDQ
+
+2.84 ± 0.54
+
+1
+
+2. LR
+
+2.90 ± 0.58
+
+0.916*
+
+1
+
+3. LI
+
+2.76 ± 0.59
+
+0.965*
+
+0.828*
+
+1
+
+4. II
+
+2.88 ± 0.54
+
+0.956*
+
+0.822*
+
+0.883*
+
+1
+
+5. PSC
+
+2.72 ± 0.36
+
+−0.496*
+
+−0.415*
+
+−0.500*
+
+−0.477*
+
+1
+
+6. CDMSE
+
+3.32 ± 0.64
+
+−0.551*
+
+−0.441*
+
+−0.564*
+
+−0.536*
+
+0.639*
+
+1
+
+CDDQ, career decision-making difficulties; LR, lack of readiness; LI, lack of information; II, inconsistent information; PSC, professional self-concept; CDMSE, career decision-making selfefficacy. *p < 0.01.
+
+TABLE 3  Regression analysis of the relationship between variables (n  =  276).
+
+Outcome
+
+Predictor
+
+β
+
+SE
+
+t
+
+p
+
+variable
+
+variable
+
+CDMSE
+
+PSC
+
+0.654
+
+0.071
+
+13.777
+
+0.000
+
+CDDQ
+
+PSC
+
+−0.470
+
+0.097
+
+−8.711
+
+0.000
+
+CDDQ
+
+CDMSE
+
+−0.387
+
+0.119
+
+−3.259
+
+0.001
+
+PSC
+
+−0.217
+
+0.079
+
+−5.912
+
+0.000
+
+CDDQ, career decision-making difficulties; PSC, professional self-concept; CDMSE, career decision-making self-efficacy.
+
+LLCI
+0.837 −1.032 −0.622 −0.619
+
+ULCI
+1.116 −0.651 −0.154 −0.310
+
+R2
+0.393 0.203 0.286
+
+F
+189.806 75.878 60.241
+
+explores the mediating role of career decision-making self-efficacy between professional self-concept and career decision-making difficulties based on SCCT. The results showed that professional selfconcept and career decision-making self-efficacy were negative predictors of career decision-making difficulties, and career decisionmaking self-efficacy played a partial mediating role between professional self-concept and career decision-making difficulties. The results of this study can provide a basis for the employment guidance of postgraduate nursing students, to reduce their career decisionmaking difficulties and improve the level and quality of career decision-making.
+4.1. The career decision-making difficulties of postgraduate nursing students are at a medium to high level
+Our study showed that the total score of 2.84 (SD = 0.54) for career decision-making difficulties among postgraduate nursing students was moderately high, which was higher than the findings for undergraduate nursing interns (Yin and Dong, 2019) and for medical students (Zhu et al., 2021). The analysis may be due to the following reasons: In China, due to traditional beliefs and social opinions, nurses do not have a high social status, and many students choose nursing because of professional transfer. Therefore, they tend to be passive in their final career decisions. Secondly, nursing is a highly specialized discipline, and postgraduate nursing students have two main employment directions, becoming a teacher or a nurse, with a narrow range of employment. Most postgraduate nursing students prefer to be employed in schools, but most schools require applicants to have a doctoral degree. For healthcare organizations, the focus is not only on academic qualifications but also on clinical practice skills. While postgraduate nursing students have a great advantage in academic research and theoretical knowledge, clinical practice skills
+
+may not be superior to those of undergraduate students. Moreover, as job seekers, postgraduate nursing students have overly high expectations for career development prospects, salary, working environment, prestige, and social status, which are in strong contrast to reality. Overall, the career decision-making difficulties of postgraduate nursing students is prominent and requires active measures by relevant departments. From the three levels of society, school, and family, based on giving full understanding and concern to nursing postgraduates, we should strengthen their employment guidance, guide them to establish a correct career view, and help them understand themselves and their employment situation, to make satisfactory and conducive to the long-term development of career decision-making.
+In addition, the current study showed that among the three dimensions of career decision-making difficulties, the lake of readiness dimension scored the highest, which was consistent with the results of previous studies (Yin and Dong, 2019; Zhu et al., 2021). Since these difficulties may inhibit the initiation of the career decision-making process, there may be more negative career-related outcomes before graduation if students do not deal with these difficulties in the early stages of their education (Viola et al., 2017; Kulcsar et al., 2020). Consistent with previous research (Schnoes et al., 2018), it is not surprising that postgraduate nursing students with experience in a career development program have lower levels of career decisionmaking difficulties. Career development skills acquired during the course can enhance students’ confidence in career exploration and decision-making. However, only 18.47% of the subjects in this study had this experience. Therefore, Nursing educators should create awareness of early career education, pay attention to early career education of postgraduate nursing students, build a complete and standardized career counseling curriculum, and add career scenario simulations inside and outside the curriculum to help postgraduate nursing students perform career preparation activities and make sound career decision-making.
+
+Frontiers in Psychology
+
+05
+
+frontiersin.org
+
+Bi et al.
+
+10.3389/fpsyg.2023.1198974
+
+TABLE 4  The mediating effect of career decision-making self-efficacy between professional self-concept and career decision-making difficulties (n  =  276).
+
+Path
+Total effect Direct effect Indirect effect
+
+Effect
+−0.470 −0.217 −0.253
+
+Boot SE
+0.097 0.119 0.048
+
+Boot LLCI
+−1.032 −0.622 −0.349
+
+Boot ULCI
+−0.651 −0.154 −0.156
+
+Relative effect
+100% 46.18% 53.82%
+
+4.2. The positive professional self-concept can reduce the career decision-making difficulties of postgraduate nursing students
+The results of this study revealed that the professional self-concept of postgraduate nursing students was negatively related to career decision-making difficulties and had a negative predictive effect on career decision-making difficulties (p < 0.01), indicating that the more positive professional self-concept of postgraduate nursing students, the lower their career decision-making difficulties. Career development theory states that professional self-concept plays an important role in the career decision-making process and is a core element of career value orientation (Stephenson and Bell, 2019), and those with positive professional self-concept usually have a stronger sense of career competence and career beliefs, which leads to better preparation and more active collection of employment information when choosing a career, and then making effective career decisionmaking (Lv et al., 2014). It is suggested that nursing educators should pay attention to the cultivation and development of positive professional self-concept of postgraduate nursing students, and can help postgraduate nursing students to correctly understand career benefits and career values and strengthen their sense of career identity through mentorship (OARC, 2013) and peer counseling (Besnilian et al., 2016), to cultivate their positive professional self-concept, reduce the degree of career decision-making difficulties, and improve the level and quality of career decision- making.
+4.3. Career decision-making self-efficacy played a partial mediating role between professional self-concept and career decision-making difficulties
+The results of this study indicated that career decision-making self-efficacy among postgraduate nursing students was negatively associated with career decision-making difficulties, which is consistent with the findings of several previous studies (Storme et al., 2017; Santos et al., 2018; Jemini-Gashi et al., 2019). Furthermore, as shown in Table 4, career decision-making self-efficacy partially mediated the effect of professional self-concept on career decisionmaking difficulties (p < 0.01), suggesting that professional selfconcept can not only directly influence career decision-making difficulties, but also indirectly through career decision-making selfefficacy. This further confirms the important contribution of the career choice efficacy intervention to career decision-making and career development. According to Bandura’s self-efficacy theory
+
+FIGURE 1
+Model of the mediating role of CDMSE between PSC and CDDQ (n  =  276) Career Decision-making Difficulties (CDDQ), Professional Self-concept (PSC), Career Decision-making Self-efficacy (CDMSE). *p  <  0.01. a, the standardized regression coefficient between PSC and CDMSE; b, the standardized regression coefficient of CDMSE on CDDQ; c, the total effect between PSC and CDDQ; c’, the direct effect of PSC on CDDQ.
+(Bandura, 1977), career decision-making self-efficacy is an individual’s self-perception of his or her abilities, career interests, and career aspirations during the career choice process, and this level of self-perception influences the individual’s thinking style, emotional response, effort, and career choice, etc. SCCT (Lent et al., 1994) stated that success and failure experiences related to career activities, supportive role models, social and verbal persuasive communication, and positive emotional responses are the main sources of information that influence the formation and development of career decisionmaking self-efficacy. Therefore, the relevant departments of the university can enhance the career decision-making self-efficacy by inviting outstanding nursing seniors and alumni to conduct lectures related to disciplinary development and employment, so that postgraduate nursing students can feel the sense of achievement, honor, and pride brought by nursing work. In addition, the formation of career decision-making self-efficacy is influenced by factors such as attribution style, goal setting, and timely feedback (Betz, 2004). So, nursing educators should guide postgraduate nursing students to face difficulties and setbacks with an optimistic attitude, instruct them to use correct attribution styles, and actively seek social support from all aspects to improve career decision-making self-efficacy and make effective career decision-making.
+5. Limitations
+The present study has several limitations. Firstly, this study is a cross-sectional study, and it is not possible to directly infer causal relationships between variables. Secondly, all data were collected through a self-report questionnaire, which may lead to some bias in the study results. Thirdly, the sample size was small, which limited the generalizability of the results. Future sample sizes could be increased and a longitudinal study could be conducted to explore in-depth other influencing factors and targeted interventions for career decision-making difficulties among postgraduate nursing students. This will provide nursing educators with ways to improve the career decision-making difficulties of postgraduate nursing students.
+
+Frontiers in Psychology
+
+06
+
+frontiersin.org
+
+Bi et al.
+
+10.3389/fpsyg.2023.1198974
+
+6. Conclusion
+
+Author contributions
+
+In conclusion, the career decision-making difficulties of postgraduate nursing students are at a medium to high level for postgraduate nursing students, and professional self-concept and career decision-making self-efficacy were negatively correlated with career decision-making difficulties, and career decision-making selfefficacy mediated between professional self-concept and career decision-making difficulties. It is demonstrated that measures and strategies to improve career decision-making self-efficacy are expected to mitigate the effects of professional self-concept on career decisionmaking difficulties. It is suggested nursing educators need to develop a complete and standardized career counseling curriculum for postgraduate nursing students, and should pay attention to the cultivation and development of positive professional self-concept and career decision-making self-efficacy of postgraduate nursing students to reduce their career decision-making difficulties and help them make effective career decision-making.
+
+YB, SM, GW, and ML made significant contributions to the conception and design, acquisition of data, or analysis and interpretation of data, participated in drafting the article or critically revising important intellectual content, agreed to submit the article to the current journal, gave final approval of the version to be published, and agreed to take responsibility for all aspects of the work. All authors contributed to the article and approved the submitted version.
+Acknowledgments
+The authors would like to thank all schools who participated in this study.
+Conflict of interest
+
+Data availability statement
+The raw data supporting the conclusions of this article will be made available by the authors, without undue reservation.
+
+The authors declare that the research was conducted in the absence of any commercial or financial relationships that could be construed as a potential conflict of interest.
+
+Ethics statement
+The studies involving human participants were reviewed and approved by the First Affiliated Hospital of Chongqing Medical University (No. 2022-10). The patients/participants provided their written informed consent to participate in this study.
+
+Publisher’s note
+All claims expressed in this article are solely those of the authors and do not necessarily represent those of their affiliated organizations, or those of the publisher, the editors and the reviewers. Any product that may be evaluated in this article, or claim that may be made by its manufacturer, is not guaranteed or endorsed by the publisher.
+
+References
+
+Bandura, A. (1977). Self-efficacy: toward a unifying theory of behavioral change. Psychol. Rev. 84, 191–215. doi: 10.1037/0033-295X.84.2.191
+Besnilian, A., Goldenberg, A., and Plunkett, S. W. (2016). Promoting diversity within the dietetics profession through a peer mentorship program. J. Acad. Nutr. Diet. 116, 198–202. doi: 10.1016/j.jand.2015.07.018
+Betz, N. E. (2004). Contributions of self-efficacy theory to career counseling: a personal perspective. Career Dev. Q. 52, 340–353. doi: 10.1002/j.2161-0045.2004.tb00950.x
+Betz, N. E., Klein, K. L., and Taylor, K. M. (1996). Evaluation of a short form of the career decision-making self-efficacy scale. J. Career Assess. 4, 47–57. doi: 10.1177/106907279600400103
+Gan, L., Zhang, H. Y., Shang, W. H., Li, X., Ma, X., and Wu, Z. (2020). Nursing turnover rate and its influencing factors. Chin. J. Nurs. Educ. 55, 198–203.
+Gao, Z., Wei, X., Yang, L., Cui, D., Kong, L., Qi, L., et al. (2021). Mediating role of career self-efficacy between clinical learning environment and professional identity in nursing students. J. Adv. Nurs. 78, 1012–1019. doi: 10.1111/jan.15027
+Gati, I., Krausz, M., and Osipow, S. H. (1996). A taxonomy of difficulties in career decision making. J. Couns. Psychol. 43, 510–526. doi: 10.1037/0022-0167.43.4.510
+Goliroshan, S., Nobahar, M., Raeisdana, N., Ebadinejad, Z., and Aziznejadroshan, P. (2021). The protective role of professional self-concept and job embeddedness on nurses' burnout: structural equation modeling. BMC Nurs. 20:203. doi: 10.1186/s12912-021-00727-8
+Hou, J., Michaud, C., Li, Z., Dong, Z., Sun, B., Zhang, J., et al. (2014). Transformation of the education of health professionals in China: progress and challenges. Lancet 384, 819–827. doi: 10.1016/s0140-6736(14)61307-6
+Howse, K., Harris, J., and Dalgarno, N. (2017). Canadian national guidelines and recommendations for integrating career advising into medical school curricula. Acad Med. 92, 1543–1548. doi: 10.1097/ACM.0000000000001720
+Jemini-Gashi, L., Duraku, Z. H., and Kelmendi, K. (2019). Associations between social support, career self-efficacy, and career indecision among youth. Curr. Psychol. 40, 4691–4697. doi: 10.1007/s12144-019-00402-x
+
+Kelly, B. (1992). The professional self-concepts of nursing undergraduates and their perceptions of influential forces. J. Nurs. Educ. 31, 121–125. doi: 10.3928/ 0148-4834-19920301-08
+Kulcsar, V., Dobrean, A., and Balazsi, R. (2020). Does it matter if I am a worrier? The effect of worry as a moderator between career decision-making difficulties and negative dysfunctional emotions. J. Youth Adolesc. 49, 549–564. doi: 10.1007/s10964-019-01118-8
+Lee, J. L. (2019). The influence of nursing organizational culture, professional selfconcept and career decision-making self-efficacy on career preparation behavior in nursing students with clinical practice. J. Korean Nurs. Res. 3, 61–73. doi: 10.34089/ jknr.2019.3.3.61
+Lent, R. W., Brown, S. D., and Hackett, G. (1994). Toward a unifying social cognitive theory of career and academic interest, choice, and performance. J. Vocat. Behav. 45, 79–122. doi: 10.1006/jvbe.1994.1027
+Li, X., Guo, Y., Zhao, T., Zhang, S., Yue, X., and Liu, Y. (2021). Cluster analysis of selfconcept and job satisfaction in Chinese nurses with master's degree to identify their turnover intention: a cross-sectional study. J. Clin. Nurs. 30, 2057–2067. doi: 10.1111/ jocn.15762
+Lipshits-Braziler, Y., Tatar, M., and Gati, I. (2016). The effectiveness of strategies for coping with career indecision. J. Career Dev. 44, 453–468. doi: 10.1177/0894845316662705
+Long, Y. M. (2003). The study on the career decision-making self-efficacy of the college students. [dissertation/master’s thesis]. [China]: Shanghai Teachers Uuiversity.
+Lv, F. F., He, H., Lv, P. Y., and Miu, Z. Z. (2014). Impacts of self-concept on career decision-making self-efficacy among undergraduate nursing students. J. Nurs. Adm. 14, 190–191.
+Navarro, A. M., Taylor, A. D., and Pokorny, A. P. (2011). Three innovative curricula for addressing medical students’ career development. Acad Med. 86, 72–76. doi: 10.1097/ ACM.0b013e3181ff7dfc
+Ni, P., Chen, L., and Liu, N. (2010). The sample size estimation in quantitative nursing research. Chin. J. Nurs. 45, 378–380.
+
+Frontiers in Psychology
+
+07
+
+frontiersin.org
+
+Bi et al.
+
+10.3389/fpsyg.2023.1198974
+
+Ni, J. C., Wang, W. M., and Li, D. C. (2022). Influence of psychological separation on master graduates' career maturity: mediating role of occupational self-efficacy. Front. Psychol. 13:833577. doi: 10.3389/fpsyg.2022.833577
+OARC, A. P. (2013). Use APIC's mentoring program to take your profession to the next level. Am. J. Infect. Control 41:575. doi: 10.1016/j.ajic.2013.04.002
+Park, S. (2015). Effects of discipline-based career course on nursing students’ career search self-efficacy, career preparation behavior, and perceptions of career barriers. Asian Nurs Res (Korean Soc Nurs Sci). 9, 259–264. doi: 10.1016/j. anr.2015.06.003
+Penn, L. T., and Lent, R. W. (2018). The joint roles of career decision self-efficacy and personality traits in the prediction of career decidedness and decisional difficulty. J. Career Assess. 27, 457–470. doi: 10.1177/1069072718758296
+Ren, Z., Zhang, X., Li, X., He, M., Shi, H., Zhao, H., et al. (2021). Relationships of organisational justice, psychological capital and professional identity with job burnout among Chinese nurses: a cross-sectional study. J. Clin. Nurs. 30, 2912–2923. doi: 10.1111/jocn.15797
+Santos, A., Wang, W., and Lewis, J. (2018). Emotional intelligence and career decisionmaking difficulties: the mediating role of career decision self-efficacy. J. Vocat. Behav. 107, 295–309. doi: 10.1016/j.jvb.2018.05.008
+Schnoes, A. M., Caliendo, A., Morand, J., Dillinger, T., Naffziger-Hirsch, M., Moses, B., et al. (2018). Internship experiences contribute to confident career decision making for doctoral students in the life sciences. CBE Life Sci. Educ. 17:ar16. doi: 10.1187/ cbe.17-08-0164
+Stephenson, A. L., and Bell, N. (2019). Social identity and the prison health worker: implications for practitioner satisfaction and turnover intentions. Health Care Manag. Rev. 44, 286–295. doi: 10.1097/HMR.0000000000000179
+Storme, M., Celik, P., and Myszkowski, N. (2017). Career decision ambiguity tolerance and career decision-making difficulties in a French sample: the mediating role of career decision self-efficacy. J. Career Assess. 27, 273–288. doi: 10.1177/1069072717748958
+Sun, H. Y., Zhu, L. N., and Dang, Y. (2015). Introduction of national guidelines and core curriculums of master of nursing specialist programs. Chin. J. Nurs. Educ. 12, 725–729.
+
+Taylor, K. M., and Betz, N. E. (1983). Applications of self-efficacy theory to the understanding and treatment of career indecision. J. Vocat. Behav. 22, 63–81. doi: 10.1016/0001-8791(83)90006-4
+Viola, M. M., Musso, P., Ingoglia, S., Lo Coco, A., and Inguglia, C. (2017). Relationships between career indecision, search for work self-efficacy, and psychological well-being in Italian never-employed young adults. Eur. J. Psychol. 13, 231–250. doi: 10.5964/ejop.v13i2.1277
+Wang, X. (2020). The influence of career decision making self-efficacy and professional identification on career decision-making difficulty of nursing undergraduates. Chin. J. Nurs. Educ. 17, 1097–1100.
+Wang, J. Y., Wei, Z. X., Jin, X. Y., and Hou, L. Y. (2020). The status of enrollment and course setting of master of nursing specialist in 75 colleges. Chin. J. Nurs. Educ. 17, 1089–1093.
+WHO. (2020). State of the world's nursing 2020: Investing in education, jobs and leadership. Available at: (https://www.who.int/publications/i/item/9789240003279).
+Wu, K. R., Sun, L., and Xu, T. (2016). The revision of the career decision-making difficulties questionnaire of universities. Chin. J. Health Psychol. 24, 1050–1055. doi: 10.13342/j.cnki.cjhp.2016.07.025
+Yang, G. R., Lin, X. Y., Yang, G. Z., and Wang, L. H. (2008). The reliability and validity of self-concept of nurses instrument used in the baccalaureate nursing students. J. Nurs. Sci. 1, 4–6.
+Yin, Q., and Dong, C. M. (2019). The correlation between career decision-making difficulties and social support for undergraduate nursing students. Chin. J. Nurs. Educ. 16, 133–137.
+Zhang, L. B., Jiang, A. L., Zhang, B., and Liu, L. (2019). Current status of curricula for nursing academic master’s degree program in China: a nationwide survey. J. Nurs. Sci. 34, 59–62.
+Zhou, H. Z., Hou, J., Yang, L., Tu, Y., Liu, Y., and Hu, R. (2021). Analysis of the status of career decision- making and its influencing factors among nursing postgraduate students. Chin. J. Pract. Nurs. 37, 831–837.
+Zhu, Y., Zuo, T., Lai, Y., Zhao, S., and Qu, B. (2021). The associations between coping strategies, psychological health, and career indecision among medical students: a crosssectional study in China. BMC Med. Educ. 21:334. doi: 10.1186/s12909-021-02781-x
+
+Frontiers in Psychology
+
+08
+
+frontiersin.org
+
+

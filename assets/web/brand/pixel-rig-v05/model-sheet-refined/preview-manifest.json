@@ -1,0 +1,19 @@
+{
+  "version": "0.5-refined-preview-01",
+  "logical_canvas": [
+    128,
+    160
+  ],
+  "native_canvas": [
+    256,
+    320
+  ],
+  "palette_colors": 28,
+  "source": "hand-authored pixel grid; no raster resize from the old portrait",
+  "poses": [
+    "idle",
+    "listen",
+    "think",
+    "encourage"
+  ]
+}

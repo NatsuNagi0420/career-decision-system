@@ -1,0 +1,82 @@
+/** 青穗集 · ASCII 微交互：字符画使用真正等宽字体，低对比陪伴装饰不抢正文，动效可关闭且尊重系统偏好。 */
+.career-workspace .ascii-art {
+  display: block;
+  width: max-content;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font: 10px/1 "Cascadia Mono", Consolas, "Liberation Mono", monospace;
+  font-variant-ligatures: none;
+  font-synthesis: none;
+  letter-spacing: 0;
+  white-space: pre;
+  overflow: hidden;
+  user-select: none;
+  pointer-events: none;
+  contain: content;
+}
+.career-workspace .ascii-motion-toggle { width: 36px; }
+.ascii-motion-toggle__glyph { font: 12px/1 "Cascadia Mono", Consolas, monospace; letter-spacing: -1px; }
+.career-workspace .ascii-motion-toggle[aria-pressed="true"] { color: #7956a3; background: #ede3f7; }
+.career-workspace .ascii-motion-toggle[aria-pressed="false"] { color: #aa99ba; }
+.career-workspace .ascii-motion-toggle:disabled { opacity: .6; cursor: default; }
+/* 猫咪留在左下角，不替代穗奈、不影响历史列表与账号入口。 */
+.career-sidebar-scene > .ascii-sidebar-cat {
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  font-size: 4.6px;
+  line-height: 4.8px;
+  color: #8b72b0;
+  opacity: .9;
+}
+.career-sidebar-scene > span { z-index: 1; }
+.ascii-file-loading { display: flex; flex-direction: column; align-items: center; gap: 13px; color: #a68abd; }
+.ascii-file-loading > .ascii-art { font-size: 11px; line-height: 17px; height: 17px; }
+/* 可操作卡片的字符边角：只在 hover / 键盘聚焦时短暂闪现，不让中文正文乱码。 */
+.career-welcome__eyebrow > span { width: auto; height: auto; background: none; font: 10px/1 "Cascadia Mono", Consolas, monospace; letter-spacing: -1px; color: #c8b3dd; }
+.ascii-card-bracket { display: inline-block; color: currentColor; opacity: .35; transition: opacity 150ms; }
+.career-step-card:is(:hover, :focus-visible) .ascii-card-bracket { opacity: 1; }
+.ascii-card-spark { position: absolute; width: 54px; height: 54px; left: 13px; top: 50%; margin-top: -27px; pointer-events: none; color: currentColor; opacity: .65; }
+.ascii-card-spark > i { position: absolute; font: 12px/1 Consolas, monospace; font-style: normal; opacity: 0; }
+.ascii-card-spark > i:nth-child(1) { left: -4px; top: 5px; }
+.ascii-card-spark > i:nth-child(2) { right: -6px; top: 2px; }
+.ascii-card-spark > i:nth-child(3) { right: -1px; bottom: 0; }
+.career-workspace[data-ui-motion="on"] .career-step-card:is(:hover, :focus-visible) .ascii-card-spark > i { animation: ascii-card-twinkle 680ms steps(3, end) both; }
+.career-workspace[data-ui-motion="on"] .career-step-card:is(:hover, :focus-visible) .ascii-card-spark > i:nth-child(2) { animation-delay: 90ms; }
+.career-workspace[data-ui-motion="on"] .career-step-card:is(:hover, :focus-visible) .ascii-card-spark > i:nth-child(3) { animation-delay: 160ms; }
+@keyframes ascii-card-twinkle {
+  0% { opacity: 0; transform: translateY(3px) scale(.75); }
+  30%, 65% { opacity: .85; transform: translateY(-2px) scale(1); }
+  100% { opacity: 0; transform: translateY(-5px) scale(.85); }
+}
+/* 用动态偏好统一收敛 CSS 装饰，不触碰角色自己的播放控制。 */
+.career-workspace[data-ui-motion="off"] :is(.career-step-card, .career-quick-actions button, .agent-new) { transform: none; }
+.career-workspace[data-ui-motion="off"] :is(.execution-state, .ascii-card-spark > i) { animation: none; }
+.career-workspace[data-ui-motion="off"] :is(button, .ascii-card-bracket) { transition: none; }
+@media (min-width: 2300px) {
+  .career-sidebar-scene > .ascii-sidebar-cat { font-size: 5.5px; line-height: 5.7px; }
+  .ascii-card-spark { width: 70px; height: 70px; left: 18px; margin-top: -35px; }
+}
+@media (max-width: 1500px) and (min-height: 901px) {
+  .ascii-card-spark { width: 40px; height: 40px; left: 14px; top: 14px; margin: 0; }
+}
+@media (max-width: 760px) {
+  .career-masthead__identity { gap: 6px; }
+  .career-masthead__identity > .career-pixel-icon { width: 28px; height: 28px; }
+  .career-workspace .career-masthead { gap: 6px; }
+  .career-masthead__actions .agent-icon-button { width: 29px; height: 30px; }
+  .ascii-motion-toggle__glyph { font-size: 11px; }
+  .ascii-card-spark { width: 38px; height: 38px; left: 9px; top: 13px; margin: 0; }
+}
+@media (max-height: 900px) and (min-width: 761px) {
+  .career-sidebar-scene > .ascii-sidebar-cat { font-size: 3.6px; line-height: 3.8px; }
+  .ascii-card-spark { width: 40px; height: 40px; left: 12px; top: 50%; margin-top: -20px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .career-workspace .ascii-card-spark > i { animation: none !important; }
+  .career-workspace .ascii-card-bracket { transition: none; }
+}

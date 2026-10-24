@@ -1,0 +1,948 @@
+TYPE Original Research PUBLISHED 11 April 2025 DOI10.3389/fpsyg.2025.1537321
+
+OPEN ACCESS
+EDITED BY
+Youngbin Kim, Korea National Open University, Republic of Korea
+REVIEWED BY
+Wanderson Silva, S�o Paulo State University, Brazil Maehyang Hwang, Gyeongin National University of Education, Republic of Korea
+*CORRESPONDENCE
+Donghyuck Lee dhlee@konkuk.ac.kr
+RECEIVED 30 November 2024 ACCEPTED 24 March 2025 PUBLISHED 11 April 2025
+CITATION
+Li S and Lee D (2025) Development and validation of the dysfunctional career thoughts scale for Chinese university students. Front. Psychol. 16:1537321. doi: 10.3389/fpsyg.2025.1537321
+COPYRIGHT
+� 2025 Li and Lee. This is an open-access article distributed under the terms of the Creative Commons Attribution License (CC BY). The use, distribution or reproduction in other forums is permitted, provided the original author(s) and the copyright owner(s) are credited and that the original publication in this journal is cited, in accordance with accepted academic practice. No use, distribution or reproduction is permitted which does not comply with these terms.
+
+Development and validation of the dysfunctional career thoughts scale for Chinese university students
+Shasha Li1 and Donghyuck Lee2*
+1School of Innovation and Entrepreneurship, Nanjing Vocational University of Industry Technology, Nanjing, China, 2Department of Education, Konkuk University, Seoul, Republic of Korea
+Dysfunctional career thoughts significantly impede rational career decision-making and have been widely assessed using the Career Thought Inventory (CTI). However, research suggests the CTI may not fully capture Chinese university students' cultural uniqueness, creating a measurement gap in this population. Therefore, this study aimed to develop and validate a culturally-appropriate instrument assessing dysfunctional career thoughts among Chinese university students. From 104 preliminary items evaluated for content validity, the Dysfunctional Career Thoughts Scale (DCTS) was constructed through exploratory factor analysis with 389 students. The final 20-item instrument encompasses three dimensions: (1) Self-knowledge Uncertainty and Choice Anxiety, (2) Career Decision-Making Amotivation, and (3) Career Decision-Making Process Inefficacy. Validation with 241 additional students confirmed robust construct validity through confirmatory factor analysis. Concurrent validity was established via significant negative correlations between dysfunctional career thoughts and both career decision-making self-efficacy and vocational identity. The study findings imply that Chinese university students encounter challenges related to incomplete self-awareness, external influences, and perfectionist tendencies during the career decision-making process. This culturally-sensitive instrument offers significant advantages for academic advisors and career counselors working with Chinese university populations, providing more precise identification of intervention needs. While the DCTS demonstrates considerable theoretical and practical utility, certain limitations require further investigation in future studies.
+KEYWORDS
+dysfunctional career thoughts, scale development, scale validation, Chinese university students, cultural differences
+
+Introduction
+Cognitive processes play a fundamental role in the quality of career decision-making (Keller et al., 1982; Sampson et al., 1996). According to Krumboltz (1994), individuals make career decisions and undertake related activities based on their self-perceptions and understanding of the professional world. He further posits that constructive and functional beliefs facilitate the achievement of career goals. The Cognitive Information Processing (CIP) theory (Peterson et al., 1991) elucidates how career-related cognitions influence decisionmaking processes. Research indicates that individuals with functional career thoughts exhibit decisiveness in their career choices (Peterson et al., 1996), while those with dysfunctional career thoughts encounter challenges in identifying interests and achieving career objectives (Sampson et al., 1996; Whiston and Keller, 2004).
+
+Frontiers in Psychology
+
+01
+
+frontiersin.org
+
+Li and Lee
+
+10.3389/fpsyg.2025.1537321
+
+Empirical research has demonstrated significant correlations between dysfunctional career thoughts and career-related challenges. Saunders et al.'s (2000) research on career decision-making revealed that dysfunctional career thoughts significantly predict career indecision. Similarly, Bullock-Yowell et al. (2012) established that increased dysfunctional career thoughts correlate with decreased decision satisfaction. Furthermore, studies have linked dysfunctional career thoughts to various psychological factors, including less developed personal identities (Voight, 1999), helplessness (Kilk, 1997), anger (Strausberger, 1998), depression and indecisiveness (Saunders et al., 2000), as well as frustration, guilt, and diminished interest (Corbishley and Yost, 1989; Dodge, 2001; Lewis and Gilhousen, 1981).
+To assess dysfunctional career thoughts, Sampson et al. (1992) developed the Career Thoughts Inventory (CTI), grounded in CIP theory and cognitive therapy. The CTI comprises three subscales: decision-making confusion, commitment anxiety, and external conflict. Decision-making confusion reflects insufficient understanding of or difficulty initiating the decision-making process due to emotional barriers. Commitment anxiety pertains to apprehension about decision outcomes and challenges in selecting or prioritizing alternatives. External conflict indicates a tendency to avoid decision-making responsibility while struggling to reconcile information from significant others with independently acquired knowledge. The CTI effectively evaluates the extent to which dysfunctional thoughts impede career problem-solving and decisionmaking processes.
+Extensive research on the CTI has revealed that dysfunctional career thoughts generate various impediments to career-related information processing, decision-making, and behavior. These challenges include career choice anxiety, decision postponement, excessive reliance on others, impulsive choices as stress responses, frequent job changes, reduced job search activity, limited selfawareness, biased evaluation of career alternatives, diminished motivation, choice dissatisfaction, and lack of confidence in decisionmaking abilities (Sampson et al., 1996). Furthermore, dysfunctional career thoughts hinder career preparation by disrupting decisionmaking processes and complicating the discovery of personal interests and values. These cognitive patterns manifest through verbal expression, emotional responses, and behaviors, potentially resulting in helplessness, fear, insecurity, guilt, and frustration (Corbishley and Yost, 1989).
+The CIP theory was initially introduced to China by Fan (2003), with subsequent research demonstrating the effectiveness of CIP-based interventions in various contexts, including group counseling (Zang, 2006), career guidance (Zhou, 2009), and career education (Chen, 2013; Tang, 2014) among Chinese populations. Liu (2007) subsequently translated and adapted the CTI for Chinese use. This research revealed that male students exhibited higher levels of dysfunctional career thoughts, particularly in the external conflict subscale, compared to female students. Additionally, total dysfunctional career thought scores, decision-making confusion subscale scores, and decision-making styles (specifically dependent and avoidant types) emerged as significant predictors of career convictions.
+Lin's (2011) development of the Career Thoughts Inventory specifically for Chinese college students revealed significant variations in dysfunctional career thoughts across demographic and experiential factors. The findings indicated that female students, humanities
+
+majors, and those lacking internship experience demonstrated a higher propensity for negative career-related cognitions compared to their counterparts. The study also established inverse correlations between dysfunctional career thoughts and both social support and self-esteem, with self-esteem serving as a partial mediator in the relationship between social support and dysfunctional career thoughts.
+Further research by Shi (2014), utilizing Liu's (2007) adapted CTI, examined high school students' career thoughts and revealed the influential role of family support systems. The study demonstrated that attachment style moderated the relationship between family support systems and career thoughts, with significant variations observed across gender and grade levels. Similarly, Bao's (2016) modification of Liu's CTI for secondary vocational high school students revealed prevalent dysfunctional career thoughts, with significant variations based on geographical origin, gender, and academic specialization.
+Heine et al. (1999) posited that psychological constructs developed within Western frameworks might not adequately explain Asian behavioral patterns. The fundamental differences in Eastern and Western worldviews and cultural values significantly influence career decision-making processes (Lin, 2011; Malach-Pines and KaspiBaruch, 2008). Markus and Kitayama (1991) highlight that while Western cultures emphasize independence and self-actualization, Eastern cultures prioritize interdependence and social inclusion.
+In the Chinese context, collective entities, particularly family units, hold paramount importance (Yang, 2004). Chinese children typically engage in collaborative problem-solving with parents, potentially resulting in limited experience with independent decisionmaking (Xue and Hu, 2018). The implementation of China's singlechild policy (1980�2016) has contributed to a generation of individuals who, having grown up exclusively with parents or grandparents, often exhibit heightened dependency on family members, particularly in career-related decisions (Zhang et al., 2009). Furthermore, China's rapid globalization and digitization have significantly influenced occupational preferences among college students, particularly those born after 1990. According to Xue and Hu (2018), these "post-90s" students, raised in relatively affluent environments, demonstrate stronger preferences for economic compensation and social status. They predominantly seek employment opportunities in major urban centers and large corporations, with 59.2% prioritizing financial considerations in their career choices. This generation also exhibits a heightened focus on practical considerations and long-term career development potential, while relatively few prioritize social contribution in their career decisions.
+Research on career cognition among Chinese populations underscores the necessity for assessment instruments that appropriately reflect the distinct characteristics of Chinese college students. Liu (2007) raised significant methodological concerns regarding the applicability of the CTI's conceptualization of dysfunctional thoughts to Chinese college students' career decisionmaking processes, particularly questioning whether culture-specific dysfunctional career thoughts might exist within this population. Lin's (2011) modified CTI, which incorporated five subscales (selfunderstanding difficulty, decision-making startup confusion, commitment anxiety, and external environment conflict and escape), revealed structural variations in career-related cognitions between Chinese college students and their international counterparts. However, several methodological limitations warrant consideration:
+
+Frontiers in Psychology
+
+02
+
+frontiersin.org
+
+Li and Lee
+
+10.3389/fpsyg.2025.1537321
+
+the escape subscale's limited reliability due to insufficient items; restricted geographical sampling from two universities in Guangdong Province; potential conflation of undergraduate and graduate student populations without accounting for developmental differences; and item selection procedures that bypassed expert validation, potentially compromising construct validity. These limitations emphasize the critical need for developing culturally appropriate career thought assessment instruments specifically tailored to contemporary Chinese college students.
+The present research endeavors to address these empirical gaps by developing and validating a psychometrically sound measure of career thoughts specifically designed for Chinese college students. The Dysfunctional Career Thoughts Scale (DCTS) for Chinese college students has been conceptualized to overcome the limitations of existing instruments while accurately capturing the cultural nuances specific to Chinese college students. Within this research framework, dysfunctional career thoughts are operationalized as the aggregate manifestation of attitudes, behaviors, beliefs, feelings, plans, and strategies related to career decision-making and problem-solving among individuals born and educated within the Chinese cultural context who are currently enrolled in Chinese higher education institutions. These dysfunctional cognitions may present through various manifestations and frequently represent inaccurate and maladaptive belief systems that impede effective career decisionmaking processes.
+
+of participants included Double First-Class universities (30.3%), standard universities (35.0%), and private universities/independent colleges (34.7%), also with participating institutions geographically dispersed throughout China. The sample encompassed students from first-year to fifth-year and spanned all major disciplinary categories: Humanities, Social Sciences, Business, Natural Sciences, Engineering, and Arts & Sports.
+Third, to validate the 20 selected items, online data were collected from 241 university students (27.0% male, 73.0% female) as presented in Table 1. In confirmatory factor analysis (CFA), the sample size should generally exceed 10 times the number of items (Kline, 2016).
+Similar to the item selection phase, participants represented various regions across China, with the majority (64.3%) being 20years of age or youngerrepresenting diverse geographical regions across China, including Northeast, North, East, Central, South, Southwest, and Northwest China. The institutional composition included Double First-Class universities (18.3%), standard universities (77.6%), and private universities/independent colleges (4.1%), also with participating institutions geographically dispersed throughout China. The sample encompassed students from first-year to fifth-year and spanned all major disciplinary categories: Humanities, Social Sciences, Business, Natural Sciences, Engineering, and Arts & Sports.
+Instruments
+
+Materials and methods
+Participants
+Data collection was conducted in three distinct phases with the following participant demographics: First, for the development of the Dysfunctional Career Thoughts Scale, individual interviews and open-ended surveys were administered to both current university students in China and career counseling professionals who provide career guidance and education to university students. The expert interview group comprised 11 professionals (mean career duration: 12.9years). The student interview cohort consisted of 15 participants (8 males, 7 females) representing diverse academic disciplines and year levels. Research indicates that in qualitative studies, data saturation can reach 85% with 12 in-depth interviews and 92% with 20 interviews (Guest et al., 2006). Thus, a recommended sample size typically ranges from 5 to 25 participants to ensure coverage of key subgroups (Creswell, 2013). The openended questionnaire was completed by 13 professionals (mean career duration: 7.4years). 10 student respondents (4 males, 6 females) participated in the open-ended survey, encompassing various majors and academic years.
+Second, for item selection purposes, online data were collected from 389 students (28.0% male, 72.0% female) as depicted in Table 1. In exploratory factor analysis (EFA), a sample size exceeding 300 participants is classified as excellent (Comrey and Lee, 1992). The majority of participants were aged 18 or younger (33.4%), 19years (15.9%), and 20years (19.5%), representing diverse geographical regions across China, including Northeast, North, East, Central, South, Southwest, and Northwest China. The institutional distribution
+
+Dysfunctional career thoughts scale
+The Dysfunctional Career Thoughts Scale (DCTS) was constructed and validated specifically for the Chinese university student population. The instrument consists of 20 items distributed across three dimensions: (1) Self-knowledge Uncertainty and Choice Anxiety (eight items), (2) Career Decision-Making Amotivation (three items), and (3) Career Decision-Making Process Inefficacy (nine items). Response options utilize a 4-point Likert-type scale ranging from 1 (Strongly Disagree) to 4 (Strongly Agree). Elevated total scores reflect higher levels of dysfunctional career cognitions. Internal consistency reliability analyses yielded a Cronbach's alpha coefficient of 0.94 for the total scale, while subscale reliability coefficients ranged from 0.88 to 0.91.
+Career thoughts inventory
+Career-related cognitions were assessed utilizing the Chinese version of Career Thoughts Inventory (CTI), adapted by Lin (2011) from Sampson et al.'s (1996) original English instrument for application within the Chinese university student population. The adapted instrument comprises 21 items distributed across five dimensions: difficulties in self-understanding (seven items), decision initiation confusion (four items), commitment-related anxiety (five items), external environmental conflicts (three items), and avoidance tendencies (two items). The instrument employs a 4-point Likert-type scale ranging from 1 (Strongly Disagree) to 4 (Strongly Agree). Higher aggregate scores indicate greater prevalence of dysfunctional career cognitions. The instrument demonstrated robust internal consistency reliability, with Cronbach's alpha coefficients of 0.87 in the original validation study (Lin, 2011) and 0.91 in the current investigation.
+
+Frontiers in Psychology
+
+03
+
+frontiersin.org
+
+Li and Lee
+
+10.3389/fpsyg.2025.1537321
+
+TABLE 1 Demographic characteristics of participants in the study.
+
+Variable
+Gender Age Region of origin
+Region of school Year in School Major Work experience
+
+Category
+Male Female 18 or younger 19 20 21 22 or older Dongbei (Northeast) Huadong (East) Huabei (North) Huazhong (Central) Huanan (South) Xinan (Southwest) Xibei (Northwest) Dongbei (Northeast) Huadong (East) Huabei (North) Huazhong (Central) Huanan (South) Xinan (Southwest) Xibei (Northwest) Freshmen Sophomore Junior Senior Fifth Year Humanities Social Sciences Business/Economics Science Engineering Arts/Sports Medicine Yes No
+
+Pilot testing (N=389)
+
+N
+
+%
+
+109
+
+28.0
+
+280
+
+72.0
+
+130
+
+33.4
+
+62
+
+15.9
+
+76
+
+19.5
+
+47
+
+12.1
+
+74
+
+19.0
+
+22
+
+5.7
+
+176
+
+45.2
+
+122
+
+31.4
+
+24
+
+6.2
+
+23
+
+5.9
+
+11
+
+2.8
+
+11
+
+2.8
+
+40
+
+10.3
+
+172
+
+44.2
+
+121
+
+31.1
+
+33
+
+8.5
+
+21
+
+5.4
+
+0
+
+0.0
+
+2
+
+0.5
+
+192
+
+49.4
+
+48
+
+12.3
+
+87
+
+22.4
+
+61
+
+15.7
+
+1
+
+0.3
+
+105
+
+27.0
+
+10
+
+2.6
+
+37
+
+9.5
+
+76
+
+19.5
+
+97
+
+24.9
+
+40
+
+10.3
+
+24
+
+6.2
+
+200
+
+51.4
+
+189
+
+48.6
+
+Scale validation (N=241)
+
+N
+
+%
+
+65
+
+27.0
+
+176
+
+73.0
+
+45
+
+18.7
+
+59
+
+24.5
+
+51
+
+21.2
+
+47
+
+19.5
+
+39
+
+16.2
+
+7
+
+2.9
+
+70
+
+29.0
+
+27
+
+11.2
+
+9
+
+3.7
+
+17
+
+7.1
+
+107
+
+44.4
+
+4
+
+1.7
+
+6
+
+2.5
+
+70
+
+29.0
+
+31
+
+12.9
+
+15
+
+6.2
+
+10
+
+4.1
+
+108
+
+44.8
+
+1
+
+0.4
+
+105
+
+43.6
+
+25
+
+10.4
+
+72
+
+29.9
+
+38
+
+15.8
+
+1
+
+0.4
+
+57
+
+23.7
+
+51
+
+21.2
+
+29
+
+12.0
+
+29
+
+12.0
+
+47
+
+19.5
+
+27
+
+11.2
+
+1
+
+0.4
+
+138
+
+57.3
+
+103
+
+42.7
+
+Career decision-making self-efficacy scale
+Career decision-making self-efficacy was assessed using the Chinese version of the Career Decision-Making Self-Efficacy Scale (CDMSES; Peng and Long, 2001), adapted from the original instrument developed by Taylor and Betz (1983) and Betz and Taylor (1994). The instrument consists of 39 items measuring five distinct dimensions: self-evaluation (six items), occupational information
+
+acquisition (nine items), goal identification (nine items), strategic planning (eight items), and problem resolution (seven items). Responses are recorded on a 5-point Likert-type scale, ranging from 1 (not confident at all) to 5 (highly confident). Higher aggregate scores reflect elevated levels of career decision-making self-efficacy. The instrument demonstrated excellent internal consistency reliability, with Cronbach's alpha coefficients of 0.94 in Lin's (2011) study and 0.96 in the current investigation.
+
+Frontiers in Psychology
+
+04
+
+frontiersin.org
+
+Li and Lee
+
+10.3389/fpsyg.2025.1537321
+
+Vocational identity scale
+Vocational identity was evaluated using the Chinese version of Vocational Identity Scale (CVIS), which was adapted and validated from Holland et al.'s (1993) original Vocational Identity Scale. The Chinese adaptation, validated by Yuan (2008), consists of 18 items distributed across four dimensions: occupational interests (three items), competency assessment (five items), career decision-making processes (five items), and career goal stability (five items). The instrument employs a dichotomous response format (0=No, 1=Yes). Higher aggregate scores indicate stronger vocational identity, characterized by well-defined career goals, interests, personality traits, and abilities. The instrument demonstrated sound internal consistency reliability, with Cronbach's alpha coefficients of 0.82 in Lin's (2011) study and 0.85 in the current investigation.
+Procedure
+Item generation and content validation
+The development of preliminary items for the Dysfunctional Career Thoughts Inventory (DCTS) commenced with the formulation of interview protocols and open-ended questionnaires, informed by comprehensive literature review and existing instruments. Data collection involved structured interviews and surveys administered to university students and career counseling practitioners with minimum 3years of professional experience. The preliminary item pool was generated through systematic analysis of responses from 15 university students and 11 practitioners (interviews), supplemented by 10 university students and 13 practitioners (open-ended questionnaires).
+The data collection protocols were designed to elicit comprehensive insights into Chinese university students' careerrelated dysfunctional cognitions, particularly focusing on the Career Information Processing (CIP) theory's decision-making components: communication, analysis, synthesis, valuation, and execution. The interview protocol for students incorporated queries such as "What cognitive barriers impede your self-assessment during career decisionmaking?" and "What thought patterns generate negative affect (e.g., anxiety, depression) during career decision-making or problemsolving processes?" Parallel inquiries were posed to practitioners regarding their observations of students' experiences.
+The open-ended questionnaire administered to students comprised eight items, including assessments of students' occupational cognitions and perceptions of external influences (e.g., significant others, sociocultural factors, educational environment, familial background, and regulatory framework) on career choices. The practitioner questionnaire, consisting of 17 items, explored similar domains.
+Initial item generation yielded 115 items, which underwent content validity assessment by five expert evaluators: two counseling psychology professors with doctoral degrees and career research expertise, one senior career counselor with over decade of experience, and two doctoral candidates with substantial career counseling research experience. The evaluation criteria encompassed appropriateness and clarity, utilizing a 5-point Likert-type scale. Items receiving mean ratings below 4 were either revised or eliminated,
+
+incorporating expert feedback. This process resulted in the elimination of 13 items and revision of 21 items, yielding 104 pilot items.
+Pilot testing and scale refinement
+The psychometric properties of the 104 pilot items were examined through exploratory factor analysis (EFA) using data from 389 Chinese university students. Statistical analyses were conducted using SPSS 23.0. The item selection process followed a systematic procedure: First, item quality was assessed based on descriptive statistics, item-total correlations, and internal consistency metrics. Second, items were systematically eliminated based on established psychometric criteria: items exhibiting extreme mean values, those with standard deviations less than 0.6, items demonstrating absolute skewness or kurtosis values greater than 2 (Huck and Cormier, 1996), those with item-total correlations below 0.03 (Gable and Wolf, 1993), and items whose elimination resulted in improved scale internal consistency coefficients. Third, the data's suitability for factor analysis was assessed using the Kaiser-Meyer-Olkin (KMO) measure of sampling adequacy and Bartlett's test of sphericity. Fourth, an exploratory factor analysis (EFA) was conducted using maximum likelihood estimation with oblimin rotation. Fifth, correlations between the DCTS's total score and subfactor scores were calculated, followed by an evaluation of internal consistency using Cronbach's alpha coefficients for both the total scale and individual subfactors. This analytical process yielded a final set of 20 items, which were retained for the scale validation.
+Scale validation
+The final instrument comprised 20 items derived from the pilot testing, supplemented by established measures to assess concurrent validity (Career Thoughts Inventory, Career Decision-Making SelfEfficacy Scale, and Vocational Identity Scale). Statistical analyses were conducted using SPSS 23.0 and MPLUS 7 software packages on data obtained from a sample of 241 undergraduate students. The psychometric evaluation proceeded in three phases: First, internal consistency reliability was assessed via Cronbach's alpha coefficients for all measures. Subsequently, construct validity was examined through confirmatory factor analysis (CFA). The structural equation model's goodness-of-fit was evaluated using multiple indices, including chi-square statistics, comparative fit index (CFI), TuckerLewis index (TLI), and root mean square error of approximation (RMSEA). While the chi-square statistic has traditionally been employed in model fit evaluation, its sensitivity to sample size and tendency toward Type I error necessitated its consideration primarily as a supplementary indicator. Therefore, primary emphasis was placed on the CFI and TLI, established relative fit indices for which values 0.90 indicate satisfactory model fit (Hu and Bentler, 1999). The RMSEA served as the principal absolute fit index, with interpretive thresholds as follows: values <0.05 indicating close fit, values <0.08 suggesting reasonable fit, and values >0.10 representing unacceptable fit (Browne and Cudeck, 1993). Moreover, in confirmatory factor analysis (CFA), modification indices (MI) identify potential model misspecifications by estimating the expected decrease in the chi-square statistic (2) if constraints on specific model parameters are
+
+Frontiers in Psychology
+
+05
+
+frontiersin.org
+
+Li and Lee
+
+10.3389/fpsyg.2025.1537321
+
+relaxed (Bollen, 1989). Following methodological conventions (Kline, 2016), MI values 10 suggest that the constraints on the parameter may lead to significant model misfit. Finally, concurrent validity was established by examining the correlational patterns among career thoughts, career decision-making self-efficacy, and vocational identity constructs.
+Results
+Pilot testing and scale refinement
+The preliminary scale refinement involved systematic psychometric evaluation. Items exhibiting restricted variance (SD0.60) were eliminated from the initial 104-item pool, resulting in the removal of six items. Analysis of distributional characteristics demonstrated that all retained items met normality assumptions as assessed through skewness and kurtosis indices (skewness: -0.87~0.60, kurtosis: -0.85~1.67). All items' skewness and kurtosis values should fall within �2 to satisfy an acceptable range of item distribution (Huck and Cormier, 1996). Further item analysis utilizing corrected item-total correlations led to the elimination of one additional item that demonstrated inadequate discrimination (r<0.30).
+An exploratory factor analysis (EFA) was conducted utilizing maximum likelihood estimation with oblimin rotation. The sampling adequacy was assessed via the Kaiser-Meyer-Olkin (KMO) measure, yielding a coefficient of 0.96, while Bartlett's test of sphericity produced a significant result (2=24648.76, df=4,656, p<0.001), indicating the data's suitability for factor analysis. Factor extraction was informed by multiple criteria, including eigenvalues, scree plot examination, and theoretical interpretability of factor structures, ultimately supporting a threefactor solution. Item retention was determined through established psychometric criteria: communalities exceeding 0.30, primary factor loadings above 0.50, and absence of cross-loadings exceeding 0.30. Through successive iterations of factor analysis, 20 items were retained across three factors. The resultant factor structure accounted for 63.44% of the total variance, with Factor 1 accounting for 46.02%, Factor 2 for 11.00%, and Factor 3 for 6.41%. This cumulative explained variance exceeded the conventional threshold of 40%, supporting the adequacy of the three-factor model. Based on conceptual analysis of item content, the factors were designated as: (1) Self-knowledge Uncertainty and Choice Anxiety, (2) Career Decision-Making Amotivation, and (3) Career Decision-Making Process Inefficacy. The final factor structure and corresponding item loadings are presented in Table 2.
+Examination of the correlation matrix (Table 3) revealed substantial positive associations between total and subfactor scores (r=0.50�0.93), while interfactor correlations exhibited moderate magnitudes (r=0.26�0.71). This pattern of correlations supports the factorial distinctiveness of the subscales while maintaining conceptual coherence, suggesting that the subfactors effectively capture discrete yet related dimensions of career-related cognitions in the Chinese university student population. Psychometric evaluation of internal consistency yielded robust reliability coefficients, with the total scale demonstrating excellent internal consistency (=0.94) and subfactors
+
+showing strong reliability indices (=0.88�0.91), thus establishing the measure's psychometric integrity.
+Scale validation
+Initial model estimation yielded the following fit indices: 2 (167)=417.72, CFI=0.89, TLI=0.87, and RMSEA=0.06. Examination of modification indices revealed substantial residual covariation between Items 7 and 8 (MI=39.54) and Items 11 and 12 (MI=33.03), suggesting shared method variance beyond that accounted for by the hypothesized factors. Model respecification incorporating these residual correlations resulted in improved fit: 2 (165)=346.95, CFI=0.92, TLI=0.91, and RMSEA=0.06, indicating satisfactory model-data correspondence.
+Concurrent validity was evaluated through correlation analyses between the DCTS and established criterion measures (Table 4). Analyses encompassed both total scores and subfactor scores for the DCTS in relation to the Career Thoughts Inventory (CTI), Career Decision-Making Self-Efficacy Scale (CDMSES), and Vocational Identity Scale (VIS). Detailed correlation matrices are presented in Table 4.
+The DCTS demonstrated significant positive correlations with all CTI dimensions (r=0.13�0.85, p<0.01), suggesting convergent validity. Consistent with theoretical expectations, significant negative correlations emerged between the DCTS and CDMSES (r=-0.63�0.20, p<0.01). Similarly, the DCTS exhibited significant negative correlations with most VIS dimensions (r=-0.68�-0.18, p<0.01), with the sole exception being the correlation between career decisionmaking amotivation and stability of occupational goals. These systematic patterns of associations provide robust evidence for the concurrent validity of the DCTS.
+Discussion
+The primary objective of this study was to develop a scale to measure dysfunctional career thoughts among Chinese university students. The research was conducted in three phases: First, individual interviews and open-ended surveys were administered to Chinese university students and career counseling professionals who provide career guidance and educational services in university settings to develop items measuring dysfunctional career thoughts. Second, to select appropriate items, a preliminary assessment comprising these items was administered to 389 Chinese university students, resulting in the selection of 20 items through data analysis. Third, to validate the selected items, the 20-item scale and other assessments were administered to an additional 241 Chinese university students to verify construct and concurrent validity. This process resulted in the development of the Dysfunctional Career Thoughts Scale (DCTS), consisting of 20 items across three factors.
+The DCTS comprises the following subscales: The first factor, "SelfKnowledge Uncertainty and Choice Anxiety (UCA)" (8 items), measures anxiety about making appropriate choices, apprehension about future workplace life, and fear of incorrect decisions due to insufficient selfunderstanding. The second factor, "Career Decision-Making Amotivation (CDA)" (3 items), assesses insufficient recognition of the
+
+Frontiers in Psychology
+
+06
+
+frontiersin.org
+
+Li and Lee
+
+10.3389/fpsyg.2025.1537321
+
+TABLE 2 Final items of dysfunctional career thoughts inventory and results of exploratory factor analysis (Beaton et al., 2000).
+
+Factor
+
+Items
+
+Factor Loadings Communality
+
+1
+
+2
+
+3
+
+Self-knowledge uncertainty and choice anxiety
+
+7 I'm afraid I will not find an occupation that suits my ability.
+
+0.91
+
+-0.00 -0.13
+
+0.67
+
+8 I'm worried that I will not be able to perform in my chosen occupation due to
+
+0.82
+
+0.00 -0.06
+
+0.61
+
+lack of ability.
+
+10 I am worried about not being able to choose an occupation that is right for me. 0.71
+
+-0.02 0.15
+
+0.68
+
+6 I am not sure what I am good at.
+
+0.70
+
+0.06
+
+0.05
+
+0.58
+
+9 I do not know which occupation is right for me.
+
+0.69
+
+0.02
+
+0.13
+
+0.64
+
+11 I do not have enough or deeper understanding of myself.
+
+0.68
+
+0.01 -0.01
+
+0.46
+
+12 I do not have the means to get an overall and deeper understanding of myself.
+
+0.65
+
+0.00
+
+0.08
+
+0.51
+
+13 I do not know how much what I learned in university can help me choose my
+
+0.51
+
+0.01
+
+0.11
+
+0.36
+
+occupation.
+
+Career Decision-
+
+48 I do not have to consider choosing my occupation because no one has ever
+
+-0.01
+
+0.88
+
+0.00
+
+0.78
+
+Making Amotivation
+
+pressed me to choose one.
+
+47 I do not have to consider choosing my occupation because those around me
+
+-0.00
+
+0.85
+
+0.03
+
+0.74
+
+have not started choosing their occupations.
+
+44 I do not have to consider choosing my occupation because getting a job is still
+
+0.04
+
+0.77 -0.01
+
+0.61
+
+far from now.
+
+Career DecisionMaking Process Inefficacy
+
+80 I'm unlikely to choose one out of the occupations I could consider. 76 I am so confused now that I cannot choose a job. 88 I do not know how to prepare to have an occupation.
+
+-0.09 -0.03 0.83
+
+0.56
+
+-0.09
+
+0.09
+
+0.79
+
+0.60
+
+0.01
+
+0.03
+
+0.78
+
+0.64
+
+98 Choosing an occupation is such a complex task that I do not know which stage 0.10
+
+0.01
+
+0.73
+
+0.66
+
+I'm in now.
+
+100 I'm frustrated and troubled because I cannot choose a satisfactory occupation.
+
+0.14
+
+-0.11 0.67
+
+0.55
+
+96 I get anxious whenever I think about entering society alone and working.
+
+0.04
+
+-0.02 0.64
+
+0.44
+
+91 I've tried many times, but I could not choose a satisfactory occupation.
+
+0.00
+
+0.11
+
+0.64
+
+0.48
+
+83 I do not know which occupation I like because of a lack of experience.
+
+0.13
+
+0.04
+
+0.61
+
+0.53
+
+56 I wish there was a simple and quick way to choose an occupation.
+
+0.07
+
+-0.02 0.59
+
+0.40
+
+Three factors were extracted via exploratory factor analysis (EFA), with gray-shaded regions in the factor loading matrix visually demarcating the structural boundaries of each factor, thereby illustrating their categorical distinctiveness.
+
+necessity for career decision-making. The third factor, "Career DecisionMaking Process Inefficacy (CDI)" (9 items), evaluates insufficient understanding of and confidence in the career decision-making process. Among these three subscales, the UCA factor accounted for the highest proportion of total explained variance, followed by the CDA factor, while the CDI factor contributed the least variance. These findings suggest that the primary factors impeding career decision-making among Chinese university students are insufficient self-understanding and anxiety about career choices, followed by lack of motivation and confidence in the career decision-making process.
+These findings align with previous research indicating that Chinese university students exhibit fragmented selfconceptualization (Li, 2017). Yu and Ma (2016) posited that university career guidance centers predominantly emphasize administrative processes and policy dissemination while neglecting crucial services such as vocational assessment and individualized career exploration. Furthermore, they noted that insufficient expertise among career counselors regarding self-exploration methodologies and decision-making processes may diminish students' self-efficacy in career planning.
+
+The research also revealed that Chinese undergraduates often perceive career-related anxiety and uncertainty as pathological states rather than natural components of the decision-making process. This perspective extends to post-graduation employment anxiety. These findings corroborate existing literature: 64% of university students report employment-related anxiety, with approximately 40% experiencing moderate to severe symptoms (Jiao, 2015). Additional studies indicate that career anxiety stems from inadequate psychological preparation, diminished confidence, and limited understanding of both employment landscapes and self-awareness (Cai and Li, 2007). Zhang et al. (2018) demonstrated that this anxiety, rooted in insufficient understanding of self, occupational environments, and decision-making processes, creates a recursive cycle that further impairs career decisionmaking capability.
+Moreover, the research indicates that Chinese undergraduates typically initiate career planning in response to external pressures rather than intrinsic motivation, potentially compromising decision-making effectiveness. This observation aligns with Guo's (2017) findings regarding Chinese students' diminished initiative
+
+Frontiers in Psychology
+
+07
+
+frontiersin.org
+
+Li and Lee
+
+10.3389/fpsyg.2025.1537321
+
+TABLE 3 Correlation coefficients and reliability coefficients of DCTS factors (N = 389).
+
+Factor
+
+Factor 1
+
+Factor 2
+
+Factor 3
+
+Cronbach's 
+
+Factor 1
+
+--
+
+0.91
+
+Factor 2
+
+0.26*
+
+--
+
+0.88
+
+Factor 3
+
+0.71*
+
+0.39*
+
+--
+
+0.91
+
+Total
+
+0.89*
+
+0.50*
+
+0.93*
+
+0.94
+
+Factor 1: Self-knowledge uncertainty and choice anxiety; Factor 2: Career decision-making amotivation; Factor 3: Career decision-making process inefficacy. *p<0.01.
+
+TABLE 4 Correlations between DCTS, CTI, CDMSE, and VI (N=241).
+
+Scale
+
+Factor
+
+Total
+
+Chinese version of career thoughts inventory
+Career decision-making self-efficacy
+Vocational identity *p<0.01.
+
+Total Self-knowing difficulty Decision-making startup confusion Commitment anxiety External environment conflict Escape Total Self-Evaluation Occupational information gathering Goal Selection Planning Provlem Solving Total Vocational interest Ability assessment Career decision Stability of occupational goal
+
+0.85 0.74
+0.75
+0.67
+0.60
+0.53 -0.62 -0.62
+-0.53
+-0.63 -0.56 -0.54 -0.68 -0.53 -0.62 -0.56
+-0.46
+
+Self-knowledge Uncertainty and Choice Anxiety
+0.75
+0.71
+
+Career DecisionMaking
+Amotivation
+0.32
+0.29
+
+Career DecisionMaking Process
+Inefficacy
+0.79
+0.63
+
+0.69
+
+0.24
+
+0.66
+
+0.53
+
+0.20
+
+0.70
+
+0.52
+
+0.13
+
+0.60
+
+0.40 -0.59 -0.59
+
+0.30 -0.24 -0.20
+
+0.53 -0.54 -0.54
+
+-0.50
+
+-0.22
+
+-0.46
+
+-0.58 -0.53 -0.50 -0.64 -0.51 -0.59 -0.51
+
+-0.22 -0.25 -0.23 -0.21 -0.18 -0.22 -0.21
+
+-0.56 -0.47 -0.47 -0.61 -0.46 -0.55 -0.51
+
+-0.43
+
+-0.04
+
+-0.44
+
+and its correlation with reduced independence, critical thinking, and problem-solving capabilities. Li (2017) further noted a significant deficit in students' recognition of career planning's importance. This passive approach may exacerbate anxiety, as Song (2015) demonstrated an inverse relationship between initiative and employment-related anxiety. The tendency to postpone career decisions, often justified by an assumption that opportunities will materialize spontaneously (Fu et al., 2014), can adversely affect subsequent career outcomes (Jiang, 2014).
+Comparison with the CTI
+When comparing these results with Sampson et al.'s (1996) Career Thoughts Inventory (CTI), several observations emerge.
+
+The DCTS's first factor (Self-Knowledge Uncertainty and Choice Anxiety) and the third factor (Career Decision-Making Process Inefficacy) share conceptual similarities with CTI's DecisionMaking Confusion (DMC) and Commitment Anxiety (CA) factors. However, CTI's External Conflict (EC) factor is absent in the DCTS, while DCTS's DCA factor is not present in the CTI. The absence of the CTI's EC factor in the DCTS can be speculated through Lee et al.'s (2016) comparative study of CTI factor structures among Korean and American college students. Their research revealed that Korean students did not perceive the EC as an independent factor but rather as integrated with DMC factor. This suggests that external conflicts might be so fundamentally embedded in East Asian career decision-making processes that they permeate all factors rather than existing as a distinct dimension.
+
+Frontiers in Psychology
+
+08
+
+frontiersin.org
+
+Li and Lee
+
+10.3389/fpsyg.2025.1537321
+
+The DCA factor in career decision-making, unique to the DCTS, appears to reflect distinctive characteristics of Chinese university students. Research indicates that Chinese students often pursue perfectionism in career choices, desiring complete selfunderstanding and precise career information. Zeng (2009) noted that Chinese university students demonstrate relatively high desires for perfect self-knowledge and career fit. Yang (2015) further demonstrated the significant impact of negative perfectionism on career indecision among Chinese students. He (2018) pointed out that Chinese students born after 1995 often struggle with career decisions due to unrealistic ideals.
+This perfectionist tendency appears connected to broader East Asian cultural characteristics, particularly collectivism and emphasis on group harmony. Chinese students' sensitivity to parental evaluation (Heine, 2001; Markus and Kitayama, 1991; Oishi and Diener, 2001) and East Asian parents' typically high expectations contribute to socially prescribed perfectionism (Castro and Rice, 2003; Flett et al., 1995; Park and Kim, 2006). Choi's (2020) research on Korean students' dysfunctional career thoughts revealed that fear of disappointing parental expectations often leads to decreased career preparation motivation. These findings suggest that Chinese collectivist cultural values and associated high levels of socially prescribed perfectionism significantly influence career decisionmaking processes, potentially contributing to motivational deficits in career preparation.
+Implications and limitation
+This research makes several valuable contributions to the field of career development and assessment. Primarily, it introduces a culturally calibrated career cognition assessment instrument specifically designed for Chinese undergraduate students, addressing notable limitations in both the original Career Thoughts Inventory (CTI) and its Chinese translation. The study's analysis of factor structure and item composition reveals distinct patterns of dysfunctional career thoughts among Chinese university students compared to their American counterparts, highlighting the inadequacy of simply using translated assessment tools.
+This finding underscores a critical consideration for practitioners: assessment instruments must be culturally appropriate for their intended population. The use of non-culturally adapted tools may lead to imprecise or potentially misleading results. Therefore, practitioners should prioritize utilizing either culturally adapted assessments or instruments developed specifically for the indigenous population under consideration.
+Furthermore, the research identifies specific cognitive patterns that impede career decision-making among Chinese undergraduates, providing career counselors with actionable insights for intervention development. The findings illuminate three key impediments: a distinctive lack of motivation for career decision-making, a strong correlation between insufficient selfknowledge and choice anxiety, and a notable deficit in confidence regarding the career decision-making process.
+These insights enable career counselors to develop more targeted and effective interventions. Following the framework
+
+established by Sampson et al. (1996), counselors can employ cognitive reframing techniques and implement the identifychallenge-alter and act approach to assist Chinese undergraduates in transforming dysfunctional career thoughts into productive decision-making strategies. This methodological approach allows for precise identification of problematic thought patterns and facilitates the development of tailored intervention strategies.
+Several limitations warrant consideration. First, the study's sample size and institutional representation may limit generalizability given China's vast university population. Gender distribution within the sample was suboptimal. Future research should incorporate a broader range of institutions and achieve better gender balance. Second, demographic variables' influence on career cognitions requires further investigation. The absence of established norms for the DCTS necessitates additional standardization studies. Third, while this instrument targets university students, future research should consider developing similar measures for other career decision-making populations. Finally, it is noteworthy that while the DCTS utilized a 4-point Likert scale, the analysis did not account for the ordinal nature of Likert items (Zumbo et al., 2007). For future investigations, researchers should implement other statistical methods, including ordinal alpha in place of Cronbach's alpha, Diagonally Weighted Least Squares estimation rather than maximum likelihood estimation, and polychoric correlations instead of Pearson correlations.
+This research developed the Dysfunctional Career Thoughts Scale (DCTS) and validated it as a psychometrically sound measure instrument. This work addresses empirical gaps in the field of career thoughts research among Chinese university students, overcomes the limitations of existing measurement tools, and accurately captures culturally nuanced career cognitive characteristics specific to the Chinese cultural context. Future research could leverage the psychometric instrument developed in this study to formulate targeted intervention strategies that facilitate the transformation of dysfunctional career thoughts into functional career thoughts among Chinese university students. Additionally, subsequent investigations should extend this line of inquiry to other career decisionmaking populations.
+Data availability statement
+The original contributions presented in the study are included in the article/supplementary material, further inquiries can be directed to the corresponding author/s.
+Author contributions
+SL: Conceptualization, Data curation, Formal analysis, Funding acquisition, Investigation, Methodology, Project administration, Resources, Software, Validation, Writing � original draft, Writing � review & editing. DL: Conceptualization, Data curation, Formal analysis, Funding acquisition, Investigation, Methodology, Project administration, Resources, Software, Supervision, Validation, Writing � review & editing.
+
+Frontiers in Psychology
+
+09
+
+frontiersin.org
+
+Li and Lee
+
+10.3389/fpsyg.2025.1537321
+
+Funding
+
+Generative AI statement
+
+The author(s) declare that financial support was received for the research and/or publication of this article. This study is a part of the Start-up Fund for New Talented Researchers of Nanjing Vocational University of Industry Technology (Grant no. 2021SKYJ29).
+
+The authors declare that Generative AI was used in the creation of this manuscript. After finalizing the manuscript, the paper was reviewed and revised using Gen AI for content refinement and editorial accuracy.
+
+Publisher's note
+
+Conflict of interest
+The authors declare that the research was conducted in the absence of any commercial or financial relationships that could be construed as a potential conflict of interest.
+
+All claims expressed in this article are solely those of the authors and do not necessarily represent those of their affiliated organizations, or those of the publisher, the editors and the reviewers. Any product that may be evaluated in this article, or claim that may be made by its manufacturer, is not guaranteed or endorsed by the publisher.
+
+References
+
+Bao, H. (2016). Current situation of career conception for secondary vocational students. [Master's thesis, Shenyang Normal University].
+Beaton, D. E., Bombardier, C., Guillemin, F., and Ferraz, M. B. (2000). Guidelines for the process of cross-cultural adaptation of self-report measures. Spine 25, 3186�3191. doi: 10.1097/00007632-200012150-00014
+Betz, N. E., and Taylor, K. M. (1994). Manual for career decision-making self-efficacy scale. Columbus: The Ohio State University, 1994, 4�23.
+Bollen, K. A. (1989). Structural equations with latent variables. Hoboken, NJ: John Wiley & Sons.
+Browne, M. W., and Cudeck, P. J. (1993). "Alternative ways of assessing model fit" in Testing structural equation models. eds. K. A. Bollen and J. S. Long (Thousand Oaks, CA: Sage), 136�162.
+Bullock-Yowell, E., Andrews, L., McConnell, A., and Campbell, M. (2012). Unemployed adults' career thoughts, career self-efficacy, and interest: any similarity to college students? J. Employ. Couns. 49, 18�30. doi: 10.1002/j.2161-1920.2012.00003.x
+Cai, S. Q., and Li, G. P. (2007). Employment anxiety of college graduates and its psychological guidance. HeiLongjiang Educ. High. Educ. Res. Appraisal 7, 61�62. doi: 10.3969/j.issn.1002-4107.2007.07.027
+Castro, J. R., and Rice, K. G. (2003). Perfectionism and ethnicity: implications for depressive symptoms and self-reported academic achievement. Cult. Divers. Ethn. Minor. Psychol. 9, 64�78. doi: 10.1037/1099-9809.9.1.64
+Chen, Q. L. (2013). The promoting effect of theme class meeting based on experiential career counseling depending on CIP theory on middle school students' learning. [Master's thesis, Central China Normal University].
+Choi, H. J. (2020). Development of the career thoughts inventory for Korean college students. [Master's thesis, Konkuk University].
+Comrey, A. L., and Lee, H. B. (1992). A first course in factor analysis. 2nd Edn. United Kingdom: Psychology Press.
+Corbishley, M. A., and Yost, E. B. (1989). Assessment and treatment of dysfunctional cognitions in career counseling. Career Plan. Adult Dev. J. 5, 20�26.
+Creswell, J. W. (2013). Qualitative inquiry and research design: Choosing among five approaches. 3rd Edn. Thousand Oaks, CA: Sage Publications.
+Dodge, T. D. (2001). An investigation of the relationship between the family of origin and selected career development outcomes. [Doctoral Dissertation, Louisiana Tech University].
+Fan, J. (2003). Cognitive information processing theory: a new form of career theory. J. Ningbo Polytech. 7, 31�33. doi: 10.3969/j.issn.1671-2153.2003.03.010
+Flett, G. L., Sawatzsky, D. L., and Hewitt, P. L. (1995). Dimensions of perfectionism and goal commitment: a further comparison of two perfectionism measures. J. Psychopathol. Behav. Assess. 17, 111�124. doi: 10.1007/BF02229013
+Fu, A. G., Mo, Q. P., and Tu, G. P. (2014). An empirical study on career development based on college students from 18 colleges and universities in China. J. Beijing Inst. Educ. 9, 13�17. doi: 10.3969/j.issn.1673-6923.2014.03.004
+Gable, R. K., and Wolf, M. B. (1993). Instrument development in the affective domain: Measuring attitudes and values in corporate and school settings. 2nd Edn. New York: Kluwer Academic.
+Guest, G., Bunce, A., and Johnson, L. (2006). How many interviews are enough? An experiment with data saturation and variability. Field Methods 18, 59�82. doi: 10.1177/1525822X05279903
+
+Guo, X. M. (2017). The reason for lack of college students' initiative and strategy for training. Theory Pract. Educ. 37, 45�46.
+He, Z. H. (2018). Research on the cultivation of values among post-1995 college students. Journal of Jilin TV & Radio University. doi: 10.3969/j.jssn.1008-7508.2018.09.039
+Heine, S. J. (2001). Self as cultural product: an examination of East Asian and north American selves. J. Pers. 69, 881�905. doi: 10.1111/1467-6494.696168
+Heine, S. J., Lehman, D. R., Markus, H. R., and Kitayama, S. (1999). Is there a universal need for positive self-regard? Psychol. Rev. 106, 766�794. doi: 10.1037/ 0033-295X.106.4.766
+Holland, J. L., Johnston, J. A., and Asama, N. F. (1993). The vocational identity scale: a diagnostic and treatment tool. J. Career Assess. 1, 1�12. doi: 10.1177/ 106907279300100102
+Hu, L. Y., and Bentler, P. (1999). Cutoff criteria for fit indexes in covariance structure analysis: conventional criteria versus new alternatives. Struct. Equ. Model. 6, 1�55. doi: 10.1080/10705519909540118
+Huck, S. W., and Cormier, W. H. (1996). "Principles of research design" in Reading statistics and research. ed. C. Jennison. 2nd ed (New York: Harper Collins), 578�622.
+Jiang, L. (2014). The impact of procrastination on the career decision-making process: Experimental study based on the information board technology. [Master's thesis, Central China Normal University].
+Jiao, J. D. (2015). Research into the group work intervention to the anxiety of college students' employment: Take H College in B City as an example. [Master's Thesis, Hebei University].
+Keller, K. E., Biggs, D. A., and Gysbers, N. C. (1982). Career counseling from a cognitive perspective. Pers. Guidance J. 60, 367�371. doi: 10.1002/j.2164-4918.1982.tb00689.x
+Kilk, K. L. (1997). The relationship between dysfunctional career thoughts and choosing an academic major. [Doctoral Dissertation, University of Northern Colorado].
+Kline, R. B. (2016). Principles and practice of structural equation modeling. 4th Edn. New York: Guilford Press.
+Krumboltz, J. D. (1994). The career belief inventory. J. Couns. Dev. 72, 424�428. doi: 10.1002/j.1556-6676.1994.tb00962.x
+Lee, D., Peterson, G. W., Sampson, J. P., and Park, M. (2016). A cross-cultural comparison of negative career thoughts. J. Career Assess. 24, 685�700. doi: 10.1177/1069072715616112
+Lewis, R. A., and Gilhousen, M. R. (1981). Myths of career development: a cognitive approach to vocational counseling. Pers. Guidance J. 59, 296�299. doi: 10.1002/j.2164-4918.1981.tb00553.x
+Li, Q. (2017). Current situation and suggestions of career counseling in colleges and universities. Vocat. Educ. 16, 6�9. doi: 10.3969/j.issn.2095-4530(z).2017.22.002
+Lin, T. T. (2011). The development of career thoughts inventory for university students and related studies. [Master's Thesis, South China Normal University].
+Liu, L. L. (2007). The relationship of decision-making styles, career thoughts and career decision status for college students [Master's Thesis, Beijing Normal University].
+Malach-Pines, A., and Kaspi-Baruch, O. (2008). The role of culture and gender in the choice of a career in management. Career Dev. Int. 13, 306�319. doi: 10.1108/13620430810880808
+Markus, H. R., and Kitayama, S. (1991). Culture and the self: implication for cognition, emotion and motivation. Psychol. Rev. 98, 224�253. doi: 10.1037/0033-295X.98.2.224
+
+Frontiers in Psychology
+
+10
+
+frontiersin.org
+
+Li and Lee
+
+10.3389/fpsyg.2025.1537321
+
+Oishi, S., and Diener, E. (2001). Goals, culture, and subjective well-being. Personal. Soc. Psychol. Bull. 27, 1674�1682. doi: 10.1177/01461672012712010
+Park, Y. S., and Kim, U. (2006). "Family, parent-child relationship, and academic achievement in Korea: indigenous, cultural, and psychological analysis" in Indigenous and cultural psychology: Understanding people in context. eds. U. Kim, K. Yang and K. Hwang (Berlin, Germany: Springer), 421�443.
+Peng, Y. X., and Long, L. R. (2001). Study on the scale of career decision-making self-efficacy for university students. Chin. J. Appl. Psychol. 7, 38�43. doi: 10.3969/j.issn.1006-6020.2001.02.007
+Peterson, G. W., Sampson, J. P., and Reardon, R. C. (1991). Career development and service: A cognitive approach. California: Brooks/Cole.
+Peterson, G. W., Sampson, J. P., Reardon, R. C., and Lenz, J. G. (1996). "Becoming career problem solvers and decision makers: a cognitive information processing approach" in Career choice and development. eds. D. Brown and L. Brooks. 3rd ed (Hoboken, NJ: Jossey-Bass), 423�475.
+Sampson, J. P., Peterson, G. W., Lenz, J. G., and Reardon, R. C. (1992). A cognitive approach to career service: translating concepts into practice. Career Dev. Q. 41, 67�74. doi: 10.1002/j.2161-0045.1992.tb00360.x
+Sampson, J. P., Peterson, G. W., Lenz, J. G., Reardon, R. C., and Saunders, D. E. (1996). Career thoughts inventory: Professional manual. Lutz, FL: Psychological Assessment Resources, Inc.
+Saunders, D. E., Peterson, G. W., Sampson, J. P. Jr., and Reardon, R. C. (2000). Relation of depression and dysfunctional career thinking to career indecision. J. Vocat. Behav. 56, 288�298. doi: 10.1006/jvbe.1999.1715
+Shi, Y. Q. (2014). A study on the family influence factors on high school students' career thoughts: The moderating role of attachment type. [Master's Thesis, Nanjing Normal University].
+Song, L. N. (2015). Research on the relationship of proactive personality, career adaptability and vocational selection anxiety of graduates. [Master's Thesis, Inner Mongolia Normal University].
+Strausberger, S. J. (1998). The relationship of state-trait anger to dysfunctional career thinking and vocational identity [Doctoral Dissertation, Florida State University].
+Tang, J. (2014). An example of the application of cognitive information processing theory in college students' career planning. Data Cult. Educ. 27, 144�146. doi: 10.3969/j.issn.1004-8359.2014.27.066
+Taylor, K. M., and Betz, N. E. (1983). Applications of self-efficacy theory to the understanding and treatment of career indecision. J. Vocat. Behav. 22, 63�81. doi: 10.1016/0001-8791(83)90006-4
+
+Voight, L. (1999). Parental attachment and ego identity as antecedents of career identity. [Doctoral Dissertation, Florida State University].
+Whiston, S. C., and Keller, B. K. (2004). The influences of the family of origin on career development: a review and analysis. Couns. Psychol. 32, 493�568. doi: 10.1177/0011000004265660
+Xue, Q. Q., and Hu, W. F. (2018). Review on the influencing factors of 'Post-90s' university students' professional values. Commun. Vocat. Educ. 8, 75�79. doi: 10.3969/j.issn.1674-7747.2018.08.018
+Yang, G. S. (2004). Chinese psychology and behavior. Beijing: China Renmin University Press.
+Yang, Y. (2015). The correlation of college students' career indecision, perfectionism and procrastination. [Master's Thesis, Northwest Normal University].
+Yuan, L. L. (2008). The assessment and intervention research on college students' vocational identity. [Master's Thesis, Nanjing Normal University].
+Yu, X., and Ma, Q. (2016). Research on the necessity and measures of college students' career planning education. Asia Pac. Educ. 35:261. doi: 10.16550/j.cnki.2095-9214.2016.35.215
+Zang, G. S. (2006). Effect of group counselling based on cognitive information processing theory on career maturity of college students. [Master's Thesis, Hebei Normal University].
+Zeng, W. X. (2009). Uncertainty about career development: Its symptom and cause analysis in college students from career Chaos theory perspective. [Doctoral Dissertation, Southwest University].
+Zhang, W. M., Feng, N. L., Zhao, Y. C., Meng, C. W., Xiao, N., and Wu, S. (2009). "Research on one child problem" in China development report. ed. W. M. Zhang (Beijing: China Development Press), 269�281.
+Zhang, X., Hou, Z. J., Zhu, J. J., and Wang, D. N. (2018). The role of career decision ambiguity tolerance on career decision-making difficulty among Chinese college students: mediation of career adaptability and anxiety. Chin. J. Clin. Psych. 2, 347�352. doi: 10.16128/j.cnki.1005-3611.2018.02.029
+Zhou, W. Z. (2009). The study on the effect of experienced career guidance based on cognitive information processing theory on vocational college students of career development. [Master's Thesis, Suzhou University].
+Zumbo, B. D., Gadermann, A. M., and Zeisser, C. (2007). Ordinal versions of coefficients alpha and theta for Likert rating scales. J. Mod. Appl. Stat. Methods 6, 21�29. doi: 10.22237/jmasm/1177992180
+
+Frontiers in Psychology
+
+11
+
+frontiersin.org
+
+

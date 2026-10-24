@@ -1,0 +1,73 @@
+{
+  "_comment": "青穗集 · 穗奈40场景动作与补图交接 v01；planned表示待制作，不是已接入业务。",
+  "date": "2026-10-19",
+  "appearance": {
+    "file": "input/appearance_original_v2_1440x2560.png",
+    "size": [
+      1440,
+      2560
+    ],
+    "sha256": "552bac8795fd85fce19e762c6525aff82241368c96868b7bdc78b70755b5addd",
+    "purpose": "仅锁定人物外观，不是1536拆层坐标"
+  },
+  "working": {
+    "file": "input/working_source_v01.ora",
+    "canvas": [
+      1536,
+      1536
+    ],
+    "visibleLayers": 25,
+    "hiddenReferenceLayers": 1,
+    "sourceArchiveSha256": "552fbfd323326ef4e3bd6bf320eba0244354e896ed16a7a33672d73668689e86",
+    "manifest": "input/base_manifest_1536.json"
+  },
+  "verifiedCurrentRuntime": {
+    "scenes": [
+      "idle",
+      "greeting",
+      "listening",
+      "thinking",
+      "responding",
+      "success"
+    ],
+    "isCubismModel": false,
+    "mouthShapes": 1,
+    "independentFingers": false,
+    "agentLinked": false
+  },
+  "knownLimitations": [
+    "脸底和补画层仍含头发/发饰残留",
+    "单个脸部有效像素范围约119×145；放大参考不新增细节",
+    "原双臂各包含衣袖+前臂+固定手形；替换手必须移除旧手区域",
+    "近期双臂动作属二维网格预演，并无cmo3或moc3"
+  ],
+  "sourceProtection": {
+    "originalArt": "552bac8795fd85fce19e762c6525aff82241368c96868b7bdc78b70755b5addd",
+    "sourceZip": "552fbfd323326ef4e3bd6bf320eba0244354e896ed16a7a33672d73668689e86",
+    "back_hair.png": "988920d93a2612a19bb8d7d09fe0c98cab423eb8986cccb681c33569bc9a75d4",
+    "handwear-r.png": "f3c4ca182d8af43775b48739dfb30f7c6f5bcbc99942a865c30ad63983244a77",
+    "handwear-l.png": "0dc208e298ce7932c30a1b8013d1eef9511647a02d623522e10ee585ce4a4528",
+    "legwear.png": "5bc54b9cc6fb58e044023eaac451c38f7038ce190ed3a3550bbad143dfcfdab1",
+    "footwear.png": "f9de0759f3da164cdfb081020168e01d47c16f9843c6c76813727c611e6b34db",
+    "neck.png": "e115a9845a751205e3cbbebd7507b28bbc294942d90ac0df615279558e4373e8",
+    "bottomwear.png": "8f3e93419694d4f12b009bb6f083806f1390f458afee23f31836020e29de19e2",
+    "topwear.png": "f10172bc150c489f8a2d5b9f82165d34e25b1cf766e62e0852dd01fd1e2c9716",
+    "ears-r.png": "b993dd0191b283e92a787b4d93ce5f8413ccae31ab7bbda7263664df651e3251",
+    "ears-l.png": "308abf69f2541bdbc8c124d5c9ee54f9117e4edbfda823211c37e25e6d65ab58",
+    "face.png": "419aed48f9f0e2ea32d45d7601512fde3ee79298f7cc0392cd88d7487aaee97e",
+    "face_base_repair_patch.png": "cd0e2aaa36877b00814ffe07f0601093e17e76ff44fc6633b5e3017916c5bbd1",
+    "eyewear.png": "f78a725016fcf46523c3a4be726e301bf915e42d2616eda6622fa90c67c35de3",
+    "nose.png": "22d49131b83ab126905b4cc297cb03d614f6dea326340cbcc102aacdf10c3c43",
+    "mouth.png": "b2704e1d93ddeda94b15491325acb733b009c85b7f9e16b113a2ed50dc256bbd",
+    "eyebrow-l.png": "e1196d4c0ff2e7ec66a130e74035363f7dfd1e3d5242ddb5863266b0dfe9005e",
+    "eyebrow-r.png": "b7104f3f74694e786598e9761372a060da06727b66a1bc51ef62162f31bc1a9b",
+    "eyewhite-r.png": "c453ba7902b12ddaa7ff0bdbf54cbe6f767632164d2e0ae3e887212b15ca715d",
+    "eyewhite-l.png": "c3557457b874d216de50c36d0ae9fc86d1a21243b0b0892a7c49055d2c4f5cf3",
+    "eyelash-r.png": "c5bc3ed340212c4997afaaaad70800f86378002debb94891c9960292dbf757f3",
+    "irides-r.png": "0379af820c670be533c1bd49f53b93ecaaf024eb8e0c1775b4eb76d44866c5f8",
+    "irides-l.png": "ed8b4504e3ec78cf24fb00a2599bf325c8ef94dfe6add83f97f047b4c21c5043",
+    "headwear.png": "079f05945d7ad4ca27955ad2db16277a4823674714f0753668b04fdb0fc0a5fc",
+    "eyelash-l.png": "f8ab8d29132e5153ec74e3b7688d4d737ae9443178f4fc2cded82a04673ba99e",
+    "front_hair.png": "94a70c66ee53f87a89d0465a58becd1dc0571e66f4dc9ceb5067fdd9cb9da988"
+  }
+}

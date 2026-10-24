@@ -1,9 +1,19 @@
+/* 青穗集 · 本地字体：Fusion Pixel 统一界面文字，系统中文仅用于正式简历文档与缺字回退；字体许可随包保留。 */
+@font-face {
+  font-family: "Fusion Pixel";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/fusion-pixel-12px-zh-hans.woff2") format("woff2");
+}
+
 /* Vendored webfonts — nothing here is fetched from a CDN.
  *
  * Both files are produced by `npm run fonts` (see scripts/fonts.mjs):
- *   - Plus Jakarta Sans, latin subset, variable wght 200–800 in one file. Chinese has
- *     never come from Google: `--md-font` falls through to Noto Sans SC / PingFang /
- *     YaHei, and dropping the cyrillic/vietnamese ranges changes nothing rendered.
+ *   - Plus Jakarta Sans, latin subset, variable wght 200–800 in one file. `--md-font`
+ *     now leads with Noto Sans SC / PingFang / YaHei so the UI reads as Chinese first;
+ *     Jakarta stays as a Latin fallback, and dropping the cyrillic/vietnamese ranges
+ *     changes nothing rendered.
  *   - Material Symbols Outlined, subset to the 75 names in scripts/icons.used.txt —
  *     450.6 KB whole, 10.2 KB subset. The FILL variation axis survives the cut, which is
  *     what `.ms-fill` drives; scripts/fonts.mjs asserts it rather than trusting it.

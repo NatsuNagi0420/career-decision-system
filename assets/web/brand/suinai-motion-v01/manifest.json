@@ -1,0 +1,300 @@
+{
+  "_comment": "青穗集 · 真实分层素材坐标清单；Canvas动作验证，非Cubism模型。",
+  "version": 1,
+  "sourceSha256": "552fbfd323326ef4e3bd6bf320eba0244354e896ed16a7a33672d73668689e86",
+  "canvas": [
+    1536,
+    1536
+  ],
+  "views": {
+    "portrait": [
+      515,
+      0,
+      500,
+      615
+    ],
+    "face": [
+      615,
+      5,
+      300,
+      360
+    ]
+  },
+  "layers": [
+    {
+      "name": "back hair",
+      "url": "/api/assets/brand/suinai-motion-v01/back_hair.png",
+      "bounds": [
+        638,
+        25,
+        874,
+        304
+      ]
+    },
+    {
+      "name": "handwear-r",
+      "url": "/api/assets/brand/suinai-motion-v01/handwear-r.png",
+      "bounds": [
+        543,
+        277,
+        683,
+        813
+      ]
+    },
+    {
+      "name": "handwear-l",
+      "url": "/api/assets/brand/suinai-motion-v01/handwear-l.png",
+      "bounds": [
+        825,
+        277,
+        972,
+        812
+      ]
+    },
+    {
+      "name": "legwear",
+      "url": "/api/assets/brand/suinai-motion-v01/legwear.png",
+      "bounds": [
+        628,
+        687,
+        889,
+        1406
+      ]
+    },
+    {
+      "name": "footwear",
+      "url": "/api/assets/brand/suinai-motion-v01/footwear.png",
+      "bounds": [
+        688,
+        1332,
+        858,
+        1452
+      ]
+    },
+    {
+      "name": "neck",
+      "url": "/api/assets/brand/suinai-motion-v01/neck.png",
+      "bounds": [
+        726,
+        171,
+        785,
+        256
+      ]
+    },
+    {
+      "name": "bottomwear",
+      "url": "/api/assets/brand/suinai-motion-v01/bottomwear.png",
+      "bounds": [
+        574,
+        482,
+        944,
+        854
+      ]
+    },
+    {
+      "name": "topwear",
+      "url": "/api/assets/brand/suinai-motion-v01/topwear.png",
+      "bounds": [
+        632,
+        234,
+        880,
+        551
+      ]
+    },
+    {
+      "name": "ears-r",
+      "url": "/api/assets/brand/suinai-motion-v01/ears-r.png",
+      "bounds": [
+        682,
+        146,
+        712,
+        186
+      ]
+    },
+    {
+      "name": "ears-l",
+      "url": "/api/assets/brand/suinai-motion-v01/ears-l.png",
+      "bounds": [
+        801,
+        137,
+        828,
+        181
+      ]
+    },
+    {
+      "name": "face",
+      "url": "/api/assets/brand/suinai-motion-v01/face.png",
+      "bounds": [
+        694,
+        77,
+        813,
+        222
+      ]
+    },
+    {
+      "name": "face_base_repair_patch",
+      "url": "/api/assets/brand/suinai-motion-v01/face_base_repair_patch.png",
+      "bounds": [
+        693,
+        57,
+        820,
+        217
+      ]
+    },
+    {
+      "name": "eyewear",
+      "url": "/api/assets/brand/suinai-motion-v01/eyewear.png",
+      "bounds": [
+        692,
+        132,
+        826,
+        177
+      ]
+    },
+    {
+      "name": "nose",
+      "url": "/api/assets/brand/suinai-motion-v01/nose.png",
+      "bounds": [
+        751,
+        168,
+        757,
+        177
+      ]
+    },
+    {
+      "name": "mouth",
+      "url": "/api/assets/brand/suinai-motion-v01/mouth.png",
+      "bounds": [
+        742,
+        189,
+        769,
+        198
+      ]
+    },
+    {
+      "name": "eyebrow-l",
+      "url": "/api/assets/brand/suinai-motion-v01/eyebrow-l.png",
+      "bounds": [
+        766,
+        118,
+        802,
+        126
+      ]
+    },
+    {
+      "name": "eyebrow-r",
+      "url": "/api/assets/brand/suinai-motion-v01/eyebrow-r.png",
+      "bounds": [
+        702,
+        121,
+        738,
+        129
+      ]
+    },
+    {
+      "name": "eyewhite-r",
+      "url": "/api/assets/brand/suinai-motion-v01/eyewhite-r.png",
+      "bounds": [
+        706,
+        140,
+        738,
+        164
+      ]
+    },
+    {
+      "name": "eyewhite-l",
+      "url": "/api/assets/brand/suinai-motion-v01/eyewhite-l.png",
+      "bounds": [
+        771,
+        137,
+        801,
+        162
+      ]
+    },
+    {
+      "name": "eyelash-r",
+      "url": "/api/assets/brand/suinai-motion-v01/eyelash-r.png",
+      "bounds": [
+        699,
+        135,
+        736,
+        158
+      ]
+    },
+    {
+      "name": "irides-r",
+      "url": "/api/assets/brand/suinai-motion-v01/irides-r.png",
+      "bounds": [
+        713,
+        141,
+        733,
+        164
+      ]
+    },
+    {
+      "name": "irides-l",
+      "url": "/api/assets/brand/suinai-motion-v01/irides-l.png",
+      "bounds": [
+        774,
+        137,
+        794,
+        161
+      ]
+    },
+    {
+      "name": "headwear",
+      "url": "/api/assets/brand/suinai-motion-v01/headwear.png",
+      "bounds": [
+        806,
+        89,
+        832,
+        128
+      ]
+    },
+    {
+      "name": "eyelash-l",
+      "url": "/api/assets/brand/suinai-motion-v01/eyelash-l.png",
+      "bounds": [
+        767,
+        132,
+        809,
+        157
+      ]
+    },
+    {
+      "name": "front hair",
+      "url": "/api/assets/brand/suinai-motion-v01/front_hair.png",
+      "bounds": [
+        659,
+        36,
+        821,
+        304
+      ]
+    }
+  ],
+  "limitations": [
+    "脸底仍包含固定头发；头发不作独立运动",
+    "眼部仅作二维压合试验，无网格绑定",
+    "不含开口素材，不制作说话口型"
+  ],
+  "eyes": {
+    "l": {
+      "bounds": [
+        767,
+        132,
+        809,
+        162
+      ],
+      "anchorY": 152.1
+    },
+    "r": {
+      "bounds": [
+        699,
+        135,
+        738,
+        164
+      ],
+      "anchorY": 154.43
+    }
+  }
+}

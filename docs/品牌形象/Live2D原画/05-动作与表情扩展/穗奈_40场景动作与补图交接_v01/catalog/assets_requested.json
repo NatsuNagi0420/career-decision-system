@@ -1,0 +1,1487 @@
+{
+  "_comment": "青穗集 · 穗奈40场景动作与补图交接 v01；planned表示待制作，不是已接入业务。",
+  "version": 1,
+  "logicalGroupCount": 53,
+  "definition": "逻辑部件组数量，不等于绘图次数或源图层数量；现有中性素材可提取复用。",
+  "phases": {
+    "P0": 40,
+    "P1": 13
+  },
+  "conventions": {
+    "canvas": [
+      1536,
+      1536
+    ],
+    "color": "sRGB RGBA PNG 8bit",
+    "sides": "L=角色自己的左=画面右；R=角色自己的右=画面左",
+    "origin": "左上角(0,0)，x向右，y向下",
+    "wristNote": "attachPoint为根据源腕部轮廓拟定的交接坐标，需以接缝预览验收；不是现有动画代码的近似旋转点。",
+    "oldApproximateAnimationPivots": {
+      "L": [
+        938,
+        738
+      ],
+      "R": [
+        568,
+        738
+      ]
+    },
+    "baseSourceSha256": "552fbfd323326ef4e3bd6bf320eba0244354e896ed16a7a33672d73668689e86"
+  },
+  "assets": [
+    {
+      "id": "F01",
+      "label": "干净可替换脸底",
+      "kind": "face_skin",
+      "phase": "P0",
+      "status": "requested",
+      "runtimeFile": "runtime_png/F01.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "以当前face和补画层修整一份脸底；清除旧眼眉嘴及固定头发/发饰在可露肤区的残留，保留原有鼻颊和下巴体积，不用平涂椭圆替代。",
+      "replaces": [
+        "face",
+        "face_base_repair_patch"
+      ],
+      "referenceBounds": [
+        693,
+        57,
+        820,
+        222
+      ]
+    },
+    {
+      "id": "ARM01_L",
+      "label": "可接替换手形的L侧原臂",
+      "kind": "arm_without_hand",
+      "phase": "P0",
+      "status": "requested",
+      "runtimeFile": "runtime_png/ARM01_L.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "提取现有整条衣袖与前臂，只清理腕以下原手，补手腕重叠皮肤；保持肩肘衣袖轮廓，不重绘全臂。",
+      "sourceLayer": "handwear-l",
+      "replaces": [
+        "handwear-l"
+      ],
+      "attachPoint": [
+        946,
+        730
+      ],
+      "overlapZone": [
+        926,
+        722,
+        968,
+        746
+      ]
+    },
+    {
+      "id": "ARM01_R",
+      "label": "可接替换手形的R侧原臂",
+      "kind": "arm_without_hand",
+      "phase": "P0",
+      "status": "requested",
+      "runtimeFile": "runtime_png/ARM01_R.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "提取现有整条衣袖与前臂，只清理腕以下原手，补手腕重叠皮肤；保持肩肘衣袖轮廓，不重绘全臂。",
+      "sourceLayer": "handwear-r",
+      "replaces": [
+        "handwear-r"
+      ],
+      "attachPoint": [
+        570,
+        730
+      ],
+      "overlapZone": [
+        546,
+        722,
+        589,
+        746
+      ]
+    },
+    {
+      "id": "H01_L",
+      "label": "放松自然手 / 角色左手",
+      "kind": "hand",
+      "phase": "P0",
+      "status": "requested",
+      "runtimeFile": "runtime_png/H01_L.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "沿用原图手形，提取手腕以下并补短接缝，不重画成长手指。 所有手形以原图垂臂时的腕部坐标注册；动作中的抬手由程序变换，不把手画到脸侧位置。",
+      "handStyle": "H01",
+      "side": "L",
+      "attachPoint": [
+        946,
+        730
+      ],
+      "overlapZone": [
+        926,
+        722,
+        968,
+        746
+      ],
+      "sourceStrategy": "extract_current_neutral",
+      "requiredSourceLayers": [
+        "hand_skin",
+        "nails_and_shading_if_needed"
+      ]
+    },
+    {
+      "id": "H01_R",
+      "label": "放松自然手 / 角色右手",
+      "kind": "hand",
+      "phase": "P0",
+      "status": "requested",
+      "runtimeFile": "runtime_png/H01_R.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "沿用原图手形，提取手腕以下并补短接缝，不重画成长手指。 所有手形以原图垂臂时的腕部坐标注册；动作中的抬手由程序变换，不把手画到脸侧位置。",
+      "handStyle": "H01",
+      "side": "R",
+      "attachPoint": [
+        570,
+        730
+      ],
+      "overlapZone": [
+        546,
+        722,
+        589,
+        746
+      ],
+      "sourceStrategy": "extract_current_neutral",
+      "requiredSourceLayers": [
+        "hand_skin",
+        "nails_and_shading_if_needed"
+      ]
+    },
+    {
+      "id": "H02_L",
+      "label": "正面招手掌 / 角色左手",
+      "kind": "hand",
+      "phase": "P0",
+      "status": "requested",
+      "runtimeFile": "runtime_png/H02_L.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "五指自然张开，拇指外展，指长有层次；掌心向观众，不使用原图手背假装挥手掌。 所有手形以原图垂臂时的腕部坐标注册；动作中的抬手由程序变换，不把手画到脸侧位置。",
+      "handStyle": "H02",
+      "side": "L",
+      "attachPoint": [
+        946,
+        730
+      ],
+      "overlapZone": [
+        926,
+        722,
+        968,
+        746
+      ],
+      "sourceStrategy": "new_local_painting",
+      "requiredSourceLayers": [
+        "hand_skin",
+        "nails_and_shading_if_needed"
+      ]
+    },
+    {
+      "id": "H02_R",
+      "label": "正面招手掌 / 角色右手",
+      "kind": "hand",
+      "phase": "P0",
+      "status": "requested",
+      "runtimeFile": "runtime_png/H02_R.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "五指自然张开，拇指外展，指长有层次；掌心向观众，不使用原图手背假装挥手掌。 所有手形以原图垂臂时的腕部坐标注册；动作中的抬手由程序变换，不把手画到脸侧位置。",
+      "handStyle": "H02",
+      "side": "R",
+      "attachPoint": [
+        570,
+        730
+      ],
+      "overlapZone": [
+        546,
+        722,
+        589,
+        746
+      ],
+      "sourceStrategy": "new_local_painting",
+      "requiredSourceLayers": [
+        "hand_skin",
+        "nails_and_shading_if_needed"
+      ]
+    },
+    {
+      "id": "H03_L",
+      "label": "自然托示掌 / 角色左手",
+      "kind": "hand",
+      "phase": "P0",
+      "status": "requested",
+      "runtimeFile": "runtime_png/H03_L.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "掌心可见并微凹，四指放松舒展，拇指与食指有正常分离；用于伸手介绍、展示。 所有手形以原图垂臂时的腕部坐标注册；动作中的抬手由程序变换，不把手画到脸侧位置。",
+      "handStyle": "H03",
+      "side": "L",
+      "attachPoint": [
+        946,
+        730
+      ],
+      "overlapZone": [
+        926,
+        722,
+        968,
+        746
+      ],
+      "sourceStrategy": "new_local_painting",
+      "requiredSourceLayers": [
+        "hand_skin",
+        "nails_and_shading_if_needed"
+      ]
+    },
+    {
+      "id": "H03_R",
+      "label": "自然托示掌 / 角色右手",
+      "kind": "hand",
+      "phase": "P0",
+      "status": "requested",
+      "runtimeFile": "runtime_png/H03_R.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "掌心可见并微凹，四指放松舒展，拇指与食指有正常分离；用于伸手介绍、展示。 所有手形以原图垂臂时的腕部坐标注册；动作中的抬手由程序变换，不把手画到脸侧位置。",
+      "handStyle": "H03",
+      "side": "R",
+      "attachPoint": [
+        570,
+        730
+      ],
+      "overlapZone": [
+        546,
+        722,
+        589,
+        746
+      ],
+      "sourceStrategy": "new_local_painting",
+      "requiredSourceLayers": [
+        "hand_skin",
+        "nails_and_shading_if_needed"
+      ]
+    },
+    {
+      "id": "H04_L",
+      "label": "食指提示手 / 角色左手",
+      "kind": "hand",
+      "phase": "P0",
+      "status": "requested",
+      "runtimeFile": "runtime_png/H04_L.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "仅食指自然伸出，其余三指弯曲、拇指贴靠；不是数根直棍或多指畸形。 所有手形以原图垂臂时的腕部坐标注册；动作中的抬手由程序变换，不把手画到脸侧位置。",
+      "handStyle": "H04",
+      "side": "L",
+      "attachPoint": [
+        946,
+        730
+      ],
+      "overlapZone": [
+        926,
+        722,
+        968,
+        746
+      ],
+      "sourceStrategy": "new_local_painting",
+      "requiredSourceLayers": [
+        "hand_skin",
+        "nails_and_shading_if_needed"
+      ]
+    },
+    {
+      "id": "H04_R",
+      "label": "食指提示手 / 角色右手",
+      "kind": "hand",
+      "phase": "P0",
+      "status": "requested",
+      "runtimeFile": "runtime_png/H04_R.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "仅食指自然伸出，其余三指弯曲、拇指贴靠；不是数根直棍或多指畸形。 所有手形以原图垂臂时的腕部坐标注册；动作中的抬手由程序变换，不把手画到脸侧位置。",
+      "handStyle": "H04",
+      "side": "R",
+      "attachPoint": [
+        570,
+        730
+      ],
+      "overlapZone": [
+        546,
+        722,
+        589,
+        746
+      ],
+      "sourceStrategy": "new_local_painting",
+      "requiredSourceLayers": [
+        "hand_skin",
+        "nails_and_shading_if_needed"
+      ]
+    },
+    {
+      "id": "H05_L",
+      "label": "脸侧思考手 / 角色左手",
+      "kind": "hand",
+      "phase": "P0",
+      "status": "requested",
+      "runtimeFile": "runtime_png/H05_L.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "食指与中指自然略弯，其他手指收拢，接触侧轮廓平顺；只画手，不把下巴或脸颊烘焙进去。 所有手形以原图垂臂时的腕部坐标注册；动作中的抬手由程序变换，不把手画到脸侧位置。",
+      "handStyle": "H05",
+      "side": "L",
+      "attachPoint": [
+        946,
+        730
+      ],
+      "overlapZone": [
+        926,
+        722,
+        968,
+        746
+      ],
+      "sourceStrategy": "new_local_painting",
+      "requiredSourceLayers": [
+        "hand_skin",
+        "nails_and_shading_if_needed"
+      ]
+    },
+    {
+      "id": "H05_R",
+      "label": "脸侧思考手 / 角色右手",
+      "kind": "hand",
+      "phase": "P0",
+      "status": "requested",
+      "runtimeFile": "runtime_png/H05_R.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "食指与中指自然略弯，其他手指收拢，接触侧轮廓平顺；只画手，不把下巴或脸颊烘焙进去。 所有手形以原图垂臂时的腕部坐标注册；动作中的抬手由程序变换，不把手画到脸侧位置。",
+      "handStyle": "H05",
+      "side": "R",
+      "attachPoint": [
+        570,
+        730
+      ],
+      "overlapZone": [
+        546,
+        722,
+        589,
+        746
+      ],
+      "sourceStrategy": "new_local_painting",
+      "requiredSourceLayers": [
+        "hand_skin",
+        "nails_and_shading_if_needed"
+      ]
+    },
+    {
+      "id": "H06_L",
+      "label": "轻握鼓励拳 / 角色左手",
+      "kind": "hand",
+      "phase": "P0",
+      "status": "requested",
+      "runtimeFile": "runtime_png/H06_L.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "自然轻握拳、拇指压在食指外侧；不是战斗用力握拳，不夹带道具。 所有手形以原图垂臂时的腕部坐标注册；动作中的抬手由程序变换，不把手画到脸侧位置。",
+      "handStyle": "H06",
+      "side": "L",
+      "attachPoint": [
+        946,
+        730
+      ],
+      "overlapZone": [
+        926,
+        722,
+        968,
+        746
+      ],
+      "sourceStrategy": "new_local_painting",
+      "requiredSourceLayers": [
+        "hand_skin",
+        "nails_and_shading_if_needed"
+      ]
+    },
+    {
+      "id": "H06_R",
+      "label": "轻握鼓励拳 / 角色右手",
+      "kind": "hand",
+      "phase": "P0",
+      "status": "requested",
+      "runtimeFile": "runtime_png/H06_R.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "自然轻握拳、拇指压在食指外侧；不是战斗用力握拳，不夹带道具。 所有手形以原图垂臂时的腕部坐标注册；动作中的抬手由程序变换，不把手画到脸侧位置。",
+      "handStyle": "H06",
+      "side": "R",
+      "attachPoint": [
+        570,
+        730
+      ],
+      "overlapZone": [
+        546,
+        722,
+        589,
+        746
+      ],
+      "sourceStrategy": "new_local_painting",
+      "requiredSourceLayers": [
+        "hand_skin",
+        "nails_and_shading_if_needed"
+      ]
+    },
+    {
+      "id": "H07_L",
+      "label": "认可拇指手 / 角色左手",
+      "kind": "hand",
+      "phase": "P1",
+      "status": "requested",
+      "runtimeFile": "runtime_png/H07_L.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "拇指明确竖起，四指自然收握；轮廓在网页缩小后仍可辨认。 所有手形以原图垂臂时的腕部坐标注册；动作中的抬手由程序变换，不把手画到脸侧位置。",
+      "handStyle": "H07",
+      "side": "L",
+      "attachPoint": [
+        946,
+        730
+      ],
+      "overlapZone": [
+        926,
+        722,
+        968,
+        746
+      ],
+      "sourceStrategy": "new_local_painting",
+      "requiredSourceLayers": [
+        "hand_skin",
+        "nails_and_shading_if_needed"
+      ]
+    },
+    {
+      "id": "H07_R",
+      "label": "认可拇指手 / 角色右手",
+      "kind": "hand",
+      "phase": "P1",
+      "status": "requested",
+      "runtimeFile": "runtime_png/H07_R.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "拇指明确竖起，四指自然收握；轮廓在网页缩小后仍可辨认。 所有手形以原图垂臂时的腕部坐标注册；动作中的抬手由程序变换，不把手画到脸侧位置。",
+      "handStyle": "H07",
+      "side": "R",
+      "attachPoint": [
+        570,
+        730
+      ],
+      "overlapZone": [
+        546,
+        722,
+        589,
+        746
+      ],
+      "sourceStrategy": "new_local_painting",
+      "requiredSourceLayers": [
+        "hand_skin",
+        "nails_and_shading_if_needed"
+      ]
+    },
+    {
+      "id": "H08_L",
+      "label": "自然握笔手 / 角色左手",
+      "kind": "hand",
+      "phase": "P1",
+      "status": "requested",
+      "runtimeFile": "runtime_png/H08_L.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "拇指、食指、中指形成合理握笔空间；笔独立透明层，握持接触关系另给预览。 所有手形以原图垂臂时的腕部坐标注册；动作中的抬手由程序变换，不把手画到脸侧位置。",
+      "handStyle": "H08",
+      "side": "L",
+      "attachPoint": [
+        946,
+        730
+      ],
+      "overlapZone": [
+        926,
+        722,
+        968,
+        746
+      ],
+      "sourceStrategy": "new_local_painting",
+      "requiredSourceLayers": [
+        "hand_skin",
+        "nails_and_shading_if_needed"
+      ]
+    },
+    {
+      "id": "H08_R",
+      "label": "自然握笔手 / 角色右手",
+      "kind": "hand",
+      "phase": "P1",
+      "status": "requested",
+      "runtimeFile": "runtime_png/H08_R.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "拇指、食指、中指形成合理握笔空间；笔独立透明层，握持接触关系另给预览。 所有手形以原图垂臂时的腕部坐标注册；动作中的抬手由程序变换，不把手画到脸侧位置。",
+      "handStyle": "H08",
+      "side": "R",
+      "attachPoint": [
+        570,
+        730
+      ],
+      "overlapZone": [
+        546,
+        722,
+        589,
+        746
+      ],
+      "sourceStrategy": "new_local_painting",
+      "requiredSourceLayers": [
+        "hand_skin",
+        "nails_and_shading_if_needed"
+      ]
+    },
+    {
+      "id": "V01_L",
+      "label": "原态睁眼 / L",
+      "kind": "eye",
+      "phase": "P0",
+      "status": "requested",
+      "runtimeFile": "runtime_png/V01_L.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "沿用当前睁眼外观，保留棕色虹膜与高光。",
+      "side": "L",
+      "eyeStyle": "V01",
+      "replaces": [
+        "eyewhite-l",
+        "irides-l",
+        "eyelash-l"
+      ],
+      "referenceBounds": [
+        763,
+        128,
+        812,
+        174
+      ],
+      "requiredSourceLayers": [
+        "eye_white",
+        "iris_with_highlight",
+        "upper_lid_lashes",
+        "lower_lid"
+      ],
+      "runtimeComposite": "一侧眼睛的完整合成；此PNG只供当前替换，分层源工程仍保留眼白/虹膜/眼睑。"
+    },
+    {
+      "id": "V01_R",
+      "label": "原态睁眼 / R",
+      "kind": "eye",
+      "phase": "P0",
+      "status": "requested",
+      "runtimeFile": "runtime_png/V01_R.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "沿用当前睁眼外观，保留棕色虹膜与高光。",
+      "side": "R",
+      "eyeStyle": "V01",
+      "replaces": [
+        "eyewhite-r",
+        "irides-r",
+        "eyelash-r"
+      ],
+      "referenceBounds": [
+        695,
+        130,
+        745,
+        176
+      ],
+      "requiredSourceLayers": [
+        "eye_white",
+        "iris_with_highlight",
+        "upper_lid_lashes",
+        "lower_lid"
+      ],
+      "runtimeComposite": "一侧眼睛的完整合成；此PNG只供当前替换，分层源工程仍保留眼白/虹膜/眼睑。"
+    },
+    {
+      "id": "V02_L",
+      "label": "柔和眼 / L",
+      "kind": "eye",
+      "phase": "P0",
+      "status": "requested",
+      "runtimeFile": "runtime_png/V02_L.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "上眼睑轻落，目光柔和但仍能看清瞳孔。",
+      "side": "L",
+      "eyeStyle": "V02",
+      "replaces": [
+        "eyewhite-l",
+        "irides-l",
+        "eyelash-l"
+      ],
+      "referenceBounds": [
+        763,
+        128,
+        812,
+        174
+      ],
+      "requiredSourceLayers": [
+        "eye_white",
+        "iris_with_highlight",
+        "upper_lid_lashes",
+        "lower_lid"
+      ],
+      "runtimeComposite": "一侧眼睛的完整合成；此PNG只供当前替换，分层源工程仍保留眼白/虹膜/眼睑。"
+    },
+    {
+      "id": "V02_R",
+      "label": "柔和眼 / R",
+      "kind": "eye",
+      "phase": "P0",
+      "status": "requested",
+      "runtimeFile": "runtime_png/V02_R.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "上眼睑轻落，目光柔和但仍能看清瞳孔。",
+      "side": "R",
+      "eyeStyle": "V02",
+      "replaces": [
+        "eyewhite-r",
+        "irides-r",
+        "eyelash-r"
+      ],
+      "referenceBounds": [
+        695,
+        130,
+        745,
+        176
+      ],
+      "requiredSourceLayers": [
+        "eye_white",
+        "iris_with_highlight",
+        "upper_lid_lashes",
+        "lower_lid"
+      ],
+      "runtimeComposite": "一侧眼睛的完整合成；此PNG只供当前替换，分层源工程仍保留眼白/虹膜/眼睑。"
+    },
+    {
+      "id": "V03_L",
+      "label": "半睑专注眼 / L",
+      "kind": "eye",
+      "phase": "P0",
+      "status": "requested",
+      "runtimeFile": "runtime_png/V03_L.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "上眼睑适当压低，用于专注与思考；不是把整只眼竖向压扁。",
+      "side": "L",
+      "eyeStyle": "V03",
+      "replaces": [
+        "eyewhite-l",
+        "irides-l",
+        "eyelash-l"
+      ],
+      "referenceBounds": [
+        763,
+        128,
+        812,
+        174
+      ],
+      "requiredSourceLayers": [
+        "eye_white",
+        "iris_with_highlight",
+        "upper_lid_lashes",
+        "lower_lid"
+      ],
+      "runtimeComposite": "一侧眼睛的完整合成；此PNG只供当前替换，分层源工程仍保留眼白/虹膜/眼睑。"
+    },
+    {
+      "id": "V03_R",
+      "label": "半睑专注眼 / R",
+      "kind": "eye",
+      "phase": "P0",
+      "status": "requested",
+      "runtimeFile": "runtime_png/V03_R.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "上眼睑适当压低，用于专注与思考；不是把整只眼竖向压扁。",
+      "side": "R",
+      "eyeStyle": "V03",
+      "replaces": [
+        "eyewhite-r",
+        "irides-r",
+        "eyelash-r"
+      ],
+      "referenceBounds": [
+        695,
+        130,
+        745,
+        176
+      ],
+      "requiredSourceLayers": [
+        "eye_white",
+        "iris_with_highlight",
+        "upper_lid_lashes",
+        "lower_lid"
+      ],
+      "runtimeComposite": "一侧眼睛的完整合成；此PNG只供当前替换，分层源工程仍保留眼白/虹膜/眼睑。"
+    },
+    {
+      "id": "V04_L",
+      "label": "自然闭眼 / L",
+      "kind": "eye",
+      "phase": "P0",
+      "status": "requested",
+      "runtimeFile": "runtime_png/V04_L.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "新画闭合眼睑和睫毛轮廓，保留眼窝的体积。",
+      "side": "L",
+      "eyeStyle": "V04",
+      "replaces": [
+        "eyewhite-l",
+        "irides-l",
+        "eyelash-l"
+      ],
+      "referenceBounds": [
+        763,
+        128,
+        812,
+        174
+      ],
+      "requiredSourceLayers": [
+        "closed_lid_lashes"
+      ],
+      "runtimeComposite": "一侧眼睛的完整合成；此PNG只供当前替换，分层源工程仍保留眼白/虹膜/眼睑。"
+    },
+    {
+      "id": "V04_R",
+      "label": "自然闭眼 / R",
+      "kind": "eye",
+      "phase": "P0",
+      "status": "requested",
+      "runtimeFile": "runtime_png/V04_R.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "新画闭合眼睑和睫毛轮廓，保留眼窝的体积。",
+      "side": "R",
+      "eyeStyle": "V04",
+      "replaces": [
+        "eyewhite-r",
+        "irides-r",
+        "eyelash-r"
+      ],
+      "referenceBounds": [
+        695,
+        130,
+        745,
+        176
+      ],
+      "requiredSourceLayers": [
+        "closed_lid_lashes"
+      ],
+      "runtimeComposite": "一侧眼睛的完整合成；此PNG只供当前替换，分层源工程仍保留眼白/虹膜/眼睑。"
+    },
+    {
+      "id": "V05_L",
+      "label": "开心笑眼 / L",
+      "kind": "eye",
+      "phase": "P0",
+      "status": "requested",
+      "runtimeFile": "runtime_png/V05_L.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "弧线自然向上弯的笑眼，区别于自然闭眼。",
+      "side": "L",
+      "eyeStyle": "V05",
+      "replaces": [
+        "eyewhite-l",
+        "irides-l",
+        "eyelash-l"
+      ],
+      "referenceBounds": [
+        763,
+        128,
+        812,
+        174
+      ],
+      "requiredSourceLayers": [
+        "closed_lid_lashes"
+      ],
+      "runtimeComposite": "一侧眼睛的完整合成；此PNG只供当前替换，分层源工程仍保留眼白/虹膜/眼睑。"
+    },
+    {
+      "id": "V05_R",
+      "label": "开心笑眼 / R",
+      "kind": "eye",
+      "phase": "P0",
+      "status": "requested",
+      "runtimeFile": "runtime_png/V05_R.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "弧线自然向上弯的笑眼，区别于自然闭眼。",
+      "side": "R",
+      "eyeStyle": "V05",
+      "replaces": [
+        "eyewhite-r",
+        "irides-r",
+        "eyelash-r"
+      ],
+      "referenceBounds": [
+        695,
+        130,
+        745,
+        176
+      ],
+      "requiredSourceLayers": [
+        "closed_lid_lashes"
+      ],
+      "runtimeComposite": "一侧眼睛的完整合成；此PNG只供当前替换，分层源工程仍保留眼白/虹膜/眼睑。"
+    },
+    {
+      "id": "V06_L",
+      "label": "轻度睁大眼 / L",
+      "kind": "eye",
+      "phase": "P1",
+      "status": "requested",
+      "runtimeFile": "runtime_png/V06_L.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "眼睑略张开，虹膜大小稳定，避免惊恐瞪眼。",
+      "side": "L",
+      "eyeStyle": "V06",
+      "replaces": [
+        "eyewhite-l",
+        "irides-l",
+        "eyelash-l"
+      ],
+      "referenceBounds": [
+        763,
+        128,
+        812,
+        174
+      ],
+      "requiredSourceLayers": [
+        "eye_white",
+        "iris_with_highlight",
+        "upper_lid_lashes",
+        "lower_lid"
+      ],
+      "runtimeComposite": "一侧眼睛的完整合成；此PNG只供当前替换，分层源工程仍保留眼白/虹膜/眼睑。"
+    },
+    {
+      "id": "V06_R",
+      "label": "轻度睁大眼 / R",
+      "kind": "eye",
+      "phase": "P1",
+      "status": "requested",
+      "runtimeFile": "runtime_png/V06_R.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "眼睑略张开，虹膜大小稳定，避免惊恐瞪眼。",
+      "side": "R",
+      "eyeStyle": "V06",
+      "replaces": [
+        "eyewhite-r",
+        "irides-r",
+        "eyelash-r"
+      ],
+      "referenceBounds": [
+        695,
+        130,
+        745,
+        176
+      ],
+      "requiredSourceLayers": [
+        "eye_white",
+        "iris_with_highlight",
+        "upper_lid_lashes",
+        "lower_lid"
+      ],
+      "runtimeComposite": "一侧眼睛的完整合成；此PNG只供当前替换，分层源工程仍保留眼白/虹膜/眼睑。"
+    },
+    {
+      "id": "B01_L",
+      "label": "原态眉 / L",
+      "kind": "brow",
+      "phase": "P0",
+      "status": "requested",
+      "runtimeFile": "runtime_png/B01_L.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "沿用原有眉形。",
+      "side": "L",
+      "browStyle": "B01",
+      "replaces": [
+        "eyebrow-l"
+      ],
+      "referenceBounds": [
+        760,
+        106,
+        810,
+        134
+      ]
+    },
+    {
+      "id": "B01_R",
+      "label": "原态眉 / R",
+      "kind": "brow",
+      "phase": "P0",
+      "status": "requested",
+      "runtimeFile": "runtime_png/B01_R.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "沿用原有眉形。",
+      "side": "R",
+      "browStyle": "B01",
+      "replaces": [
+        "eyebrow-r"
+      ],
+      "referenceBounds": [
+        695,
+        109,
+        746,
+        138
+      ]
+    },
+    {
+      "id": "B02_L",
+      "label": "专注眉 / L",
+      "kind": "brow",
+      "phase": "P0",
+      "status": "requested",
+      "runtimeFile": "runtime_png/B02_L.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "眉形轻收而不愤怒，内侧位置稍向下。",
+      "side": "L",
+      "browStyle": "B02",
+      "replaces": [
+        "eyebrow-l"
+      ],
+      "referenceBounds": [
+        760,
+        106,
+        810,
+        134
+      ]
+    },
+    {
+      "id": "B02_R",
+      "label": "专注眉 / R",
+      "kind": "brow",
+      "phase": "P0",
+      "status": "requested",
+      "runtimeFile": "runtime_png/B02_R.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "眉形轻收而不愤怒，内侧位置稍向下。",
+      "side": "R",
+      "browStyle": "B02",
+      "replaces": [
+        "eyebrow-r"
+      ],
+      "referenceBounds": [
+        695,
+        109,
+        746,
+        138
+      ]
+    },
+    {
+      "id": "B03_L",
+      "label": "思考眉 / L",
+      "kind": "brow",
+      "phase": "P0",
+      "status": "requested",
+      "runtimeFile": "runtime_png/B03_L.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "轻微斜度和不对称，保留原眉粗细与弧度。",
+      "side": "L",
+      "browStyle": "B03",
+      "replaces": [
+        "eyebrow-l"
+      ],
+      "referenceBounds": [
+        760,
+        106,
+        810,
+        134
+      ]
+    },
+    {
+      "id": "B03_R",
+      "label": "思考眉 / R",
+      "kind": "brow",
+      "phase": "P0",
+      "status": "requested",
+      "runtimeFile": "runtime_png/B03_R.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "轻微斜度和不对称，保留原眉粗细与弧度。",
+      "side": "R",
+      "browStyle": "B03",
+      "replaces": [
+        "eyebrow-r"
+      ],
+      "referenceBounds": [
+        695,
+        109,
+        746,
+        138
+      ]
+    },
+    {
+      "id": "B04_L",
+      "label": "愉快自信眉 / L",
+      "kind": "brow",
+      "phase": "P0",
+      "status": "requested",
+      "runtimeFile": "runtime_png/B04_L.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "略舒展开，轻抬，不能飞离额头。",
+      "side": "L",
+      "browStyle": "B04",
+      "replaces": [
+        "eyebrow-l"
+      ],
+      "referenceBounds": [
+        760,
+        106,
+        810,
+        134
+      ]
+    },
+    {
+      "id": "B04_R",
+      "label": "愉快自信眉 / R",
+      "kind": "brow",
+      "phase": "P0",
+      "status": "requested",
+      "runtimeFile": "runtime_png/B04_R.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "略舒展开，轻抬，不能飞离额头。",
+      "side": "R",
+      "browStyle": "B04",
+      "replaces": [
+        "eyebrow-r"
+      ],
+      "referenceBounds": [
+        695,
+        109,
+        746,
+        138
+      ]
+    },
+    {
+      "id": "B05_L",
+      "label": "温和关切眉 / L",
+      "kind": "brow",
+      "phase": "P0",
+      "status": "requested",
+      "runtimeFile": "runtime_png/B05_L.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "内眉稍抬、外侧稍缓；不画成悲苦八字眉。",
+      "side": "L",
+      "browStyle": "B05",
+      "replaces": [
+        "eyebrow-l"
+      ],
+      "referenceBounds": [
+        760,
+        106,
+        810,
+        134
+      ]
+    },
+    {
+      "id": "B05_R",
+      "label": "温和关切眉 / R",
+      "kind": "brow",
+      "phase": "P0",
+      "status": "requested",
+      "runtimeFile": "runtime_png/B05_R.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "内眉稍抬、外侧稍缓；不画成悲苦八字眉。",
+      "side": "R",
+      "browStyle": "B05",
+      "replaces": [
+        "eyebrow-r"
+      ],
+      "referenceBounds": [
+        695,
+        109,
+        746,
+        138
+      ]
+    },
+    {
+      "id": "B06_L",
+      "label": "提问眉 / L",
+      "kind": "brow",
+      "phase": "P1",
+      "status": "requested",
+      "runtimeFile": "runtime_png/B06_L.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "角色左眉略抬，另一眉自然，不简单两侧复制同角度。",
+      "side": "L",
+      "browStyle": "B06",
+      "replaces": [
+        "eyebrow-l"
+      ],
+      "referenceBounds": [
+        760,
+        106,
+        810,
+        134
+      ]
+    },
+    {
+      "id": "B06_R",
+      "label": "提问眉 / R",
+      "kind": "brow",
+      "phase": "P1",
+      "status": "requested",
+      "runtimeFile": "runtime_png/B06_R.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "角色左眉略抬，另一眉自然，不简单两侧复制同角度。",
+      "side": "R",
+      "browStyle": "B06",
+      "replaces": [
+        "eyebrow-r"
+      ],
+      "referenceBounds": [
+        695,
+        109,
+        746,
+        138
+      ]
+    },
+    {
+      "id": "M01",
+      "label": "原态闭口",
+      "kind": "mouth",
+      "phase": "P0",
+      "status": "requested",
+      "runtimeFile": "runtime_png/M01.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "沿用原图浅笑闭口，先精确提取。",
+      "replaces": [
+        "mouth"
+      ],
+      "referenceBounds": [
+        736,
+        183,
+        777,
+        211
+      ],
+      "requiredSourceLayers": [
+        "closed_lip"
+      ],
+      "isPhonemeSet": false
+    },
+    {
+      "id": "M02",
+      "label": "温柔微笑口",
+      "kind": "mouth",
+      "phase": "P0",
+      "status": "requested",
+      "runtimeFile": "runtime_png/M02.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "轻微抬嘴角，保持原唇色与宽度。",
+      "replaces": [
+        "mouth"
+      ],
+      "referenceBounds": [
+        736,
+        183,
+        777,
+        211
+      ],
+      "requiredSourceLayers": [
+        "closed_lip"
+      ],
+      "isPhonemeSet": false
+    },
+    {
+      "id": "M03",
+      "label": "开心闭口笑",
+      "kind": "mouth",
+      "phase": "P0",
+      "status": "requested",
+      "runtimeFile": "runtime_png/M03.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "比M02更清楚但仍自然的闭口笑，不能露夸张牙齿。",
+      "replaces": [
+        "mouth"
+      ],
+      "referenceBounds": [
+        736,
+        183,
+        777,
+        211
+      ],
+      "requiredSourceLayers": [
+        "closed_lip"
+      ],
+      "isPhonemeSet": false
+    },
+    {
+      "id": "M04",
+      "label": "小圆开口",
+      "kind": "mouth",
+      "phase": "P1",
+      "status": "requested",
+      "runtimeFile": "runtime_png/M04.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "小幅惊讶/询问用，画自然口腔内部，非黑色圆洞。",
+      "replaces": [
+        "mouth"
+      ],
+      "referenceBounds": [
+        736,
+        183,
+        777,
+        211
+      ],
+      "requiredSourceLayers": [
+        "mouth_inner",
+        "lip_edge",
+        "teeth_or_tongue_if_visible"
+      ],
+      "isPhonemeSet": false
+    },
+    {
+      "id": "M05",
+      "label": "中幅微笑开口",
+      "kind": "mouth",
+      "phase": "P1",
+      "status": "requested",
+      "runtimeFile": "runtime_png/M05.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "为后续简单说话预备；口腔、唇缘分层，牙/舌只在可见时画出。",
+      "replaces": [
+        "mouth"
+      ],
+      "referenceBounds": [
+        736,
+        183,
+        777,
+        211
+      ],
+      "requiredSourceLayers": [
+        "mouth_inner",
+        "lip_edge",
+        "teeth_or_tongue_if_visible"
+      ],
+      "isPhonemeSet": false
+    },
+    {
+      "id": "M06",
+      "label": "关切闭口",
+      "kind": "mouth",
+      "phase": "P0",
+      "status": "requested",
+      "runtimeFile": "runtime_png/M06.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "嘴角略收并极轻微下落，不扁成一条粗直线。",
+      "replaces": [
+        "mouth"
+      ],
+      "referenceBounds": [
+        736,
+        183,
+        777,
+        211
+      ],
+      "requiredSourceLayers": [
+        "closed_lip"
+      ],
+      "isPhonemeSet": false
+    },
+    {
+      "id": "M07",
+      "label": "抿嘴思考",
+      "kind": "mouth",
+      "phase": "P0",
+      "status": "requested",
+      "runtimeFile": "runtime_png/M07.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "闭唇略收，保留嘴唇体积，不改变鼻唇距。",
+      "replaces": [
+        "mouth"
+      ],
+      "referenceBounds": [
+        736,
+        183,
+        777,
+        211
+      ],
+      "requiredSourceLayers": [
+        "closed_lip"
+      ],
+      "isPhonemeSet": false
+    },
+    {
+      "id": "X01",
+      "label": "可选淡腮红",
+      "kind": "overlay",
+      "phase": "P1",
+      "status": "requested",
+      "runtimeFile": "runtime_png/X01.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "低饱和、淡且不发光的双颊腮红，不能附带皮肤块；无必须使用要求。"
+    },
+    {
+      "id": "P01",
+      "label": "无品牌细笔",
+      "kind": "prop",
+      "phase": "P1",
+      "status": "requested",
+      "runtimeFile": "runtime_png/P01.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "独立透明笔；与H08握持空间对齐，笔身无文字，无手指，单独保留可遮挡前后笔段。"
+    },
+    {
+      "id": "P02",
+      "label": "空白便签",
+      "kind": "prop",
+      "phase": "P1",
+      "status": "requested",
+      "runtimeFile": "runtime_png/P02.png",
+      "canvas": [
+        1536,
+        1536
+      ],
+      "requirements": "独立透明便签，小面积无文字，角度与托示掌H03对齐；不在美术图里烘焙简历文字。"
+    }
+  ]
+}

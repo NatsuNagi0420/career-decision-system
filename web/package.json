@@ -5,18 +5,32 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "node scripts/build-live2d.mjs && tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "fonts": "node scripts/fonts.mjs",
     "fonts:check": "node scripts/fonts.mjs --check",
     "verify:e2e": "node e2e/shots.mjs",
-    "verify:states": "node e2e/states.mjs"
+    "verify:states": "node e2e/states.mjs",
+    "verify:sprite": "node e2e/suinai-sprite.mjs",
+    "live2d:build": "node scripts/build-live2d.mjs",
+    "verify:live2d": "node e2e/live2d.mjs",
+    "suinai:export": "python scripts/export-suinai-v03.py && node scripts/export-suinai-cubism.mjs && python scripts/export-suinai-cubism-psd.py",
+    "verify:suinai-actions": "node e2e/suinai-actions.mjs",
+    "verify:companion": "node e2e/suinai-companion.mjs",
+    "verify:companion-live": "node e2e/suinai-companion-live.mjs",
+    "verify:suinai-hands": "python scripts/verify-suinai-hands.py && node e2e/suinai-hands.mjs",
+    "boot:build": "python scripts/build-boot-lottie.py",
+    "verify:boot": "node e2e/boot.mjs"
   },
   "dependencies": {
+    "ascii.rest": "0.4.0",
+    "lottie-web": "5.13.0",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
     "@types/node": "^26.6.2",

@@ -1,0 +1,52 @@
+{
+  "version": "0.5",
+  "status": "art-authoring",
+  "purpose": "Layered pixel character source for Suinai; not a final exported sprite.",
+  "canvas": { "logical_width": 128, "logical_height": 160, "native_width": 256, "native_height": 320, "scale": 2 },
+  "style": {
+    "palette_limit": 32,
+    "anti_alias": false,
+    "dither": false,
+    "outline": "colored-cluster",
+    "view": "front-three-quarter-companion",
+    "animation_rule": "rigid-parts-plus-hand-authored-key-poses"
+  },
+  "references": {
+    "cutout_rig": "D:/IDE/references/godot-pixel-cutout-rig",
+    "modular_char": "D:/IDE/references/godot-modular-char",
+    "pixelorama": "D:/IDE/Pixelorama/Pixelorama-Windows-64bit/Pixelorama.exe"
+  },
+  "layers": [
+    { "id": "hair-back", "file": "layers/hair-back.png", "pivot": [128, 144], "depth": 10 },
+    { "id": "body", "file": "layers/body.png", "pivot": [128, 252], "depth": 20 },
+    { "id": "neck-face", "file": "layers/neck-face.png", "pivot": [128, 164], "depth": 30 },
+    { "id": "hair-front", "file": "layers/hair-front.png", "pivot": [128, 128], "depth": 40 },
+    { "id": "glasses", "file": "layers/glasses.png", "pivot": [128, 96], "depth": 50 },
+    { "id": "arm-left", "file": "layers/arm-left.png", "pivot": [92, 188], "depth": 60 },
+    { "id": "arm-right", "file": "layers/arm-right.png", "pivot": [164, 188], "depth": 70 },
+    { "id": "prop", "file": "layers/prop.png", "pivot": [128, 244], "depth": 80 },
+    { "id": "hands", "file": "layers/hands.png", "pivot": [128, 244], "depth": 90 },
+    { "id": "effects", "file": "layers/effects.png", "pivot": [128, 96], "depth": 100 }
+  ],
+  "anchors": {
+    "face_center": [128, 90],
+    "chin": [128, 140],
+    "neck_base": [128, 164],
+    "shoulder_left": [92, 188],
+    "shoulder_right": [164, 188],
+    "hand_left": [60, 264],
+    "hand_right": [196, 264],
+    "prop_center": [128, 244]
+  },
+  "actions": {
+    "idle": { "frame_count": 4, "hand_target": [[92, 248], [164, 248]], "prop": "journal" },
+    "listen": { "frame_count": 4, "hand_target": [[96, 244], [158, 132]], "prop": "none" },
+    "think": { "frame_count": 4, "hand_target": [[96, 248], [164, 232]], "prop": "note" },
+    "encourage": { "frame_count": 4, "hand_target": [[88, 248], [200, 208]], "prop": "offering" }
+  },
+  "source_policy": {
+    "reference_only": "web/public/brand/pixel-v04",
+    "do_not": ["flatten-the-character-before-rigging", "rotate-the-whole-portrait", "use-mesh-deformation", "use-antialiased-resampling"],
+    "first_deliverable": "model-sheet/frame-00 with all layer boundaries and anchors readable"
+  }
+}

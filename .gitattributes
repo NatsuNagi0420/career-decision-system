@@ -1,0 +1,16 @@
+# Keep text files stable across Windows, macOS, and Linux.
+* text=auto eol=lf
+
+# Binary assets must never be normalized as text.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.psd binary
+*.kra binary
+*.zip binary
+*.woff binary
+*.woff2 binary

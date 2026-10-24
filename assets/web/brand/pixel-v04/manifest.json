@@ -1,0 +1,53 @@
+{
+  "version": "0.4",
+  "logical_size": {
+    "width": 96,
+    "height": 128
+  },
+  "native_size": {
+    "width": 192,
+    "height": 256
+  },
+  "display_scale": 2,
+  "frame_count": 4,
+  "palette_size": 28,
+  "source_note": "Derived from existing Suinai desktop illustrations; keep editable and hand-polish in Pixelorama before making it the default.",
+  "states": {
+    "journal": {
+      "source": "suinai-smile.webp",
+      "frames": [
+        "journal/frame-00.png",
+        "journal/frame-01.png",
+        "journal/frame-02.png",
+        "journal/frame-03.png"
+      ]
+    },
+    "listen": {
+      "source": "suinai-listen.webp",
+      "frames": [
+        "listen/frame-00.png",
+        "listen/frame-01.png",
+        "listen/frame-02.png",
+        "listen/frame-03.png"
+      ]
+    },
+    "write": {
+      "source": "suinai-think.webp",
+      "frames": [
+        "write/frame-00.png",
+        "write/frame-01.png",
+        "write/frame-02.png",
+        "write/frame-03.png"
+      ]
+    },
+    "review": {
+      "source": "suinai-encourage.webp",
+      "frames": [
+        "review/frame-00.png",
+        "review/frame-01.png",
+        "review/frame-02.png",
+        "review/frame-03.png"
+      ]
+    }
+  }
+}

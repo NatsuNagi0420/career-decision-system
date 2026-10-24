@@ -1,0 +1,112 @@
+/** 青穗集 · 文件交付与预览：正文文字链接、原生右键浮层、与执行记录共享宽屏分栏和窄屏抽屉，不使用成果卡片。 */
+.file-text-link { display: inline-flex; align-items: baseline; gap: 6px; max-width: 100%; color: #7753ab; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; cursor: pointer; vertical-align: baseline; overflow-wrap: anywhere; }
+.file-text-link > svg { align-self: center; flex: none; }
+.file-text-link > span { min-width: 0; }
+.file-text-link:hover { color: #51317d; text-decoration-thickness: 2px; }
+.file-text-link:focus-visible { outline: 2px solid #9878cd; outline-offset: 4px; border-radius: 2px; }
+.file-unavailable { color: #9b8ba9; text-decoration: underline dotted; text-underline-offset: 3px; }
+.message-file-links { margin: 12px 0 18px; min-width: 0; font-size: 13px; }
+.message-file-links > div { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 10px; padding: 4px 0; }
+.message-file-links small { color: #a095b3; font-size: 10px; white-space: nowrap; }
+.career-workspace .agent-message > .message-file-links { grid-column: 2; margin: 9px 0 0; }
+.career-workspace .file-inline-action { display: inline-flex; align-items: center; gap: 4px; border: 0; background: transparent; color: #806398; padding: 2px 5px; font-size: 11px; cursor: pointer; border-radius: 4px; }
+.career-workspace .file-inline-action:hover { background: #efe7f8; color: #5d3b87; }
+.file-directory { border-top: 1px solid #e5d9f3; margin: 4px 0 12px; padding: 16px 4px 0; }
+.file-directory > header { display: flex; align-items: center; justify-content: space-between; }
+.career-workspace .file-directory h2 { margin: 0; font-size: 12px; font-weight: 400; color: #746184; }
+.file-directory > header > span { color: #a592b6; font-size: 10px; }
+.file-directory ul { list-style: none; margin: 10px 0 0; padding: 0; }
+.file-directory li { min-width: 0; padding: 9px 0; border-bottom: 1px solid #ece4f6; }
+.file-directory li > a { font-size: 12px; }
+.file-directory li > small { display: block; margin: 3px 0 0 19px; color: #a18cb3; font-size: 9px; }
+.file-directory > p { font-size: 11px; color: #9e8dad; line-height: 1.9; }
+/* 原生 popover 自动处理点空白关闭与 Esc，路径与用户内容仅作为文字展示。 */
+.file-context-menu { position: fixed; inset: auto; margin: 0; width: 236px; max-width: calc(100vw - 24px); padding: 7px; box-sizing: border-box; border: 1px solid #dbcaed; border-radius: 10px; background: #fffcff; color: #59486e; box-shadow: 0 10px 35px #4f326d2e; font: 12px/1.7 var(--desktop-font, "Fusion Pixel", sans-serif); }
+.file-context-menu:popover-open { display: flex; flex-direction: column; gap: 3px; }
+.file-context-menu small { display: block; padding: 5px 9px 8px; margin-bottom: 2px; border-bottom: 1px solid #f0e9f8; color: #a28caf; font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-context-menu button { font: inherit; text-align: left; border: 0; background: transparent; color: inherit; border-radius: 6px; padding: 8px 10px; cursor: pointer; }
+.file-context-menu button:hover, .file-context-menu button:focus-visible { background: #efe5fa; outline: none; color: #715193; }
+.file-context-menu button:disabled { opacity: .4; cursor: not-allowed; }
+/* 4K 不把文档挤进原来的窄小窗；小屏转换为抽屉而不是横向溢出。 */
+.career-workspace[data-detail-open="true"][data-inspector-open="true"] { grid-template-columns: 238px minmax(340px, 1fr) clamp(410px, 40vw, 860px); }
+.career-workspace .agent-inspector.workspace-detail-panel { gap: 0; min-width: 0; padding: 0; overflow: hidden; border: 1px solid #e2d5f0; border-radius: 14px; background: #fdfbff; box-shadow: 0 5px 22px #9e82c414; }
+.file-preview-panel:focus { outline: none; }
+.file-preview-heading { display: flex; flex: none; align-items: center; justify-content: space-between; min-height: 44px; padding: 9px 15px 8px 20px; border-bottom: 1px solid #eee7f6; }
+.file-preview-heading > span { display: flex; align-items: center; gap: 8px; font-size: 11px; color: #9c87b1; }
+.file-preview-summary { padding: 17px 21px 12px; flex: none; }
+.career-workspace .file-preview-summary h2 { display: flex; align-items: flex-start; gap: 10px; margin: 0; padding: 0; font-size: 16px; line-height: 1.7; font-weight: 400; color: #624c7f; }
+.file-preview-summary h2 > svg { flex: none; margin-top: 2px; color: #a287c2; }
+.file-preview-summary h2 > span { min-width: 0; overflow-wrap: anywhere; }
+.file-preview-summary > p { display: flex; flex-wrap: wrap; gap: 7px 14px; margin: 6px 0 12px 33px; font-size: 10px; color: #a392b5; }
+.file-preview-filebar { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.career-workspace .file-preview-filebar .agent-menu-trigger { padding: 5px 7px; border: 1px solid #eadff5; border-radius: 5px; background: #f6f0fc; font-size: 10px; color: #8c74a2; }
+.career-workspace .file-picker-menu { width: min(300px, 82vw); padding: 6px; }
+.career-workspace .file-picker-menu > button { display: flex; align-items: center; gap: 9px; width: 100%; padding: 9px; text-align: left; border: 0; border-radius: 6px; background: transparent; color: #775b91; font-size: 12px; }
+.file-picker-menu > button > span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.file-picker-menu > button small { display: block; margin-top: 2px; color: #ab96bd; font-size: 9px; }
+.career-workspace .file-picker-menu > button:hover, .career-workspace .file-picker-menu > button[aria-checked="true"] { background: #eee3fa; }
+.file-preview-toolbar { display: flex; flex: none; align-items: center; justify-content: space-between; min-height: 43px; padding: 0 14px 0 20px; border-top: 1px solid #f0e9f8; border-bottom: 1px solid #e8dcf4; background: #fbf7ff; gap: 6px; }
+.file-preview-toolbar [role="tablist"] { display: flex; gap: 14px; align-self: stretch; }
+.career-workspace .file-preview-toolbar [role="tab"] { border: 0; border-bottom: 2px solid transparent; padding: 10px 1px 8px; color: #a18ab7; background: transparent; font-size: 11px; }
+.career-workspace .file-preview-toolbar [role="tab"][aria-selected="true"] { border-bottom-color: #9875c7; color: #78579e; }
+.file-preview-actions { display: flex; align-items: center; gap: 2px; }
+.career-workspace .file-preview-actions > button { display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 6px 7px; border: 0; border-radius: 5px; color: #886a9f; background: transparent; font-size: 10px; }
+.career-workspace .file-preview-actions > button:hover { background: #eee4f8; color: #654180; }
+.file-preview-body { position: relative; flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; background: #fff; scrollbar-width: thin; scrollbar-color: #ddd0ee transparent; }
+.file-preview-document { padding: clamp(20px, 2vw, 40px); max-width: 920px; margin: 0 auto; font-size: 14px; line-height: 1.95; }
+.file-preview-document .career-message-content h1 { padding-bottom: 15px; margin-bottom: 20px; border-bottom: 1px solid #eee5f6; font-size: 23px; }
+.file-preview-document .career-message-content h2 { margin: 25px 0 10px; font-size: 17px; }
+.file-preview-document .career-message-content h3 { font-size: 14px; }
+.file-preview-document .career-message-content p { margin: 10px 0; }
+.file-preview-document .career-message-content li { padding: 3px 0; }
+.file-preview-code { margin: 0; padding: 24px; min-height: 100%; font: 12px/1.85 var(--desktop-font), monospace; tab-size: 2; color: #655276; white-space: pre-wrap; overflow-wrap: anywhere; }
+.file-preview-warning { margin: 0; padding: 10px 20px; background: #fff6df; border-bottom: 1px solid #eee0b4; font-size: 10px; color: #957542; line-height: 1.8; }
+.file-preview-table { min-width: 100%; font-size: 12px; }
+.file-preview-table table { border-collapse: collapse; width: max-content; min-width: 100%; }
+.file-preview-table th, .file-preview-table td { padding: 12px 16px; border: 1px solid #eee5f6; text-align: left; white-space: pre-wrap; max-width: 350px; overflow-wrap: anywhere; color: #776283; }
+.file-preview-table thead th { position: sticky; top: 0; z-index: 1; background: #f4edf9; font-weight: 400; color: #705486; }
+.file-preview-table tr > :first-child { width: 44px; text-align: center; font-size: 10px; color: #b09cbe; background: #fbf8fd; }
+.file-preview-table tbody tr:nth-child(even) td { background: #fefbff; }
+.file-preview-table > p { margin: 15px 20px; color: #aa97b5; font-size: 10px; }
+.file-preview-image { display: grid; place-items: center; min-height: 100%; padding: 24px; background-color: #faf7fc; background-image: linear-gradient(45deg, #eee8f3 25%, transparent 25%), linear-gradient(-45deg, #eee8f3 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #eee8f3 75%), linear-gradient(-45deg, transparent 75%, #eee8f3 75%); background-size: 20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0; }
+.file-preview-image img { max-width: 100%; max-height: 68dvh; object-fit: contain; image-rendering: auto; box-shadow: 0 3px 16px #3e2d5720; }
+.file-preview-pdf { display: flex; flex-direction: column; height: 100%; min-height: 300px; }
+.file-preview-pdf iframe { width: 100%; flex: 1; min-height: 260px; border: 0; }
+.file-preview-pdf > p { margin: 7px 12px; font-size: 9px; color: #9d8cac; }
+.file-preview-state { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100%; padding: 36px; gap: 14px; color: #aa95b9; text-align: center; }
+.file-preview-state > strong { color: #80648e; font-size: 14px; font-weight: 400; }
+.file-preview-state > p { max-width: 340px; margin: 0; font-size: 12px; line-height: 1.9; }
+.career-workspace .file-preview-state > button { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border: 1px solid #daccE9; background: #f8f1ff; border-radius: 6px; color: #85649d; font-size: 12px; }
+.file-preview-footer { display: flex; flex: none; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; min-height: 34px; padding: 8px 16px; border-top: 1px solid #ede4f7; color: #ab96b9; font-size: 9px; }
+.file-preview-footer > span:first-child { display: flex; align-items: center; gap: 6px; }
+.file-preview-footer i { width: 5px; height: 5px; background: #82b5a0; box-shadow: 0 0 0 3px #eaf5ef; border-radius: 50%; }
+.workspace-detail-backdrop { display: none; }
+@media (min-width: 2000px) {
+  .career-workspace[data-detail-open="true"][data-inspector-open="true"] { grid-template-columns: 280px minmax(520px, 1fr) clamp(650px, 39vw, 1100px); }
+  .file-preview-document { padding: 44px; font-size: 17px; }
+  .career-workspace .file-preview-summary h2 { font-size: 21px; }
+  .file-preview-heading > span, .file-preview-summary > p, .career-workspace .file-preview-toolbar [role="tab"], .career-workspace .file-preview-actions > button { font-size: 13px; }
+  .file-preview-footer { font-size: 11px; }
+  .file-preview-code, .file-preview-table { font-size: 15px; }
+  .message-file-links { font-size: 16px; }
+}
+@media (max-width: 1440px) and (min-width: 1181px) {
+  .career-workspace[data-detail-open="true"][data-inspector-open="true"] { grid-template-columns: 205px minmax(340px, 1fr) clamp(410px, 39vw, 560px); }
+  .career-workspace[data-detail-open="true"] .agent-messages { padding-left: 20px; padding-right: 20px; }
+}
+@media (max-width: 1180px) {
+  .career-workspace[data-detail-open="true"][data-inspector-open="true"] { grid-template-columns: 204px minmax(0, 1fr); }
+  .career-workspace .agent-inspector.workspace-detail-panel { width: min(680px, calc(100vw - 32px)); padding: 0; z-index: 65; }
+  .workspace-detail-backdrop { display: block; position: fixed; inset: 0; z-index: 61; border: 0; background: #3c284d36; backdrop-filter: blur(2px); }
+}
+@media (max-width: 760px) {
+  .career-workspace[data-detail-open="true"][data-inspector-open="true"] { grid-template-columns: minmax(0, 1fr); }
+  .career-workspace .agent-inspector.workspace-detail-panel { width: calc(100vw - 20px); top: 14px; bottom: 14px; right: 10px; max-width: none; }
+  .file-preview-heading { min-height: 40px; }
+  .file-preview-summary { padding: 12px 15px; }
+  .career-workspace .file-preview-summary h2 { font-size: 14px; }
+  .file-preview-summary > p { margin-bottom: 8px; }
+  .file-preview-toolbar { padding: 0 9px 0 15px; }
+  .file-preview-document { padding: 22px 19px; font-size: 13px; }
+  .file-preview-footer { font-size: 8px; }
+}

@@ -1,0 +1,116 @@
+/** 青穗集 · 用户六组件原稿的可交互像素样式：保留穗奈主页面、可伸缩排版和统一素材入口。 */
+.career-workspace { --career-component-width:840px; --component-ink:#39315f; --component-line:#8d7db2; --component-lavender:#dfd5f7; --component-paper:#fffdf8; --component-muted:#80758f; --component-mint:#d8f0e2; }
+.component-pixel-icon { display:inline-block; object-fit:contain; image-rendering:pixelated; flex:none; vertical-align:middle; }
+.suinai-component { position:relative; min-width:0; padding:18px 20px; border:2px solid var(--component-line); background:var(--component-paper); box-shadow:inset 0 0 0 2px var(--component-lavender),3px 3px 0 #c9bbdf55; color:var(--component-ink); border-radius:0; }
+.component-card-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+.career-workspace .component-icon-button { display:inline-flex; align-items:center; justify-content:center; flex:none; padding:5px; min-width:30px; min-height:30px; border:1px solid transparent; border-radius:0; background:transparent; color:inherit; cursor:pointer; }
+.career-workspace .component-icon-button:hover,.career-workspace .component-icon-button:focus-visible { border-color:var(--component-lavender); background:#f1ebfb; }
+.bookmark-button .component-pixel-icon { opacity:.45; filter:grayscale(.7); transition:opacity .15s,filter .15s,transform .15s; }
+.bookmark-button[data-saved="true"] .component-pixel-icon { opacity:1;filter:none; }
+.bookmark-button:hover .component-pixel-icon { transform:translateY(-1px); }
+.career-workspace .component-primary,.career-workspace .component-secondary { display:inline-flex; justify-content:center;align-items:center; gap:7px; border:1px solid #82719f; border-radius:0; padding:7px 11px; font-size:.88em; line-height:1.5; cursor:pointer; }
+.career-workspace .component-primary { color:#fffcf6; background:#4d3c76; box-shadow:2px 2px 0 var(--component-lavender); }
+.career-workspace .component-primary .component-pixel-icon { filter:brightness(1.25); }
+.career-workspace .component-secondary { color:var(--component-ink); background:#f2edf9; }
+.career-workspace .component-primary:hover { background:#604c8b; }
+.career-workspace .component-secondary:hover { background:#e8def5; }
+.component-button-group { display:flex;align-items:center;gap:9px;flex-wrap:wrap; }
+.career-workspace .component-text-button { display:inline-flex;align-items:center;gap:6px;padding:4px 0;border:0;background:transparent;color:#776090;font-size:.9em;text-align:left;cursor:pointer; }
+.component-muted { color:var(--component-muted);font-size:.88em; }
+.component-caution { color:#956047; background:#fff4e9;padding:8px 10px;font-size:.88em; }
+.career-workspace .suinai-component button:focus-visible,.job-detail-panel button:focus-visible { outline:2px solid #9b81b9;outline-offset:3px; }
+.conversation-job-cards { width:min(100%,var(--career-component-width)); display:grid; gap:14px; margin:12px 0 22px; }
+.job-reference-card { padding:16px 20px; }
+.career-workspace .job-reference-card__title { display:flex;align-items:center;gap:10px;margin:0;padding:0;border:0;background:transparent;text-align:left;color:var(--component-ink);font-size:1.1em;line-height:1.6;cursor:pointer; }
+.job-reference-card__title .component-pixel-icon { opacity:0;transform:translateX(-3px);transition:opacity .15s,transform .15s; }
+.job-reference-card:hover .job-reference-card__title .component-pixel-icon,.job-reference-card__title:focus-visible .component-pixel-icon { opacity:1;transform:none; }
+.component-job-meta { display:flex;flex-wrap:wrap;gap:5px 15px;color:var(--component-muted);font-size:.86em;margin:6px 0 0; }
+.component-job-meta > span { display:inline-flex;align-items:center;gap:6px; }
+.component-tags { display:flex;gap:7px;flex-wrap:wrap;margin:12px 0; }
+.component-tags > span { display:inline-block;padding:1px 7px;border:1px solid #d5c9e8;background:#f1edf9;font-size:.82em; }
+.career-workspace .job-reference-card__excerpt { display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-wrap;width:100%;border:0;border-left:3px solid #c6b8df;background:#f8f5fc;color:#665771;padding:8px 11px;margin:12px 0;text-align:left;font-size:.9em;line-height:1.8;cursor:pointer; }
+.job-reference-card > footer { display:flex;justify-content:space-between;align-items:flex-end;gap:14px;padding-top:10px;margin-top:10px;border-top:1px solid #e9e2ef; }
+.job-reference-card > footer > small { max-width:62%;color:var(--component-muted);font-size:.76em;line-height:1.7; }
+.job-reference-card .agent-menu-trigger { min-width:30px;border:1px solid #ded3eb;border-radius:0;background:#f7f2fc; }
+.career-desktop-shell.career-workspace .agent-inspector.job-detail-panel { display:flex;flex-direction:column;padding:0;border:2px solid var(--component-line);border-radius:0;background:var(--component-paper);box-shadow:inset 0 0 0 2px var(--component-lavender);overflow:hidden; }
+.job-detail-panel:focus { outline:none; }
+.job-detail-panel__toolbar { display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 16px;border-bottom:1px solid #e8e0f0;background:#f4effa;flex:none; }
+.job-detail-panel__toolbar > span { display:flex;align-items:center;gap:8px;font-size:.88em;color:var(--component-muted); }
+.job-detail-panel__body { overflow-y:auto;min-height:0;padding:20px 24px;flex:1;scrollbar-width:thin; }
+.career-workspace .job-detail-panel__body h2 { margin:0 0 9px;font-size:1.25em;color:var(--component-ink);font-weight:400; }
+.job-reference-notice { display:flex;align-items:flex-start;gap:8px;margin:15px 0;color:var(--component-muted);font-size:.82em;line-height:1.8; }
+.job-reference-notice > img { margin-top:4px; }
+.job-detail-facts { display:grid;gap:7px;margin:20px 0; }
+.job-detail-facts > div { display:grid;grid-template-columns:70px minmax(0,1fr);gap:10px; }
+.job-detail-facts dt { color:var(--component-muted); }
+.job-detail-facts dd { margin:0; }
+.job-detail-panel__body section { border-top:1px solid #e5deeb;padding-top:15px;margin-top:18px; }
+.job-detail-panel__body h3 { margin:0 0 11px;font-size:1em;font-weight:400; }
+.job-detail-panel__body p { font-size:.92em; }
+.job-original-text { white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.95;font-size:.94em; }
+.job-source-details { margin-top:20px;color:var(--component-muted);font-size:.86em; }
+.job-source-details summary { cursor:pointer; }
+.job-source-details dl { display:grid;grid-template-columns:auto 1fr;gap:5px 12px; }
+.job-source-details dd { margin:0; }
+.job-detail-panel__actions { flex:none;display:flex;justify-content:space-between;gap:10px;padding:13px 20px;border-top:1px solid #e8e0f0; }
+.job-comparison-list { list-style:none;margin:0;padding:0; }
+.job-comparison-list li { padding:10px 0;border-bottom:1px solid #eee8f2; }
+.job-comparison-list strong { display:block;font-weight:400; }
+.job-comparison-list li > span { color:#75866e;font-size:.83em; }
+.job-comparison-list li > span[data-assessment="conflict"] { color:#a46d52; }
+.job-comparison-list blockquote { margin:8px 0;padding-left:10px;border-left:2px solid #c8bdd8;color:var(--component-muted);font-size:.86em; }
+.growth-summary { margin-top:14px;padding:13px 15px;font-size:.92em; }
+.career-workspace .growth-summary h2 { margin:0;font-size:1em;font-weight:400; }
+.growth-summary__intro { margin:8px 0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;color:#7f708a;font-size:.91em;line-height:1.9; }
+.growth-summary__direction { display:flex;align-items:flex-start;gap:8px;padding:8px 0;margin:0;border-bottom:1px solid #e9e1ee;font-size:.9em; }
+.growth-summary__direction img { margin-top:4px; }
+.growth-summary__empty { padding:12px 0 3px; }
+.growth-summary__empty > p { color:var(--component-muted);margin:6px 0;font-size:.9em; }
+.growth-summary__skills { margin:10px 0 0; }
+.career-workspace .skill-record { display:flex;align-items:center;gap:10px;text-align:left;width:100%;min-width:0;padding:9px 0;border:0;border-bottom:1px solid #eee7f2;background:transparent;color:inherit;cursor:pointer; }
+.skill-record > span:first-of-type { flex:1;min-width:0;overflow-wrap:anywhere; }
+.skill-record small { display:block;color:var(--component-muted);font-size:.83em; }
+.skill-stage-dots { display:flex;gap:3px;flex:none; }
+.skill-stage-dots i { width:6px;height:6px;border:1px solid #b7a9ca;background:transparent; }
+.skill-stage-dots i[data-filled="true"] { background:#a6d9bd;border-color:#83ac92; }
+.growth-conversation-memory { margin-top:10px;padding-top:8px;border-top:1px solid #e9e1ee; }
+.growth-conversation-memory > summary { color:#8b7898;font-size:.84em;cursor:pointer; }
+.career-workspace .growth-conversation-memory .conversation-memory { margin:8px 0 0;padding:0;border:0;background:transparent;box-shadow:none; }
+.growth-conversation-memory .conversation-memory > header,.growth-conversation-memory .conversation-memory > footer { display:none; }
+.skill-detail-dialog { width:min(500px,calc(100vw - 28px));max-height:85dvh;overflow-y:auto;border:0;padding:0;background:transparent;color:var(--component-ink);font:14px/1.8 var(--desktop-font,sans-serif); }
+.skill-detail-dialog::backdrop { background:#30244350;backdrop-filter:blur(2px); }
+.skill-detail-surface { padding:20px 24px; }
+.skill-detail-surface h2 { display:flex;align-items:center;gap:10px;margin:0;font-size:1.15em;font-weight:400; }
+.skill-detail-surface h3 { font-size:1em;font-weight:400; }
+.skill-detail-stage { margin:10px 0 0; }
+.skill-detail-surface blockquote,.profile-update-strip blockquote { margin:10px 0;padding:10px 12px;border-left:3px solid #b5a4cf;background:#f7f3fb;font-size:.9em;white-space:pre-wrap; }
+.skill-detail-surface cite { display:block;margin-top:7px;color:var(--component-muted);font-size:.82em;font-style:normal; }
+.skill-detail-surface footer { justify-content:flex-end;margin-top:18px; }
+.profile-update-strip { width:min(100%,var(--career-component-width));margin:16px 0;padding:13px 18px;border-left-color:#8fb39b; }
+.profile-update-strip > header { display:flex;align-items:center;gap:9px; }
+.profile-update-strip h3 { margin:0;font-size:.95em;font-weight:400; }
+.profile-update-strip dl { margin:12px 0; }
+.profile-update-strip dl > div { display:grid;grid-template-columns:110px minmax(0,1fr);gap:10px;margin:6px 0;font-size:.9em; }
+.profile-update-strip dt { color:var(--component-muted); }
+.profile-update-strip dd { margin:0;white-space:pre-wrap;max-height:160px;overflow-y:auto; }
+.profile-update-strip > footer { justify-content:flex-end;padding-top:8px; }
+.profile-update-strip details { font-size:.9em; }
+.next-action-row { display:flex;align-items:center;gap:10px;padding:11px 12px;margin-top:14px;font-size:.86em; }
+.next-action-row > div { min-width:0;flex:1; }
+.next-action-row h3 { margin:0;font-size:1em;font-weight:400; }
+.next-action-row p { margin:4px 0 0;color:var(--component-muted);font-size:.88em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
+.saved-job-list { margin-bottom:24px; }
+.saved-job-list h3 { font-size:1.05em;font-weight:400; }
+.saved-job-list h3 small { margin-left:6px;color:var(--component-muted); }
+.saved-job-row { display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #e9e1ef; }
+.saved-job-row > button:first-child { display:flex;align-items:center;gap:12px;flex:1;min-width:0;text-align:left;padding:0;border:0;background:transparent;color:var(--component-ink);cursor:pointer; }
+.saved-job-row > button:first-child > span { min-width:0;flex:1; }
+.saved-job-row strong { display:block;font-weight:400; }
+.saved-job-row small { display:block;color:var(--component-muted);font-size:.85em; }
+.career-workbench .growth-summary { max-width:740px;margin:0 0 22px; }
+@media (min-width:1181px) { .career-desktop-shell.career-workspace[data-detail-open="true"][data-inspector-open="true"] { grid-template-columns:238px minmax(340px,1fr) clamp(410px,39vw,800px); } }
+@media (min-width:2000px) { .career-desktop-shell.career-workspace[data-detail-open="true"][data-inspector-open="true"] { grid-template-columns:280px minmax(520px,1fr) clamp(620px,37vw,1000px); } .career-workspace { --career-component-width:1020px; } .job-reference-card { padding:20px 26px; } }
+@media (max-width:1180px) { .career-desktop-shell.career-workspace .agent-inspector.job-detail-panel { position:fixed;top:20px;right:16px;bottom:20px;width:min(650px,calc(100vw - 32px));z-index:65; } }
+@media (max-width:760px) { .suinai-component { padding:13px 14px; } .job-reference-card > footer { align-items:stretch;flex-direction:column; } .job-reference-card > footer > small { max-width:none; } .job-reference-card > footer .component-button-group { justify-content:flex-end; } .career-desktop-shell.career-workspace .agent-inspector.job-detail-panel { top:10px;bottom:10px;right:10px;width:calc(100vw - 20px); } .job-detail-panel__body { padding:17px; } .profile-update-strip dl > div { grid-template-columns:1fr;gap:2px; } .growth-summary { font-size:1em; } }
+@media (pointer:coarse) { .career-workspace .component-icon-button { min-width:44px;min-height:44px; } }
+@media (prefers-reduced-motion:reduce) { .component-pixel-icon { transition:none!important; } }

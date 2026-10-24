@@ -1,3 +1,4 @@
+/** 青穗集 · 简历编辑与投递预览：像素工具栏、可填写联系信息、独立打印正文和明确的缺项提示。 */
 import { useState } from "react";
 import { rise } from "../state/motion";
 import {
@@ -38,6 +39,7 @@ export interface ResumeBody {
   completeness?: string;
   order_reason?: string;
   plain?: string;
+  improvements?: string[];
 }
 
 /**
@@ -53,11 +55,17 @@ export interface ResumeBody {
 export function ResumeCard({ resume, onAsk }: { resume: ResumeBody; onAsk?: (goal: string) => void }) {
   const [templateId, setTemplateId] = useState(loadTemplateId);
   const [overrides, setOverrides] = useState<Format>(loadOverrides);
+  const [contact, setContact] = useState({ name: "", phone: "", email: "" });
   const [copied, setCopied] = useState<"idle" | "done" | "manual">("idle");
 
   const template = byId(templateId);
   const format = resolveFormat(template, overrides);
   const sections = orderedSections(template, Array.isArray(resume.sections) ? resume.sections : []);
+  const exportText = sections.length ? [
+    `# ${contact.name || "个人简历"}`,
+    [contact.phone, contact.email].filter(Boolean).join(" · "),
+    ...sections.filter(section => !section.empty).map(section => `## ${section.title}\n${section.lines.map(line => `- ${line.text}${line.quote ? `\n  “${line.quote}”` : ""}`).join("\n")}`),
+  ].filter(Boolean).join("\n\n") : resume.plain ?? "";
 
   const pick = (id: string) => {
     setTemplateId(id);
@@ -70,7 +78,7 @@ export function ResumeCard({ resume, onAsk }: { resume: ResumeBody; onAsk?: (goa
   };
 
   const copy = async () => {
-    const text = resume.plain ?? "";
+    const text = exportText;
     try {
       await navigator.clipboard.writeText(text);
       setCopied("done");
@@ -121,6 +129,14 @@ export function ResumeCard({ resume, onAsk }: { resume: ResumeBody; onAsk?: (goa
             </label>
           ))}
         </div>
+        <div className="resume-bar__contacts">
+          {([["name", "姓名"], ["phone", "手机"], ["email", "邮箱"]] as const).map(([key, title]) => <label key={key}>{title}
+            <input aria-label={`简历${title}`} type={key === "email" ? "email" : key === "phone" ? "tel" : "text"}
+              maxLength={key === "name" ? 60 : 160} placeholder={`填写${title}`} value={contact[key]}
+              onChange={event => setContact(current => ({ ...current, [key]: event.target.value }))} />
+          </label>)}
+        </div>
+        <p className="muted t-label-sm">联系信息仅用于当前预览与打印，离开此简历后需重新填写。</p>
         <div className="resume-bar__row">
           <button className="fieldbtn fieldbtn--wide" onClick={print} title="打印或另存为 PDF">
             <Ms g="print" size={16} />
@@ -135,29 +151,32 @@ export function ResumeCard({ resume, onAsk }: { resume: ResumeBody; onAsk?: (goa
         {copied === "manual" ? (
           <details className="resume-bar__fallback">
             <summary>浏览器不让复制，这段可以手选</summary>
-            <pre className="mono">{resume.plain}</pre>
+            <pre className="mono">{exportText}</pre>
           </details>
         ) : null}
       </div>
 
+      <aside className="resume-context no-print">
+        <p>投递预览 · 正文使用正式文档字体，下面的缺项提示不会打印。</p>
+        {resume.order_reason ? <p>{resume.order_reason}</p> : null}
+        {resume.completeness ? <p>{resume.completeness}</p> : null}
+        {!contact.name || (!contact.phone && !contact.email) ? <p>打印前请补充姓名及至少一种联系方式。</p> : null}
+      </aside>
       <div className="resume-sheet card-in" style={{ ...formatVars(format), ...rise(1) }}>
         <header className="resume-sheet__head">
-          <div className="resume-sheet__contact">
-            <span className="muted t-label-sm">联系方式：姓名 / 手机 / 邮箱（我们不替你编，打印前自己填上）</span>
-          </div>
-          {resume.order_reason ? <p className="faint t-label-sm">{resume.order_reason}</p> : null}
-          {resume.completeness ? <p className="t-body-md">{resume.completeness}</p> : null}
+          <h2 className="resume-sheet__name">{contact.name || "个人简历"}</h2>
+          {contact.phone || contact.email ? <p className="resume-sheet__contact">{[contact.phone, contact.email].filter(Boolean).join(" · ")}</p> : null}
         </header>
 
         {sections.map((section) => (
-          <section className="resume-sheet__section" key={section.key}>
+          <section className={`resume-sheet__section${section.empty ? " no-print" : ""}`} key={section.key}>
             <h3>{section.title}</h3>
             {section.empty ? (
               <p className="resume-sheet__empty">
-                <span className="tag tag--tertiary">{`还没有依据${section.ask ? ` · ${section.ask}` : ""}`}</span>
+                <span>{section.ask || "这部分还没有已确认的内容。"}</span>
                 {section.ask && onAsk ? (
                   <button className="linkbtn" onClick={() => onAsk(`${section.title}：${section.ask}`)}>
-                    让她问我这节
+                    和穗奈补充这一节
                   </button>
                 ) : null}
               </p>
@@ -175,6 +194,24 @@ export function ResumeCard({ resume, onAsk }: { resume: ResumeBody; onAsk?: (goa
           </section>
         ))}
       </div>
+
+      {Array.isArray(resume.improvements) && resume.improvements.length ? (
+        <section className="jobseek jobseek--gaps no-print card-in" style={rise(2)}>
+          <p className="jobseek__kicker">还能补的</p>
+          <ul className="jobseek__quotes">
+            {resume.improvements.map((item, index) => (
+              <li key={`imp-${index}`}>
+                {item}
+                {onAsk ? (
+                  <button className="linkbtn" type="button" onClick={() => onAsk(item)}>
+                    让她问我这句
+                  </button>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </div>
   );
 }

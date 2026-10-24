@@ -1,3 +1,4 @@
+/** 青穗集 · 求职主线四站只由成果物点亮。 */
 import { describe, expect, it } from "vitest";
 import type { Feed } from "../api/client";
 import { currentStation, loopStations } from "./loop";
@@ -31,32 +32,18 @@ const feed = (over: Partial<Feed> = {}): Feed => ({
 describe("the loop spine", () => {
   it("starts at the first station when nothing has happened", () => {
     const stations = loopStations(feed());
-    expect(stations.map((station) => station.done)).toEqual([false, false, false, false, false]);
-    expect(currentStation(stations)?.key).toBe("direction");
+    expect(stations.map((station) => station.done)).toEqual([false, false, false, false]);
+    expect(currentStation(stations)?.key).toBe("profile");
   });
 
   it("says there is nothing to point at once every station is lit", () => {
     const stations = loopStations(
       feed({
         artifacts: [
-          artifact("DirectionBrief", 2),
-          artifact("DecisionFrame"),
-          artifact("ComparisonMatrix"),
-          artifact("WeeklyReviewDraft"),
-        ],
-        tasks: [
-          {
-            id: "t1",
-            project_id: "p1",
-            plan_id: "pl1",
-            title: "去问一个在职的人",
-            expected_output: "他的一天",
-            week_no: 1,
-            kind: "conversation",
-            status: "done",
-            due_date: null,
-            results: [{ id: "r1", body: "…", link: null, at: "2026-09-22T10:00:00" }],
-          },
+          artifact("ProfileGapReport"),
+          artifact("JobMatchReport", 2),
+          artifact("LearningPathDraft"),
+          artifact("ResumeDraft"),
         ],
       }),
     );
@@ -64,51 +51,21 @@ describe("the loop spine", () => {
     expect(currentStation(stations)).toBeNull();
   });
 
-  it("counts what came back instead of guessing progress", () => {
-    const stations = loopStations(
-      feed({
-        tasks: [
-          {
-            id: "t1",
-            project_id: "p1",
-            plan_id: "pl1",
-            title: "a",
-            expected_output: "",
-            week_no: 1,
-            kind: "conversation",
-            status: "open",
-            due_date: null,
-            results: [{ id: "r1", body: "…", link: null, at: "2026-09-22T10:00:00" }],
-          },
-          {
-            id: "t2",
-            project_id: "p1",
-            plan_id: "pl1",
-            title: "b",
-            expected_output: "",
-            week_no: 1,
-            kind: "conversation",
-            status: "open",
-            due_date: null,
-            results: [],
-          },
-        ],
-      }),
-    );
-    const act = stations.find((station) => station.key === "act");
-    expect(act?.hint).toBe("1 / 2 件带回了结果");
-    expect(act?.done).toBe(true);
+  it("counts quoted job lines instead of guessing progress", () => {
+    const stations = loopStations(feed({ artifacts: [artifact("JobMatchReport", 3)] }));
+    const jobs = stations.find((station) => station.key === "jobs");
+    expect(jobs?.hint).toBe("对上了 3 条原话");
+    expect(jobs?.done).toBe(true);
   });
 
   it("does not light a later station because an earlier one is empty", () => {
-    const stations = loopStations(feed({ artifacts: [artifact("ComparisonMatrix")] }));
-    expect(stations.map((station) => station.done)).toEqual([false, false, true, false, false]);
-    // The spine still points at 看方向: a conclusion with nothing under it is not progress.
-    expect(currentStation(stations)?.key).toBe("direction");
+    const stations = loopStations(feed({ artifacts: [artifact("ResumeDraft")] }));
+    expect(stations.map((station) => station.done)).toEqual([false, false, false, true]);
+    expect(currentStation(stations)?.key).toBe("profile");
   });
 
   it("keeps every station pointing at a capability the shell can actually run", () => {
     const ids = loopStations(feed()).map((station) => station.capability);
-    expect(ids).toEqual(["direction_explore", "decision_frame", "compare_decide", "action_plan", "weekly_review"]);
+    expect(ids).toEqual(["profile_diagnose", "job_match", "learning_path", "resume_build"]);
   });
 });

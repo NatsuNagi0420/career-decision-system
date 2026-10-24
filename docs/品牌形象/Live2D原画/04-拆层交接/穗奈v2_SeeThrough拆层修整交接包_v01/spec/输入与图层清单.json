@@ -1,0 +1,905 @@
+{
+  "_comment": "青穗集 · 新账号交接的输入清单与已确认坐标，仅包含素材与审查资料，不代表拆层已修复。",
+  "created_date": "2026-10-18",
+  "actual_input": {
+    "file": "input/穗奈_Live2D全身立绘_整体风格统一.png",
+    "size": [
+      1440,
+      2560
+    ],
+    "sha256": "552bac8795fd85fce19e762c6525aff82241368c96868b7bdc78b70755b5addd"
+  },
+  "coarse_psd": {
+    "file": "input/seethrough_output.psd",
+    "size": [
+      1536,
+      1536
+    ],
+    "depth": 8,
+    "layer_count": 24,
+    "sha256": "086541839732657cd5a3d4b78fdcf93e76ad7fdf2e0c8a0458c51a47cf387ee7"
+  },
+  "comparison_transform": {
+    "scale": 0.6,
+    "resized_source": [
+      864,
+      1536
+    ],
+    "padding_left": 336,
+    "padding_right": 336,
+    "padding_top": 0,
+    "padding_bottom": 0,
+    "scope": "Verified geometric comparison, not an exact promise of the exporter resampling kernel."
+  },
+  "target_editable_canvas": [
+    1440,
+    2560
+  ],
+  "layers": [
+    {
+      "index_bottom_to_top": 0,
+      "name": "back hair",
+      "kind": "pixel",
+      "bbox": [
+        638,
+        25,
+        874,
+        304
+      ],
+      "visible": true,
+      "opacity": 255,
+      "blend_mode": "BlendMode.NORMAL",
+      "clipping": false,
+      "has_mask": false,
+      "pixel_size": [
+        236,
+        279
+      ],
+      "alpha": {
+        "range": [
+          0,
+          255
+        ],
+        "local_bbox": [
+          0,
+          0,
+          236,
+          279
+        ],
+        "nonzero_pixels": 47222,
+        "opaque_pixels": 40083,
+        "partial_pixels": 7139,
+        "transparent_pixels": 18622
+      }
+    },
+    {
+      "index_bottom_to_top": 1,
+      "name": "handwear-r",
+      "kind": "pixel",
+      "bbox": [
+        543,
+        277,
+        683,
+        813
+      ],
+      "visible": true,
+      "opacity": 255,
+      "blend_mode": "BlendMode.NORMAL",
+      "clipping": false,
+      "has_mask": false,
+      "pixel_size": [
+        140,
+        536
+      ],
+      "alpha": {
+        "range": [
+          0,
+          255
+        ],
+        "local_bbox": [
+          0,
+          0,
+          140,
+          536
+        ],
+        "nonzero_pixels": 29935,
+        "opaque_pixels": 27293,
+        "partial_pixels": 2642,
+        "transparent_pixels": 45105
+      }
+    },
+    {
+      "index_bottom_to_top": 2,
+      "name": "handwear-l",
+      "kind": "pixel",
+      "bbox": [
+        825,
+        277,
+        972,
+        812
+      ],
+      "visible": true,
+      "opacity": 255,
+      "blend_mode": "BlendMode.NORMAL",
+      "clipping": false,
+      "has_mask": false,
+      "pixel_size": [
+        147,
+        535
+      ],
+      "alpha": {
+        "range": [
+          0,
+          255
+        ],
+        "local_bbox": [
+          0,
+          0,
+          147,
+          535
+        ],
+        "nonzero_pixels": 30629,
+        "opaque_pixels": 27850,
+        "partial_pixels": 2779,
+        "transparent_pixels": 48016
+      }
+    },
+    {
+      "index_bottom_to_top": 3,
+      "name": "legwear",
+      "kind": "pixel",
+      "bbox": [
+        628,
+        687,
+        889,
+        1406
+      ],
+      "visible": true,
+      "opacity": 255,
+      "blend_mode": "BlendMode.NORMAL",
+      "clipping": false,
+      "has_mask": false,
+      "pixel_size": [
+        261,
+        719
+      ],
+      "alpha": {
+        "range": [
+          0,
+          255
+        ],
+        "local_bbox": [
+          0,
+          0,
+          261,
+          719
+        ],
+        "nonzero_pixels": 111890,
+        "opaque_pixels": 101565,
+        "partial_pixels": 10325,
+        "transparent_pixels": 75769
+      }
+    },
+    {
+      "index_bottom_to_top": 4,
+      "name": "footwear",
+      "kind": "pixel",
+      "bbox": [
+        688,
+        1332,
+        858,
+        1452
+      ],
+      "visible": true,
+      "opacity": 255,
+      "blend_mode": "BlendMode.NORMAL",
+      "clipping": false,
+      "has_mask": false,
+      "pixel_size": [
+        170,
+        120
+      ],
+      "alpha": {
+        "range": [
+          0,
+          255
+        ],
+        "local_bbox": [
+          0,
+          0,
+          170,
+          120
+        ],
+        "nonzero_pixels": 12300,
+        "opaque_pixels": 8722,
+        "partial_pixels": 3578,
+        "transparent_pixels": 8100
+      }
+    },
+    {
+      "index_bottom_to_top": 5,
+      "name": "neck",
+      "kind": "pixel",
+      "bbox": [
+        726,
+        171,
+        785,
+        256
+      ],
+      "visible": true,
+      "opacity": 255,
+      "blend_mode": "BlendMode.NORMAL",
+      "clipping": false,
+      "has_mask": false,
+      "pixel_size": [
+        59,
+        85
+      ],
+      "alpha": {
+        "range": [
+          0,
+          255
+        ],
+        "local_bbox": [
+          0,
+          0,
+          59,
+          85
+        ],
+        "nonzero_pixels": 4389,
+        "opaque_pixels": 3690,
+        "partial_pixels": 699,
+        "transparent_pixels": 626
+      }
+    },
+    {
+      "index_bottom_to_top": 6,
+      "name": "bottomwear",
+      "kind": "pixel",
+      "bbox": [
+        574,
+        482,
+        944,
+        854
+      ],
+      "visible": true,
+      "opacity": 255,
+      "blend_mode": "BlendMode.NORMAL",
+      "clipping": false,
+      "has_mask": false,
+      "pixel_size": [
+        370,
+        372
+      ],
+      "alpha": {
+        "range": [
+          0,
+          255
+        ],
+        "local_bbox": [
+          0,
+          0,
+          370,
+          372
+        ],
+        "nonzero_pixels": 101428,
+        "opaque_pixels": 97302,
+        "partial_pixels": 4126,
+        "transparent_pixels": 36212
+      }
+    },
+    {
+      "index_bottom_to_top": 7,
+      "name": "topwear",
+      "kind": "pixel",
+      "bbox": [
+        632,
+        234,
+        880,
+        551
+      ],
+      "visible": true,
+      "opacity": 255,
+      "blend_mode": "BlendMode.NORMAL",
+      "clipping": false,
+      "has_mask": false,
+      "pixel_size": [
+        248,
+        317
+      ],
+      "alpha": {
+        "range": [
+          0,
+          255
+        ],
+        "local_bbox": [
+          0,
+          0,
+          248,
+          317
+        ],
+        "nonzero_pixels": 59051,
+        "opaque_pixels": 56308,
+        "partial_pixels": 2743,
+        "transparent_pixels": 19565
+      }
+    },
+    {
+      "index_bottom_to_top": 8,
+      "name": "ears-r",
+      "kind": "pixel",
+      "bbox": [
+        682,
+        146,
+        712,
+        186
+      ],
+      "visible": true,
+      "opacity": 255,
+      "blend_mode": "BlendMode.NORMAL",
+      "clipping": false,
+      "has_mask": false,
+      "pixel_size": [
+        30,
+        40
+      ],
+      "alpha": {
+        "range": [
+          0,
+          255
+        ],
+        "local_bbox": [
+          0,
+          0,
+          30,
+          40
+        ],
+        "nonzero_pixels": 669,
+        "opaque_pixels": 435,
+        "partial_pixels": 234,
+        "transparent_pixels": 531
+      }
+    },
+    {
+      "index_bottom_to_top": 9,
+      "name": "ears-l",
+      "kind": "pixel",
+      "bbox": [
+        801,
+        137,
+        828,
+        181
+      ],
+      "visible": true,
+      "opacity": 255,
+      "blend_mode": "BlendMode.NORMAL",
+      "clipping": false,
+      "has_mask": false,
+      "pixel_size": [
+        27,
+        44
+      ],
+      "alpha": {
+        "range": [
+          0,
+          255
+        ],
+        "local_bbox": [
+          0,
+          0,
+          27,
+          44
+        ],
+        "nonzero_pixels": 751,
+        "opaque_pixels": 516,
+        "partial_pixels": 235,
+        "transparent_pixels": 437
+      }
+    },
+    {
+      "index_bottom_to_top": 10,
+      "name": "eyewear",
+      "kind": "pixel",
+      "bbox": [
+        692,
+        132,
+        826,
+        177
+      ],
+      "visible": true,
+      "opacity": 255,
+      "blend_mode": "BlendMode.NORMAL",
+      "clipping": false,
+      "has_mask": false,
+      "pixel_size": [
+        134,
+        45
+      ],
+      "alpha": {
+        "range": [
+          0,
+          255
+        ],
+        "local_bbox": [
+          0,
+          0,
+          134,
+          45
+        ],
+        "nonzero_pixels": 1143,
+        "opaque_pixels": 13,
+        "partial_pixels": 1130,
+        "transparent_pixels": 4887
+      }
+    },
+    {
+      "index_bottom_to_top": 11,
+      "name": "face",
+      "kind": "pixel",
+      "bbox": [
+        694,
+        77,
+        813,
+        222
+      ],
+      "visible": true,
+      "opacity": 255,
+      "blend_mode": "BlendMode.NORMAL",
+      "clipping": false,
+      "has_mask": false,
+      "pixel_size": [
+        119,
+        145
+      ],
+      "alpha": {
+        "range": [
+          0,
+          255
+        ],
+        "local_bbox": [
+          0,
+          0,
+          119,
+          145
+        ],
+        "nonzero_pixels": 13339,
+        "opaque_pixels": 12417,
+        "partial_pixels": 922,
+        "transparent_pixels": 3916
+      }
+    },
+    {
+      "index_bottom_to_top": 12,
+      "name": "nose",
+      "kind": "pixel",
+      "bbox": [
+        751,
+        168,
+        757,
+        177
+      ],
+      "visible": true,
+      "opacity": 255,
+      "blend_mode": "BlendMode.NORMAL",
+      "clipping": false,
+      "has_mask": false,
+      "pixel_size": [
+        6,
+        9
+      ],
+      "alpha": {
+        "range": [
+          0,
+          255
+        ],
+        "local_bbox": [
+          0,
+          0,
+          6,
+          9
+        ],
+        "nonzero_pixels": 46,
+        "opaque_pixels": 6,
+        "partial_pixels": 40,
+        "transparent_pixels": 8
+      }
+    },
+    {
+      "index_bottom_to_top": 13,
+      "name": "mouth",
+      "kind": "pixel",
+      "bbox": [
+        742,
+        189,
+        769,
+        198
+      ],
+      "visible": true,
+      "opacity": 255,
+      "blend_mode": "BlendMode.NORMAL",
+      "clipping": false,
+      "has_mask": false,
+      "pixel_size": [
+        27,
+        9
+      ],
+      "alpha": {
+        "range": [
+          0,
+          204
+        ],
+        "local_bbox": [
+          0,
+          0,
+          27,
+          9
+        ],
+        "nonzero_pixels": 121,
+        "opaque_pixels": 0,
+        "partial_pixels": 121,
+        "transparent_pixels": 122
+      }
+    },
+    {
+      "index_bottom_to_top": 14,
+      "name": "eyebrow-l",
+      "kind": "pixel",
+      "bbox": [
+        766,
+        118,
+        802,
+        126
+      ],
+      "visible": true,
+      "opacity": 255,
+      "blend_mode": "BlendMode.NORMAL",
+      "clipping": false,
+      "has_mask": false,
+      "pixel_size": [
+        36,
+        8
+      ],
+      "alpha": {
+        "range": [
+          0,
+          251
+        ],
+        "local_bbox": [
+          0,
+          0,
+          36,
+          8
+        ],
+        "nonzero_pixels": 123,
+        "opaque_pixels": 0,
+        "partial_pixels": 123,
+        "transparent_pixels": 165
+      }
+    },
+    {
+      "index_bottom_to_top": 15,
+      "name": "eyebrow-r",
+      "kind": "pixel",
+      "bbox": [
+        702,
+        121,
+        738,
+        129
+      ],
+      "visible": true,
+      "opacity": 255,
+      "blend_mode": "BlendMode.NORMAL",
+      "clipping": false,
+      "has_mask": false,
+      "pixel_size": [
+        36,
+        8
+      ],
+      "alpha": {
+        "range": [
+          0,
+          251
+        ],
+        "local_bbox": [
+          0,
+          0,
+          36,
+          8
+        ],
+        "nonzero_pixels": 118,
+        "opaque_pixels": 0,
+        "partial_pixels": 118,
+        "transparent_pixels": 170
+      }
+    },
+    {
+      "index_bottom_to_top": 16,
+      "name": "eyewhite-r",
+      "kind": "pixel",
+      "bbox": [
+        706,
+        140,
+        738,
+        164
+      ],
+      "visible": true,
+      "opacity": 255,
+      "blend_mode": "BlendMode.NORMAL",
+      "clipping": false,
+      "has_mask": false,
+      "pixel_size": [
+        32,
+        24
+      ],
+      "alpha": {
+        "range": [
+          0,
+          255
+        ],
+        "local_bbox": [
+          0,
+          0,
+          32,
+          24
+        ],
+        "nonzero_pixels": 620,
+        "opaque_pixels": 437,
+        "partial_pixels": 183,
+        "transparent_pixels": 148
+      }
+    },
+    {
+      "index_bottom_to_top": 17,
+      "name": "eyewhite-l",
+      "kind": "pixel",
+      "bbox": [
+        771,
+        137,
+        801,
+        162
+      ],
+      "visible": true,
+      "opacity": 255,
+      "blend_mode": "BlendMode.NORMAL",
+      "clipping": false,
+      "has_mask": false,
+      "pixel_size": [
+        30,
+        25
+      ],
+      "alpha": {
+        "range": [
+          0,
+          255
+        ],
+        "local_bbox": [
+          0,
+          0,
+          30,
+          25
+        ],
+        "nonzero_pixels": 623,
+        "opaque_pixels": 444,
+        "partial_pixels": 179,
+        "transparent_pixels": 127
+      }
+    },
+    {
+      "index_bottom_to_top": 18,
+      "name": "eyelash-r",
+      "kind": "pixel",
+      "bbox": [
+        699,
+        135,
+        736,
+        158
+      ],
+      "visible": true,
+      "opacity": 255,
+      "blend_mode": "BlendMode.NORMAL",
+      "clipping": false,
+      "has_mask": false,
+      "pixel_size": [
+        37,
+        23
+      ],
+      "alpha": {
+        "range": [
+          0,
+          255
+        ],
+        "local_bbox": [
+          0,
+          0,
+          37,
+          23
+        ],
+        "nonzero_pixels": 371,
+        "opaque_pixels": 54,
+        "partial_pixels": 317,
+        "transparent_pixels": 480
+      }
+    },
+    {
+      "index_bottom_to_top": 19,
+      "name": "irides-r",
+      "kind": "pixel",
+      "bbox": [
+        713,
+        141,
+        733,
+        164
+      ],
+      "visible": true,
+      "opacity": 255,
+      "blend_mode": "BlendMode.NORMAL",
+      "clipping": false,
+      "has_mask": false,
+      "pixel_size": [
+        20,
+        23
+      ],
+      "alpha": {
+        "range": [
+          0,
+          255
+        ],
+        "local_bbox": [
+          0,
+          0,
+          20,
+          23
+        ],
+        "nonzero_pixels": 383,
+        "opaque_pixels": 240,
+        "partial_pixels": 143,
+        "transparent_pixels": 77
+      }
+    },
+    {
+      "index_bottom_to_top": 20,
+      "name": "irides-l",
+      "kind": "pixel",
+      "bbox": [
+        774,
+        137,
+        794,
+        161
+      ],
+      "visible": true,
+      "opacity": 255,
+      "blend_mode": "BlendMode.NORMAL",
+      "clipping": false,
+      "has_mask": false,
+      "pixel_size": [
+        20,
+        24
+      ],
+      "alpha": {
+        "range": [
+          0,
+          255
+        ],
+        "local_bbox": [
+          0,
+          0,
+          20,
+          24
+        ],
+        "nonzero_pixels": 396,
+        "opaque_pixels": 248,
+        "partial_pixels": 148,
+        "transparent_pixels": 84
+      }
+    },
+    {
+      "index_bottom_to_top": 21,
+      "name": "headwear",
+      "kind": "pixel",
+      "bbox": [
+        806,
+        89,
+        832,
+        128
+      ],
+      "visible": true,
+      "opacity": 255,
+      "blend_mode": "BlendMode.NORMAL",
+      "clipping": false,
+      "has_mask": false,
+      "pixel_size": [
+        26,
+        39
+      ],
+      "alpha": {
+        "range": [
+          0,
+          255
+        ],
+        "local_bbox": [
+          0,
+          0,
+          26,
+          39
+        ],
+        "nonzero_pixels": 516,
+        "opaque_pixels": 56,
+        "partial_pixels": 460,
+        "transparent_pixels": 498
+      }
+    },
+    {
+      "index_bottom_to_top": 22,
+      "name": "eyelash-l",
+      "kind": "pixel",
+      "bbox": [
+        767,
+        132,
+        809,
+        157
+      ],
+      "visible": true,
+      "opacity": 255,
+      "blend_mode": "BlendMode.NORMAL",
+      "clipping": false,
+      "has_mask": false,
+      "pixel_size": [
+        42,
+        25
+      ],
+      "alpha": {
+        "range": [
+          0,
+          255
+        ],
+        "local_bbox": [
+          0,
+          0,
+          42,
+          25
+        ],
+        "nonzero_pixels": 431,
+        "opaque_pixels": 73,
+        "partial_pixels": 358,
+        "transparent_pixels": 619
+      }
+    },
+    {
+      "index_bottom_to_top": 23,
+      "name": "front hair",
+      "kind": "pixel",
+      "bbox": [
+        659,
+        36,
+        821,
+        304
+      ],
+      "visible": true,
+      "opacity": 255,
+      "blend_mode": "BlendMode.NORMAL",
+      "clipping": false,
+      "has_mask": false,
+      "pixel_size": [
+        162,
+        268
+      ],
+      "alpha": {
+        "range": [
+          0,
+          255
+        ],
+        "local_bbox": [
+          0,
+          0,
+          162,
+          268
+        ],
+        "nonzero_pixels": 14897,
+        "opaque_pixels": 10245,
+        "partial_pixels": 4652,
+        "transparent_pixels": 28519
+      }
+    }
+  ],
+  "status": "Inputs and repair instructions only; no repaired PSD or rig delivered in this package."
+}

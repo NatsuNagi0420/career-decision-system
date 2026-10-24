@@ -1,3 +1,4 @@
+/** 青穗集 · 求职助手工作台：登录后的对话、确认卡、成果物都从这里进。 */
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import {
   api,
@@ -20,6 +21,11 @@ import { DecisionCard } from "./components/DecisionCard";
 import { EvidenceDrawer } from "./components/EvidenceDrawer";
 import { Login } from "./components/Login";
 import { LoopSpine } from "./components/LoopSpine";
+import { Welcome } from "./components/Welcome";
+import { DesktopScene } from "./components/DesktopScene";
+import { PixelIcon } from "./components/PixelIcon";
+import type { DesktopApp } from "./state/desktop";
+import { companionCue, type CompanionIssue } from "./character/suinaiCompanion";
 import { Ms } from "./components/Ms";
 import { formatFailure } from "./state/failure";
 import { currentStation, loopStations } from "./state/loop";
@@ -51,14 +57,13 @@ interface Props {
 const LAST_RUN_KEY = "career.lastRun";
 const RUN_QUERY_KEY = "run";
 
+const AUTO_CAPABILITY = "auto";
+
 const EXAMPLES: Array<{ goal: string; capability: string; glyph: string }> = [
-  {
-    goal: "我在数据分析师和后端工程师之间犹豫，想先看看真实岗位到底要什么",
-    capability: "direction_explore",
-    glyph: "travel_explore",
-  },
-  { goal: "帮我把这个纠结整理成一个能比较、能行动的决策问题", capability: "decision_frame", glyph: "flag" },
-  { goal: "看看我的画像里还缺哪条线索，以致于现在没法判断", capability: "profile_diagnose", glyph: "person_search" },
+  { goal: "先补我的经历，缺哪条会明说", capability: AUTO_CAPABILITY, glyph: "person_search" },
+  { goal: "按我现在的经历对照目录里适合我的岗位", capability: AUTO_CAPABILITY, glyph: "travel_explore" },
+  { goal: "对照岗位看我还缺什么、有没有题库和练习", capability: AUTO_CAPABILITY, glyph: "route" },
+  { goal: "帮我根据现在的情况写一份简历", capability: AUTO_CAPABILITY, glyph: "article" },
 ];
 
 const RUN_LABEL: Record<string, string> = {
@@ -76,8 +81,11 @@ const RUN_LABEL: Record<string, string> = {
 const PHASES = ["决定下一步", "查资料", "整理结论"];
 
 function WorkbenchShell({ onSignedOut }: Props) {
+  const [desktopApp, setDesktopApp] = useState<DesktopApp>("messages");
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const [capabilities, setCapabilities] = useState<Capability[]>([]);
-  const [chosen, setChosen] = useState<string>("direction_explore");
+  const [chosen, setChosen] = useState<string>(AUTO_CAPABILITY);
   const [goal, setGoal] = useState("");
   const [state, setState] = useState<ShellState>(emptyState);
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
@@ -87,6 +95,9 @@ function WorkbenchShell({ onSignedOut }: Props) {
   const [project, setProject] = useState<string | null>(null);
   const [runId, setRunId] = useState<string | null>(() => sharedRun() ?? localStorage.getItem(LAST_RUN_KEY));
   const [notice, setNotice] = useState<string | null>(null);
+  const [companionIssue, setCompanionIssue] = useState<CompanionIssue | null>(null);
+  const [submitting, setSubmitting] = useState<"run" | "decision" | null>(null);
+  const [reactToResult, setReactToResult] = useState(false);
   /** The answer as it is being written. Transient: it is replaced by the artifact. */
   const [stream, setStream] = useState<{ answer: string; reasoning: string } | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -102,6 +113,9 @@ function WorkbenchShell({ onSignedOut }: Props) {
    *  right after the approval that wrote a round. */
   const [boardTick, setBoardTick] = useState(0);
   const abortRef = useRef<AbortController | null>(null);
+  const currentRunRef = useRef(runId);
+  const submissionRef = useRef(false);
+  const selectionRef = useRef(0);
   const bootRef = useRef(false);
 
   const refreshFeed = useCallback(async () => {
@@ -114,46 +128,54 @@ function WorkbenchShell({ onSignedOut }: Props) {
   }, []);
 
   const refresh = useCallback(
-    async (id: string) => {
+    async (id: string, signal?: AbortSignal) => {
       try {
-        setSnapshot(await api.snapshot(id));
+        const next = await api.snapshot(id);
+        if (!signal?.aborted && currentRunRef.current === id) setSnapshot(next);
       } catch (error) {
-        setNotice((error as Error).message);
+        if (!signal?.aborted && currentRunRef.current === id) setNotice((error as Error).message);
       }
-      void refreshFeed();
+      if (!signal?.aborted) void refreshFeed();
     },
     [refreshFeed],
   );
 
   const consume = useCallback(
     async (id: string, afterSeq: number) => {
+      abortRef.current?.abort();
       const controller = new AbortController();
       abortRef.current = controller;
+      setCompanionIssue(null);
       let last = afterSeq;
       try {
         for await (const frame of readRunStream(id, {
           afterSeq,
           signal: controller.signal,
-          onDelta: (delta) => setStream({ answer: delta.answer, reasoning: delta.reasoning }),
+          onDelta: (delta) => {
+            if (!controller.signal.aborted && currentRunRef.current === id) setStream({ answer: delta.answer, reasoning: delta.reasoning });
+          },
         })) {
+          if (controller.signal.aborted || currentRunRef.current !== id) break;
           last = frame.seq;
           setState((current) => reduceFrame(current, frame as Frame));
           // The real answer has landed; the half-written one must not linger under it.
-          if (frame.kind === "artifact_created") {
+          if (["artifact_created", "run_completed", "run_failed"].includes(frame.kind)) {
             setStream(null);
           }
           // Only the frames that change what the object layer holds trigger a refetch;
           // refreshing per frame would put a request on every token of the timeline.
           if (["approval_required", "artifact_created", "obligation_created", "run_completed", "run_failed"].includes(frame.kind)) {
-            void refresh(id);
+            void refresh(id, controller.signal);
           }
         }
       } catch (error) {
-        if (!controller.signal.aborted) {
-          setNotice((error as Error).message);
+        if (!controller.signal.aborted && currentRunRef.current === id) {
+          const message = (error as Error).message;
+          setNotice(message);
+          setCompanionIssue({ kind: "connection", message });
         }
       } finally {
-        void refresh(id);
+        if (!controller.signal.aborted && currentRunRef.current === id) void refresh(id, controller.signal);
       }
       return last;
     },
@@ -162,35 +184,50 @@ function WorkbenchShell({ onSignedOut }: Props) {
 
   const launch = useCallback(
     async (input: { goal: string; capability_id: string | null; obligation_id?: string; project_id?: string | null }) => {
-      if (input.goal.trim().length < 4) {
-        return;
-      }
+      if (input.goal.trim().length < 4 || submissionRef.current) return;
+      submissionRef.current = true;
+      const selection = ++selectionRef.current;
       abortRef.current?.abort();
+      currentRunRef.current = null;
+      setRunId(null);
       setState(emptyState);
       setSnapshot(null);
       setNotice(null);
+      setCompanionIssue(null);
       setStream(null);
+      setReactToResult(true);
+      setSubmitting("run");
+      let created: { run_id: string };
       try {
-        const created = await api.createRun(input);
-        // The words are now the agent's input, not a draft. Leaving them in the box
-        // reads as "nothing happened yet".
-        setGoal("");
-        localStorage.setItem(LAST_RUN_KEY, created.run_id);
-        setRunId(created.run_id);
-        await consume(created.run_id, -1);
+        created = await api.createRun(input);
       } catch (error) {
-        // A 409 here means the promise was already claimed elsewhere — the other tab
-        // is showing it, so saying so beats an error toast.
-        setNotice((error as Error).message);
+        if (selectionRef.current === selection) {
+          const message = (error as Error).message;
+          setNotice(message);
+          setCompanionIssue({ kind: "request", message });
+        }
         void refreshFeed();
+        return;
+      } finally {
+        submissionRef.current = false;
+        if (selectionRef.current === selection) setSubmitting(null);
       }
+      // A request can finish after the person opened another conversation. Keep it in
+      // history, but do not steal their selection or animate the wrong task's result.
+      if (selectionRef.current !== selection) { void refreshFeed(); return; }
+      setGoal("");
+      localStorage.setItem(LAST_RUN_KEY, created.run_id);
+      currentRunRef.current = created.run_id;
+      setRunId(created.run_id);
+      await consume(created.run_id, -1);
     },
     [consume, refreshFeed],
   );
 
   const start = useCallback(() => {
+    if (submissionRef.current || state.status === "running" || state.status === "awaiting_approval") return;
     void launch({ goal: goal.trim(), capability_id: chosen, project_id: project });
-  }, [chosen, goal, launch, project]);
+  }, [chosen, goal, launch, project, state.status]);
 
   useEffect(() => {
     api
@@ -207,6 +244,13 @@ function WorkbenchShell({ onSignedOut }: Props) {
 
   const openRun = useCallback(
     (id: string) => {
+      selectionRef.current++;
+      currentRunRef.current = id;
+      setSubmitting(null);
+      setCompanionIssue(null);
+      setReactToResult(false);
+      setDesktopApp("messages");
+      setHistoryOpen(false);
       abortRef.current?.abort();
       setState(emptyState);
       setSnapshot(null);
@@ -262,20 +306,30 @@ function WorkbenchShell({ onSignedOut }: Props) {
 
   const decide = useCallback(
     async (approved: boolean, feedback: string) => {
-      if (!runId || !state.proposals.length) {
-        return;
-      }
-      const approvalId = state.proposals.find((proposal) => proposal.approvalId)?.approvalId;
-      if (!approvalId) {
-        return;
-      }
+      if (!runId || !state.proposals.length || submissionRef.current) return;
+      const approvalId = state.proposals.find((proposal) => proposal.state === "awaiting")?.approvalId;
+      if (!approvalId) return;
+      submissionRef.current = true;
+      const selection = selectionRef.current;
+      setSubmitting("decision");
+      setCompanionIssue(null);
+      setReactToResult(true);
       setState((current) => ({ ...current, status: "running" }));
       try {
         await api.decide(runId, approvalId, approved, feedback);
-        await consume(runId, state.lastSeq);
       } catch (error) {
-        setNotice((error as Error).message);
+        if (selectionRef.current === selection && currentRunRef.current === runId) {
+          const message = (error as Error).message;
+          setNotice(message);
+          setCompanionIssue({ kind: "request", message });
+          setState((current) => ({ ...current, status: "awaiting_approval" }));
+        }
+        return;
+      } finally {
+        submissionRef.current = false;
+        if (selectionRef.current === selection) setSubmitting(null);
       }
+      if (selectionRef.current === selection && currentRunRef.current === runId) await consume(runId, state.lastSeq);
     },
     [consume, runId, state.lastSeq, state.proposals],
   );
@@ -312,12 +366,15 @@ function WorkbenchShell({ onSignedOut }: Props) {
         setUser(await api.me());
       } catch (error) {
         setNotice((error as Error).message);
+        throw error;
       }
     },
     [],
   );
 
-  const running = state.status === "running" || state.status === "awaiting_approval";
+  const running = Boolean(submitting) || state.status === "running" || state.status === "awaiting_approval";
+  const companion = companionCue({ runId, state, snapshot, composing: desktopApp === "messages" && Boolean(goal.trim()),
+    submitting, issue: companionIssue, reactToResult });
   /* A run is selected but its snapshot has not landed yet — the whole switch window.
      Derived rather than flagged, so it cannot be left set after the data arrives. */
   const waitingForRun = Boolean(runId) && !snapshot;
@@ -359,6 +416,13 @@ function WorkbenchShell({ onSignedOut }: Props) {
   };
   // The first screen is the only one that still needs an introduction to how she works.
   const firstScreen = state.items.length === 0 && !running && !waitingForRun;
+  // Desktop launchers prepare an editable message; opening a window never spends tokens.
+  const prepareMessage = (text: string) => {
+    setDesktopApp("messages");
+    setHistoryOpen(false);
+    setGoal(text);
+    requestAnimationFrame(() => document.getElementById("composer")?.focus());
+  };
 
   const taskSubmitted = useCallback(
     (woken: string | null) => {
@@ -394,21 +458,40 @@ function WorkbenchShell({ onSignedOut }: Props) {
 
   // The pill shows this text on desktop and only a coloured dot below 980px, so the same
   // words have to ride on the element itself or the dot means nothing on a phone.
-  const consentLine = user?.external_ai_consent ? "云端模型已连接，她会去查原话" : "未授权 · 走确定性路径，她不查原话";
+  const consentLine = user?.external_ai_consent
+    ? research
+      ? "云端模型已连接，她会去查原话"
+      : "可以查岗位原话"
+    : research
+      ? "未授权 · 走确定性路径，她不查原话"
+      : "只按你确认过的内容来写";
 
   return (
     <div
       className="app"
+      data-desktop-app={desktopApp}
+      data-history={historyOpen ? "open" : "closed"}
+      data-expanded={expanded ? "true" : "false"}
       data-research={research ? "on" : "off"}
       data-motion={motion ? "on" : "off"}
       data-busy={running ? "true" : "false"}
     >
       <WheatField />
-      <aside className="sidebar">
+      <DesktopScene
+        active={desktopApp} onSelect={app => { setDesktopApp(app); setHistoryOpen(false); setMenuOpen(false); }} onPrepare={prepareMessage}
+        artifacts={Object.values(artifactsById)} companion={companion} motion={motion} expanded={expanded}
+        user={user} feed={feed} onConsent={setConsent} onSignOut={signOut}
+        onMotion={() => { const next = !motion; localStorage.setItem("career.motion", next ? "1" : "0"); setMotion(next); }}
+        onHistory={() => setHistoryOpen((open) => !open)}
+        historyOpen={historyOpen} projectId={focusProject} onFiled={() => void refreshFeed()}
+        onReconnect={runId ? () => void consume(runId, state.lastSeq) : undefined}
+      />
+      <aside className="sidebar no-print" aria-label="最近对话">
+        <button className="sidebar__dismiss" type="button" onClick={() => setHistoryOpen(false)}>关闭最近对话 ×</button>
         <div className="sidebar__scroll">
           <div className="brand">
             <BrandMark />
-            <span className="pill">Agent</span>
+            <span className="pill research-only">调试</span>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-sm)" }}>
@@ -416,16 +499,26 @@ function WorkbenchShell({ onSignedOut }: Props) {
               className="cta"
               onClick={() => {
                 abortRef.current?.abort();
+                selectionRef.current++;
+                currentRunRef.current = null;
+                setSubmitting(null);
+                setCompanionIssue(null);
+                setReactToResult(false);
+                setNotice(null);
+                setStream(null);
                 setRunId(null);
                 localStorage.removeItem(LAST_RUN_KEY);
                 setState(emptyState);
                 setSnapshot(null);
                 setGoal("");
+                setDesktopApp("messages");
+                setHistoryOpen(false);
               }}
             >
               <Ms g="add" size={20} />
-              <span>新建规划会话</span>
+              <span>新对话</span>
             </button>
+            {research || openObligations.length || pendingApprovals.length ? (
             <div className="navgrid">
               <button
                 className="navpill"
@@ -449,13 +542,14 @@ function WorkbenchShell({ onSignedOut }: Props) {
                 </span>
               </button>
             </div>
+            ) : null}
           </div>
 
           <div style={{ display: "flex", flexDirection: "column" }}>
             <div className="treehead">
               <div className="treehead__lead">
                 <Ms g="account_tree" size={16} />
-                <span>这周的方向</span>
+                <span>最近对话</span>
               </div>
             </div>
             <nav className="history">
@@ -472,15 +566,16 @@ function WorkbenchShell({ onSignedOut }: Props) {
               ))}
               {!feed?.runs.length ? (
                 <p className="muted t-body-sm" style={{ padding: "4px 16px" }}>
-                  还没有对话。写下第一个目标，穗奈就会开始查。
+                  还没有对话。跟穗奈说你想做什么就行。
                 </p>
               ) : null}
             </nav>
           </div>
 
+          {research || feed?.projects.length ? (
           <div style={{ display: "flex", flexDirection: "column" }}>
             <div className="group">
-              <span>你现在要定的这件事</span>
+              <span>正在比较</span>
               <Ms g="folder_open" size={16} />
             </div>
             {feed?.projects.length ? (
@@ -502,10 +597,11 @@ function WorkbenchShell({ onSignedOut }: Props) {
               ))
             ) : (
               <p className="muted t-body-sm" style={{ padding: "4px 16px" }}>
-                还没定要比较什么。跟穗奈说说你在纠结什么，她帮你框成一个问题。
+                还没有要比较的方向。
               </p>
             )}
           </div>
+          ) : null}
         </div>
 
         <div className="usercard">
@@ -516,7 +612,7 @@ function WorkbenchShell({ onSignedOut }: Props) {
               <Swap when={String(openObligations.length)}>
                 {openObligations.length
                   ? `穗奈答应过要接着做 ${openObligations.length} 件事`
-                  : "穗奈手上没有欠着的下一步"}
+                  : "还没有下一步要接着做"}
               </Swap>
             </div>
           </div>
@@ -528,7 +624,8 @@ function WorkbenchShell({ onSignedOut }: Props) {
 
       <div className="frame">
         <header className="topbar">
-          <div className="search">
+          <div className="desktop-message-title"><PixelIcon kind="messages" size={19} /><span>穗奈消息</span><small>MESSAGE.EXE</small></div>
+          <div className="search research-only">
             <Ms g="search" size={20} />
             <input
               name="search"
@@ -539,6 +636,7 @@ function WorkbenchShell({ onSignedOut }: Props) {
             />
           </div>
           <div className="topbar__end">
+            <button className="desktop-maximize" type="button" aria-label={expanded ? "还原消息窗口" : "展开消息窗口"} aria-pressed={expanded} onClick={() => setExpanded((open) => !open)}>□</button>
             <span
               className={`status ${user?.external_ai_consent ? "status--on" : "status--quiet"}`}
               role="status"
@@ -547,35 +645,43 @@ function WorkbenchShell({ onSignedOut }: Props) {
             >
               <span className={`dot${running ? " dot--live" : ""}`} />
               <span className="status__label">
-                <Swap when={user?.external_ai_consent ? "on" : "off"}>
-                  {user?.external_ai_consent ? "云端模型已连接" : "未授权 · 走确定性路径"}
+                <Swap when={`${research ? "r" : "c"}-${user?.external_ai_consent ? "on" : "off"}`}>
+                  {user?.external_ai_consent
+                    ? research
+                      ? "云端模型已连接"
+                      : "可以查岗位原话"
+                    : research
+                      ? "未授权 · 走确定性路径"
+                      : "只按已确认的内容写"}
                 </Swap>
               </span>
             </span>
-            <button
-              className="pillbtn"
-              aria-pressed={research}
-              title="把每一步走了多久、花了多少字、依据挂在哪一行也显示出来。这是给调试的人看的。"
-              onClick={() => {
-                const next = !research;
-                localStorage.setItem("career.research", next ? "1" : "0");
-                setResearch(next);
-              }}
-            >
-              <Ms g={research ? "engineering" : "psychology"} size={16} />
-              <span>研究员</span>
-            </button>
+            {research ? (
+              <button
+                className="pillbtn"
+                aria-pressed={true}
+                title="收起逐步耗时、字数和行指针。这是给调试的人看的。"
+                onClick={() => {
+                  localStorage.setItem("career.research", "0");
+                  setResearch(false);
+                }}
+              >
+                <Ms g="engineering" size={16} />
+                <span>调试中</span>
+              </button>
+            ) : null}
             <div className="topbar__own">
               <button className="iconbtn" title="账号与授权" aria-expanded={menuOpen} onClick={() => setMenuOpen((current) => !current)}>
                 <Ms g="tune" size={22} />
               </button>
               {menuOpen ? (
                 <div className="menu menu--drop">
+                  <button type="button" className="menu__row" onClick={() => { setDesktopApp("profile"); setMenuOpen(false); setHistoryOpen(false); }}><PixelIcon kind="profile" size={18} /><span>个人主页与资料</span></button>
                   <div className="menu__head">云端模型授权</div>
                   <button
                     className="menu__row"
                     onClick={() => {
-                      void setConsent(!user?.external_ai_consent);
+                      void setConsent(!user?.external_ai_consent).catch(() => {});
                       setMenuOpen(false);
                     }}
                   >
@@ -592,6 +698,19 @@ function WorkbenchShell({ onSignedOut }: Props) {
                     </span>
                   </button>
                   <div className="menu__head">界面</div>
+                  <a className="menu__row" href="?preview=suinai-motion"><PixelIcon kind="wheat" size={18} /><span>穗奈动作试映室</span></a>
+                  <button
+                    className="menu__row"
+                    aria-pressed={research}
+                    onClick={() => {
+                      const next = !research;
+                      localStorage.setItem("career.research", next ? "1" : "0");
+                      setResearch(next);
+                    }}
+                  >
+                    <Ms g="engineering" size={18} />
+                    <span>{research ? "调试视图开着 · 点击收起" : "打开调试视图"}</span>
+                  </button>
                   <button
                     className="menu__row"
                     aria-pressed={motion}
@@ -602,7 +721,7 @@ function WorkbenchShell({ onSignedOut }: Props) {
                     }}
                   >
                     <Ms g={motion ? "air" : "pause_circle"} size={18} />
-                    <span>{motion ? "背景麦浪开着 · 点击让它停下" : "背景麦浪已停下 · 点击让它再动"}</span>
+                    <span>{motion ? "界面动画开着 · 点击暂停" : "界面动画已暂停 · 点击播放"}</span>
                   </button>
                   <button className="menu__row" onClick={signOut}>
                     <Ms g="logout" size={18} />
@@ -620,9 +739,11 @@ function WorkbenchShell({ onSignedOut }: Props) {
               <Ms g="notifications" size={22} />
               {pendingApprovals.length ? <span className="iconbtn__badge">{pendingApprovals.length}</span> : null}
             </button>
-            <button className="iconbtn" disabled={!snapshot} title="复制这一轮的链接" onClick={() => void share()}>
-              <Ms g="ios_share" size={22} />
-            </button>
+            {snapshot ? (
+              <button className="iconbtn" title="复制这一轮的链接" onClick={() => void share()}>
+                <Ms g="ios_share" size={22} />
+              </button>
+            ) : null}
           </div>
         </header>
 
@@ -630,19 +751,31 @@ function WorkbenchShell({ onSignedOut }: Props) {
           {/* Keyed by the run: switching conversations remounts the thread, so the
               entrance animations replay instead of content silently mutating. */}
           <div className="feed" data-swap="" key={runId ?? "none"}>
-            <LoopSpine
-              stations={stations}
-              current={spineNow}
-              onTake={takeStep}
-              alternatives={firstScreen ? EXAMPLES : []}
-              lead={
-                firstScreen
-                  ? continuation?.reason === "cooling_down"
-                    ? "穗奈今天已经自己跑过一轮了，不再自动打扰你。想让她现在开始，写个目标，或者在左边点「接着做」。"
-                    : "她会把结果落成能点回原文的成果物，要写进业务库的动作会停下来等你确认。"
-                  : null
-              }
-            />
+            {research ? (
+              <LoopSpine
+                stations={stations}
+                current={spineNow}
+                onTake={takeStep}
+                alternatives={firstScreen ? EXAMPLES : []}
+                lead={
+                  firstScreen
+                    ? continuation?.reason === "cooling_down"
+                      ? "穗奈今天已经自己跑过一轮了，不再自动打扰你。想让她现在开始，写个目标，或者在左边点「接着做」。"
+                      : "她会把结果落成能点回原文的成果物，要写进业务库的动作会停下来等你确认。"
+                    : null
+                }
+              />
+            ) : firstScreen ? (
+              <Welcome
+                lead={
+                  continuation?.reason === "cooling_down"
+                    ? "今天已经自己跑过一轮了。想现在开始，直接说你想做什么。"
+                    : "把经历放进档案，把选择留在桌面。今天想聊聊，还是先做一件求职小事？"
+                }
+                onHome={() => setDesktopApp("profile")}
+                onStart={prepareMessage}
+              />
+            ) : null}
             {snapshot ? null : waitingForRun ? (
               <div className="ribbon">
                 <div className="ribbon__lead">
@@ -677,7 +810,7 @@ function WorkbenchShell({ onSignedOut }: Props) {
                   <button className="minibtn" title="复制这一轮的链接" onClick={() => void share()}>
                     <Ms g="share" size={20} />
                   </button>
-                  <button className="minibtn" title="重放这一轮" onClick={() => openRun(snapshot.run.id)}>
+                  <button className="minibtn research-only" title="重放这一轮" onClick={() => openRun(snapshot.run.id)}>
                     <Ms g="replay" size={20} />
                   </button>
                 </div>
@@ -766,6 +899,7 @@ function WorkbenchShell({ onSignedOut }: Props) {
           goal={goal}
           phase={phase}
           projectName={project ? (feed?.projects.find((entry) => entry.id === project)?.title ?? null) : null}
+          research={research}
           onChangeGoal={setGoal}
           onPick={setChosen}
           onSend={start}
@@ -857,7 +991,7 @@ function TrackCard({
 
   return (
     <div className={`track${expanded ? " track--open" : ""}`}>
-      <button className="track__head" onClick={() => setExpanded((value) => !value)}>
+      <button className="track__head" aria-expanded={expanded} onClick={() => setExpanded((value) => !value)}>
         <span className="track__name">
           <Ms g={expanded ? "arrow_drop_down" : "arrow_right"} size={16} />
           <span>{capabilityName}</span>
@@ -872,11 +1006,11 @@ function TrackCard({
             const isCurrent = run.id === runId;
             return (
               <div key={run.id}>
-                <button className={`session${isCurrent ? " session--on" : ""}`} onClick={() => onOpen(run.id)}>
+                <button className={`session${isCurrent ? " session--on" : ""}`} title={run.goal} onClick={() => onOpen(run.id)}>
                   <Ms className="session__icon" g="chat_bubble" fill={isCurrent} size={16} />
                   <span className="session__body">
                     <span className="session__title">
-                      <span>{run.goal.slice(0, 20) || run.id.slice(0, 8)}</span>
+                      <span>{run.goal || run.id.slice(0, 8)}</span>
                       {isCurrent && run.status === "running" ? <span className="session__dot" /> : null}
                     </span>
                     <span className={`session__sub${isCurrent ? "" : " session__sub--quiet"}`}>
@@ -887,11 +1021,11 @@ function TrackCard({
                 {promises.length ? (
                   <div className="branch">
                     {promises.map((entry) => (
-                      <button className="branch__item" key={entry.id} onClick={() => onOpen(run.id)}>
+                      <button className="branch__item" key={entry.id} title={entry.intent} onClick={() => onOpen(run.id)}>
                         <span className="branch__row">
                           <span className="branch__name">
-                            <span>💡</span>
-                            <span>{entry.intent.slice(0, 18)}</span>
+                            <PixelIcon kind="wheat" size={14} />
+                            <span>{entry.intent}</span>
                           </span>
                         </span>
                         <span className="branch__tags">
@@ -923,6 +1057,7 @@ function Dock({
   evidenceCount,
   phase,
   projectName,
+  research,
   onPick,
   onChangeGoal,
   onSend,
@@ -935,6 +1070,7 @@ function Dock({
   evidenceCount: number;
   phase: string | null;
   projectName: string | null;
+  research: boolean;
   onPick: (id: string) => void;
   onChangeGoal: (value: string) => void;
   onSend: () => void;
@@ -943,23 +1079,25 @@ function Dock({
     <div className="dock">
       <div className="dock__inner">
         <span className="dock__glow" aria-hidden="true" />
-        <div className="dock__rigor">
-          <span className="dock__readout">
-            <Ms g="verified" size={16} />
-            <Swap when={`${consented}-${evidenceCount}`}>{`${consented ? "她会去查原话" : "她不查原话"} · ${evidenceCount} 条原话比对`}</Swap>
-          </span>
-          <div className="seg" title="穗奈这一轮实际走到的阶段">
-            {PHASES.map((entry) => (
-              <span className="seg__btn" data-on={entry === phase} key={entry}>
-                {entry}
-              </span>
-            ))}
+        {research ? (
+          <div className="dock__rigor">
+            <span className="dock__readout">
+              <Ms g="verified" size={16} />
+              <Swap when={`${consented}-${evidenceCount}`}>{`${consented ? "她会去查原话" : "她不查原话"} · ${evidenceCount} 条原话比对`}</Swap>
+            </span>
+            <div className="seg" title="穗奈这一轮实际走到的阶段">
+              {PHASES.map((entry) => (
+                <span className="seg__btn" data-on={entry === phase} key={entry}>
+                  {entry}
+                </span>
+              ))}
+            </div>
           </div>
-        </div>
+        ) : null}
 
         <div className="dock__field">
-          <CapabilityPicker capabilities={capabilities} chosen={chosen} onPick={onPick} />
-          {projectName ? <span className="pill pill--primary">{`写入：${projectName}`}</span> : null}
+          {research ? <CapabilityPicker capabilities={capabilities} chosen={chosen} onPick={onPick} /> : null}
+          {research && projectName ? <span className="pill pill--primary">{`写入：${projectName}`}</span> : null}
           <textarea
             id="composer"
             name="goal"
@@ -971,7 +1109,7 @@ function Dock({
                 onSend();
               }
             }}
-            placeholder="想知道什么直接问；也可以让她去查某个岗位的原话"
+            placeholder="直接说你想做什么，比如对照岗位或写简历"
             rows={1}
           />
           <button
@@ -983,7 +1121,11 @@ function Dock({
             <Ms g="arrow_upward" size={20} />
           </button>
         </div>
-        <p className="dock__hint">Shift+Enter 换行 · 穗奈会先去找真实岗位与要求原句，不会凭行业印象下结论</p>
+        <p className="dock__hint">
+          {research
+            ? "Shift+Enter 换行 · 求职助手会按你这句话判断这一步；也可以自己点左边选这一步做什么"
+            : "回车交给穗奈 · Shift+Enter 换行"}
+        </p>
       </div>
     </div>
   );
@@ -996,13 +1138,15 @@ function Dock({
  */
 const GROUPS: Array<{ label: string; domains: string[] }> = [
   { label: "认识自己", domains: ["profile"] },
-  { label: "看清方向", domains: ["explore", "evidence"] },
-  { label: "做出决定", domains: ["decide"] },
+  { label: "对照岗位", domains: ["explore", "learn"] },
+  { label: "做出决定", domains: ["decide", "evidence"] },
   { label: "落地行动", domains: ["act", "resume", "interview"] },
 ];
 
 const GLYPH: Record<string, string> = {
   profile_diagnose: "person_search",
+  job_match: "travel_explore",
+  learning_path: "route",
   direction_explore: "travel_explore",
   evidence_collect: "fact_check",
   decision_frame: "flag",
@@ -1012,6 +1156,7 @@ const GLYPH: Record<string, string> = {
   weekly_review: "calendar_month",
   resume_build: "article",
   interview_prep: "record_voice_over",
+  auto: "handshake",
 };
 
 function CapabilityPicker({
@@ -1025,7 +1170,15 @@ function CapabilityPicker({
 }) {
   const [phase, setPhase] = useState<"closed" | "open" | "closing">("closed");
   const wrap = useRef<HTMLDivElement>(null);
-  const active = capabilities.find((entry) => entry.id === chosen);
+  const autoOption = {
+    id: AUTO_CAPABILITY,
+    name: "求职助手",
+    description: "根据你这句话判断这一步该做什么，不用先选工作流",
+    domain: "system",
+    status: "implemented" as const,
+    risk_tier: "R0",
+  };
+  const active = chosen === AUTO_CAPABILITY ? autoOption : capabilities.find((entry) => entry.id === chosen);
   const open = phase === "open";
 
   // The panel stays mounted for the length of its exit animation, otherwise closing it
@@ -1079,6 +1232,25 @@ function CapabilityPicker({
 
       {phase !== "closed" ? (
         <div className="picker__panel" data-closing={phase === "closing"}>
+          <div>
+            <div className="picker__group">
+              <span>先交给她</span>
+            </div>
+            <button
+              className="picker__item"
+              aria-pressed={chosen === AUTO_CAPABILITY}
+              onClick={() => pick(AUTO_CAPABILITY)}
+            >
+              <span className="picker__icon">
+                <Ms g="handshake" size={16} />
+              </span>
+              <span style={{ minWidth: 0 }}>
+                <span className="picker__name">{autoOption.name}</span>
+                <span className="picker__desc">{autoOption.description}</span>
+              </span>
+              {chosen === AUTO_CAPABILITY ? <Ms className="picker__tick" g="check_circle" size={20} /> : null}
+            </button>
+          </div>
           {GROUPS.map((group) => {
             const entries = capabilities.filter((capability) => group.domains.includes(capability.domain));
             if (!entries.length) {

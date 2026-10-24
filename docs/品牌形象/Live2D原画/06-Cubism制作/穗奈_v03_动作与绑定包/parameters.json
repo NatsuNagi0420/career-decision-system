@@ -1,0 +1,349 @@
+{
+  "_comment": "青穗集 · 参数绑定目标；这些数值不是已经存在的模型关键形。",
+  "canvas": [
+    1536,
+    1536
+  ],
+  "parameterCount": 25,
+  "parameters": [
+    {
+      "id": "ParamAngleY",
+      "label": "点头",
+      "min": -10,
+      "max": 10,
+      "default": 0,
+      "keys": [
+        -10,
+        0,
+        10
+      ],
+      "binding": "整头变形器：轻微俯仰，脸、五官、眼镜与头发同步"
+    },
+    {
+      "id": "ParamAngleZ",
+      "label": "侧头",
+      "min": -10,
+      "max": 10,
+      "default": 0,
+      "keys": [
+        -10,
+        0,
+        10
+      ],
+      "binding": "整头旋转变形器：锚点(756,236)，不要单独移动脸底内的头发"
+    },
+    {
+      "id": "ParamBodyAngleZ",
+      "label": "身体倾斜",
+      "min": -3,
+      "max": 3,
+      "default": 0,
+      "keys": [
+        -3,
+        0,
+        3
+      ],
+      "binding": "整个人物父旋转变形器"
+    },
+    {
+      "id": "ParamBodyY",
+      "label": "身体起落",
+      "min": -10,
+      "max": 10,
+      "default": 0,
+      "keys": [
+        -10,
+        0,
+        10
+      ],
+      "binding": "身体父变形器垂直位移；负值向上"
+    },
+    {
+      "id": "ParamEyeBallX",
+      "label": "同向视线X",
+      "min": -1,
+      "max": 1,
+      "default": 0,
+      "keys": [
+        -1,
+        0,
+        1
+      ],
+      "binding": "两眼中性瞳孔共用值，左右最大约3.2原画像素，裁剪到眼白遮罩"
+    },
+    {
+      "id": "ParamEyeBallY",
+      "label": "同向视线Y",
+      "min": -1,
+      "max": 1,
+      "default": 0,
+      "keys": [
+        -1,
+        0,
+        1
+      ],
+      "binding": "正值向上，两眼最大约2.5原画像素，裁剪到眼白遮罩"
+    },
+    {
+      "id": "ParamEyeLOpen",
+      "label": "L眼开合",
+      "min": 0,
+      "max": 1,
+      "default": 1,
+      "keys": [
+        0,
+        0.35,
+        0.7,
+        1
+      ],
+      "binding": "闭眼用V04/V05轮廓，中间关键形修眼睑；不要只缩放整块眼图"
+    },
+    {
+      "id": "ParamEyeLSmile",
+      "label": "L眼笑眼",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "keys": [
+        0,
+        1
+      ],
+      "binding": "仅在闭合区间将V04切换为V05笑眼"
+    },
+    {
+      "id": "ParamBrowLY",
+      "label": "L眉高",
+      "min": -1,
+      "max": 1,
+      "default": 0,
+      "keys": [
+        -1,
+        0,
+        1
+      ],
+      "binding": "参考B01-B06形态，眉毛独立网格变形"
+    },
+    {
+      "id": "ParamBrowLForm",
+      "label": "L眉形",
+      "min": -1,
+      "max": 1,
+      "default": 0,
+      "keys": [
+        -1,
+        0,
+        1
+      ],
+      "binding": "负为温和关切，正为专注；避免过度皱眉"
+    },
+    {
+      "id": "ParamEyeROpen",
+      "label": "R眼开合",
+      "min": 0,
+      "max": 1,
+      "default": 1,
+      "keys": [
+        0,
+        0.35,
+        0.7,
+        1
+      ],
+      "binding": "闭眼用V04/V05轮廓，中间关键形修眼睑；不要只缩放整块眼图"
+    },
+    {
+      "id": "ParamEyeRSmile",
+      "label": "R眼笑眼",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "keys": [
+        0,
+        1
+      ],
+      "binding": "仅在闭合区间将V04切换为V05笑眼"
+    },
+    {
+      "id": "ParamBrowRY",
+      "label": "R眉高",
+      "min": -1,
+      "max": 1,
+      "default": 0,
+      "keys": [
+        -1,
+        0,
+        1
+      ],
+      "binding": "参考B01-B06形态，眉毛独立网格变形"
+    },
+    {
+      "id": "ParamBrowRForm",
+      "label": "R眉形",
+      "min": -1,
+      "max": 1,
+      "default": 0,
+      "keys": [
+        -1,
+        0,
+        1
+      ],
+      "binding": "负为温和关切，正为专注；避免过度皱眉"
+    },
+    {
+      "id": "ParamMouthForm",
+      "label": "闭口嘴形",
+      "min": -1,
+      "max": 1,
+      "default": 0,
+      "keys": [
+        -1,
+        0,
+        1
+      ],
+      "binding": "参考M01/M02/M03/M06/M07画出关键形；以M01为静止默认"
+    },
+    {
+      "id": "ParamMouthOpenY",
+      "label": "嘴部开合",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "keys": [
+        0,
+        0.25,
+        0.6,
+        1
+      ],
+      "binding": "M04/M05作小中开口，文本不循环口型；不代表音素绑定"
+    },
+    {
+      "id": "ParamArmLShoulder",
+      "label": "L肩",
+      "min": -20,
+      "max": 20,
+      "default": 0,
+      "keys": [
+        -20,
+        0,
+        20
+      ],
+      "binding": "袖子根部固定，向肘部渐变；不要让肩缝漂浮"
+    },
+    {
+      "id": "ParamArmLElbow",
+      "label": "L肘",
+      "min": -165,
+      "max": 165,
+      "default": 0,
+      "keys": [
+        -165,
+        -110,
+        -55,
+        0,
+        55,
+        110,
+        165
+      ],
+      "binding": "连续网格/弯曲变形器，保留肘部体积"
+    },
+    {
+      "id": "ParamArmLWrist",
+      "label": "L腕",
+      "min": -16,
+      "max": 16,
+      "default": 0,
+      "keys": [
+        -16,
+        0,
+        16
+      ],
+      "binding": "腕和手掌共用连续形变，不独立刚性旋转切片"
+    },
+    {
+      "id": "ParamHandL",
+      "label": "L手形",
+      "min": 1,
+      "max": 6,
+      "default": 1,
+      "keys": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "binding": "H01放松/H02招手/H03托示/H04提示/H05思考/H06轻拳；用不透明度切换"
+    },
+    {
+      "id": "ParamArmRShoulder",
+      "label": "R肩",
+      "min": -20,
+      "max": 20,
+      "default": 0,
+      "keys": [
+        -20,
+        0,
+        20
+      ],
+      "binding": "袖子根部固定，向肘部渐变；不要让肩缝漂浮"
+    },
+    {
+      "id": "ParamArmRElbow",
+      "label": "R肘",
+      "min": -165,
+      "max": 165,
+      "default": 0,
+      "keys": [
+        -165,
+        -110,
+        -55,
+        0,
+        55,
+        110,
+        165
+      ],
+      "binding": "连续网格/弯曲变形器，保留肘部体积"
+    },
+    {
+      "id": "ParamArmRWrist",
+      "label": "R腕",
+      "min": -16,
+      "max": 16,
+      "default": 0,
+      "keys": [
+        -16,
+        0,
+        16
+      ],
+      "binding": "腕和手掌共用连续形变，不独立刚性旋转切片"
+    },
+    {
+      "id": "ParamHandR",
+      "label": "R手形",
+      "min": 1,
+      "max": 6,
+      "default": 1,
+      "keys": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "binding": "H01放松/H02招手/H03托示/H04提示/H05思考/H06轻拳；用不透明度切换"
+    },
+    {
+      "id": "ParamTere",
+      "label": "轻微脸红",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "keys": [
+        0,
+        1
+      ],
+      "binding": "X01不透明度；实际场景最大约0.2"
+    }
+  ]
+}

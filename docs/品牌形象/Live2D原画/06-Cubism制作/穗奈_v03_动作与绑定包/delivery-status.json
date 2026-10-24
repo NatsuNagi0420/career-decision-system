@@ -1,0 +1,22 @@
+{
+  "_comment": "青穗集 · motion3/exp3格式导出不等于Cubism模型制作完成。",
+  "motions": 40,
+  "expressions": 12,
+  "parameterDefinitions": 25,
+  "moc3": false,
+  "cmo3": false,
+  "nativeEditorRiggingVerified": false,
+  "sdkParserVerification": "passed: 40 motions and 12 expressions; evidence in logs/suinai-hand-orientation-fix-20261019/browser/cubism-sdk-parse.json",
+  "handOrientationVerification": {
+    "revision": 1,
+    "correctedDistalPalms": [
+      "H02_L",
+      "H02_R",
+      "H03_R"
+    ],
+    "reviewedOpenPalmLandmarks": 4,
+    "chromePoses": 17,
+    "nativeModelRigVerified": false,
+    "evidence": "D:\\Project\\career-decision-system\\logs\\suinai-hand-orientation-fix-20261019\\browser-hands\\hand-orientation-browser.json"
+  }
+}

@@ -1,0 +1,72 @@
+/** 青穗集 · 代码像素角色与试映室：沿用桌面字体和配色，保证小窗、静帧和移动端可读。 */
+.suinai-sprite { display: block; max-width: 100%; max-height: 100%; object-fit: contain; image-rendering: pixelated; }
+.suinai-sprite[data-mode="dots"] { image-rendering: auto; }
+.suinai-portrait { display: block; }
+.suinai-portrait .suinai-sprite { width: 100%; height: 100%; min-width: 0; min-height: 0; }
+.companion__scene .suinai-portrait { bottom: 0; height: 256px; filter: none; }
+.auth__art .suinai-portrait { bottom: 70px; width: 100%; left: 0; height: 385px; filter: none; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.app .agenthead__logo .suinai-sprite { width: 100%; height: 100%; }
+.sprite-switch { display: flex; flex-wrap: wrap; gap: 6px; }
+.sprite-switch button { padding: 8px 14px; border: 1px solid var(--md-outline-variant); background: var(--md-surface-lowest); color: var(--md-primary); border-radius: var(--r-sm); }
+.sprite-switch button[aria-pressed="true"] { background: var(--md-primary); border-color: var(--md-primary); color: var(--md-on-primary); }
+.suinai-studio { min-height: 100dvh; padding: 30px max(24px, calc((100% - 1080px) / 2)) 48px; background: var(--md-background); background-image: radial-gradient(var(--md-outline-variant) .7px, transparent .7px); background-size: 10px 10px; }
+.suinai-studio__masthead { display: flex; gap: 20px; justify-content: space-between; align-items: center; }
+.suinai-studio__masthead a { font: 400 14px/1.5 var(--desktop-font); color: var(--md-primary); text-decoration: underline; text-underline-offset: 5px; }
+.suinai-studio__intro { padding: 50px 0 27px; }
+.suinai-studio__intro h1 { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; margin: 10px 0; font: 400 36px/1.5 var(--desktop-font); }
+.suinai-studio__intro h1 span { border: 1px solid var(--md-outline-variant); padding: 0 6px; color: var(--md-on-surface-faint); font-size: 16px; }
+.suinai-studio__intro > p:last-child { font-size: 14px; line-height: 1.8; color: var(--md-on-surface-variant); }
+.suinai-studio__window { border: 2px solid var(--md-outline); border-radius: var(--r-sm); overflow: hidden; box-shadow: 5px 5px 0 var(--md-outline-variant); background: var(--md-surface-lowest); }
+.suinai-studio__body { display: grid; grid-template-columns: minmax(0,1.12fr) minmax(0,1fr); }
+.suinai-studio__preview { position: relative; display: flex; flex-direction: column; justify-content: space-between; min-height: 536px; padding: 24px; color: var(--md-primary); background-color: var(--md-surface-container); background-image: linear-gradient(var(--md-outline-variant) 1px, transparent 1px), linear-gradient(90deg,var(--md-outline-variant) 1px, transparent 1px); background-size: 24px 24px; border-right: 1px solid var(--md-outline-variant); }
+.suinai-studio__preview[data-mode="dots"] { color: var(--md-primary-fixed); background-color: #292a38; background-image: radial-gradient(#535361 .6px,transparent .6px); background-size: 6px 6px; }
+.suinai-studio__stamp, .suinai-studio__caption { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; font: 400 11px/1.5 var(--desktop-font); letter-spacing: .4px; }
+.suinai-studio__stage { display: grid; place-items: center; min-height: 400px; }
+.suinai-studio__stage .suinai-sprite { width: 288px; height: 384px; }
+.suinai-studio__caption { padding-top: 14px; border-top: 1px dashed var(--md-outline); }
+.suinai-studio__controls { padding: 28px 32px; display: flex; flex-direction: column; gap: 24px; }
+.suinai-studio__controls fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+.suinai-studio__controls legend { margin-bottom: 13px; font: 400 15px/1.5 var(--desktop-font); color: var(--md-primary); }
+.suinai-studio__poses { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.suinai-studio__poses button { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 11px 13px; border: 1px solid var(--md-outline-variant); border-radius: var(--r-sm); color: var(--md-primary); background: var(--md-surface-lowest); font-size: 13px; }
+.suinai-studio__poses button[aria-pressed="true"] { border-color: var(--md-primary); background: var(--md-primary-fixed); }
+.suinai-studio__faces { display: flex; flex-wrap: wrap; gap: 6px; }
+.suinai-studio__faces button { padding: 6px 10px; border: 1px solid var(--md-outline-variant); border-radius: var(--r-sm); background: var(--md-surface-lowest); color: var(--md-primary); font-size: 12px; }
+.suinai-studio__faces button[aria-pressed="true"] { border-color: var(--md-primary); background: var(--md-primary-fixed); }
+.suinai-studio__note { margin-top: 11px; min-height: 42px; font-size: 12px; line-height: 1.8; color: var(--md-on-surface-variant); }
+.suinai-studio__controls .btn { font-size: 13px; }
+.suinai-studio__scrub { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; margin-top: 15px; font-size: 12px; color: var(--md-on-surface-variant); }
+.suinai-studio__scrub input { width: 100%; accent-color: var(--md-primary); }
+.suinai-studio__controls small { display: block; margin-top: 9px; font-size: 11px; line-height: 1.8; color: var(--md-on-surface-faint); }
+.suinai-studio__footer { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 30px; }
+.suinai-studio__footer h2 { font: 400 17px/1.5 var(--desktop-font); color: var(--md-primary); margin-bottom: 9px; }
+.suinai-studio__footer p { font-size: 12px; line-height: 1.9; color: var(--md-on-surface-variant); max-width: 42em; }
+.suinai-studio__palette { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 8px; }
+.suinai-studio__palette span { width: 11px; height: 11px; }
+@media (max-width: 1240px) { .companion__scene .suinai-portrait { height: 218px; } }
+@media (max-width: 760px) {
+  .suinai-studio { padding: 22px 18px 35px; }
+  .suinai-studio__intro { padding-top: 32px; }
+  .suinai-studio__intro h1 { font-size: 28px; gap: 8px; }
+  .suinai-studio__body { grid-template-columns: 1fr; }
+  .suinai-studio__preview { min-height: 375px; padding: 18px; border-right: 0; border-bottom: 1px solid var(--md-outline-variant); }
+  .suinai-studio__stage { min-height: 300px; }
+  .suinai-studio__stage .suinai-sprite { width: 192px; height: 256px; }
+  .suinai-studio__stamp { font-size: 10px; }
+  .suinai-studio__controls { padding: 24px; }
+  .suinai-studio__footer { grid-template-columns: 1fr; gap: 22px; }
+  .suinai-studio__masthead a { font-size: 12px; }
+}
+/* A dark matrix makes gaps visible; foreground labels keep their own contrast. */
+.companion__scene[data-mode="dots"] { background: #292a38; }
+.companion__scene[data-mode="dots"] .companion__label { color: var(--md-primary-fixed); }
+.companion__scene[data-mode="dots"] .companion__grid { opacity: .18; }
+.suinai-studio__preview[data-mode="dots"] .suinai-studio__stamp,
+.suinai-studio__preview[data-mode="dots"] .suinai-studio__caption { color: var(--md-primary-fixed); }
+@media (max-width: 380px) {
+  .suinai-studio__intro h1 { font-size: 24px; }
+  .suinai-studio__intro h1 span { display: none; }
+  .suinai-studio__stamp { flex-direction: column; }
+  .suinai-studio__poses button { padding: 11px 8px; gap: 5px; }
+}
+@media (pointer: coarse) { .sprite-switch button, .suinai-studio__poses button, .suinai-studio__faces button { min-height: 44px; } }

@@ -1,0 +1,564 @@
+ ILO Brief
+
+1
+
+Gen AI, occupational segregation and gender equality in the world of work
+
+ Research Brief
+
+March 2026
+Gen AI, occupational segregation and gender equality in the world of work
+
+Key points
+
+ Generative artificial intelligence (Gen AI) is evolving at an unprecedented pace, creating both opportunities and challenges for employment, productivity and working conditions. Its impacts are not gender-neutral, often shaped by persistent inequalities between women and men in access to decent work, leadership and economic opportunities.
+
+ The higher exposure of women is closely linked to entrenched occupational segregation and the systemic barriers that sustain it. Discriminatory social and legal norms and biases in recruitment, promotion and workplace practices, and macroeconomic and sectoral policies often shape labour markets in ways that have implications for women's equality of opportunities and treatment.
+
+ In countries with available data, female-dominated occupations, such as business administration and clerical support, are almost twice as likely to be exposed to Gen AI as male-dominated ones such as construction, manufacturing and trade (29 versus 16 per cent). They also face much higher automation risk (16 per cent for female vs. 3 per cent of male-dominated occupations).
+
+ Gen AI is expected to drive job growth in tech-intensive sectors, yet women remain underrepresented in STEM and AI, making up only 30 per cent of the AI workforce globally. Gaps in access, skills and use are compounded for women facing intersecting inequalities while underrepresentation in AI development, risks perpetuating gender-bias in technologies and deepening the digital divide.
+
+ Exposure to Gen AI varies widely across regions and income levels. In high-income countries, 41 per cent of jobs are exposed, compared to 11 per cent in lowincome countries. These gaps reflect differences in occupational structures and sectoral composition, digital readiness and skills.
+ Women are more exposed to Gen AI than men in 88 per cent of countries in the sample (see footnote 2). The highest levels of exposure (over 40 per cent of female workers) is found in small island countries in the Pacific and the Caribbean, as well as in European countries such as Switzerland and the United Kingdom, and in the Philippines. This can be likely attributed to a higher share of women in the services sector and the rapid expansion of AI in these economies.
+
+ The more widespread impact of Gen AI lies in the quality of employment rather than quantity through its reshaping of tasks, work organisation and skills. It can intensify workloads, reduce autonomy and introduce bias. Yet Gen AI also has the potential to improve job quality by easing physical demands, supporting well-being and enhancing workplace safety and equality, including at enterprise level. This requires Gen AI be designed inclusively and supported by strong labour market institutions and social dialogue.
+ The policy choices made now will determine whether GenAI drives greater equality or entrenches disparities in the world of work, and whether opportunities are seized or lost. Embedding gender equality in the design, deployment and governance of GenAI, tackling the drivers of occupational segregation, and ensuring women’s representation in AIrelated roles are essential. Social dialogue is fundamental to ensuring that technological transformations enhance working conditions and advance an inclusive world of work.
+
+ ILO Brief
+
+2
+
+Gen AI, occupational segregation and gender equality in the world of work
+
+Why a focus on Gen AI and gender equality?
+Generative artificial intelligence (Gen AI) has entered the lives of many workers and impacted enterprise operations across the globe, evolving at an unprecedented pace, both in its technological capabilities and its adoption across occupations and sectors. This transformation brings significant opportunities for productivity gains, innovation and job creation while also raising questions about its effects on employment, task shifts, and working conditions.
+Early studies have revealed that the impacts of Gen AI will not be uniform. They will differ across economies based on their income levels and employment structures as well as between groups of workers, often reflecting existing inequalities in labour markets and societies (Gmyrek et al., 2023, 2024 & 2025; Lewandowski et al., 2025). Women and men often work in different occupations, with unequal access to decent work, leadership positions and economic opportunities. These disparities shape how they are likely to be affected by technological change—both in terms of opportunities and risks.
+This research brief seeks to provide a global and regional overview of how Gen AI may affect gender equality in the world of work. It draws on new evidence from the ILO’s harmonized microdata collection and applies an ILO index of occupational exposure to Gen AI. By analysing occupational structures through a gender lens, it provides a more detailed and nuanced picture of the potential impacts of Gen AI on women and men around the world.
+The brief is organised in two sections. The first section presents key findings on the interaction between occupational segregation, Gen AI exposure and impact on gender equality at the global and regional levels. The second section unpacks these findings and discusses the wider implications of Gen AI for gender equality in the labour market.1
+
+A brief description of the methodology
+This brief uses the ILO-NASK global index of occupational exposure to Gen AI (Gmyrek et al., 2025) to analyse the potential impacts of Gen AI on gender equality in the world of work.
+The index is constructed at the task and occupational level: tasks within occupations are scored for their potential exposure to Gen AI, drawing on a combination of worker surveys, expert validation, and AI modelling. These scores are then aggregated to the level of occupations (ISCO-08, 4-digit) and classified along a continuous gradient of exposure, from low to high.
+The gradient categories can be summarized as follows:
+ Minimal/no occupational exposure. These are occupations in which tasks cannot be done at all, or only minimally, with Gen AI technology. Many of these occupations consist of manual work.
+ Gradient 1 represents occupations with low overall Gen AI exposure and significant variability across tasks. While some tasks within these roles may be automatable, the occupation has many tasks that require humans, and thus these occupations are more likely to be “augmented” by AI.
+ Gradient 2 includes occupations with moderate Gen AI exposure and a mix of highly exposed and minimally exposed tasks, resulting in uneven impacts where some tasks may be disrupted while others remain unaffected, potentially allowing for augmentation.
+ Gradient 3 captures occupations where a significant portion of tasks are exposed to Gen AI, signalling growing automation risks and requiring adaptation strategies for workers.
+ Gradient 4 concerns occupations with a concentration of tasks that have high potential automation scores, thus making them most likely to face potential redundancy.
+
+1 Throughout the report ‘employment’ refers to all working modalities – wage workers and non-wage workers.
+
+ ILO Brief
+
+3
+
+Gen AI, occupational segregation and gender equality in the world of work
+
+Exposure to Gen AI (gradients 1-4) does not mean necessarily a technologically induced job redundancy in the near future. Risk of full automation is mostly associated with gradient 4 and even for these occupations, the process should not be assumed as automatic.
+
+To understand how this occupational exposure translates into differences between women and men, the index is applied to employment data from the ILO’s harmonized microdata collection, which provides the gender composition of employment across occupations in 84 countries2. This allows a comparison of exposure across:
+
+•
+
+Occupational categories: female-dominated,
+
+male-dominated, and mixed occupations
+
+(those with important shares of both women
+
+and men in the occupation);
+
+•
+
+Employment outcomes: the share of women
+
+and men employed in occupations with
+
+different exposure levels;
+
+•
+
+Regional and country patterns: differences
+
+arising from sectoral and occupational
+
+structures, levels of digital readiness, and
+
+labour market composition.
+
+In this way, the analysis first establishes exposure at the level of occupations, then examines how the distribution of women and men across these occupations results in different levels of potential exposure across countries and regions (Gmyrek et al., 2025).
+
+Female-dominated occupations are defined as those with a female share in employment of at least 75 per cent in at least 25 per cent of countries. Male-dominated occupations are defined as having a female share in employment of less than 25 per cent across the same proportion of countries with reliable data, (Hegewisch and Liepmann, 2013).
+
+Main findings
+Occupational segregation persists in the labour market
+Understanding which occupations are dominated by women and men in the labour market is essential to anticipating and addressing the differential impacts of Gen AI.
+According to the criteria identified in Hegewisch and Liepmann (2013), and for countries where data are available, among the 436 occupations (unit groups at the 4-digit ISCO-08), 82 occupations (19 per cent) are female-dominated, 89 occupations (20 per cent) are male-dominated, while the remaining 266 occupations (61 per cent) are mixed (important presence of both women and men).
+Grouped in six clusters (See Figure 1), femaledominated occupations are prominent in the following sectors: health and care, teaching, social work and culture, business administration and clerical support, personal services, sales and food preparation, and finally, textiles and wearing apparel manufacturing (see Figure 1).
+Men are instead concentrated in construction, building, manufacturing and trade as well as in occupations relating to science and engineering, information and communication technologies, protective services, drivers, and agriculture workers. Male-dominated occupations also include some chief executives, senior officials and armed forces (See Figure 2).
+The remaining occupations (266) are considered “mixed”, in that there is an important presence of both women and men. These include occupations across all exposure gradients ranging from hotel managers (gradient 1) to call centre workers (gradient 4), as well as occupations that are not exposed to Gen AI technology.
+
+2 A minimum sample size requirement was applied at the occupational level to ensure that results were not driven by individual country contexts. Specifically, for an occupation to be included in the analysis, data needed to be available for at least nine countries—representing over 10 per cent of the 84 countries with reliable 4-digit ISCO data.
+
+Consequently, while the overall dataset covers 84 countries, not all occupations met this minimum coverage criterion, particularly once data were disaggregated by sex.
+
+ ILO Brief
+
+4
+
+Gen AI, occupational segregation and gender equality in the world of work
+
+ Figure 1: Female-dominated occupations
+
+ Figure 2: Male-dominated occupations
+
+Note: Sample size (number of countries with reliable data for the occupation) in parenthesis Source: ILO harmonized microdata collection
+
+Note: Sample size (number of countries with reliable data for the occupation) in parenthesis Source: ILO harmonized microdata collection
+
+ ILO Brief
+
+5
+
+Gen AI, occupational segregation and gender equality in the world of work
+
+Female-dominated
+
+occupations
+
+comprise an important share of
+
+female employment in high-income
+
+countries
+
+Female-dominated occupations account for important shares of female employment in highincome countries, given the importance of occupations in health, education, social work, business administration and clerical support, in these economies (figure 3).
+ Figure 3: Female concentration in femaledominated occupations by region and income level
+
+dominated occupations account for lower shares of female employment are primarily in Africa and in the Asia and Pacific region.
+While male concentration in male employment is also important (accounting for 40 to 60 percent of total male employment), income and regional differences across countries are less striking (figure 4). This is because male-dominated occupations are spread more widely across clusters within all three broad economic sectors (agriculture, industry, and services) and male labour force participation is high regardless of country income level.
+ Figure 4: Male concentration in maledominated occupations by region and income level
+
+Source: ILO harmonized microdata collection.
+In lower-income countries, where larger shares of women are employed in agriculture or in lowproductivity service industries (e.g., retail trade, food and accommodation, other services), the female-dominated clusters account for lower shares of female employment. This pattern reflects both lower overall female labour force participation and the earlier stage of structural transformation in these economies. As many women remain concentrated in subsistence farming or informal activities, they are less likely to be employed in the formal service sectors- such as health, education, or public administration- and occupations that are traditionally highly feminized in upper-middle and high-income countries. Countries where female-
+
+Source: ILO harmonized microdata collection.
+Female-dominated occupations have higher exposure to Gen AI
+A significantly higher proportion of female-dominated occupations (29 per cent) and mixed occupations (28 per cent) are exposed to Gen AI, compared to just 16 per cent of male-dominated occupations (see Figure 5). In other words, female-dominated occupations are almost twice as likely to be exposed to Gen AI as male-dominated ones. This figure, however, captures only part of total employment exposed to Gen AI (as discussed below) and should be interpreted in the
+
+ ILO Brief
+
+6
+
+Gen AI, occupational segregation and gender equality in the world of work
+
+wider context of labour market exposure across countries.
+ Figure 5: Exposure to Gen AI for female-dominated, male-dominated and mixed occupations
+Source: ILO harmonised microdata collection
+Female-dominated occupations are also more likely to have a higher degree of exposure to Gen AI with 16 per cent of occupations in gradient 3 and gradient 4, compared to 13 per cent for mixed occupations, and only 3 per cent for maledominated occupations. These occupations have a significant portion of tasks that are at greater risk of exposure to AI-driven automation and require adaptation strategies that support both workers and enterprises in addressing these risks while leveraging technology for productivity and skills upgrading.
+The female-dominated occupations that belong to these high-exposure categories are primarily the ones under the business administration and clerical support cluster (see Annex table 1). Specifically, female-dominated occupations in gradient 4 include for example typists and word processing operators, accounting and bookkeeping clerks and payroll clerks. Gradient 3 ones include secretaries, receptionists, librarians, translators and interpreters.
+In contrast, the male-dominated occupations that are exposed in gradients 3 and 4 mostly fall under the ICT cluster. Such jobs comprise for example web and multimedia developers, software developers, and application programmers.
+
+In terms of employment, exposure to Gen AI differs across the world
+Countries in different regions and income brackets differ widely in their levels of exposure to Gen AI, largely due to differences in occupational structures and sectoral compositions, as well as access to digital infrastructure, firm-level readiness and foundational skills of individuals.
+Overall, 41 per cent of employment is potentially exposed to Gen AI technology in high-income countries compared with just 11 per cent in low-income countries. Furthermore, 9.6 per cent of employment in high-income countries is in the category of highest exposure to automation by Gen AI (Gradient 4), compared to just 0.3 per cent in low-income countries (Gmyrek et al., 2025).
+In general, advanced economies have higher exposure to Gen AI as a result of greater diversification of their economies and thus occupations. Specifically, low exposure to Gen AI in low- and middle-income countries primarily reflects the sectoral composition of their economies, where employment remains concentrated in agriculture and lower productivity services, rather than an absence of digital connectivity. In addition, task content tends to differ within same occupations located across high- and low-income countries (Lewandowski, 2025, Gmyrek et al., forthcoming).
+Women in employment are more exposed than men to Gen AI
+Considering all four exposure gradients, women are more exposed overall to Gen AI than men in most (88 per cent) of countries in the sample. Small island countries in the Pacific and in the Caribbean, followed by European countries (Bosnia and Herzegovina, Switzerland, United Kingdom) and the Philippines (figure 6) is where women have the highest levels of exposure to Gen AI (over 40 per cent of total female employment). Overall, Europe and Central Asia and Latin America and the Caribbean are the two regions with the highest levels of exposure for female workers on average, while Africa and Asia have the lowest exposure.
+The few countries where women are less exposed
+
+ ILO Brief
+
+7
+
+Gen AI, occupational segregation and gender equality in the world of work
+
+to Gen AI than men include countries with higher prevalence of agricultural employment (e.g., Burundi, Tanzania) sometimes also combined with low female labour force participation (e.g., Afghanistan, Bangladesh, Iraq, Pakistan, Sudan). Countries where men have relatively high exposure (although still lower than among women) include some countries in Europe (Switzerland and the United Kingdom), Asia (Maldives) and some Arab States (Lebanon, United Arab Emirates).
+For most occupations, the more widespread impact of Gen AI lies in the transformation of work and working conditions. In many cases, Gen AI is likely to reshape tasks within occupations, change work organisation and processes, or modify supervision and performance management. It is also likely to alter the skills required to perform certain jobs, as it gets integrated into digital tools that workers are required to use to perform their duties. For most jobs, these technological changes are more likely to reshape responsibilities and affect the quality of employment, rather than eliminate their current tasks altogether.
+
+ Figure 6: Percentage of female and male employment in exposure gradients 1-4 by country
+
+Note: Latest year available in parenthesis Source: ILO harmonized microdata collection
+
+ ILO Brief
+
+8
+
+Gen AI, occupational segregation and gender equality in the world of work
+
+Unpacking the findings: occupational segregation, systemic barriers, and AI underrepresentation
+The higher exposure of women to Gen AI reflects the persistent and gendered patterns of occupational segregation that continue to shape labour markets globally. Technologies, including Gen AI, are not inherently neutral, but are embedded within and shaped by societal structures and relations (Spencer, 2018). Past waves of technological change have shown how, rather than disrupting gendered patterns and divisions of labour, technology can reproduce them in new forms (Howcroft and Rubery, 2019).
+This section unpacks how these patterns are reinforced by structural and institutional factors, including discriminatory social norms, intensive and unequal unpaid care and domestic work, and economic and labour market policies that do not fully address the different needs of both women and men. The under-representation of women in Gen AI employment and development can also influence how technologies are designed and deployed, with direct consequences for both the quality and quantity of their employment.
+Drivers of occupational segregation
+While there has been an increase of women in professional roles in the last two decades, they continue to be overrepresented in clerical and administrative roles, which are highly exposed to Gen AI automation (Gmyrek et al., 2023 & 25). Women are also more likely than men to perform routine cognitive and codifiable tasks, which are at a higher risk of substitution by Gen AI across all sectors and occupations, and less likely to have analytical and abstract tasks, which are more likely to be complemented by this technology (Brussevich et al., 2019). These disparities also reflect patterns of vertical segregation, with women less likely to occupy senior or decision-making roles within the same occupational categories (ILO, 2019). As a result, women’s employment may be more affected by technology in specific occupations or tasks.
+Studies find that in advanced and emerging economies, the share of routine and automatable
+
+tasks is higher among older women and those with lower levels of education (Brussevich et al., 2019). In contrast, in low- and middle-income countries, Gen AI exposure tends to be higher among women, more educated workers and those in urban areas, who tend to demonstrate higher digital readiness and greater access to infrastructure (Demombynes et al., 2025, Gmyrek et al., 2024).
+At the same time, women are overrepresented in care-related occupations, which are less likely to be automated due to their reliance on social and interpersonal skills (ILO, 2018). However, there is increasing interest from both the public and the private sector in integrating such technologies in the care sector– for example, remote patient monitoring, automated charting and nursing care plans, and clinical prediction – given demographic changes, increasing care needs and budgetary pressures that have restrained staffing (O’Connor et al., 2023). Emerging evidence on the integration of AI in nursing reveals that if implemented without adequate consultation, training, interoperability or labour protections, AI can risk intensifying work, reinforcing existing hierarchies and inequalities, and creating new decent work deficits for a predominantly female workforce (ILO, forthcoming).
+Occupational segregation is shaped by a range of intersecting and mutually reinforcing structural barriers affecting supply and demand side constraints. These include social and legal norms that affect educational and occupational pathways. Despite progress in recent years, legal restrictions continue to limit women’s occupational choices in many countries, contributing not only to occupational segregation but also labour-market distortions and reduced innovation and productivity (Blau and Kahn, 2017). In 2023, 21 economies limited a women’s ability to work at night, 49 prohibit women from working in hazardous jobs, and 65 bar women from working in the same industries as men (World Bank, 2023).
+Persistent gender stereotypes continue to shape expectations around what constitutes appropriate work for women and men (Carranza, Das, and Kotikula 2023). These include beliefs that women are naturally more caring, more suited to repetitive or household-related tasks, have lower aptitude in science or mathematics or less leadership potential. These same norms often associate men with technical, managerial and decision-making roles,
+
+ ILO Brief
+
+9
+
+Gen AI, occupational segregation and gender equality in the world of work
+
+while positioning women in nurturing, administrative or supportive roles (Anker, 1997).
+These norms can be reinforced through biases and discrimination in workplace practices including recruitment, promotion, training opportunities and organizational culture. For instance, job postings can reflect and reproduce gender norms, discouraging women from applying or channelling them into certain occupations, while selection processes may favour male applicants even with identical qualifications. In fact, when used as a source of labour market information, Gen AI tools can reinforce such stereotypes, as they can replicate gendered perceptions of occupational segregation, appropriate remuneration, or the prestige associated with typically male- or femaledominated jobs (Gmyrek, Lutz and Newlands, 2025).
+In addition, women’s entry into and retention in male-dominated occupations, as well as their promotion prospects, may be further constrained by workplace factors when characterized by long and inflexible working hours, violence and harassment and unequal access to training, skills upgrading and leadership roles (Carranza et al., 2023).
+The intensive and unequal unpaid care and domestic work done by women further constrains their time, mobility and occupational choices. Globally, women perform more than three-quarters of total unpaid care work, on average 3.2 times more than men (ILO, 2018). Recent ILO estimates reveal that care responsibilities are the primary contributor to the gender employment gap. Indeed, excessive and unequal care responsibilities keep 708 million women outside the labour force globally (ILO, 2025). This unequal distribution of care work often influences women’s decisions to seek part-time or flexible employment arrangements to be able to accommodate care responsibilities. This limits their access to a broader range of occupations, contributes to their concentration in lower-paid and less secure jobs, and hinders their ability to access and remain in decent work (ILO, 2018).
+In addition, macroeconomic and sectoral policies shape the structure of labour markets and influence the distribution of employment opportunities across sectors and occupations, with gendered effects. For example, tax systems that
+
+disincentivize secondary earners or reforms that affect sectors with high female employment can influence labour force participation (Carranza et al., 2023). Structural transformation, in which economies shift from lower- to higher-productivity sectors and where technological change often acts as a catalyst, can produce differentiated outcomes for women and men. Women are at risk of being concentrated in low productivity, low-paying and slow growing sectors in the absence of sectoral policies designed to generate decent and productive employment for both women and men (Esquivel 2019, ILO 2024).
+Quality of employment also matters
+For most occupations, the impact of Gen AI is more likely to be on the transformation of work and working conditions rather than on net job losses. Whether this leads to an improvement or a deterioration in working conditions will depend on how AI is introduced and managed and whether it is done through social dialogue. Strong labour market institutions, including employer and worker organizations, and sound employment protection frameworks play a crucial role in ensuring that technological change contributes to improved outcomes for all workers and enterprises (Giuntella et al., 2025). In addition, AI is increasingly being applied to advance gender equality at work, including through tools that detect bias in recruitment advertising, promote pay transparency, and support prevention and response to genderbased violence and harassment (Ramboll, 2020; EIGE, 2020).
+Gen AI holds potential to improve job quality and productivity when applied responsibly. For example, AI systems may help reduce physical job intensity, support worker well-being, and enhance workplace safety—provided they are designed and implemented in an inclusive, rights-based and transparent manner (Giuntella et al., 2025, Karaferis et. al., 2025). Within enterprises, AI-driven tools have been used to optimize workflow management, improving efficiency and job satisfaction by streamlining administrative processes, enhancing communication and providing decision-support systems that allow workers to focus on highervalue and more creative tasks. For employers, such improvements contribute not only to better working conditions but also to gains in productivity, quality and employee retention (IOE, 2024).
+
+ ILO Brief
+
+10
+
+Gen AI, occupational segregation and gender equality in the world of work
+
+Similarly, Gen AI can address or intensify existing inequalities in the world of work. Evidence from the health sector- where women represent the majority of the workforce- shows that despite low overall exposure of nursing occupations to Gen AI, integration of AI tools is taking place. Research shows that the newly introduced AI systems can rely on poor quality datasets that embed bias, increase workloads, and are often developed and implemented with little to no involvement of the nurses that are directly affected (O’Connor et al., 2023). Such trends highlight the importance of ensuring that AI tools are implemented with attention to how they interact with existing workflows and job roles while ensuring worker’s right to decent work.
+Underrepresentation of women in STEM and AI hinders equal opportunity and can perpetuate bias
+While much analysis has emphasised the risks of job displacement related to Gen AI, this technology is also projected to be a driver of employment creation and productivity in the world of work, in tech-intensive sectors in particular (WEF, 2025). Research estimates that AI and information processing technology could lead to a net gain of around 2 million jobs— creating approximately 11 million roles while displacing 9 million (WEF, 2025). At the same time AI adoption has the potential to increase annual global productivity by between 0.2 and 3.3 percentage points (McKinsey & Company, 2023). For enterprises, this represents a major opportunity for growth and competitive advantage.
+Evidence also shows, however, that GenAI carries potential environmental risks, with its rapid pace of innovation and growing demand for data and computational power placing increasing pressure on energy, water and other natural resources (UNEP, 2024). Ensuring that the jobs created through GenAI adoption contribute to—rather than impede—just and green transitions will therefore be essential.
+Furthermore, women continue to be underrepresented in STEM and AI jobs, and the design, and governance of AI systems. This not only limits their ability to benefit from emerging opportunities but also constrains enterprises from fully leveraging women’s talent and perspectives.
+
+STEM skills are essential for both the development and informed use of AI technologies. Women have made significant progress in the attainment of STEM education. This reflects important efforts made by governments, employers and workers to promote women’s STEM education, reskilling and upskilling. However, these gains have not translated into adequate advancements for women in the labour market as they have not been sufficiently complemented by measures to address structural and systemic barriers.
+ILO estimates indicate that women account for around 40 per cent of STEM professionals globally, although their representation varies widely across countries. Women’s representation in STEM jobs also remains considerably lower in high-demand fields such as technology and engineering, making up less than 10 per cent of engineers and software developers (ILOSTAT, 2023). Complementary data from LinkedIn suggests an even sharper gender gap in technology-intensive roles, with women representing only 29.2 per cent of STEM workers in 2022. Retention is also a critical concern: despite a growing number of women earning STEM degrees, a sharp 5.9 per cent decline in the retention of women in STEM was observed, just one year after graduating (WEF, 2023).
+Gender gaps are also prevalent in AI employment, adoption and skills acquisition. Although some progress has been made, in 2022, women represented only 30 per cent of the AI workforce, a share that is roughly only 4 percentage points higher than in 2016 (WEF, 2023).
+Evidence reveals that women’s continued underrepresentation in STEM and AI jobs is linked to systemic supply and demand side barriers. These include, gender bias embedded in organisational cultures and practices (Newje, Makai and Ndubuisi, 2025), societal expectations around women and men’s primary responsibilities and professional abilities (Eagly and Karau, 2002; Friedmann et al., 2022); inadequate flexible work arrangements and family-friendly policies that meet the needs of both women and men (Weisgram and Diekman, 2016). These barriers are further compounded for women facing multiple and intersecting forms of discrimination, including on the basis of race, ethnicity, class, migration status or disability, who encounter additional barriers in accessing digital tools, training and decent work opportunities (Fung et al., 2025; ILO, 2021).
+Underrepresentation of women and marginalised groups in AI development and
+
+ ILO Brief
+
+11
+
+Gen AI, occupational segregation and gender equality in the world of work
+
+adoption have important implications beyond preventing these groups from reaping the potential benefits of the technology. It can perpetuate gender-biased technologies and risks creating a vicious cycle in which exclusion from design leads to discriminatory outcomes that further discourage participation and deepen the digital divide (GomezHerrera & Koeszegi, 2022).
+AI systems trained on unrepresentative and incomplete datasets, risk producing discriminatory outcomes. For instance, healthcare algorithms underestimate female patients’ needs (Obermeyer et al., 2019), recruitment or hiring tools penalise female resumes (Dastin, 2018), and creditscoring algorithms perpetuate gender disparities in lending decisions (Bartlett et al., 2022). Such risks are also compounded for groups facing multiple and intersecting forms of discrimination: AI-based hiring tools have been found to favour resumes with White-sounding names over those with Blacksounding names, with Black women often disadvantaged by this bias (Wilson & Caliskan, 2024). In addition, AI tools used to analyse written communication can embed negative stereotypes about disability, with potential consequences for recruitment, promotion and workplace monitoring (Hutchinson et al., 2020). Reviews of gender-biased AI systems deployed across sectors have found that the majority deliver poorer outcomes for women and distribute resources and opportunities unfairly, underscoring the urgency of more inclusive approaches to AI development (Smith & Rustagi, 2021).
+Conclusions and emerging considerations
+The expansion of Gen AI presents the opportunity for new jobs, greater productivity and improved working conditions for all. Technological transformation and gender equality are complementary goals. For these to be realised, a human-centred approach that places gender equality, social dialogue and the rights of all workers at the heart of the design, development and deployment of AI is needed.
+This brief has shown that women are more exposed to the impacts of Gen AI than men, due to their concentration in occupations and tasks that are more susceptible to automation effects. Women are disproportionately concentrated in less senior, routine and codifiable roles, and less likely to perform abstract or high-autonomy tasks where AI acts as a complement
+
+rather than a substitute. Exposure is not uniform: it is higher in high-income economies and varies by region, with women workers in Europe and Central Asia and in Latin America and the Caribbean facing relatively greater exposure, while Africa and Asia face lower exposure.
+At the same time, women remain underrepresented in AI-related occupations and likely decision-making processes around how technologies are developed and deployed. Gen AI systems trained on incomplete or biased data can reproduce and amplify gender inequalities, with consequences for recruitment, participation, promotion, pay, workplace monitoring and access to skills and resources. These risks are compounded for women at the intersections of multiple inequalities, such as race, ethnicity, or disability.
+The implications of Gen AI for gender equality are not limited to job loss. In many cases, the greater impact lies in how work is transformed—reshaping tasks, workflows, and the conditions under which women engage with work.
+These findings highlight the urgent need to embed gender equality in the design, deployment and governance of new technologies. Addressing these challenges requires deliberate action, including the development of debiasing techniques and more representative datasets to train learning models, alongside robust safeguards to prevent the reinforcement of gender stereotypes and biases in AI systems. Ensuring greater involvement of diverse stakeholders—particularly women and other underrepresented groups—in AI development is also essential to promote inclusive and equitable outcomes.
+Broader efforts are likewise needed to address the structural drivers of gender inequality in labour markets including discriminatory gender norms, gender bias and discrimination in workplace practices, and the unequal distribution of unpaid care responsibilities.
+Gender responsive macroeconomic, sectoral and active labour market policies including skills and learning systems that embed gender equality as a key objective, will be critical to expanding women’s access to quality jobs and ensure that technological change generates more and better jobs for all. These need to be accompanied by comprehensive care leave policies, services and infrastructure that ensure greater gender equality in the world of work.
+Technological change has the potential to support decent work and drive inclusive growth. Realising this potential will require sustained investment in genderresponsive digital transformation, alongside policies that
+
+ ILO Brief
+
+12
+
+Gen AI, occupational segregation and gender equality in the world of work
+
+strengthen women’s representation, voice and agency, including in social dialogue process, shaping the future of work. The choices made now will determine whether Gen AI becomes a driver of greater equality or a force that entrenches existing disparities – and whether opportunities are seized or lost.
+
+ ILO Brief
+
+13
+
+Gen AI, occupational segregation and gender equality in the world of work
+
+ References
+Acemoglu, Daron, David Autor, Jonathon Hazell and Pascual Restrepo. 2022. Artificial intelligence and jobs: Evidence from online vacancies. Journal of Labor Economics 40 (S1): S293–S340. Anker, Richard. 1997. “Theories of Occupational Segregation by Sex: An Overview.” International Labour Review 136 (3): 315– 39. Alonso, Cristian, Andrew Berg, Siddharth Kothari, Chris Papageorgiou and Sidra Rehman. 2022. “Will the AI Revolution Cause a Great Divergence?” Journal of Monetary Economics 127: 18–37.
+Antoniades, Alexis, Manolis Chatzikonstantinou and Olesia Savka. 2024. Are AI Jobs Driving Up Demand for STEM Education? Yes, but Not for Women. Qatar Research, Development and Innovation Council.
+Armutat, Sascha, Malte Wattenburg and Nina Mauritz. 2024. Artificial Intelligence – Gender-Specific Differences in Perception, Understanding, and Training Interest. International Conference on Gender Research 7 (1): 36–43.
+Bartlett, Robert, Adair Morse, Richard Stanton, and Nancy Wallace. 2022. Consumer-Lending Discrimination in the FinTech Era. Journal of Financial Economics 143 (1): 30–56. https://doi.org/10.1016/j.jfineco.2021.05.047
+Bjorkegren, Daniel.2023. Artificial Intelligence for the Poor: How to Harness the Power of AI in the Developing World. Foreign Affairs. https://www.foreignaffairs.com/world/artificial-intelligence-poor.
+Blau, Francine D. and Lawrence M. Kahn. 2017. “The Gender Wage Gap: Extent, Trends, and Explanations.” Journal of Economic Literature 55(3): 789–865. https://doi.org/10.1257/jel.20160995
+Bolukbasi, Tolga, Kai-Wei Chang, James Zou, Venkatesh Saligrama and Adam Kalai. 2016. Man is to computer programmer as woman is to homemaker?: Debiasing word embeddings. Proceedings of the 30th Conference on Neural Information Processing Systems. https://perma.cc/9A8W-JCD4.
+Brussevich, Mariya, Era Dabla-Norris and Salma Khalid. 2019. Is technology widening the gender gap? Automation and the future of female employment. IMF Working Paper No. 18/91. International Monetary Fund.
+Brynjolfsson, Erik, Danielle Li, and Lindsey Raymond. 2023. Generative AI at Work. NBER Working Paper 31161.
+Carranza, Eliana, Smita Das, and Aphichoke Kotikula. 2023. Gender-Based Employment Segregation: Understanding Causes and Policy Interventions. Jobs Working Paper No. 26. Draft Date: July 11 2023. Washington, DC: World Bank.
+Carroll, Seron, Susan S. Silbey, Erin Cech and Brian Rubineau. 2016. Persistence is cultural: Professional socialization and the reproduction of sex segregation. Work and Occupations 43 (2): 178–214.
+Cazzaniga, Mauro, Florence Jaumotte, Longji Li, Giovanni Melina, Augustus J. Panton, Carlo Pizzinelli, Emma Rockall and Marina M. Taveres. 2024. Gen-AI: Artificial Intelligence and the Future of Work. IMF Staff Discussion Note SDN/2024/001. Washington, DC: IMF.
+Comunale, Mariarosaria and Andrea Manera. 2024. The economic impacts and regulation of AI: A review of the academic literature and policy actions. IMF Working Paper 2024/65.
+Cornelli, Giulio, Jon Frost, and Saurabh Mishra.2023. Artificial Intelligence, Services Globalisation, and Income Inequality. BIS Working Paper 1135.
+Dastin, Jeffrey. 2018. Amazon scraps secret AI recruiting tool that showed bias against women. Reuters, 9 October. https://perma.cc/5UPB-NHLE. Demombynes, Gabriel, Jörg Langbein and Michael Weber. 2025. The Exposure of Workers to Artificial Intelligence in Low- and Middle-Income Countries. World Bank Policy Research Working Paper 11057.
+D’Ignazio Catherine and Lauren F. Klein 2020. Data Feminism. MIT Press. https://doi.org/10.7551/mitpress/11805.001.0001
+Eagly, Alice H., and Steven J. Karau. 2002. Role Congruity Theory of Prejudice Toward Female Leaders. Psychological Review 109 (3): 573–98
+Esquivel, Valeria. 2019. Gender Impacts of Structural Transformation. Technical Brief No. 2. ILO/Sida Partnership on Employment. Geneva: ILO.
+Eurofound and European Institute for Gender Equality. 2021. Upward Convergence in Gender Equality: How Close Is the Union of Equality? Luxembourg: Publications Office of the European Union.
+European Institute for Gender Equality (EIGE). 2021. Artificial Intelligence, Platform Work and Gender Equality. Luxembourg: Publications Office of the European Union. https://doi.org/10.2839/372863
+
+ ILO Brief
+
+14
+
+Gen AI, occupational segregation and gender equality in the world of work
+
+Felten, Edward W., Manav Raj, and Robert Seamans (2023). Occupational Heterogeneity in Exposure
+
+to Generative AI. Working Paper 4414065
+
+Friedmann, Enav, and Dorit Efrat-Treister. 2023. Gender Bias in STEM Hiring: Implicit In-Group Gender Favoritism Among Men Managers. Gender and Society 37 (1): 32–64. https://doi.org/10.1177/08912432221137910
+
+Fung, Kwok Kin, Chi Yuen Lai, Suet Lin Hung, Yue Yu, and Langjie He. 2025. A systematic review of the digital divide experienced by migrant women. Journal of International Migration and Integration. https://doi.org/10.1007/s12134-02401222-0
+
+Giuntella, Osea, Johannes König, and Luca Stella. 2025. rtificial intelligence and the wellbeing of workers. Scientific Reports 15 (1): 11042. https://doi.org/10.1038/s41598-024-57288-2.
+Gomez-Herrera, Estrella and Sabine T. Koeszegi. 2022. A Gender Perspective on Artificial Intelligence and Jobs: The Vicious Cycle of Digital Inequality. Bruegel Working Paper 15/2022.
+Gmyrek, Pawel, Janine Berg and David Bescond. 2023. Generative AI and Jobs: A Global Analysis of Potential Effects on Job Quantity and Quality. ILO Working Paper 96. Geneva: ILO.
+Gmyrek, Pawel, Hernan Winkler and Santiago Garganta. 2024. Buffer or Bottleneck? Employment Exposure to Generative AI and the Digital Divide in Latin America. ILO Working Paper 121. Geneva: ILO and World Bank.
+Hegewisch, Ariane and Hannah Liepmann. 2013. Occupational Segregation and the Gender Wage Gap in the US. Geneva: ILO.
+Howcroft, Debra and Jill Rubery. 2019. ‘Bias in, bias out’: Gender equality and the future of work debate. Labour & Industry 29 (2): 213–27.
+Hutchinson, Ben, Vinodkumar Prabhakaran, Emily Denton, Kellie Webster, Yu Zhong, and Stephen Denuyl. 2020. Social biases in NLP models as barriers for persons with disabilities. In Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics, 5491–5501. https://doi.org/10.18653/v1/2020.acl-main.487
+ILO. 2018. Care Work and Care Jobs for the Future of Decent Work. Geneva: ILO.
+ILO. 2019. Women in Business and Management: The Business Case for Change. Geneva: ILO. ILO and Fundación ONCE. 2021. An Inclusive Digital Economy for People with Disabilities. Geneva: ILO Global Business and Disability Network.
+ILO. 2024. GENSEC: A Gender-Responsive Sectoral Policy Tool. Geneva: ILO.
+ILO. 2025. Women and the economy: 30 years after the Beijing Declaration. Geneva: ILO.
+ILO. Forthcoming. AI, Nursing and Decent Work: Country-Level Insights from India, Brazil, the Republic of Korea and Germany. Geneva: ILO. International Organisation of Employers. 2024. The Impact of AI on Work and Employment. June 2024.
+International Telecommunication Union. 2023. Facts and Figures 2023: The Gender Digital Divide. Geneva: ITU.
+Karaferis, Dimitrios, Dimitra Balaska, Vasileios Lavrentiadis and Yannis Pollalis. 2025. Leveraging artificial intelligence and diverse strategies to alleviate burnout and optimize workload management for nursing personnel to enhance work-life balance. American Journal of Clinical Medicine Research 13 (2): 45–52.
+Korinek, Anton and Joseph E. Stiglitz. 2021. Artificial intelligence, globalization, and strategies for economic development. NBER Working Paper 28453.
+Limani, Donika and Marie-Claire Sodergren. 2023. Where women work: Female-dominated occupations and sectors. ILOSTAT Blog. https://ilostat.ilo.org/blog/where-women-work-female-dominated-occupations-and-sectors/.
+McKinsey & Company. 2023. The Economic Potential of Generative AI: The Next Productivity Frontier. McKinsey Global Institute.
+Noy, Shakked and Whitney Zhang. 2023. Experimental evidence on the productivity effects of generative artificial intelligence. Science 381 (6654): 187–92.
+
+Obermeyer, Ziad, Brian Powers, Christine Vogeli, and Sendhil Mullainathan. 2019. Dissecting Racial Bias in an Algorithm Used to Manage the Health of Populations. Science 366 (6464): 447–53. https://doi.org/10.1126/science.aax2342
+
+O’Connor, Siobhán, Jonathan Baldwin, Paulina Sniatecki, Conor O’Donovan, and Dawn Dowding. 2023. Artificial Intelligence in Nursing and Midwifery: A Systematic Review. Journal of Clinical Nursing 32, no. 13–14: 2951–68. https://doi.org/10.1111/jocn.16478
+
+Ramboll. 2020. AI for Gender Equality—Addressing Inequality through AI. Report commissioned by Vinnova (Swedish Innovation Agency), Stockholm: Vinnova.
+
+ ILO Brief
+
+15
+
+Gen AI, occupational segregation and gender equality in the world of work
+
+Smith, Genevieve, and Ishita Rustagi. 2021. When Good Algorithms Go Sexist: Why and How to Advance AI Gender Equity.”
+
+Stanford Social Innovation Review.
+
+https://ssir.org/articles/entry/when_good_algorithms_go_sexist_why_and_how_to_advance_ai_gender_equity
+
+Spencer, David A. 2018. Fear and hope in an age of mass automation: Debating the future of work. New Technology, Work and Employment. https://doi.org/10.1111/ntwe.12105
+
+Tufekci, Zeynep. 2015. Algorithmic harms beyond Facebook and Google: Emergent challenges of computational agency. Colorado Technology Law Journal 13: 203–218.
+
+United Nations Environment Programme (UNEP). 2024. Artificial Intelligence (AI) end-to-end: The environmental impact of the full AI lifecycle needs to be comprehensively assessed. Issues Note. Nairobi: UNEP.
+
+Weisgram, Erica S. and Amanda B. Diekman. 2017. Making STEM ‘family friendly’: The impact of perceiving science careers as family-compatible. Social Sciences 6 (2): 61. https://doi.org/10.3390/socsci6020061.
+
+Wilson, Benjamin and Aylin Caliskan. 2024. Predictive inequity in resume filtering: Auditing race and gender bias in large language models. Proceedings of the AAAI Conference on Artificial Intelligence 38 (19): 21694–21702.
+
+World Bank Group. 2023. Women, Business and the Law 2023. Washington, DC: World Bank Group.
+
+World Economic Forum. 2023. Global Gender Gap Report 2023. Geneva: World Economic Forum.
+
+World Economic Forum. 2025. The Future of Jobs Report 2025. Geneva: World Economic Forum.
+
+Acknowledgements
+This report was jointly prepared by the ILO Research Department, under the supervision of Caroline Fredrickson, and the Gender, Equality and Diversity and Inclusion (GEDI) Branch of the Conditions of Work and Equality Department (WORKQUALITY) of the ILO, under the supervision of Sukti Dasgupta and Chidi King.
+The report was written by Anam Parvez Butt and Emanuela Pozzan from GEDI, Janine Berg and Pawel Gmyrek from Research and Souleima El Achkar. The authors especially acknowledge David Bescond for providing ISCO and AI exposure estimates, and wish to thank Rosalia Vazquez-Alvarez, Paloma Carrillo, Jae-Hee Chang, Hannah Liepmann and Victor Hugo Ricco for their review and valuable inputs.
+
+ ILO Brief
+
+16
+
+Gen AI, occupational segregation and gender equality in the world of work
+
+Annex table 1 Occupations that are exposed to Gen AI by category (female- or male-dominated or mixed)
+
+Gradient 1
+
+Gradient 2
+
+Exposed female-dominated occupations (24 out of 82 occupations, 29%).
+
+Gradient 3
+
+Gradient 4
+
+2351 - Education Methods specialists
+2634 – Psychologists
+
+2423 - Personnel and Careers Professionals 2621 – Archivists and Curators
+
+3256 – Medical Assistants
+
+3313 – Accounting Associate Professionals
+
+5230 – Cashiers and Ticket Clerks
+
+3353 – Government Social Benefits Officials 4229 – Client Information Workers nec 4411 – Library Clerks 5243 – Door-to-door Salespersons
+
+Male-dominated occupations (12 out of 89 occupations, 16%).
+
+2622 - Librarians and Related Information Professionals
+
+4131 – Typists and Word Processing Operators
+
+2643 – Translators, Interpreters and Other Linguists
+
+4311 – Accounting and Bookkeeping Clerks
+
+3252 – Medical Records and Health Information Technicians
+
+4313 – Payroll Clerks
+
+3342 – Legal Secretaries
+
+3343 – Administrative and Executive Secretaries
+
+3344 – Medical Secretaries
+
+4120 – Secretaries (general)
+
+4223 – Telephone Switchboard Operators
+
+4226 – Receptionists (general)
+
+4227 – Survey and Market Research Interviewers
+
+3431 – Photographers
+
+1330 – ICT Services Managers
+
+2512 – Software Developers
+
+8322 – Car, Taxi and Van Drivers 9621 – Messengers, Package Deliverers and Luggage Porters
+Gradient 1 Diverse occupations (74 out of 266 occupations).
+
+2511 – Systems Analysts 3322 – Commercial Sales Representatives
+3324 – Trade Brokers 3511 – ICT Operations Technicians 3512 – ICT User Support Technicians 3513 – Computer Network and Systems Technicians 4412 – Mail Carriers and Sorting Clerks Gradient 2
+
+2514 – Applications Programmers Gradient 3
+
+1411 - Hotel Managers
+2111 - Physicists and Astronomers
+3141 - Life Science Technicians (excluding Medical) 3411 - Legal and Related Associate Professionals
+
+1219 - Business Services and Administration Managers nec 1221 - Sales and Marketing Managers
+1346 - Financial and Insurance Services Branch Managers 1420 - Retail and Wholesale Trade Managers
+
+2112 - Meteorologists
+2120 - Mathematicians, Actuaries and Statisticians 2411 - Accountants
+2412 - Financial and Investment Advisers
+
+2513 – Web and Multimedia Developers
+Gradient 4
+2413 - Financial Analysts 3311 - Securities and Finance Dealers and Brokers 3312 - Credit and Loans Officers 4110 - General Office Clerks
+
+ ILO Brief
+
+Gen AI, occupational segregation and gender equality in the world of work
+
+3433 - Gallery, Museum and Library 2131 - Biologists, Botanists, Zoologists and
+
+2431 - Advertising and Marketing Professionals
+
+Technicians
+
+Related Professionals
+
+4415 - Filing and Copying Clerks
+
+2152 - Electronics Engineers
+
+2433 - Technical and Medical Sales Professionals (excluding ICT)
+
+5211 - Stall and Market Salespersons
+
+2153 - Telecommunications Engineers
+
+2434 - ICT Sales Professionals
+
+5223 - Shop Sales Assistants
+
+2165 - Cartographers and Surveyors
+
+2519 - Software and Applications Developers and Analysts nec
+
+7321 - Pre-press Technicians
+
+2166 - Graphic and Multimedia Designers
+
+2521 - Database Designers and Administrators
+
+9623 - Meter Readers and Vendingmachine Collectors
+
+2356 - Information Technology Trainers
+
+2522 - Systems Administrators
+
+2421 - Management and Organization Analysts 2523 - Computer Network Professionals
+
+2424 - Training and Staff Development Professionals
+
+2631 - Economists
+
+2432 - Public Relations Professionals
+
+2641 - Authors and Related Writers
+
+2529 - Database and Network Professionals nec
+
+2642 - Journalists
+
+2632 - Sociologists, Anthropologists and Related Professionals
+
+3314 - Statistical, Mathematical and Related Associate Professionals
+
+2633 - Philosophers, Historians and Political Scientists
+
+3321 - Insurance Representatives
+
+2656 - Announcers on Radio, Television and Other Media
+
+3331 - Clearing and Forwarding Agents
+
+3315 - Valuers and Loss Assessors
+
+3514 - Web Technicians
+
+3332 - Conference and Event Planners
+
+4211 - Bank Tellers and Related Clerks
+
+3339 - Business Services Agents nec
+
+4221 - Travel Consultants and Clerks
+
+3341 - Office Supervisors
+
+4222 - Contact Centre Information Clerks
+
+17
+4132 - Data Entry Clerks
+4312 - Statistical, Finance and Insurance Clerks 4416 - Personnel Clerks
+4419 - Clerical Support Workers nec
+5244 - Contact Centre Salespersons
+
+3352 - Government Tax and Excise Officials 3354 - Government Licensing Officials 4212 - Bookmakers, Croupiers and Related Gaming Workers 4213 - Pawnbrokers and Money-lenders 4214 - Debt Collectors and Related Workers 4322 - Production Clerks 5221 - Shopkeepers 5242 - Sales Demonstrators
+
+4224 - Hotel Receptionists 4225 - Inquiry Clerks 4323 - Transport Clerks
+4413 - Coding, Proofreading and Related Clerks 4414 - Scribes and Related Workers
+
+ ILO Brief
+
+18
+
+Gen AI, occupational segregation and gender equality in the world of work
+
+Licensed under CC BY 4.0 © International Labour Organization 2026 ILO. Gen AI, occupational segregation and gender equality in the world of work, Research brief, Geneva: International Labour Office, 2026. © ILO.
+https://doi.org/10.54394/00033798
+
+Contact details
+International Labour Organization Route des Morillons 4 CH-1211 Geneva 22
+Switzerland
+
+T: +41 22 799 7869 E: GEDI@ilo.org
+
+© International Labour Organization 2026
+
+

@@ -1,0 +1,83 @@
+/** 青穗集 · 消息微交互：悬浮图标、原位编辑和分片像素粒子显字，不重复堆叠说明与标签。 */
+.career-workspace .agent-messages { scroll-behavior: auto; }
+.agent-message-flow { min-height: 100%; display: flow-root; }
+.career-workspace .agent-message { position: relative; margin-bottom: 30px; }
+.message-actions { position: relative; display: flex; gap: 3px; grid-column: 2; align-items: center; min-height: 25px; margin-top: 4px; color: #ab98be; opacity: 0; transform: translateY(-2px); transition: opacity 140ms ease, transform 180ms cubic-bezier(.2,.75,.34,.94); }
+.agent-message--user > .message-actions { justify-content: flex-end; }
+.agent-message:is(:hover, :focus-within) > .message-actions { opacity: 1; transform: none; }
+.career-workspace .message-actions button { display: inline-grid; place-items: center; width: 27px; height: 25px; padding: 0; border: 0; border-radius: 5px; color: inherit; background: transparent; cursor: pointer; }
+.career-workspace .message-actions button:hover { background: #ece3f5; color: #765793; }
+.career-workspace .message-actions button:focus-visible { outline: 2px solid #b197cc; outline-offset: 2px; }
+.career-workspace .message-actions button:disabled { opacity: .4; cursor: default; }
+.message-actions__announcement { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.career-workspace .agent-message--editing { width: min(760px, 100%); max-width: 100%; }
+.message-editor { width: 100%; padding: 14px; border: 1px solid #cab4df; border-radius: 12px 3px 12px 12px; background: #fbf9fe; box-shadow: 0 0 0 3px #d5c5ea20; }
+.career-workspace .message-editor textarea { display: block; width: 100%; min-height: 130px; max-height: 420px; field-sizing: content; resize: vertical; margin: 0; padding: 2px 3px 12px; border: 0; border-radius: 0; background: transparent; color: #4c3f67; font: inherit; line-height: 1.9; outline: none; }
+.message-editor__footer { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; padding-top: 8px; }
+.message-editor__footer > small { flex: 1; font-size: 10px; color: #a18db3; line-height: 1.6; }
+.message-editor__footer > div { display: flex; align-items: center; margin-left: auto; gap: 7px; }
+.career-workspace .message-editor__footer button { display: inline-flex; gap: 6px; align-items: center; justify-content: center; padding: 7px 12px; border: 1px solid #e2d6ef; border-radius: 6px; background: #f7f2fc; color: #8e74a7; font: inherit; font-size: 11px; cursor: pointer; }
+.career-workspace .message-editor__footer .message-editor__send { background: #a184bd; border-color: #a184bd; color: white; }
+.career-workspace .message-editor__footer button:disabled { opacity: .45; cursor: default; }
+.streaming-content > .career-message-content { display: contents; }
+.streaming-content[data-streaming="true"] > .career-message-content > :last-child:is(p,h1,h2,h3,h4,blockquote) { display: inline; }
+.streaming-content[data-streaming="false"] .agent-caret { display: none; }
+/* 真字始终占据最终宽度；两层绝对定位遮罩与像素尘不参与排版，也不遮挡链接点击。 */
+.stream-token { position: relative; display: inline; white-space: pre-wrap; }
+.stream-token__letter { opacity: 0; animation: stream-letter-arrive var(--decode-duration) cubic-bezier(.16,.68,.24,1) var(--decode-delay) both; }
+.stream-token__glyph { position: absolute; inset: 0; pointer-events: none; user-select: none; color: #a58abd; animation: stream-glyph-appear 1ms step-end var(--mask-delay) both, stream-glyph-dissolve var(--decode-duration) ease-out var(--decode-delay) both; }
+.stream-token__glyph::before { content: attr(data-glyph); display: grid; place-items: center; position: absolute; inset: 0; font-family: Consolas, "Fusion Pixel 12px", monospace; font-size: .85em; text-shadow: 0 0 5px #bba1d83b; animation: stream-glyph-flicker 180ms steps(2, end) var(--glyph-phase) infinite; }
+.stream-token[data-particles="true"]::before, .stream-token[data-particles="true"]::after { content: ""; position: absolute; left: 50%; top: 48%; width: 2px; height: 2px; pointer-events: none; user-select: none; background: #b390d1; box-shadow: 3px -2px 0 -0.2px #c7a8df, -3px 1px 0 -0.3px #9fc9c2; opacity: 0; animation: stream-pixel-scatter var(--dust-duration) cubic-bezier(.1,.56,.26,1) var(--decode-delay) both; }
+.stream-token[data-particles="true"]::after { left: 35%; top: 60%; width: 1.5px; height: 1.5px; background: #b7d2c8; box-shadow: 2px 2px 0 #d0bbdf; animation-name: stream-pixel-scatter-reverse; }
+@keyframes stream-letter-arrive { from { opacity: 0; } to { opacity: 1; } }
+@keyframes stream-glyph-appear { from { visibility: hidden; } to { visibility: visible; } }
+@keyframes stream-glyph-dissolve { 0% { opacity: .95; transform: translateY(0); } 45% { opacity: .45; } 100% { opacity: 0; transform: translateY(-2px); } }
+@keyframes stream-glyph-flicker { 0%, 100% { content: attr(data-glyph); opacity: 1; transform: scaleX(.85); } 33% { content: attr(data-next); opacity: .55; transform: scaleX(1.05); } 66% { content: attr(data-last); opacity: .85; transform: scaleX(.9); } }
+@keyframes stream-pixel-scatter { 0% { opacity: 0; transform: translate(0, 0) scale(.5); } 12% { opacity: .85; } 100% { opacity: 0; transform: translate(var(--dust-x), var(--dust-y)) scale(.15); } }
+@keyframes stream-pixel-scatter-reverse { 0% { opacity: 0; transform: translate(0, 0) scale(.7); } 18% { opacity: .65; } 100% { opacity: 0; transform: translate(calc(var(--dust-x) * -.7), calc(var(--dust-y) * -.6)) scale(.1); } }
+.career-workspace[data-ui-motion="off"] .stream-token__letter { opacity: 1; animation: none; }
+.career-workspace[data-ui-motion="off"] .stream-token__glyph, .career-workspace[data-ui-motion="off"] .stream-token::before, .career-workspace[data-ui-motion="off"] .stream-token::after { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .stream-token__letter { opacity: 1; animation: none; }
+  .stream-token__glyph, .stream-token::before, .stream-token::after { display: none; }
+}
+.career-workspace[data-ui-motion="off"] .message-actions { transition: none; transform: none; }
+@media (hover: none) { .message-actions { opacity: 1; transform: none; } }
+@media (max-width: 760px) { .message-editor { padding: 10px; } .message-editor__footer { align-items: flex-start; } .message-editor__footer > small { font-size: 9px; } .career-workspace .message-editor__footer button { padding: 7px 9px; } .message-actions { min-height: 28px; } }
+@media (prefers-reduced-motion: reduce) { .message-actions { transition: none; transform: none; } }
+
+.conversation-loading { display: grid; gap: 14px; width: min(420px, 76%); margin: 30px 0; padding-left: 51px; }
+.conversation-loading > i { height: 12px; border-radius: 4px; background: #e9e0f2; opacity: .7; }
+.conversation-loading > i:nth-child(2) { width: 86%; }
+.conversation-loading > i:nth-child(3) { width: 56%; }
+
+
+
+
+
+/* 对话气泡：保留像素字体，用浅纸面、留白和内容层级减少长回复的整块色感。 */
+.career-workspace .agent-message--assistant { width: fit-content; max-width: min(100%, 960px); }
+.career-workspace .agent-message > .career-message-content,
+.career-workspace .agent-message > .career-draft-content {
+  padding: 18px 22px; border: 1px solid #e9dff3; border-radius: 5px 17px 17px 17px;
+  background: linear-gradient(135deg, #fdfbff, #f6f1fc); color: #514163; line-height: 1.95;
+  box-shadow: 0 3px 14px #8d6ba10a; min-width: 0;
+}
+.career-workspace .agent-message--user { max-width: min(84%, 760px); }
+.career-workspace .agent-message--user > .career-message-content { background: linear-gradient(135deg, #f1faf6, #e7f3ed); border-color: #dcece3; border-radius: 17px 5px 17px 17px; padding: 13px 19px; }
+.agent-message .career-message-content p { margin: 12px 0; }
+.agent-message .career-message-content strong { color: #6d4d8b; font-weight: 600; }
+.agent-message .career-message-content li { padding: 4px 0; }
+.agent-message .career-message-content li::marker { color: #9e82bc; }
+.agent-message .career-message-content blockquote { border-left-width: 2px; border-radius: 0 8px 8px 0; background: #eee5f64d; color: #7a648d; }
+.agent-message .career-message-content hr { margin: 22px 0; border-color: #e7dcef; }
+.agent-message .career-message-content > :first-child { margin-top: 0; }
+.agent-message .career-message-content > :last-child { margin-bottom: 0; }
+/* 只对新增 ID 播放一次；变更流式正文不更换节点，也不对历史整列播放。 */
+.career-workspace[data-ui-motion="on"] .agent-message[data-entering="true"] { animation: message-arrive 340ms cubic-bezier(.16, 1, .3, 1) both; transform-origin: left top; }
+@keyframes message-arrive { from { opacity: .35; transform: translateY(10px) scale(.992); } to { opacity: 1; transform: none; } }
+@media (max-width: 760px) {
+  .career-workspace .agent-message > .career-message-content, .career-workspace .agent-message > .career-draft-content { padding: 14px 16px; }
+  .career-workspace .agent-message--user { max-width: 90%; }
+}
+@media (prefers-reduced-motion: reduce) { .career-workspace .agent-message[data-entering="true"] { animation: none !important; } }

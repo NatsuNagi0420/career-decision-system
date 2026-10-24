@@ -1,0 +1,75 @@
+/** 青穗集 · 紫色像素桌面微交互：点击波纹、轻按反馈、浮层入场；不以动效阻塞交互。 */
+html[data-ui-motion="on"] { --ui-button-motion: translate 160ms cubic-bezier(.2,.8,.3,1), scale 140ms cubic-bezier(.2,.8,.3,1); }
+/* 低优先级定位，不覆盖确认框里 absolute 的按钮，也不裁剪按钮外的焦点框/提示。 */
+:where(.ui-ripple-host) { position: relative; }
+.ui-ripple-host > .ui-ripple-layer,
+button > .ui-ripple-layer,
+[role="button"] > .ui-ripple-layer {
+  position: absolute; inset: 0; z-index: 1; display: block;
+  width: auto; height: auto; min-width: 0; margin: 0; padding: 0; border: 0;
+  overflow: hidden; border-radius: inherit; pointer-events: none; user-select: none;
+  contain: strict;
+}
+.ui-ripple-layer > .ui-ripple-wave {
+  position: absolute; left: var(--ripple-x); top: var(--ripple-y);
+  width: var(--ripple-size); height: var(--ripple-size); display: block;
+  margin: 0; padding: 0; border: 1px solid #b391da38; border-radius: 50%;
+  background: radial-gradient(circle, #c4a2ef24 12%, #af8bd442 52%, #ede1ff80 72%, #b18cd624 100%);
+  pointer-events: none; transform: translate(-50%, -50%) scale(0);
+  animation: ui-button-ripple var(--ripple-duration, 620ms) cubic-bezier(.16,.7,.3,1) both;
+}
+@keyframes ui-button-ripple {
+  0% { opacity: .85; transform: translate(-50%, -50%) scale(.06); }
+  48% { opacity: .62; }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+}
+
+/* 低优先级默认过渡，让已有控件自己的 transition 继续优先；独立 scale/translate 不覆盖 transform。 */
+:where(html[data-ui-motion="on"]) :where(button, [role="button"]):not(:where(.workspace-detail-backdrop, [data-ui-ripple="off"])) {
+  transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease,
+    box-shadow 180ms ease, opacity 150ms ease, transform 160ms ease, translate 160ms ease, scale 140ms ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  :where(html[data-ui-motion="on"]) :where(button, [role="button"]):not(:where(:disabled, [aria-disabled="true"], [inert] *, .workspace-detail-backdrop, [data-ui-ripple="off"])):hover { translate: 0 -1px; }
+}
+:where(html[data-ui-motion="on"]) :where(button, [role="button"]):not(:where(:disabled, [aria-disabled="true"], [inert] *, .workspace-detail-backdrop, [data-ui-ripple="off"])):active { translate: 0 0; scale: .965; }
+
+/* 浮层只在真正展开时播放；深入思考面板保留原有的动态边框，避免覆盖它的 animation。 */
+html[data-ui-motion="on"] :is(.agent-menu-panel:not(.agent-effort-panel), .conversation-actions-panel, .file-context-menu):popover-open {
+  transform-origin: center; animation: ui-menu-enter 180ms cubic-bezier(.2,.8,.25,1) both;
+}
+@keyframes ui-menu-enter {
+  from { opacity: 0; translate: 0 5px; scale: .98; }
+  to { opacity: 1; translate: 0 0; scale: 1; }
+}
+html[data-ui-motion="on"] :is(.agent-dialog, .pixel-confirm, .conversation-rename)[open],
+html[data-ui-motion="on"] .career-desktop-window:not([hidden]) {
+  animation: ui-window-enter 240ms cubic-bezier(.18,.8,.25,1) both;
+}
+@keyframes ui-window-enter {
+  from { opacity: 0; translate: 0 8px; scale: .985; }
+  to { opacity: 1; translate: 0 0; scale: 1; }
+}
+html[data-ui-motion="on"] :is(.agent-dialog, .pixel-confirm, .conversation-rename)[open]::backdrop { animation: ui-backdrop-enter 180ms ease-out both; }
+@keyframes ui-backdrop-enter { from { opacity: 0; } to { opacity: 1; } }
+html[data-ui-motion="on"] .workspace-detail-panel { animation: ui-panel-enter 220ms cubic-bezier(.2,.8,.25,1) both; }
+@keyframes ui-panel-enter { from { opacity: 0; translate: 10px 0; } to { opacity: 1; translate: 0 0; } }
+
+/* 输入/搜索聚焦用边框和浅阴影反馈，不增加额外说明，也不改变控件尺寸。 */
+html[data-ui-motion="on"] :is(.career-desktop-shell .agent-composer, .conversation-search) { transition: border-color 180ms ease, box-shadow 180ms ease; }
+html[data-ui-motion="on"] .career-desktop-shell .agent-composer:focus-within { border-color: #b89bdb; box-shadow: 0 0 0 3px #b69ad51a, 0 4px 16px #8d70ad0c; }
+html[data-ui-motion="on"] .agent-menu-trigger > svg:last-of-type { transition: rotate 180ms ease; }
+html[data-ui-motion="on"] .agent-menu-trigger[aria-expanded="true"] > svg:last-of-type:not(:first-child) { rotate: 180deg; }
+
+/* 仅关闭本文件新增的动效，不触碰穗奈独立的角色动作偏好。 */
+html[data-ui-motion="off"] :is(button, [role="button"]) { translate: none; scale: none; }
+html[data-ui-motion="off"] .ui-ripple-layer { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  html[data-ui-motion] :is(button, [role="button"]) { translate: none; scale: none; }
+  html[data-ui-motion] .ui-ripple-layer { display: none; }
+  html[data-ui-motion] :is(.agent-menu-panel:not(.agent-effort-panel), .conversation-actions-panel, .file-context-menu):popover-open,
+  html[data-ui-motion] :is(.agent-dialog, .pixel-confirm, .conversation-rename)[open],
+  html[data-ui-motion] :is(.career-desktop-window:not([hidden]), .workspace-detail-panel),
+  html[data-ui-motion] :is(.agent-dialog, .pixel-confirm, .conversation-rename)[open]::backdrop { animation: none; }
+  html[data-ui-motion] :is(.career-desktop-shell .agent-composer, .conversation-search, .agent-menu-trigger > svg:last-of-type) { transition: none; }
+}

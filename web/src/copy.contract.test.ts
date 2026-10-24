@@ -1,3 +1,4 @@
+/** 青穗集 · 用户文案契约：隐藏内部术语，并保留用户已要求的对话归档操作。 */
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -24,6 +25,13 @@ const RESEARCHER_SURFACES = new Set([
 ]);
 
 const SRC = fileURLToPath(new URL("./", import.meta.url));
+
+// 2026-10：用户明确要求归档对话，这是正常产品操作，与旧业务内部的归档术语不同。
+const CONVERSATION_SURFACES = new Set([
+  "src/agent/AgentApp.tsx:归档",
+  "src/agent/ChatComposer.tsx:归档",
+  "src/agent/ConversationHistory.tsx:归档",
+]);
 
 function sources(dir: string, acc: string[] = []): string[] {
   for (const entry of readdirSync(dir)) {
@@ -74,9 +82,9 @@ describe("consumer copy", () => {
   });
 
   it("keeps internal vocabulary on researcher surfaces only", () => {
-    const offenders = [...FOUND.keys()].filter((key) => !RESEARCHER_SURFACES.has(key));
+    const offenders = [...FOUND.keys()].filter((key) => !RESEARCHER_SURFACES.has(key) && !CONVERSATION_SURFACES.has(key));
     expect(offenders).toEqual([]);
-    const stale = [...RESEARCHER_SURFACES].filter((key) => !FOUND.has(key));
+    const stale = [...RESEARCHER_SURFACES, ...CONVERSATION_SURFACES].filter((key) => !FOUND.has(key));
     expect(stale, "these exemptions are no longer used by anything — delete them").toEqual([]);
   });
 });

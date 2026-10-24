@@ -1,0 +1,826 @@
+{
+  "_comment": "青穗集 · PSD结构/像素往返检查，不冒充Cubism Editor实际导入验收。",
+  "layers": [
+    {
+      "name": "HairBack",
+      "visible": true,
+      "bounds": [
+        638,
+        25,
+        874,
+        304
+      ],
+      "source": "source_layers/base/back_hair.png",
+      "clipping": false,
+      "pixelSha256": "733704765a40a615f5cc2580a2781cbd577e5ac929695f71d62b13e88d95eb97"
+    },
+    {
+      "name": "ArmR_H01",
+      "visible": true,
+      "bounds": [
+        543,
+        277,
+        683,
+        813
+      ],
+      "source": [
+        "runtime_png/ARM01_R.png",
+        "runtime_png/H01_R.png"
+      ],
+      "clipping": false,
+      "pixelSha256": "92251c0301956813e89785af11da7c59fd3a601f4b5226fb2610b093a80ba231"
+    },
+    {
+      "name": "ArmR_H02",
+      "visible": false,
+      "bounds": [
+        535,
+        277,
+        683,
+        822
+      ],
+      "source": [
+        "runtime_png/ARM01_R.png",
+        "runtime_png/H02_R.png"
+      ],
+      "clipping": false,
+      "pixelSha256": "928bb10c6ae9ebaf72eac7ecc4b7bce4f51e270282a712ae91d145d6f8b47b0f",
+      "derivation": {
+        "operation": "reflect-distal-palm",
+        "axisX": 569.5,
+        "keepThroughY": 742,
+        "fullFromY": 750
+      }
+    },
+    {
+      "name": "ArmR_H03",
+      "visible": false,
+      "bounds": [
+        534,
+        277,
+        683,
+        830
+      ],
+      "source": [
+        "runtime_png/ARM01_R.png",
+        "runtime_png/H03_R.png"
+      ],
+      "clipping": false,
+      "pixelSha256": "efc0d110255486ab8408c6f55ae28c5701b3d1d75660b3310b2409b3f88fa1b6",
+      "derivation": {
+        "operation": "reflect-distal-palm",
+        "axisX": 569.0,
+        "keepThroughY": 742,
+        "fullFromY": 750
+      }
+    },
+    {
+      "name": "ArmR_H04",
+      "visible": false,
+      "bounds": [
+        546,
+        277,
+        683,
+        836
+      ],
+      "source": [
+        "runtime_png/ARM01_R.png",
+        "runtime_png/H04_R.png"
+      ],
+      "clipping": false,
+      "pixelSha256": "a89ccab7c357f2ad9043e0422ba399c103eb0c19a93d281da07ed1e55671679a"
+    },
+    {
+      "name": "ArmR_H05",
+      "visible": false,
+      "bounds": [
+        544,
+        277,
+        683,
+        830
+      ],
+      "source": [
+        "runtime_png/ARM01_R.png",
+        "runtime_png/H05_R.png"
+      ],
+      "clipping": false,
+      "pixelSha256": "d004ad16d136fb206a6c784a2b968380b63676e5cb306fb8812d47e1a59ecf91"
+    },
+    {
+      "name": "ArmR_H06",
+      "visible": false,
+      "bounds": [
+        539,
+        277,
+        683,
+        814
+      ],
+      "source": [
+        "runtime_png/ARM01_R.png",
+        "runtime_png/H06_R.png"
+      ],
+      "clipping": false,
+      "pixelSha256": "bf791940cbf83d5c3e6b021ffdb40525005030db4bd486dab940db4b3d1ccf09"
+    },
+    {
+      "name": "ArmL_H01",
+      "visible": true,
+      "bounds": [
+        825,
+        277,
+        972,
+        812
+      ],
+      "source": [
+        "runtime_png/ARM01_L.png",
+        "runtime_png/H01_L.png"
+      ],
+      "clipping": false,
+      "pixelSha256": "c6ed6328cc70c69e3e4424446263806c74315ac5528aecc235821f619a6e4e7e"
+    },
+    {
+      "name": "ArmL_H02",
+      "visible": false,
+      "bounds": [
+        825,
+        277,
+        983,
+        821
+      ],
+      "source": [
+        "runtime_png/ARM01_L.png",
+        "runtime_png/H02_L.png"
+      ],
+      "clipping": false,
+      "pixelSha256": "51c1bd5e500e96bf80e4046b68aa4be3594d5774545b0a8c8645fafa1fdad0df",
+      "derivation": {
+        "operation": "reflect-distal-palm",
+        "axisX": 945.5,
+        "keepThroughY": 742,
+        "fullFromY": 750
+      }
+    },
+    {
+      "name": "ArmL_H03",
+      "visible": false,
+      "bounds": [
+        825,
+        277,
+        980,
+        823
+      ],
+      "source": [
+        "runtime_png/ARM01_L.png",
+        "runtime_png/H03_L.png"
+      ],
+      "clipping": false,
+      "pixelSha256": "b0a7a1c71679b36f51651a7151981b2c8a913f50fa1e06f110e54db5eb87c38f"
+    },
+    {
+      "name": "ArmL_H04",
+      "visible": false,
+      "bounds": [
+        825,
+        277,
+        974,
+        836
+      ],
+      "source": [
+        "runtime_png/ARM01_L.png",
+        "runtime_png/H04_L.png"
+      ],
+      "clipping": false,
+      "pixelSha256": "643024abd050317f735506a4e365f4840e696c0d4f8514f8d664bd415914d5db"
+    },
+    {
+      "name": "ArmL_H05",
+      "visible": false,
+      "bounds": [
+        825,
+        277,
+        971,
+        830
+      ],
+      "source": [
+        "runtime_png/ARM01_L.png",
+        "runtime_png/H05_L.png"
+      ],
+      "clipping": false,
+      "pixelSha256": "6c8eab7abc26be93b7a3b2b901e98d54f964749ea6d526cff7d5074f256df455"
+    },
+    {
+      "name": "ArmL_H06",
+      "visible": false,
+      "bounds": [
+        825,
+        277,
+        977,
+        818
+      ],
+      "source": [
+        "runtime_png/ARM01_L.png",
+        "runtime_png/H06_L.png"
+      ],
+      "clipping": false,
+      "pixelSha256": "7638f2c9fe0d6bf08a823b01bad44795c0b243d989e916dbf6c60ffc8a287364"
+    },
+    {
+      "name": "Legwear",
+      "visible": true,
+      "bounds": [
+        628,
+        687,
+        889,
+        1406
+      ],
+      "source": "source_layers/base/legwear.png",
+      "clipping": false,
+      "pixelSha256": "235bf436f6f85c1a2ff545fb1c44cb1702e729679f2dee5d0b3d933d7c7cf602"
+    },
+    {
+      "name": "Footwear",
+      "visible": true,
+      "bounds": [
+        688,
+        1332,
+        858,
+        1452
+      ],
+      "source": "source_layers/base/footwear.png",
+      "clipping": false,
+      "pixelSha256": "3a87a39589be6f622b222945509b62cdef4a8cd2a04f9677a94c3fb9373859fb"
+    },
+    {
+      "name": "Neck",
+      "visible": true,
+      "bounds": [
+        726,
+        171,
+        785,
+        256
+      ],
+      "source": "source_layers/base/neck.png",
+      "clipping": false,
+      "pixelSha256": "4ef5375819d03ba1d5b00a111fc3ad9d5ad3ea677fbf5a221d10744c912515c1"
+    },
+    {
+      "name": "Bottomwear",
+      "visible": true,
+      "bounds": [
+        574,
+        482,
+        944,
+        854
+      ],
+      "source": "source_layers/base/bottomwear.png",
+      "clipping": false,
+      "pixelSha256": "d606db3b14085677a2c3b73786f7ac0f12df4e8895203374635a3acbea16b436"
+    },
+    {
+      "name": "Topwear",
+      "visible": true,
+      "bounds": [
+        632,
+        234,
+        880,
+        551
+      ],
+      "source": "source_layers/base/topwear.png",
+      "clipping": false,
+      "pixelSha256": "da3d1f11ef9e2e94ff5e6da8a1813aac28ac3ebf64183d244b5bc394708e6c13"
+    },
+    {
+      "name": "Ears_R",
+      "visible": true,
+      "bounds": [
+        682,
+        146,
+        712,
+        186
+      ],
+      "source": "source_layers/base/ears-r.png",
+      "clipping": false,
+      "pixelSha256": "3466a3ad9a9037d8a2b4c3a83111b8ea5e9aed0fc33c839ca7efe2eafc071425"
+    },
+    {
+      "name": "Ears_L",
+      "visible": true,
+      "bounds": [
+        801,
+        137,
+        828,
+        181
+      ],
+      "source": "source_layers/base/ears-l.png",
+      "clipping": false,
+      "pixelSha256": "9f51d2b4183fb98b308d8abcdbb8942942afdaa2a81d378508c0d4773ad918ba"
+    },
+    {
+      "name": "Face",
+      "visible": true,
+      "bounds": [
+        693,
+        57,
+        820,
+        222
+      ],
+      "source": "runtime_png/F01.png",
+      "clipping": false,
+      "pixelSha256": "841e5f20f0cd82001621e0df99b93a71cc9d305c6ae8828ddf4387d3a63062bf"
+    },
+    {
+      "name": "Nose",
+      "visible": true,
+      "bounds": [
+        751,
+        168,
+        757,
+        177
+      ],
+      "source": "source_layers/base/nose.png",
+      "clipping": false,
+      "pixelSha256": "83858ae5a5351450b92a186131e4f38bc8ff5cfdd60b653c64734325b08e5d37"
+    },
+    {
+      "name": "Blush_X01",
+      "visible": false,
+      "bounds": [
+        715,
+        164,
+        797,
+        174
+      ],
+      "source": "runtime_png/X01.png",
+      "clipping": false,
+      "pixelSha256": "750739f061a21d6b4f7fc2d438519202bfd38d6c49610ba2503295aff59a8b26"
+    },
+    {
+      "name": "BrowL_B01",
+      "visible": true,
+      "bounds": [
+        766,
+        118,
+        802,
+        126
+      ],
+      "source": "runtime_png/B01_L.png",
+      "clipping": false,
+      "pixelSha256": "8766ca1f09fe90eff58d486a72c7f74007a8f2ede1efd32684731aea860fe241"
+    },
+    {
+      "name": "BrowL_B02",
+      "visible": false,
+      "bounds": [
+        766,
+        118,
+        802,
+        126
+      ],
+      "source": "runtime_png/B02_L.png",
+      "clipping": false,
+      "pixelSha256": "d559c54d8e3cbc00fd8823773699a9df2805d68e4b77081297a26aeb81b6515a"
+    },
+    {
+      "name": "BrowL_B03",
+      "visible": false,
+      "bounds": [
+        766,
+        118,
+        802,
+        126
+      ],
+      "source": "runtime_png/B03_L.png",
+      "clipping": false,
+      "pixelSha256": "0b06bdb7c72e4370a07f619731a9979b35b5173afcc7e46f6d90ba6b3ad65abd"
+    },
+    {
+      "name": "BrowL_B04",
+      "visible": false,
+      "bounds": [
+        766,
+        118,
+        802,
+        125
+      ],
+      "source": "runtime_png/B04_L.png",
+      "clipping": false,
+      "pixelSha256": "32345c69151452b7bb2f6273de3aaa4868afceba0a02d3a088da9684f5b598e7"
+    },
+    {
+      "name": "BrowL_B05",
+      "visible": false,
+      "bounds": [
+        768,
+        117,
+        799,
+        127
+      ],
+      "source": "runtime_png/B05_L.png",
+      "clipping": false,
+      "pixelSha256": "ca585b9a1baa474b01e46da622633e8850bbce2fbdab20d3ee8187facf24a7a5"
+    },
+    {
+      "name": "BrowL_B06",
+      "visible": false,
+      "bounds": [
+        766,
+        119,
+        802,
+        125
+      ],
+      "source": "runtime_png/B06_L.png",
+      "clipping": false,
+      "pixelSha256": "0d7e1d1acad8923e76dff6a7e56ee889f61de0160d926e7a9957bbd56f72c4bf"
+    },
+    {
+      "name": "BrowR_B01",
+      "visible": true,
+      "bounds": [
+        702,
+        121,
+        738,
+        129
+      ],
+      "source": "runtime_png/B01_R.png",
+      "clipping": false,
+      "pixelSha256": "668271205cdd5d0a2461765cf4725cedf0e34d11bd18c1db0229816d645e93be"
+    },
+    {
+      "name": "BrowR_B02",
+      "visible": false,
+      "bounds": [
+        702,
+        121,
+        738,
+        129
+      ],
+      "source": "runtime_png/B02_R.png",
+      "clipping": false,
+      "pixelSha256": "8e90c34b891da03729b2d0514753a4595385d37841d763369d635d41497f8522"
+    },
+    {
+      "name": "BrowR_B03",
+      "visible": false,
+      "bounds": [
+        702,
+        120,
+        738,
+        129
+      ],
+      "source": "runtime_png/B03_R.png",
+      "clipping": false,
+      "pixelSha256": "7ddd7ff3c3f0c18bcc004cd897789c58373f18be671e624225972ea6bd76fb56"
+    },
+    {
+      "name": "BrowR_B04",
+      "visible": false,
+      "bounds": [
+        702,
+        120,
+        738,
+        129
+      ],
+      "source": "runtime_png/B04_R.png",
+      "clipping": false,
+      "pixelSha256": "694016dc6ca67e0c9b552c3678a22c455eb5b503f81a7df20577cfb714a3f31f"
+    },
+    {
+      "name": "BrowR_B05",
+      "visible": false,
+      "bounds": [
+        708,
+        120,
+        733,
+        130
+      ],
+      "source": "runtime_png/B05_R.png",
+      "clipping": false,
+      "pixelSha256": "015e8af2c40f78395e30ce5d4cb4bbc69f1c7da6162441809b4411635dd34321"
+    },
+    {
+      "name": "BrowR_B06",
+      "visible": false,
+      "bounds": [
+        702,
+        122,
+        738,
+        129
+      ],
+      "source": "runtime_png/B06_R.png",
+      "clipping": false,
+      "pixelSha256": "70907667c08be931adf0198eb513b0d5c2fcbb94007b4fb1076df1337ad35a04"
+    },
+    {
+      "name": "Mouth_M01",
+      "visible": true,
+      "bounds": [
+        742,
+        189,
+        769,
+        198
+      ],
+      "source": "runtime_png/M01.png",
+      "clipping": false,
+      "pixelSha256": "709d10415ffb55ae2c0272366f87f9e641397c4f659168f437df4f4ac3a88eed"
+    },
+    {
+      "name": "Mouth_M02",
+      "visible": false,
+      "bounds": [
+        741,
+        190,
+        770,
+        196
+      ],
+      "source": "runtime_png/M02.png",
+      "clipping": false,
+      "pixelSha256": "2cefcc442ca65e34e0282a0607fbd4982790ac4cb9fc978b72c92e694cd216f4"
+    },
+    {
+      "name": "Mouth_M03",
+      "visible": false,
+      "bounds": [
+        744,
+        186,
+        768,
+        197
+      ],
+      "source": "runtime_png/M03.png",
+      "clipping": false,
+      "pixelSha256": "ea5efe9c9c0d53c85f1a268f5f1660dc4143fa08c464111881eacc5b47152dad"
+    },
+    {
+      "name": "Mouth_M04",
+      "visible": false,
+      "bounds": [
+        746,
+        188,
+        766,
+        199
+      ],
+      "source": "runtime_png/M04.png",
+      "clipping": false,
+      "pixelSha256": "01c56aa92da6630d4dec7992b4c0beb270b39e107345d6bf60b6dd94c821e7c0"
+    },
+    {
+      "name": "Mouth_M05",
+      "visible": false,
+      "bounds": [
+        744,
+        189,
+        768,
+        198
+      ],
+      "source": "runtime_png/M05.png",
+      "clipping": false,
+      "pixelSha256": "807ec9d33ab3f678d0382678967e7c106ee12ed19d8e284a6fe51199232656de"
+    },
+    {
+      "name": "Mouth_M06",
+      "visible": false,
+      "bounds": [
+        741,
+        191,
+        770,
+        196
+      ],
+      "source": "runtime_png/M06.png",
+      "clipping": false,
+      "pixelSha256": "27fa593c7415e2f3afec8552c9b11d10cee4aa91aea1215408fd6f6dac02e984"
+    },
+    {
+      "name": "Mouth_M07",
+      "visible": false,
+      "bounds": [
+        741,
+        190,
+        770,
+        197
+      ],
+      "source": "runtime_png/M07.png",
+      "clipping": false,
+      "pixelSha256": "60684eb49794a5852dafd043fddc262eadb187fd0d369ff7c24add1fc5939769"
+    },
+    {
+      "name": "EyeL_White",
+      "visible": true,
+      "bounds": [
+        771,
+        137,
+        801,
+        162
+      ],
+      "source": "source_layers/generated_parts/V02_L_sclera.png",
+      "clipping": false,
+      "pixelSha256": "673ea60f59763acdde87f0e83e75467bef231dfdd20824793e2dd029113d93cc"
+    },
+    {
+      "name": "EyeL_Iris_COMPLETE",
+      "visible": true,
+      "bounds": [
+        774,
+        137,
+        794,
+        161
+      ],
+      "source": "source_layers/generated_parts/V02_L_iris_highlights.png",
+      "clipping": true,
+      "pixelSha256": "0d54c5e9d964b84cfe49a890a32af102e0e783029d1809dce4738a15240db160"
+    },
+    {
+      "name": "EyeL_LowerLid",
+      "visible": true,
+      "bounds": [
+        769,
+        144,
+        809,
+        157
+      ],
+      "source": "source_layers/generated_parts/V02_L_lower_lid.png",
+      "clipping": false,
+      "pixelSha256": "70eb371ff05946589b5921ef220035a338528f318edcac3eb7a240debe2e5dd2"
+    },
+    {
+      "name": "EyeL_UpperLid",
+      "visible": true,
+      "bounds": [
+        767,
+        132,
+        806,
+        144
+      ],
+      "source": "source_layers/generated_parts/V02_L_upper_lid.png",
+      "clipping": false,
+      "pixelSha256": "22c6e81405ff9005cf4d7c53a039637fde41c295cd3cae642403b98787d4fa7e"
+    },
+    {
+      "name": "EyeL_Closed",
+      "visible": false,
+      "bounds": [
+        767,
+        141,
+        809,
+        153
+      ],
+      "source": "runtime_png/V04_L.png",
+      "clipping": false,
+      "pixelSha256": "43eca38142f33a2eb8f0a6f0efea2a66654de896ffe6767c9e7f737f913e5806"
+    },
+    {
+      "name": "EyeL_SmileClosed",
+      "visible": false,
+      "bounds": [
+        767,
+        140,
+        809,
+        153
+      ],
+      "source": "runtime_png/V05_L.png",
+      "clipping": false,
+      "pixelSha256": "86769e1e869aa6356342b8dae3dc4b0b7b8bb897381f99479b318bcd7f67e0be"
+    },
+    {
+      "name": "EyeR_White",
+      "visible": true,
+      "bounds": [
+        706,
+        140,
+        738,
+        164
+      ],
+      "source": "source_layers/generated_parts/V02_R_sclera.png",
+      "clipping": false,
+      "pixelSha256": "f42a5a825ff41761b444bc258736e9dfd736995fb80d1500f64f167dbc1c8df0"
+    },
+    {
+      "name": "EyeR_Iris_COMPLETE",
+      "visible": true,
+      "bounds": [
+        713,
+        141,
+        733,
+        164
+      ],
+      "source": "source_layers/generated_parts/V02_R_iris_highlights.png",
+      "clipping": true,
+      "pixelSha256": "200822492fadc988491820ed12c563dd8bcf92d95e48110b7f68b220882a9798"
+    },
+    {
+      "name": "EyeR_LowerLid",
+      "visible": true,
+      "bounds": [
+        699,
+        146,
+        736,
+        158
+      ],
+      "source": "source_layers/generated_parts/V02_R_lower_lid.png",
+      "clipping": false,
+      "pixelSha256": "a76f0894997102554ce97b24039921e4bd19d06ee2872e931a46e7797696c120"
+    },
+    {
+      "name": "EyeR_UpperLid",
+      "visible": true,
+      "bounds": [
+        702,
+        135,
+        736,
+        146
+      ],
+      "source": "source_layers/generated_parts/V02_R_upper_lid.png",
+      "clipping": false,
+      "pixelSha256": "0896a63cee20da547eb4c12d081f9d360f3b25a0ffdaa3add94c668d89ef2db8"
+    },
+    {
+      "name": "EyeR_Closed",
+      "visible": false,
+      "bounds": [
+        699,
+        144,
+        738,
+        155
+      ],
+      "source": "runtime_png/V04_R.png",
+      "clipping": false,
+      "pixelSha256": "1174b2392200227ffc11bdaf8a63028cef4b6c52115f4944bf3526fe7e490a87"
+    },
+    {
+      "name": "EyeR_SmileClosed",
+      "visible": false,
+      "bounds": [
+        699,
+        144,
+        738,
+        156
+      ],
+      "source": "runtime_png/V05_R.png",
+      "clipping": false,
+      "pixelSha256": "2ba1aa09061af458c3242a3495bd85f97d900cdf7525cdbfa1e29776d214a1de"
+    },
+    {
+      "name": "Headwear",
+      "visible": true,
+      "bounds": [
+        806,
+        89,
+        832,
+        128
+      ],
+      "source": "source_layers/base/headwear.png",
+      "clipping": false,
+      "pixelSha256": "4070ee98a9afb289a202d4b7d7c5ffc7cb3737f6f9edd28ae5ea9f60e4ffa30c"
+    },
+    {
+      "name": "Eyewear",
+      "visible": true,
+      "bounds": [
+        692,
+        132,
+        826,
+        177
+      ],
+      "source": "source_layers/base/eyewear.png",
+      "clipping": false,
+      "pixelSha256": "6a52144f1c5374c0729cabe667ef2d3e96404119c82897a37e08a7aa8e18b6d6"
+    },
+    {
+      "name": "Fronthair",
+      "visible": true,
+      "bounds": [
+        659,
+        36,
+        821,
+        304
+      ],
+      "source": "source_layers/base/front_hair.png",
+      "clipping": false,
+      "pixelSha256": "c468ee7f5f24d5a982c012fd3be66e8463d37c26c1cc3b84e0604cc09815f326"
+    },
+    {
+      "name": "EyeL_ClipMask_REFERENCE",
+      "visible": true,
+      "bounds": [
+        771,
+        137,
+        801,
+        162
+      ],
+      "source": "source_layers/generated_parts/V02_L_iris_clip_mask.png",
+      "clipping": false,
+      "pixelSha256": "447ac0d02f081c567192810bc85ee780db506b822ae8a65c85b5944a429d34bc"
+    },
+    {
+      "name": "EyeR_ClipMask_REFERENCE",
+      "visible": true,
+      "bounds": [
+        706,
+        140,
+        738,
+        164
+      ],
+      "source": "source_layers/generated_parts/V02_R_iris_clip_mask.png",
+      "clipping": false,
+      "pixelSha256": "b4eebaa21d8d5ef62b106369819f3130e495a6e83d3cae26b4f786f025be48ed"
+    }
+  ]
+}

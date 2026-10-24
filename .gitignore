@@ -55,3 +55,28 @@ web/e2e/.shots/
 # Whole-font downloads that `npm run fonts` cuts down to the shipped subset. Never
 # served, always regenerable — 450 KB of Material Symbols has no business in history.
 web/.font-src/
+
+# TypeScript Agent local state and official relay database (never commit secrets).
+agent/var/
+agent/relay-var/
+*.sqlite-wal
+*.sqlite-shm
+
+# Repository preparation: keep local source material and retired runtime state out of Git.
+tmp/
+legacy/server-python/.env
+legacy/server-python/var/
+legacy/server-python/.venv/
+legacy/server-python/.pytest_cache/
+legacy/server-python/.ruff_cache/
+legacy/server-python/**/__pycache__/
+legacy/server-python/*.log
+
+# Raw research and art handoff files stay in the local workspace or an artifact store.
+docs/参考资料/**/*.pdf
+docs/参考资料/工具/网页原件/
+docs/品牌形象/**/*.zip
+docs/品牌形象/**/*.psd
+docs/品牌形象/**/*.kra
+docs/品牌形象/**/*.clip
+docs/岗位库扩充/**/待导入/*.zip

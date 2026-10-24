@@ -1,0 +1,175 @@
+{
+  "_comment": "青穗集 · 穗奈40场景动作与补图交接 v01；planned表示待制作，不是已接入业务。",
+  "status": "planned",
+  "total": 12,
+  "expressions": [
+    {
+      "id": "E01",
+      "label": "平静陪伴",
+      "eye": "V01",
+      "brow": "B01",
+      "mouth": "M01",
+      "phase": "P0",
+      "status": "planned",
+      "artDirection": "目光正视、眉形舒展、原有浅笑；不要把嘴角拉成机械大弧线。",
+      "variants": {
+        "speaking": "M05仅在真实语音或明确的演示口型时替换；本轮不是音素口型"
+      },
+      "previewFile": "previews/expressions/E01.png"
+    },
+    {
+      "id": "E02",
+      "label": "温柔微笑",
+      "eye": "V02",
+      "brow": "B01",
+      "mouth": "M02",
+      "phase": "P0",
+      "status": "planned",
+      "artDirection": "眼睑稍柔和，嘴角轻抬；两侧面颊的明暗保持原画。",
+      "variants": {
+        "speaking": "M05仅在真实语音或明确的演示口型时替换；本轮不是音素口型"
+      },
+      "previewFile": "previews/expressions/E02.png"
+    },
+    {
+      "id": "E03",
+      "label": "专注倾听",
+      "eye": "V01",
+      "brow": "B02",
+      "mouth": "M01",
+      "phase": "P0",
+      "status": "planned",
+      "artDirection": "瞳孔看向用户，眉部略集中；严肃但不皱成生气。",
+      "variants": {
+        "speaking": "M05仅在真实语音或明确的演示口型时替换；本轮不是音素口型"
+      },
+      "previewFile": "previews/expressions/E03.png"
+    },
+    {
+      "id": "E04",
+      "label": "思考斟酌",
+      "eye": "V03",
+      "brow": "B03",
+      "mouth": "M07",
+      "phase": "P0",
+      "status": "planned",
+      "artDirection": "眼神略偏侧上方、眉毛轻微不对称、小幅抿嘴；不是困倦翻白眼。",
+      "variants": {
+        "speaking": "M05仅在真实语音或明确的演示口型时替换；本轮不是音素口型"
+      },
+      "previewFile": "previews/expressions/E04.png"
+    },
+    {
+      "id": "E05",
+      "label": "清楚讲解",
+      "eye": "V01",
+      "brow": "B02",
+      "mouth": "M02",
+      "phase": "P0",
+      "status": "planned",
+      "artDirection": "目光稳定、眉部有精神、轻微微笑；文字回复默认闭口。",
+      "variants": {
+        "speaking": "M05仅在真实语音或明确的演示口型时替换；本轮不是音素口型"
+      },
+      "previewFile": "previews/expressions/E05.png"
+    },
+    {
+      "id": "E06",
+      "label": "开心认可",
+      "eye": "V05",
+      "brow": "B04",
+      "mouth": "M03",
+      "phase": "P0",
+      "status": "planned",
+      "artDirection": "自然笑眼和闭口笑；开心但不夸张张嘴，不改变颧骨与下巴。",
+      "variants": {
+        "speaking": "M05仅在真实语音或明确的演示口型时替换；本轮不是音素口型"
+      },
+      "previewFile": "previews/expressions/E06.png"
+    },
+    {
+      "id": "E07",
+      "label": "坚定鼓励",
+      "eye": "V02",
+      "brow": "B04",
+      "mouth": "M02",
+      "phase": "P0",
+      "status": "planned",
+      "artDirection": "眉形自信、眼神温暖、微笑有力量；不居高临下。",
+      "variants": {
+        "speaking": "M05仅在真实语音或明确的演示口型时替换；本轮不是音素口型"
+      },
+      "previewFile": "previews/expressions/E07.png"
+    },
+    {
+      "id": "E08",
+      "label": "温和关切",
+      "eye": "V02",
+      "brow": "B05",
+      "mouth": "M06",
+      "phase": "P0",
+      "status": "planned",
+      "artDirection": "眉头内侧略抬，嘴角轻收；不责怪、不哭泣、不制造焦虑。",
+      "variants": {
+        "speaking": "M05仅在真实语音或明确的演示口型时替换；本轮不是音素口型"
+      },
+      "previewFile": "previews/expressions/E08.png"
+    },
+    {
+      "id": "E09",
+      "label": "询问确认",
+      "eye": "V01",
+      "brow": "B06",
+      "mouth": "M04",
+      "phase": "P1",
+      "status": "planned",
+      "artDirection": "单侧眉轻抬、短暂小开口后闭口；保持成年人的克制表情。",
+      "variants": {
+        "speaking": "M05仅在真实语音或明确的演示口型时替换；本轮不是音素口型"
+      },
+      "previewFile": "previews/expressions/E09.png"
+    },
+    {
+      "id": "E10",
+      "label": "轻度惊喜",
+      "eye": "V06",
+      "brow": "B04",
+      "mouth": "M04",
+      "phase": "P1",
+      "status": "planned",
+      "artDirection": "眼睛略睁大，小圆口短暂出现；不是惊恐或瞪眼。",
+      "variants": {
+        "speaking": "M05仅在真实语音或明确的演示口型时替换；本轮不是音素口型"
+      },
+      "previewFile": "previews/expressions/E10.png"
+    },
+    {
+      "id": "E11",
+      "label": "安心释然",
+      "eye": "V04",
+      "brow": "B01",
+      "mouth": "M02",
+      "phase": "P1",
+      "status": "planned",
+      "artDirection": "短暂轻闭眼再睁开，嘴角放松；不一直闭眼。",
+      "variants": {
+        "speaking": "M05仅在真实语音或明确的演示口型时替换；本轮不是音素口型"
+      },
+      "previewFile": "previews/expressions/E11.png"
+    },
+    {
+      "id": "E12",
+      "label": "集中检查",
+      "eye": "V03",
+      "brow": "B02",
+      "mouth": "M07",
+      "phase": "P0",
+      "status": "planned",
+      "artDirection": "视线略向下检查内容，眉部轻收；区别于怀疑或生气。",
+      "variants": {
+        "speaking": "M05仅在真实语音或明确的演示口型时替换；本轮不是音素口型"
+      },
+      "previewFile": "previews/expressions/E12.png"
+    }
+  ]
+}

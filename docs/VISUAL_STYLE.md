@@ -1,5 +1,7 @@
 # Visual Style
 
+> **2026-10-16 — Historical direction, not the active Web theme.** The cyan virtual mentor, purple ban, energy maps, and sync-rate ideas below are archived concepts, not requirements for the current career desktop. For the active Web appearance, see `web/src/desktop.css`; for Suinai asset production, see [desktop asset v2](品牌形象/桌面素材扩展v2/制作说明.md). This scope notice does not change Android requirements.
+
 ## Direction
 
 The product should feel like:

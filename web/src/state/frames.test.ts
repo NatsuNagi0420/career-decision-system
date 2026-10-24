@@ -1,3 +1,4 @@
+/** 青穗集 · 任务事件回归：重放去重、跨任务隔离、取消与失败分离，保障消息和角色读取同一事实。 */
 import { describe, expect, it } from "vitest";
 import { emptyState, expiryNote, groupTrace, reduceFrame, type Frame, type ShellState } from "./frames";
 
@@ -234,5 +235,17 @@ describe("reduceFrame", () => {
     const [group] = groupTrace(state.items).flatMap((block) => (block.type === "group" ? [block.group] : []));
     expect(group).toMatchObject({ failed: true, done: true });
     expect(group.items.at(-1)?.title).toBe("这一步失败了");
+  });
+});
+
+describe("run identity for shared companion state", () => {
+  it("retains the actual server capability and refuses late frames from another run", () => {
+    const state = reduceFrame(emptyState, frame("run_started", 0, { capability_id: "job_match" }));
+    expect(state.runId).toBe("run-1"); expect(state.capabilityId).toBe("job_match");
+    expect(reduceFrame(state, frame("run_failed", 9, { run_id: "old-run", error: "stale" }))).toBe(state);
+  });
+  it("records the user's refusal as cancelled, not as a backend failure", () => {
+    const state = applyAll([frame("run_started", 0), frame("run_completed", 1, { status: "cancelled" })]);
+    expect(state.status).toBe("cancelled"); expect(state.errors).toEqual([]);
   });
 });

@@ -1,20 +1,4 @@
-/**
- * 青穗集 shell, reproduced 1:1 from the reference implementation's stylesheet.
- *
- * The reference is Tailwind + a Material 3 theme map. Every value below is transcribed
- * from that theme block rather than re-invented: the colour roles, the spacing scale
- * (space-xs 4 / sm 8 / md 16 / lg 24 / xl 32), the radii (DEFAULT 1rem, 2xl 1rem,
- * 3xl 1.5rem, lg 2rem, xl 3rem) and the typescale including its letter-spacing, which
- * is most of what makes it read as Material You instead of generic rounded boxes.
- *
- * Two deliberate departures, both marked where they occur:
- *   - the reference's model tier slider, mic and search buttons are decoration in a
- *     mockup; here the same slots carry real state (which capability, whether cloud AI
- *     is consented, how many quotes back the answer). No control is rendered that has
- *     no behaviour behind it.
- *   - the IP illustrations in `public/brand/` replace the mockup's stock avatar and
- *     generic `psychology` glyph, and 穗奈's face follows the run's state.
- */
+/** 青穗集 · 业务组件基础样式：语义色、成果、对话和打印结构；桌面主题统一覆盖视觉变量。 */
 
 :root {
   /* --- colour roles, verbatim from the reference theme map --- */
@@ -49,30 +33,31 @@
   --md-error-container: #ffdad6;
   --md-on-error-container: #93000a;
 
-  --md-background: #f2fbf7;
-  --md-on-background: #151d1b;
-  --md-surface: #f2fbf7;
-  --md-surface-dim: #d3dcd8;
-  --md-surface-bright: #f2fbf7;
-  --md-surface-lowest: #f9fefb;
+  --md-background: #f6f3ea;
+  --md-on-background: #1c1914;
+  --md-surface: #f6f3ea;
+  --md-surface-dim: #d9d2c3;
+  --md-surface-bright: #f8f5ec;
+  --md-surface-lowest: #fbf8f0;
   /* The dock and the inspector buttons float, so they are translucent — but the
      glass has to carry the same hue as the ramp, or it reads as a white slab. */
-  --surface-glass: rgba(249, 254, 251, 0.95);
-  --md-surface-low: #edf6f2;
-  --md-surface-container: #e7f0ec;
-  --md-surface-high: #e1eae6;
-  --md-surface-highest: #dbe4e1;
-  --md-surface-variant: #dbe4e1;
+  --surface-glass: rgba(251, 248, 240, 0.94);
+  --md-surface-low: #f1ece1;
+  --md-surface-container: #ebe5d8;
+  --md-surface-high: #e4ddcf;
+  --md-surface-container-high: #e7e0d2;
+  --md-surface-highest: #ddd6c7;
+  --md-surface-variant: #ddd6c7;
 
-  --md-on-surface: #151d1b;
-  --md-on-surface-variant: #3e4947;
+  --md-on-surface: #1c1914;
+  --md-on-surface-variant: #4a453c;
   /* outline is a border colour; text that wants to be faint still owes 4.5:1. */
-  --md-on-surface-faint: #586462;
-  --md-outline: #6e7977;
-  --md-outline-variant: #bec9c6;
+  --md-on-surface-faint: #635d53;
+  --md-outline: #7a7468;
+  --md-outline-variant: #c9c1b2;
 
-  --md-inverse-surface: #2a3230;
-  --md-inverse-on-surface: #eaf3ef;
+  --md-inverse-surface: #2a2620;
+  --md-inverse-on-surface: #f4efe4;
   --md-inverse-primary: #84d5c8;
 
   /* --- spacing scale --- */
@@ -86,9 +71,9 @@
          full = anything small you click or label with. tail = the speech-bubble corner.
          Inputs split by the same two roles: a control you can type into any moment
          (search, dock) is full; a field sitting inside a form card is md. --- */
-  --r-sm: 8px;
-  --r-md: 16px;
-  --r-lg: 24px;
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 16px;
   --r-full: 9999px;
   --r-tail: 2px;
   /* --- one signal colour, and it is a mark, never text: #ffd802 on this paper is
@@ -96,10 +81,10 @@
   --signal: #ffd802;
 
   /* --- shadows --- */
-  --sh-sidebar: 0 1px 8px rgba(0, 80, 72, 0.06);
-  --sh-topbar: 0 1px 8px rgba(0, 80, 72, 0.05);
-  --sh-card: 0 1px 3px rgba(0, 80, 72, 0.06);
-  --sh-dock: 0 12px 32px -4px rgba(0, 80, 72, 0.12);
+  --sh-sidebar: none;
+  --sh-topbar: none;
+  --sh-card: 0 1px 2px rgba(28, 25, 20, 0.06);
+  --sh-dock: 0 10px 28px -8px rgba(28, 25, 20, 0.14);
 
   /* --- fixed geometry --- */
   --sidebar-w: 320px;
@@ -109,7 +94,7 @@
   --user-w: 672px;
   --dock-w: 768px;
 
-  --md-font: "Plus Jakarta Sans", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --md-font: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", "Plus Jakarta Sans", system-ui, sans-serif;
   --mono: ui-monospace, "Cascadia Code", Consolas, "Liberation Mono", monospace;
 }
 
@@ -121,8 +106,8 @@
 .t-title-lg { font: 500 22px/28px var(--md-font); letter-spacing: -0.2px; }
 .t-title-md { font: 600 16px/24px var(--md-font); letter-spacing: 0.15px; }
 .t-title-sm { font: 600 14px/20px var(--md-font); letter-spacing: 0.1px; }
-.t-body-lg { font: 400 16px/24px var(--md-font); letter-spacing: 0.5px; }
-.t-body-md { font: 400 14px/20px var(--md-font); letter-spacing: 0.25px; }
+.t-body-lg { font: 400 16px/24px var(--md-font); letter-spacing: 0; }
+.t-body-md { font: 400 14px/20px var(--md-font); letter-spacing: 0; }
 .t-body-sm { font: 400 12px/16px var(--md-font); letter-spacing: 0.4px; }
 .t-label-lg { font: 600 14px/20px var(--md-font); letter-spacing: 0.1px; }
 .t-label-md { font: 600 12px/16px var(--md-font); letter-spacing: 0.5px; }
@@ -162,7 +147,7 @@ body {
   background: var(--md-surface);
   color: var(--md-on-surface);
   font: 400 14px/20px var(--md-font);
-  letter-spacing: 0.25px;
+  letter-spacing: 0;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -240,6 +225,7 @@ a {
   gap: var(--sp-md);
   padding: var(--sp-md);
   background: var(--md-surface-low);
+  border-right: 1px solid var(--md-outline-variant);
   box-shadow: var(--sh-sidebar);
 }
 
@@ -305,7 +291,7 @@ a {
   gap: var(--sp-sm);
   width: 100%;
   padding: var(--sp-sm) var(--sp-lg);
-  border-radius: var(--r-full);
+  border-radius: var(--r-md);
   background: var(--md-primary);
   color: var(--md-on-primary);
   font: 600 14px/20px var(--md-font);
@@ -329,7 +315,7 @@ a {
   justify-content: center;
   gap: var(--sp-xs);
   padding: var(--sp-sm) var(--sp-sm);
-  border-radius: var(--r-full);
+  border-radius: var(--r-md);
   background: var(--md-surface-container);
   color: var(--md-on-surface-variant);
   font: 600 12px/16px var(--md-font);
@@ -366,8 +352,7 @@ a {
   padding: var(--sp-xs) var(--sp-sm);
   color: var(--md-on-surface-variant);
   font: 600 12px/16px var(--md-font);
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .history {
@@ -382,7 +367,7 @@ a {
   align-items: center;
   gap: var(--sp-sm);
   padding: var(--sp-sm) var(--sp-md);
-  border-radius: var(--r-full);
+  border-radius: var(--r-md);
   color: var(--md-on-surface-variant);
   font: 400 14px/20px var(--md-font);
   transition: background-color 180ms, color 180ms;
@@ -394,9 +379,10 @@ a {
 }
 
 .item[data-on="true"] {
-  background: var(--md-surface-highest);
+  background: var(--md-surface-lowest);
   color: var(--md-on-surface);
   font-weight: 600;
+  box-shadow: inset 2px 0 0 var(--md-primary);
 }
 
 .item__text {
@@ -453,8 +439,9 @@ a {
   justify-content: space-between;
   gap: var(--sp-md);
   padding: 0 var(--sp-lg);
-  background: rgba(242, 251, 247, 0.8);
-  backdrop-filter: blur(24px);
+  background: rgba(246, 243, 234, 0.88);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--md-outline-variant);
   box-shadow: var(--sh-topbar);
 }
 
@@ -465,7 +452,7 @@ a {
   width: 384px;
   max-width: 40vw;
   padding: 4px var(--sp-md);
-  border-radius: var(--r-full);
+  border-radius: var(--r-md);
   background: var(--md-surface-low);
   color: var(--md-on-surface-faint);
 }
@@ -551,6 +538,7 @@ a {
   display: flex;
   align-items: center;
   gap: var(--sp-sm);
+  margin-left: auto;
 }
 
 .topbar__own {
@@ -657,8 +645,8 @@ a {
   width: 32px;
   height: 32px;
   border-radius: var(--r-full);
-  background: var(--md-primary);
-  color: var(--md-on-primary);
+  background: var(--md-surface-container);
+  color: var(--md-primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -671,6 +659,7 @@ a {
 
 .agenthead__logo[data-tone="promise"] {
   background: var(--md-tertiary);
+  color: var(--md-on-tertiary);
 }
 
 .agenthead__name {
@@ -940,7 +929,7 @@ details[open] .thought__chev {
   align-items: center;
   gap: var(--sp-xs);
   padding: 8px var(--sp-md);
-  border-radius: var(--r-full);
+  border-radius: var(--r-md);
   background: var(--md-surface-highest);
   color: var(--md-on-surface);
   font: 600 12px/16px var(--md-font);
@@ -977,7 +966,7 @@ details[open] .thought__chev {
 
 .btn--outline {
   background: var(--md-surface-lowest);
-  border: 1px solid rgba(190, 201, 198, 0.3);
+  border: 1px solid var(--md-outline-variant);
 }
 
 .btn:disabled {
@@ -1069,7 +1058,7 @@ details[open] .thought__chev {
   align-items: center;
   gap: var(--sp-xs);
   padding-top: var(--sp-xs);
-  border-top: 1px dashed rgba(190, 201, 198, 0.6);
+  border-top: 1px dashed var(--md-outline-variant);
 }
 
 .probe__label {
@@ -1180,7 +1169,7 @@ details[open] .thought__chev {
   max-width: var(--dock-w);
   padding: var(--sp-sm);
   border-radius: var(--r-lg);
-  border: 1px solid rgba(190, 201, 198, 0.2);
+  border: 1px solid var(--md-outline-variant);
   background: var(--surface-glass);
   backdrop-filter: blur(32px);
   box-shadow: var(--sh-dock);
@@ -1600,7 +1589,7 @@ details[open] .thought__chev {
   width: 100%;
   padding: 12px var(--sp-md);
   border: 1px solid var(--md-outline-variant);
-  border-radius: var(--r-full);
+  border-radius: var(--r-md);
   background: var(--md-surface-lowest);
   outline: none;
   font: 400 14px/20px var(--md-font);
@@ -2359,7 +2348,7 @@ details[open] .thought__chev {
   width: 40px;
   height: 40px;
   border-radius: var(--r-full);
-  background: var(--md-primary);
+  background: var(--md-surface-container);
   overflow: hidden;
   flex: 0 0 auto;
 }
@@ -2429,7 +2418,7 @@ details[open] .thought__chev {
   gap: 6px;
   padding: var(--sp-sm) var(--sp-md);
   border-radius: var(--r-md);
-  border: 1px dashed rgba(190, 201, 198, 0.9);
+  border: 1px dashed var(--md-outline-variant);
   background: var(--md-surface-container);
   color: var(--md-on-surface-variant);
 }
@@ -2904,9 +2893,9 @@ details[open] .thought__chev {
   align-items: center;
   gap: var(--sp-sm);
   padding: 6px var(--sp-md);
-  border-radius: var(--r-full);
-  border: 1px solid var(--md-surface-container);
-  background: var(--md-surface-low);
+  border-radius: var(--r-md);
+  border: 1px solid var(--md-outline-variant);
+  background: var(--md-surface-lowest);
 }
 
 /* 流动光效 — a comet of light travelling around the dock's outer frame.
@@ -3438,38 +3427,58 @@ details[open] .thought__chev {
   }
 }
 
-/* Login with the IP art */
+/* Login: wheat runs under the whole page. The character stands on the horizon;
+   the form is a paper card floating on the right — not a second opaque column. */
 
 .auth__wrap {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: var(--sp-xl);
+  position: relative;
+  z-index: 0;
+  display: grid;
+  grid-template-columns: minmax(280px, 1.1fr) minmax(380px, 520px);
+  align-items: stretch;
   min-height: 100vh;
-  padding: var(--sp-xl);
+  padding: 0;
+  background: var(--md-surface);
 }
 
 .auth {
+  position: relative;
+  z-index: 1;
   margin: auto;
-  max-width: 460px;
+  width: calc(100% - 64px);
+  max-width: 440px;
+  border: 1px solid var(--md-outline-variant);
+  background: var(--md-surface-lowest);
+  box-shadow: var(--sh-dock);
 }
 
 .auth__art {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--sp-md);
-  flex: 0 0 auto;
+  justify-content: flex-end;
+  gap: var(--sp-sm);
+  padding: var(--sp-xl) var(--sp-xl) 4vh;
+  background: transparent;
 }
 
 .auth__art img {
-  height: min(520px, 62vh);
+  height: min(560px, 70vh);
   width: auto;
+  filter: drop-shadow(0 18px 24px rgba(28, 25, 20, 0.14));
 }
 
 .auth__art span {
-  color: var(--md-on-surface-faint);
+  padding: 6px 12px;
+  border: 1px solid var(--md-outline-variant);
+  border-radius: var(--r-full);
+  background: var(--md-surface-lowest);
+  color: var(--md-on-surface-variant);
   font: 400 13px/20px var(--md-font);
+  text-align: center;
+  white-space: nowrap;
 }
 
 /* Keyboard focus. Before this the only indicator was a border-colour change worth
@@ -3514,6 +3523,10 @@ details[open] .thought__chev {
 [data-research="off"] .thought,
 [data-research="off"] .research-only,
 [data-research="off"] .drawer__cap {
+  display: none;
+}
+
+[data-research="on"] .consumer-only {
   display: none;
 }
 
@@ -3604,6 +3617,14 @@ details[open] .thought__chev {
 
   /* One line of words carries the position on a phone, so the track collapses to its
      dots. Same state, less room — nothing is behind a tap. */
+  .welcome {
+    padding: var(--sp-lg) 0 var(--sp-md);
+  }
+
+  .welcome__card {
+    width: 100%;
+  }
+
   .spine {
     gap: var(--sp-sm);
     margin-bottom: var(--sp-md);
@@ -3630,8 +3651,19 @@ details[open] .thought__chev {
     justify-content: center;
   }
 
+  .auth__wrap {
+    display: flex;
+    flex-direction: column;
+    padding: var(--sp-md);
+  }
+
   .auth__art {
     display: none;
+  }
+
+  .auth {
+    width: 100%;
+    max-width: 440px;
   }
 
   .picker__panel {
@@ -3663,7 +3695,7 @@ details[open] .thought__chev {
   z-index: -1;
   display: block;
   width: 100%;
-  height: min(38vh, 320px);
+  height: min(28vh, 240px);
   overflow: hidden;
   pointer-events: none;
 }
@@ -3691,18 +3723,18 @@ details[open] .thought__chev {
   }
 }
 
-/* Far rows paler than near ones. At 5% the bands read as a grey smudge rather than
-   wheat over the mint paper — the warmth needs enough alpha to beat the green. */
+/* Far rows paler than near ones. On cream paper the bands only need a horizon,
+   not a second wash of colour. */
 .field__wave--0 {
-  opacity: 0.07;
+  opacity: 0.05;
 }
 
 .field__wave--1 {
-  opacity: 0.1;
+  opacity: 0.07;
 }
 
 .field__wave--2 {
-  opacity: 0.13;
+  opacity: 0.1;
 }
 
 /* WCAG 2.2.2 asks for a mechanism, not a preference: the account menu can switch the
@@ -3711,6 +3743,219 @@ details[open] .thought__chev {
 .app[data-motion="off"] .field__wave,
 .app[data-busy="true"] .field__wave {
   animation-play-state: paused;
+}
+
+/* ── 求职者第一屏 ──────────────────────────────────────────────────────────
+   A greeting and four things she can actually do. The researcher loop stays
+   behind the switch; this is what a job seeker opens the page for. */
+.welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--sp-lg);
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: var(--sp-xl) var(--sp-md) var(--sp-lg);
+  text-align: left;
+}
+
+.feed:has(.welcome) {
+  justify-content: flex-start;
+  min-height: calc(100vh - var(--topbar-h));
+  padding-top: 48px;
+}
+
+.welcome__hero {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: var(--sp-md);
+  row-gap: var(--sp-md);
+}
+
+.welcome__hero .agenthead__logo {
+  width: 88px;
+  height: 88px;
+  flex: 0 0 auto;
+  background: transparent;
+  box-shadow: none;
+}
+
+.welcome__intro {
+  min-width: 0;
+}
+
+.welcome__kicker {
+  margin: 0 0 4px;
+  color: var(--md-primary);
+  font: 600 12px/16px var(--md-font);
+  letter-spacing: 0.08em;
+}
+
+.welcome h1 {
+  margin: 0;
+  font: 600 28px/36px var(--md-font);
+  color: var(--md-on-surface);
+}
+
+.welcome__lead {
+  grid-column: 1 / -1;
+  max-width: 52em;
+  margin: 0;
+  color: var(--md-on-surface-variant);
+  font: 400 14px/22px var(--md-font);
+}
+
+.welcome__actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-sm);
+  width: 100%;
+}
+
+.welcome__card {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--sp-sm);
+  width: 100%;
+  min-height: 88px;
+  padding: var(--sp-md);
+  border: 1px solid var(--md-outline-variant);
+  border-radius: var(--r-md);
+  background: var(--md-surface-lowest);
+  box-shadow: var(--sh-card);
+  color: var(--md-on-surface);
+  text-align: left;
+  transition: border-color 180ms, box-shadow 180ms, transform 180ms;
+}
+
+.welcome__card:hover {
+  border-color: var(--md-primary);
+  box-shadow: var(--sh-card);
+  transform: translateY(-1px);
+}
+
+.welcome__index {
+  color: var(--md-primary);
+  font: 600 12px/16px var(--mono);
+  letter-spacing: 0.04em;
+}
+
+.welcome__icon {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: var(--r-sm);
+  background: var(--md-surface-container);
+  color: var(--md-primary);
+}
+
+.welcome__copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.welcome__title {
+  font: 600 14px/20px var(--md-font);
+}
+
+.welcome__hint {
+  color: var(--md-on-surface-faint);
+  font: 400 12px/18px var(--md-font);
+}
+
+
+.jobseek,
+.jobseek__job,
+.jobseek__col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-sm);
+  padding: var(--sp-md);
+  border: 1px solid var(--md-outline-variant);
+  border-radius: var(--r-md);
+  background: var(--md-surface-lowest);
+  box-shadow: var(--sh-card);
+}
+
+.jobseek__kicker {
+  margin: 0;
+  color: var(--md-primary);
+  font: 600 11px/16px var(--md-font);
+  letter-spacing: 1px;
+}
+
+.jobseek__title {
+  margin: 0;
+  font: 500 20px/28px var(--md-font);
+}
+
+.jobseek__banner {
+  margin: 0;
+  padding: var(--sp-sm) var(--sp-md);
+  border-radius: var(--r-sm);
+  background: var(--md-primary-fixed);
+  color: var(--md-on-primary-fixed-variant);
+  font: 400 13px/20px var(--md-font);
+}
+
+.jobseek__jobhead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-sm);
+}
+
+.jobseek__jobhead h3,
+.jobseek__col h3 {
+  margin: 0;
+  font: 600 16px/24px var(--md-font);
+}
+
+.jobseek__match {
+  margin: 0;
+  font: 500 13px/20px var(--md-font);
+}
+
+.jobseek__quotes,
+.jobseek__steps,
+.jobseek__practice {
+  margin: 0;
+  padding-left: 1.1em;
+}
+
+.jobseek__quotes li,
+.jobseek__practice li,
+.jobseek__steps li {
+  margin-bottom: var(--sp-xs);
+}
+
+.jobseek__split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-sm);
+}
+
+.jobseek__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-sm);
+}
+
+.jobseek--gaps {
+  margin-top: var(--sp-sm);
+}
+
+@media (max-width: 720px) {
+  .jobseek__split,
+  .welcome__actions {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ── 闭环主线 ─────────────────────────────────────────────────────────────
@@ -4057,6 +4302,7 @@ details[open] .thought__chev {
   .topbar,
   .dock,
   .spine,
+  .welcome,
   /* An on-screen affordance: on paper it is a sentence about a button that is not there. */
   .linkbtn,
   .no-print,

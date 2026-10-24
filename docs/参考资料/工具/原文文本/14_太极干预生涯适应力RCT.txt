@@ -1,0 +1,382 @@
+TYPE  Original Research PUBLISHED  26 September 2024 DOI 10.3389/fpsyg.2024.1455877
+
+OPEN ACCESS
+EDITED BY
+Yibo Wu, Peking University, China
+REVIEWED BY
+Pedro Sequeira, Sport Sciences School of Rio Maior, Portugal Justine Stynes, Australian Catholic University, Australia Angelita Bautista Cruz, Keimyung University, Republic of Korea
+*CORRESPONDENCE
+Qichao Sun 13580483800@163.com
+RECEIVED 27 June 2024 ACCEPTED 13 September 2024 PUBLISHED 26 September 2024
+CITATION
+Wang L, Zhai Y and Sun Q (2024) Enhancing career adaptability in college students: a Tai Chi-based sports intervention study. Front. Psychol. 15:1455877. doi: 10.3389/fpsyg.2024.1455877
+COPYRIGHT
+© 2024 Wang, Zhai and Sun. This is an open-access article distributed under the terms of the Creative Commons Attribution License (CC BY). The use, distribution or reproduction in other forums is permitted, provided the original author(s) and the copyright owner(s) are credited and that the original publication in this journal is cited, in accordance with accepted academic practice. No use, distribution or reproduction is permitted which does not comply with these terms.
+
+Enhancing career adaptability in college students: a Tai Chi-based sports intervention study
+Le Wang 1, Yuanyan Zhai 2 and Qichao Sun 3*
+1 Department of Physical Education, Shandong University of Traditional Chinese Medicine, Jinan, China, 2 College of Health Sciences, Shandong University of Traditional Chinese Medicine, Jinan, China, 3 Guangdong Justice Police Vocational College, Guangzhou, China
+Introduction: This research explores the impact of Tai Chi, a traditional Chinese martial art, on the career adaptability of college students, utilizing a quasiexperimental design. With the increasing complexities in the transition from school to work, effective interventions that address both psychological and vocational needs are essential. Methods: The study involved 70 senior college students, randomly assigned to either an intervention group that participated in an organized 8-week Tai Chi program based on positive youth development (PYD) or a control group with no intervention. Results: Results indicated significant improvements in the intervention group in terms of both career adaptability and satisfaction of basic psychological needs, compared to the control group. Mediation analysis revealed that the increase in career adaptability induced by intervention was mediated by the satisfaction of basic psychological needs, underscoring the effectiveness of Tai Chi as a holistic intervention tool. Discussion: This study contributes to the field by demonstrating that physical activity, particularly one embedded with deep cultural and philosophical significance like Tai Chi, can effectively enhance the career adaptability of college students. It advocates for the inclusion of PYD-based physical practices in developmental interventions aimed at preparing youth for the challenges of the modern workforce.
+KEYWORDS
+career adaptability, Tai Chi sports, basic psychosocial needs, sports intervention, college student
+
+Frontiers in Psychology
+
+1 Introduction
+The transition from college to the professional world presents significant challenges for college students, particularly against the backdrop of unfavorable employment conditions and rising unemployment rates, which have captured the attention of global governmental and non-governmental organizations (van der Horst et al., 2021). The concept of individuals’ relative plasticity, which refers to the potential for systematic changes throughout their lifespan (Savickas, 2002), has inspired researchers to explore a range of interventions that foster proactive development within individuals and their contexts.
+Career adaptability is defined as “the readiness to cope with the predictable tasks of preparing for and participating in the work role and with the unpredictable adjustments prompted by
+
+01
+
+frontiersin.org
+
+Wang et al.
+
+10.3389/fpsyg.2024.1455877
+
+changes in work and working conditions” (Savickas, 1997, p. 254). It includes career concern (prepare and plan for career development), career control (responsibility and control over one’s career), career curiosity (exploration of self-learning and advancement opportunities), and career confidence (belief in one’s problem-solving abilities; Savickas and Porfeli, 2012). Career adaptability is increasingly recognized as a critical socio-psychological resource for successful environmental adaptation and is highly valued by employers (Guan et al., 2016; Hirschi and Valero, 2015). Research in this area often focuses on the impact of family members’ interaction, individual traits, and workplace factors on career adaptability (e.g., Lu and Jia, 2022; Xia et al., 2020). For instance, Guan et al. (2015) found that career-specific parental behaviors (including lack of engagement, parent support, and intervention) have different impacts on the career adaptability of college students. Specifically, parental engagement and support plays a positive role, while excessive intervention can have negative effects. Besides, neuroticism has been found to negatively predict career adaptability among college students (Zacher, 2014), whereas transformational leadership positively affects it (Wang et al., 2017).
+Career adaptability is a learnable skill that can be enhanced through education and experience (Savickas, 2005), making the exploration of scientifically effective intervention methods a significant direction in this field. Currently, interventions of career adaptability primarily target college students who are at the formative stage of their career, making interventions potentially more socially meaningful (e.g., Koen et al., 2012). This means that intervention at this stage may yield longer-term benefits for individuals, organizations and society. Traditionally, career intervention research has concentrated on knowledge-based vocational training, such as career information training (e.g., Janeiro et al., 2014; Liu et al., 2023), and one-on-one counseling (e.g., Obi, 2015). Given the importance of career interventions for college students, researchers have begun to explore how other context-based intervention approaches, such as internships (Ocampo et al., 2020), can influence their career adaptability. It is necessary for researchers to further explore the expansion of intervention paradigms.
+The interplay between physical and psychological factors suggests that physical activity interventions could effectively enhance career adaptability. From the perspective of positive youth development program (PYD), sports intervention programs can foster beneficial interactions between social backgrounds and individual growth (Larson, 2000). PYD programs assert that positive development stems from synergistic relationships within ecological settings (Lerner et al., 2009, 2011). Structured sports intervention programs could provide rich interactional contexts and create positive and safe environments for participants (Bruner et al., 2023). Multiple qualitative studies show that PYD-based sports interventions promote positive self-perceptions and help participants understand themselves (Camiré et al., 2009), as participants in Armour and Sandford (2013) said, participating in sports training programs made them “braver and more confident,” which in line with the implication of career confidence dimension.
+According to trait activation theory, environmental cues related to traits—including task, social, and organizational cues—trigger the expression of individual traits (Tett and Burnett, 2003; Tett and Guterman, 2000). The adaptation process is a continually mutual adjustment between individuals and their environments (Savickas, 2013). Structured sports programs, replete with such environmental cues, can boost participants’ initiative and intrinsic motivation, thereby promoting career development (Barton, 2011; Larson, 2000).
+
+Research supports the positive impact of PYD-based sports programs on one’s development across various domains. The structured elements of sports environments, including sport tasks per se, sports characteristics (like rules, decision-making, relationships, and competition), and key environmental elements (like coaches and peers) significantly contribute to positive youth development (Camiré et al., 2011; Johnston et al., 2013). Studies have also revealed the important role of sports training programs in promoting individual positive adaptation and self-regulation (e.g., Moran et al., 2019; Mosoi et al., 2020), suggesting that sports could also be a potential way to effectively prepare individuals for work roles. However, empirical evidence is still lacking on whether and how this type of intervention promotes the development of individual career adaptability, highlighting a gap in the theoretical and practical frameworks of career development interventions.
+Trait activation theory elucidates how situational factors can elicit related traits, yet it does not fully address the psychological mechanisms behind this interaction. Intervention theories grounded in positive development suggest that when intervention programs provide a need-supportive motivational climate, participants can experience psychological need satisfaction, leading to optimal outcomes of psychological development (Gould and Carson, 2008). Evidence from empirical studies also showed that the group structure of sports training provided a platform for individual interaction (e.g., communication) and the sharing of group states (e.g., cohesion), influencing individuals’ intrinsic motivation (Riemer and Chelladurai, 1998; Smith and Smoll, 2002). Furthermore, coaches play a critical role in this group structure, and when coaches exhibit more autonomy-supportive behaviors, athletes experience the satisfaction of autonomous needs, enhancing their intrinsic motivation (Gagné et al., 2003). The other study employed handball training revealed that when coaches allow a high level of participatory atmosphere, participants showed higher intrinsic motivation and commitment (Alesi et al., 2019).
+This study aims to design an intervention program based on the positive youth development perspective and trait activation theory. The first objective is to explore the impact of sports interventions on college students’ career adaptability. The second objective is to update traditional coaching methods by incorporating features of positive youth development in the intervention program. This includes guiding and encouraging a motivational social and activity environment, such as supporting team members’ agency, as suggested by Larson et al. (2019). Furthermore, the study aims to investigate the motivational mechanisms that contribute to participants’ career development through sports training. Specifically, we hypothesize that a structured Tai Chi training program can lead to positive development outcomes by satisfying individuals’ basic psychological needs. By doing so, our study aims to enhance the findings and theoretical framework of interventions targeting college students’ career adaptability.
+1.1 The design of Tai Chi intervention program
+Tai Chi, a traditional Chinese martial art, embodies profound philosophical principles that set it apart from other forms of exercise. Central to its practice is the principle of Yin and Yang, positing that all elements exist in a mutually dependent yet opposing relationship (Wayne and Kaptchuk, 2008). This practice emphasizes enhancing
+
+Frontiers in Psychology
+
+02
+
+frontiersin.org
+
+Wang et al.
+
+10.3389/fpsyg.2024.1455877
+
+awareness and cultivating sensitivity to one’s body and external environment. Research indicates that this introspective ability helps individuals better adapt to changes and stresses in life, and cope with challenges and difficulties more effectively (Wang et al., 2014). As participants gradually internalize the values promoted by the intervention training, their behaviors are more likely to be selfregulated (Gould and Carson, 2008).
+The study proposes a systematical Tai Chi intervention program that integrates dimensions of physical, cognitive, and interpersonal interactions. This approach aims to enable participants to think and act adaptively when facing career-related challenges. Coaches play a pivotal role in this context, significantly influencing the efficacy of the interventions (Ferrari et al., 2017; Rathwell et al., 2020). Therefore, this study will incorporate techniques from PYD-based sports programs, focusing on creating a motivating and safe atmosphere (Rodrigues et al., 2020); establishing goal-oriented practices with clear, consistent rules and expectations (Côté et al., 2007); and fostering autonomy and participation by such as involving team members in the design and execution of training strategies and goals (Larson et al., 2019). Additionally, the intervention emphasizes cultivating positive social interactions between coaches and team members, characterized by supportive relationships and effective communication (Strachan et al., 2011). This structured approach is designed to explore and enhance the motivational pathways for participants’ positive development, aiming to improve their adaptability in their career trajectories.
+2 Hypothesis development
+2.1 The influence of sports training on undergraduates’ career adaptability
+Career adaptability is a socially constructed process (Savickas, 2013). Based on trait activation theory, the context of sports training may activate individuals’ adaptive traits.
+Within the framework of sports activities, participants typically engage under the guidance of their coaches, who serve as significant environmental cues. Coaches can positively impact participants’ understanding of their career interests, skills, and values, facilitating better coping mechanisms for challenges and changes, and fostering strong adaptability (Rasberry et al., 2011; Vella et al., 2011). Moreover, the sports environment cues such as rules, expectations, and responsibilities outlined in sports interventions (Perkins and Noam, 2007), and competitive tasks (e.g., training and competitions) have been shown to support participants’ social adaptation (Eime et al., 2013; Mosoi et al., 2020). For instance, a study on a winter sports intervention aimed at enhancing college students’ social adaptability found that physical exercise helps maintain composure and effectively cope with competitive pressures, thus bolstering social adaptability (Zhang and Xia, 2021). Additionally, research on young elite athletes indicated that the tasks emphasized in sports training—planning, exploration, and decision-making—are closely linked to career adaptability development (Ojala et al., 2023). The sports environment, by mimicking career-related tasks such as problem-solving and attention regulation, may significantly contribute to the development of young individuals’ career planning and control.
+Therefore, it is hypothesized that participation in sports training positively influences the career adaptability of college students.
+
+Hypothesis 1: Compared to the control group, the career adaptability of participants in intervention group will be significantly improved following Tai Chi training.
+2.2 The mediating role of basic psychological needs
+Basic psychological needs, which include autonomy, competence, and relatedness, are fundamental for human motivation and well-being (Deci and Ryan, 2000). Autonomy involves the experience of volition and choice; competence relates to the feelings of self-efficacy in the environment; and relatedness pertains to the sense of belongingness and connection with others in the social context (Ryan and Deci, 2000). Research suggests that there are three environmental factors that facilitate the satisfaction of individual psychological needs: (a) autonomy support, (b) structure, and (c) involvement (e.g., Connell and Wellborn, 1991; Reeve et al., 1999). Autonomy support involves providing choices and opportunities (e.g., Ryan and Deci, 2000); structure relates to competence needs as it involves establishing clear expectations, confidence in task success, and providing constructive feedback (Markland et al., 2005); involvement, pertaining to relatedness, reflects the degree to which individuals perceive significant others as genuinely interested in their welfare (Connell and Wellborn, 1991).
+The organized sports environment, exemplified by disciplines such as Tai Chi, embodies these elements. Tai Chi environment is goal-oriented, emphasizing comprehension of rules and expectations. Coaches, driven by the requirements of their job and Tai Chi principles, need to listen to participants, and providing feedback and adjust training strategies accordingly, thereby enhancing goal orientation, facilitating successful experiences, and fostering connections (Fenton et al., 2014; Solstad et al., 2015). Research suggests that such sports training environments boost self-efficacy and interpersonal skills, thereby satisfying basic psychological needs (Rodrigues et al., 2020). Therefore, we hypothesize:
+Hypothesis 2: Compared to the control group, Tai Chi training in the intervention group promotes the satisfaction of basic psychological needs.
+The satisfaction of basic psychological needs equips individuals with substantial psychological resources, enabling better coping with challenges and adaptability in uncertain work conditions (Deci and Ryan, 1985; Olafsen and Deci, 2020). This satisfaction is positively linked to effective career decision-making and goal-setting in college students (Holding et al., 2020; Pesch et al., 2018). Studies show that the extent to which an individual’s basic psychological needs are met is crucial for their career adaptability (Şahin and Gülşen, 2022), promoting quick reaction to workplace uncertainties (Collie and Martin, 2017), and encouraging participation in career development activities (Guan et al., 2016). Career adaptability entails the readiness to explore the work environment and prepare for unfamiliar situations, suggesting that satisfying basic psychological needs fosters this readiness.
+Career adaptability could be acquired from education and life experiences, and it is based on relationships and social construction (Hirschi and Valero, 2015). Individuals naturally pursue opportunities to meet their own needs, and these needs and expectations shape their
+
+Frontiers in Psychology
+
+03
+
+frontiersin.org
+
+Wang et al.
+
+10.3389/fpsyg.2024.1455877
+
+participation in the environment (Skinner et al., 2014). Therefore, providing an educational environment that can meet basic psychological needs may be an important way to improve individual career adaptability. In general, we speculate that the PYD-based Tai Chi exercise training can shape a positive development environment in terms of autonomy, structure, and participation, in order to meet the basic psychological needs of team members, thereby promoting the career adaptability. Therefore, we hypothesize that:
+Hypothesis 3: The satisfaction of basic psychological needs mediates the relationship between Tai Chi training and career adaptability in college students.
+3 Methods
+3.1 Subjects
+Seventy senior college students were recruited to participate in this intervention study from compulsory courses at a university of China. They were randomly assigned to two groups: the intervention group and the control group, with 35 participants each. The intervention group consisted of 45.7% males, and the control group consisted of 51.4% males. The average age of participants was 20.9 years. Before the experiment began, all participants were informed of the voluntary nature of their participation and signed an informed consent form. This study has been reviewed and approved by the Ethics Committee of Shandong University of Traditional Chinese Medicine.
+3.2 Experimental design and procedures
+The study utilized a 2 (between-subjects factor: intervention group, control group) × 2 (within-subjects factor: pretest, posttest) mixed experimental design. The primary analytical methods included t-tests, covariance analysis, and regression analysis to evaluate the main effects of the Tai Chi training intervention on career adaptability and explore the mediating mechanisms involved.
+The intervention group participated in an 8-week Tai Chi training program led by a professional coach. The control group did not receive any form of intervention during this period. The course was conducted once a week for 45 min each time. To ensure that the PYD and psychological techniques required for the intervention were correctly implemented, the coach was trained by two doctoral students specializing in the field of psychological counseling during the first 3 weeks of the intervention.
+The psychological techniques taught to coaches primarily include: (1) utilizing expressions that fully convey empathy, complimenting, and cheerleading (e.g., “You are doing great,” “You are learning quickly,” “I have encountered similar technical challenges before, and I found that adjusting my mindset helped significantly. Would you like to give it a try?”). (2) Listening techniques, such as open body posture, maintaining eye contact, refraining from jumping to conclusions or labeling. (3) Unconditional positive regard. We required the coach to maintain unconditional positive regard for the players and encourage the same among team members. (4) Self-suggestion training is also incorporated, guiding players to use effective self-suggestion like, “It’s okay to make mistakes; I can seize the next opportunity.” (5) Cognitive
+
+restructuring. It involves identifying irrational beliefs, such as “I must win, or it is meaningless,” and replacing them with more constructive thoughts, like “What I need to focus on is doing my best and controlling each movement carefully.”
+During intervention period, coaches are required to set clear goals and provide feedback at any time. They are also encouraged to avoid using disparaging or negative language, instead adopting encouraging and respectful words and attitudes. A doctoral student accompanies each training session to provide supervision and guidance.
+Unlike traditional training sessions, each session in this program consists of four components: relaxation exercises, skill training, competition simulation, and sharing and discussion. During each sharing and discussion session, players are encouraged to share with each other any insights and feelings from the training session that have contributed to their personal development. Coaches are required to apply listening techniques and unconditional positive regard, using encouraging language to create an open and equal atmosphere.
+Measurements of career adaptability and basic psychological needs were conducted for both groups 1 week before and 1 week after the intervention. During the pretest, participants also provided basic demographic information, including gender and age. All measurement questionnaires were distributed to participants through an online platform.
+3.3 Measures
+Career adaptability. This variable is measured using a scale developed by Savickas and Porfeli (2012) with a total of 24 items. We use the Chinese version translated by Hou et al. (2012), which has been used in previous local studies (such as Guan et al., 2016). Example items include “I will observe different ways of doing things.” The scale uses a Likert 5-point scale, and participants need to evaluate each item from 1 to 5 (1 = strongly disagree to 5 = strongly agree) based on their actual situation. The Cronbach α value of this scale is 0.82.
+Basic psychological needs. The basic psychological needs scale developed by Johnston and Finney (2010) was used for evaluation, which included 21 items such as “I generally feel free to express my ideas and opinions,” “I often do not feel very capable,” and “People in my life care about me.” The scale uses a 7-point Likert scale, and participants are required to evaluate each item from 1 to 7 based on their actual situation (1 = strongly disagree, 7 = strongly agree). The higher the score, the more satisfied they feel. In the current study, the Cronbach α value is 0.87.
+4 Results
+4.1 Main effects of the intervention
+To test hypotheses 1 and 2, which evaluate the main effects of Tai Chi intervention on participants’ basic psychological needs and career adaptability, we first conducted independent sample t-tests to compare the pretest scores of the intervention and control groups. The results showed no significant differences at the baseline between the two groups in terms of basic psychological needs (t = −0.01, p > 0.05) and career adaptability (t = −0.55, p > 0.05), confirming that the initial conditions were comparable.
+Following the intervention, posttest comparisons revealed that the intervention group exhibited significantly higher levels of both basic
+
+Frontiers in Psychology
+
+04
+
+frontiersin.org
+
+Wang et al.
+
+10.3389/fpsyg.2024.1455877
+
+psychological needs (t = 2.09, p < 0.05) and career adaptability (t = 3.56, p < 0.05) compared to the control group. Descriptive statistics of pretest and posttest for each group have shown in Table 1. These findings provide preliminary support for the positive effects of the Tai Chi intervention.
+To further account for potential confounding variables such as pretest scores, age, and gender, a covariance analysis (ANCOVA) was conducted. Homogeneity of variance tests were conducted first (basic psychological needs: F = 2.03, p > 0.05; career adaptability: F = 1.49, p > 0.05), meeting the assumptions for ANCOVA. After controlling for the pretest levels, participants’ age and gender, the results also confirmed the positive impact of the intervention, with significant improvements observed in both basic psychological needs (F = 6.24, p < 0.05) and career adaptability (F = 26.9, p < 0.01), supporting Hypotheses 1 and 2 (as shown in Figures 1, 2).
+
+4.2 Mediation analysis
+A mediation analysis was performed to assess whether the enhancement in basic psychological needs could explain the improvement in career adaptability post-intervention. Since the exercise intervention manipulation was a categorical variable, different levels of the manipulation were coded as dummy variables, with the intervention group and control group coded as 1 and 0, respectively. The correlations among the main variables of interest are presented in Table 2, and all variables demonstrated significant correlations in the expected directions. The PROCESS Macro program was utilized to test the mediation effects. The results revealed a significant indirect effect (B = 0.04, CI [0.01, 0.11]). Specifically, Tai Chi exercise enhanced participants’ levels of basic psychological needs (B = 0.28, CI [0.07, 1.09]), which in turn improved their career adaptability (B = 0.14, CI [0.33, 0.74]), as illustrated in Figure 3. Hence, Hypothesis 3 was supported. These findings suggest that Tai Chi not only directly benefits psychological and career-oriented outcomes but also facilitates these benefits through the satisfaction of basic psychological needs.
+
+5 Discussion
+
+College students, at the stage of emerging adulthood, encounter various developmental pressures including role conflict, career exploration, and the school-to-work transition. Young adults often lack essential information for making informed career decisions, leading to uncertainty and impulsive job choices (Arnett, 2007; Kelly and Lee, 2002). This concern underscores the importance of developing effective theory-based interventions that can guide policy
+
+TABLE 1  Descriptive statistics of pretest and posttest for each group.
+
+Pretest
+
+SD
+
+M
+
+CAintervention
+
+0.62
+
+3.56
+
+CAcontrol
+
+0.70
+
+3.66
+
+BNintervention
+
+1.08
+
+5.02
+
+BNcontrol
+
+1.28
+
+4.97
+
+CA, career adaptability; BN, basic psychological needs.
+
+Posttest
+
+SD
+
+M
+
+0.55
+
+4.04
+
+0.65
+
+3.53
+
+1.09
+
+5.57
+
+1.14
+
+4.98
+
+and decision-making (van der Horst et al., 2021). This study initially incorporates traditional Chinese martial arts, Tai Chi, as a method for enhancing career adaptability among college students. This study demonstrates that Tai-chi sports interventions enhance career adaptability among college students by meeting their basic psychological needs. Specifically, participants in the intervention group exhibited significant improvements in both career adaptability and basic psychological needs—enhancements not observed in the control group. These findings demonstrate that even short-term PYD-based Tai Chi training can significantly boost career adaptability, mediated by the fulfillment of basic psychological needs. These results suggest that Tai Chi promotes significant career development.
+Coaches play an important role in the PYD-based sports intervention. In this study, coaches are required to encourage, compliment, and provide unconditional positive regard to players, guiding them in using positive self-suggestions and coping with challenges, promoting participants’ career adaptability. After each session, a summary and sharing were conducted, creating a virtuous cycle that led to improvements in participants’ skill levels and enhanced their confidence. Coaches demonstrate full respect for individual decision-making, encouraging active participation, which fosters the development of autonomy. At the same time, players experience a stronger sense of belonging within a motivating and safe interpersonal environment that coaches trying to create. This approach aligns with the 4Cs (competence, confidence, connection, and caring) principles emphasized in the PYD-based intervention framework (Côté et al., 2010), and enhancing the effectiveness of the intervention in this study.
+5.1 Expanding intervention paradigms
+The combined effects of individual characteristics and environmental factors influence and promote the design of interventions for positive development. The current study contributes to a broader understanding of how non-traditional interventions, such as Tai Chi, can be effectively utilized. Sports interventions can strengthen the perception-action cycle of individuals, stimulating cognitive and affective feedback through their physical actions and perceptual experiences (Gibson, 2014). This cyclic process helps individuals better understand their behaviors and reactions, enabling them to adapt to the demands and challenges of the work environment. The integration of PYD sports interventions into vocational psychology represents a novel approach, contributing to the theoretical development of career interventions.
+PYD programs focus on optimizing developmental opportunities within specific environments, suggesting that organized activities can significantly enhance developmental experiences (Larson and Tran, 2014). While PYD-based sports interventions have been recognized for their value in promoting individuals’ positive development (e.g., Holt and Neely, 2011), their application in vocational psychology has been limited. This study illustrates how organized sports training programs offer a platform for fostering career adaptability by providing a social environment for college students, including coaches, peers, tasks, and competitive situations. The interaction between individuals and their social environment promotes one’s development, and the potential for behavioral and developmental changes exists within this dynamic interaction (Lerner, 2002).
+
+Frontiers in Psychology
+
+05
+
+frontiersin.org
+
+Wang et al.
+
+10.3389/fpsyg.2024.1455877
+
+FIGURE 1
+The results of covariance analysis of basic psychological needs.
+
+FIGURE 2
+The results of covariance analysis of career adaptability.
+
+5.2 The mediating role of basic psychological needs
+This research not only demonstrates the main effects of Tai Chi on career adaptability but also illuminates the underlying mechanisms through the mediating role of basic psychological needs. This aspect is often overlooked in career intervention study, which may restrict the progress of intervention theories in this field. Satisfaction of psychological needs is influenced by the environment (Ryan and Deci, 2000), and individuals strive for the satisfaction of basic psychological needs, shaping their engagement with the environment (Skinner et al., 2014). This study adds to the knowledge base of this field by providing a motivational perspective.
+A critical question in career intervention research is the extent to which intervention effects can generalize to overall career success. Aligning with previous findings, our findings suggest that when individuals’ basic needs are satisfied, intervention outcomes may extend to other domains of life (e.g., Ntoumanis et al., 2021). The satisfaction of these needs is pivotal in translating the values and selfregulatory skills acquired through sports into enhanced career
+
+TABLE 2  The correlation between main variables in this study.
+
+Variable
+
+1
+
+2
+
+3
+
+1. Intervention manipulation
+
+2. Posttest of basic psychological needs
+
+0.25*
+
+3. Posttest of career adaptation *p < 0.05, **p < 0.01.
+
+0.16**
+
+0.28**
+
+adaptability, offering a promising pathway for future research and practical applications in vocational psychology and beyond.
+
+5.3 Limitations and directions for future research
+This study has certain limitations that provide directions for future research. Firstly, while this study provided valuable insights into the effects of Tai Chi training on the career adaptability of college students, its focus was limited to this specific demographic. As societal
+
+Frontiers in Psychology
+
+06
+
+frontiersin.org
+
+Wang et al.
+
+10.3389/fpsyg.2024.1455877
+
+FIGURE 3
+The mediation model. *p < .05, **p < .01.
+
+trends shift toward prolonged educational periods and delayed entry into the workforce, the definition of emerging adulthood extends. Future research could beneficially explore the applicability of sports interventions to other groups within this stage, such as young employees who have recently entered the workforce. This would help to understand the broader impacts of sports interventions on career adaptability across different stages of life transitions.
+Secondly, the current study primarily examined the motivational pathway of sports training on career adaptability. However, sports activities are also known to influence cognitive functions, such as attention regulation, which may be crucial for career development (Moran and Toner, 2017). Future studies should investigate these cognitive aspects to uncover additional mechanisms through which sports training might enhance career adaptability. This exploration could provide a more comprehensive understanding of how physical activities influence one’s career growth.
+Thirdly, Tai Chi, characterized by its integration of physical movement with ethical principles and philosophical elements of traditional Chinese culture, differs significantly from more conventional sports like running or strength training. Therefore, it is necessary to further explore the activation effects and mechanisms of other sports interventions on individuals’ psychological traits. Future intervention research should take into consideration the characteristics of the specific sports activities.
+Additionally, the Tai Chi intervention utilized in this study was predominantly an individual-focused activity without competitive elements, particularly in the initial stages of training. In contrast, team sports like soccer or basketball inherently include cooperative dynamics and competitive interactions, which could offer different developmental benefits and challenges. Investigating the impacts of team-based sports on career adaptability could reveal whether the cooperative and competitive elements of these sports provide additional or distinct advantages for career development. Future studies should explore these dynamics to determine if the positive effects of sports on career adaptability observed in Tai Chi training are replicable in team sports settings and to elucidate the underlying mechanisms.
+By addressing these limitations and exploring these suggested directions, future research can significantly expand the understanding of how diverse forms of physical activity influence career adaptability and professional development, thereby contributing to more effective and tailored intervention strategies.
+
+Positive Youth Development (PYD) framework, on enhancing career adaptability among college students. The findings demonstrate that Tai Chi, a martial art deeply embedded with philosophical teachings, significantly improves career adaptability by fulfilling basic psychological needs. This traditional Chinese practice emphasizes the balance of yin and yang, encourages focus and concentration, and espouses the principle of using softness to overcome hardness. These elements contribute to career adaptability. The results suggest that Tai Chi can serve as a multifaceted tool for enhancing individuals’ career adaptability, which are crucial in navigating the increasingly complex and dynamic career landscapes faced by today’s college students.
+Data availability statement
+The raw data supporting the conclusions of this article will be made available by the authors, without undue reservation.
+Ethics statement
+The studies involving humans were approved by the Ethics Committee of Shandong University of Traditional Chinese Medicine. The studies were conducted in accordance with the local legislation and institutional requirements. The participants provided their written informed consent to participate in this study.
+Author contributions
+LW: Conceptualization, Formal analysis, Writing – original draft. YZ: Writing – review & editing. QS: Investigation, Writing – review & editing.
+Funding
+The author(s) declare that no financial support was received for the research, authorship, and/or publication of this article.
+
+6 Conclusion
+This study employed a quasi-experimental intervention research design to explore the impact of Tai Chi training, informed by the
+
+Conflict of interest
+The authors declare that the research was conducted in the absence of any commercial or financial relationships that could be construed as a potential conflict of interest.
+
+Frontiers in Psychology
+
+07
+
+frontiersin.org
+
+Wang et al.
+
+10.3389/fpsyg.2024.1455877
+
+Publisher’s note
+All claims expressed in this article are solely those of the authors and do not necessarily represent those of their affiliated
+
+organizations, or those of the publisher, the editors and the reviewers. Any product that may be evaluated in this article, or claim that may be made by its manufacturer, is not guaranteed or endorsed by the publisher.
+
+References
+
+Alesi, M., Gómez-López, M., Chicau Borrego, C., Monteiro, D., and Granero-Gallegos, A. (2019). Effects of a motivational climate on psychological needs satisfaction, motivation and commitment in teen handball players. Int. J. Environ. Res. Public Health 16:2702. doi: 10.3390/ijerph16152702
+Armour, K., and Sandford, R. (2013). Positive youth development through an outdoor physical activity programme: evidence from a four-year evaluation. Educ. Rev. 65, 85–108. doi: 10.1080/00131911.2011.648169
+Arnett, J. J. (2007). Emerging adulthood: what is it, and what is it good for? Child Dev. Perspect. 1, 68–73. doi: 10.1111/j.1750-8606.2007.00016.x
+Barton, G. B. (2011). Career success and life skill development through sports. Boston: Boston University.
+Bruner, M. W., McLaren, C. D., Sutcliffe, J. T., Gardner, L. A., Lubans, D. R., Smith, J. J., et al. (2023). The effect of sport-based interventions on positive youth development: a systematic review and meta-analysis. Int. Rev. Sport Exerc. Psychol. 16, 368–395. doi: 10.1080/1750984x.2021.1875496
+Camiré, M., Forneris, T., Trudel, P., and Bernard, D. (2011). Strategies for helping coaches facilitate positive youth development through sport. J. Sport Psychol. Action 2, 92–99. doi: 10.1080/21520704.2011.584246
+Camiré, M., Trudel, P., and Forneris, T. (2009). High school athletes’ perspectives on support, communication, negotiation and life skill development. Qualitat. Res. Sport Exerc. 1, 72–88. doi: 10.1080/19398440802673275
+Collie, R. J., and Martin, A. J. (2017). Teachers' sense of adaptability: examining links with perceived autonomy support, teachers' psychological functioning, and students' numeracy achievement. Learn. Individ. Differ. 55, 29–39. doi: 10.1016/j.lindif.2017.03.003
+Connell, J. P., and Wellborn, J. G. (1991). “Competence, autonomy, and relatedness: a motivational analysis of self-system processes” in Self processes and development. eds. M. R. Gunnar and L. A. Sroufe (New Jersey: Lawrence Erlbaum Associates, Inc), 43–77.
+Côté, J., Bruner, M. W., Erickson, K., Strachan, L., and Fraser-Thomas, J. (2010). “Athlete development and coaching” in Sport coaching: Professionalism and practice. eds. J. Lyle and C. Cushion (Oxford: Elsevier), 63–79.
+Côté, J., Strachan, L., and Fraser-Thomas, J. (2007). “Participation, personal development, and performance through youth sport” in Positive youth development through sport (London: Routledge), 48–60.
+Deci, E. L., and Ryan, R. M. (1985). The general causality orientations scale: selfdetermination in personality. J. Res. Pers. 19, 109–134. doi: 10.1016/0092-6566(85)90023-6
+Deci, E. L., and Ryan, R. M. (2000). The" what" and" why" of goal pursuits: human needs and the self-determination of behavior. Psychol. Inq. 11, 227–268. doi: 10.1207/ s15327965pli1104_01
+Eime, R. M., Young, J. A., Harvey, J. T., Charity, M. J., and Payne, W. R. (2013). A systematic review of the psychological and social benefits of participation in sport for children and adolescents: informing development of a conceptual model of health through sport. Int. J. Behav. Nutr. Phys. Act. 10, 1–21. doi: 10.1186/1479-5868-10-98
+Fenton, S. A., Duda, J. L., Quested, E., and Barrett, T. (2014). Coach autonomy support predicts autonomous motivation and daily moderate-to-vigorous physical activity and sedentary time in youth sport participants. Psychol. Sport Exerc. 15, 453–463. doi: 10.1016/j.psychsport.2014.04.005
+Ferrari, G., Bloom, G. A., Gilbert, W. D., and Caron, J. G. (2017). Experiences of competitive masters swimmers: desired coaching characteristics and perceived benefits. Int. J. Sport Exerc. Psychol. 15, 409–422. doi: 10.1080/1612197x.2015.1114504
+Gagné, M., Ryan, R. M., and Bargmann, K. (2003). The effects of parent and coach autonomy support on the need satisfaction and well-being of gymnasts. J. Appl. Sport Psychol. 15, 372–390. doi: 10.1080/714044203
+Gibson, J. J. (2014). The ecological approach to visual perception. Classic Edn. New York: Psychology Press.
+Gould, D., and Carson, S. (2008). Life skills development through sport: current status and future directions. Int. Rev. Sport Exerc. Psychol. 1, 58–78. doi: 10.1080/17509840701834573
+Guan, P., Capezio, A., Restubog, S. L. D., Read, S., Lajom, J. A. L., and Li, M. (2016). The role of traditionality in the relationships among parental support, career decisionmaking self-efficacy and career adaptability. J. Vocat. Behav. 94, 114–123. doi: 10.1016/j. jvb.2016.02.018
+Guan, Y., Wang, F., Liu, H., Ji, Y., Jia, X., Fang, Z., et al. (2015). Career-specific parental behaviors, career exploration and career adaptability: a three-wave investigation among Chinese undergraduates. J. Vocat. Behav. 86, 95–103. doi: 10.1016/j.jvb.2014.10.007
+
+Hirschi, A., and Valero, D. (2015). Career adaptability profiles and their relationship to adaptivity and adapting. J. Vocat. Behav. 88, 220–229. doi: 10.1016/j. jvb.2015.03.010
+Holding, A. C., St-Jacques, A., Verner-Filion, J., Kachanoff, F., and Koestner, R. (2020). Sacrifice but at what price? A longitudinal study of young adults' sacrifice of basic psychological needs in pursuit of career goals. Motiv. Emot. 44, 99–115. doi: 10.1007/s11031-019-09777-7
+Holt, N. L., and Neely, K. C. (2011). Positive youth development through sport: a review. Revista Iberoamericana De Psicología Del Ejercicio y el Deporte 6, 299–316. doi: 10.4324/9781315709499-3
+Hou, Z. J., Leung, S. A., Li, X., Li, X., and Xu, H. (2012). Career adapt-abilities scaleChina form: construction and initial validation. J. Vocat. Behav. 80, 686–691. doi: 10.1016/j.jvb.2012.01.006
+Janeiro, I. N., Mota, L. P., and Ribas, A. M. (2014). Effects of two types of career interventions on students with different career coping styles. J. Vocat. Behav. 85, 115–124. doi: 10.1016/j.jvb.2014.05.006
+Johnston, M. M., and Finney, S. J. (2010). Measuring basic needs satisfaction: evaluating previous research and conducting new psychometric evaluations of the basic needs satisfaction in general scale. Contemp. Educ. Psychol. 35, 280–296. doi: 10.1016/j. cedpsych.2010.04.003
+Johnston, J., Harwood, C., and Minniti, A. M. (2013). Positive youth development in swimming: clarification and consensus of key psychosocial assets. J. Appl. Sport Psychol. 25, 392–411. doi: 10.1080/10413200.2012.747571
+Kelly, K. R., and Lee, W. C. (2002). Mapping the domain of career decision problems. J. Vocat. Behav. 61, 302–326. doi: 10.1006/jvbe.2001.1858
+Koen, J., Klehe, U. C., and Van Vianen, A. E. (2012). Training career adaptability to facilitate a successful school-to-work transition. J. Vocat. Behav. 81, 395–408. doi: 10.1016/j.jvb.2012.10.003
+Larson, R. W. (2000). Toward a psychology of positive youth development. Am. Psychol. 55, 170–183. doi: 10.1037/0003-066X.55.1.170
+Larson, R. W., Raffaelli, M., Guzman, S., Salusky, I., Orson, C. N., and Kenzer, A. (2019). The important (but neglected) developmental value of roles: findings from youth programs. Dev. Psychol. 55, 1019–1033. doi: 10.1037/dev0000674
+Larson, R. W., and Tran, S. P. (2014). Invited commentary: positive youth development and human complexity. J. Youth Adolesc. 43, 1012–1017. doi: 10.1007/s10964-014-0124-9
+Lerner, R. M. (2002). Concepts and theories of human development. 3rd Edn. Mahwah, NJ: Erlbaum.
+Lerner, R. M., Lerner, J. V., Lewin-Bizan, S., Bowers, E. P., Boyd, M. J., Mueller, M. K., et al. (2011). Positive youth development: processes, programs, and problematics. J. Youth Dev. 6, 38–62. doi: 10.5195/jyd.2011.174
+Lerner, J. V., Phelps, E., Forman, Y., and Bowers, E. P. (2009). “Positive youth development” in Handbook of adolescent psychology. eds. R. M. Lerner and L. Steinberg. 3rd ed (Hoboken, NJ: Wiley), 524–558.
+Liu, X., Zhang, X., Dang, Y., and Gao, W. (2023). Career education skills and career adaptability among college students in China: the mediating role of career decisionmaking self-efficacy. Behav. Sci. 13:780. doi: 10.3390/bs13090780
+Lu, L., and Jia, Q. (2022). Do college students with future work self-salience demonstrate higher levels of career adaptability? From a dual perspective of teachers and students. Front. Psychol. 13:1011447. doi: 10.3389/fpsyg.2022.1011447
+Markland, D., Ryan, R. M., Tobin, V. J., and Rollnick, S. (2005). Motivational interviewing and self–determination theory. J. Soc. Clin. Psychol. 24, 811–831. doi: 10.1521/jscp.2005.24.6.811
+Moran, A., Campbell, M., and Toner, J. (2019). Exploring the cognitive mechanisms of expertise in sport: Progress and prospects. Psychol. Sport Exerc. 42, 8–15. doi: 10.1016/j.psychsport.2018.12.019
+Moran, A., and Toner, J. (2017). A critical introduction to sport psychology. 3rd Edn. London: Routledge.
+Mosoi, A. A., Beckmann, J., Mirifar, A., Martinent, G., and Balint, L. (2020). Influence of organized vs non organized physical activity on school adaptation behavior. Front. Psychol. 11:550952. doi: 10.3389/fpsyg.2020.550952
+Ntoumanis, N., Ng, J. Y., Prestwich, A., Quested, E., Hancox, J. E., Thøgersen-Ntoumani, C., et al. (2021). A meta-analysis of self-determination theoryinformed intervention studies in the health domain: effects on motivation, health behavior, physical, and psychological health. Health Psychol. Rev. 15, 214–244. doi: 10.1080/17437199.2020.1718529
+
+Frontiers in Psychology
+
+08
+
+frontiersin.org
+
+Wang et al.
+
+10.3389/fpsyg.2024.1455877
+
+Obi, O. P. (2015). Constructionist career counseling of undergraduate students: an experimental evaluation. J. Vocat. Behav. 88, 215–219. doi: 10.1016/j.jvb.2015.03.009
+Ocampo, A. C. G., Reyes, M. L., Chen, Y., Restubog, S. L. D., Chih, Y. Y., Chua-Garcia, L., et al. (2020). The role of internship participation and conscientiousness in developing career adaptability: a five-wave growth mixture model analysis. J. Vocat. Behav. 120:103426. doi: 10.1016/j.jvb.2020.103426
+Ojala, J., Nikander, A., Aunola, K., De Palo, J., and Ryba, T. V. (2023). The role of career adaptability resources in dual career pathways: a person-oriented longitudinal study across elite sports upper secondary school. Psychol. Sport Exerc. 67:102438. doi: 10.1016/j.psychsport.2023.102438
+Olafsen, A. H., and Deci, E. L. (2020). “Self-determination theory and its relation to organizations” in Oxford Research Encyclopedia of Psychology.
+Perkins, D. F., and Noam, G. G. (2007). Characteristics of sports-based youth development programs. New Dir. Youth Dev. 2007, 75–84. doi: 10.1002/yd.224
+Pesch, K. M., Larson, L. M., and Seipel, M. T. (2018). Career decision-making within the college social microcosm: social value determinants and psychological needs. J. Career Assess. 26, 291–307. doi: 10.1177/1069072717692767
+Rasberry, C. N., Lee, S. M., Robin, L., Laris, B. A., Russell, L. A., Coyle, K. K., et al. (2011). The association between school-based physical activity, including physical education, and academic performance: a systematic review of the literature. Prev. Med. 2012, 358–359. doi: 10.1016/j.yspm.2011.07.013
+Rathwell, S., Young, B. W., Callary, B., Motz, D., Hoffmann, M. D., and Currie, C. (2020). The adult-oriented sport coaching survey: an instrument designed to assess coaching behaviors tailored to adult athletes. J. Sport Exerc. Psychol. 42, 368–385. doi: 10.1123/jsep.2020-0031
+Reeve, J., Bolt, E., and Cai, Y. (1999). Autonomy-supportive teachers: how they teach and motivate students. J. Educ. Psychol. 91, 537–548. doi: 10.1037//0022-0663.91.3.537
+Riemer, H. A., and Chelladurai, P. (1998). Development of the athlete satisfaction questionnaire (ASQ). J. Sport Exerc. Psychol. 20, 127–156. doi: 10.1123/jsep.20.2.127
+Rodrigues, F., Macedo, R., Cid, L., Teixeira, D. S., Marinho, D. A., and Monteiro, D. (2020). Sex differences in relationships between perceived coach-induced motivational climates, basic psychological needs, and behavior regulation among young swimmers. Percept. Mot. Skills 127, 891–911. doi: 10.1177/0031512520926805
+Ryan, R. M., and Deci, E. L. (2000). Intrinsic and extrinsic motivations: classic definitions and new directions. Contemp. Educ. Psychol. 25, 54–67. doi: 10.1006/ ceps.1999.1020
+Şahin, E. E., and Gülşen, F. U. (2022). The mediating role of self-leadership in the relationship between basic psychological needs satisfaction, academic self-efficacy and career adaptability of Turkish undergraduates when life satisfaction is controlled. Personal. Individ. Differ. 195:111709. doi: 10.1016/j.paid.2022.111709
+Savickas, M. L. (1997). Career adaptability: an integrative construct for life-span, lifespace theory. Career Dev. Q. 45, 247–259. doi: 10.1002/j.2161-0045.1997.tb00469.x
+Savickas, M. L. (2002). “Career construction: a developmental theory of vocational behavior” in Career choice and development. ed. D. Brown (San Francisco, CA: JosseyBass), 149–205.
+Savickas, M. L. (2005). The theory and practice of career construction. Career Dev. Couns. Theory Res. Work 1, 42–70.
+
+Savickas, M. L. (2013). Career construction theory and practice. Career Dev. Couns. Theory Res. Work 2, 144–180.
+Savickas, M. L., and Porfeli, E. J. (2012). Career adapt-abilities scale: construction, reliability, and measurement equivalence across 13 countries. J. Vocat. Behav. 80, 661–673. doi: 10.1016/j.jvb.2012.01.011
+Skinner, E., Pitzer, J., and Brule, H. (2014). “The role of emotion in engagement, coping, and the development of motivational resilience” in International handbook of emotions in education (New York: Routledge), 331–347.
+Smith, R. E., and Smoll, F. L. (2002). Youth sports as a behavior setting for psychosocial interventions. In RaalteJ. L. Van and B. W. Brewer (Eds.), Exploring sport and exercise psychology (2., pp. 341–371). Washington: American Psychological Association.
+Solstad, B. E., van Hoye, A., and Ommundsen, Y. (2015). Social-contextual and intrapersonal antecedents of coaches' basic need satisfaction: the intervening variable effect of providing autonomy-supportive coaching. Psychol. Sport Exerc. 20, 84–93. doi: 10.1016/j.psychsport.2015.05.001
+Strachan, L., Côté, J., and Deakin, J. (2011). A new view: exploring positive youth development in elite sport contexts. Qual. Res. Sport, Exerc. Health 3, 9–32. doi: 10.1080/19398441.2010.541483
+Tett, R. P., and Burnett, D. D. (2003). A personality trait-based interactionist model of job performance. J. Appl. Psychol. 88, 500–517. doi: 10.1037/0021-9010.88.3.500
+Tett, R. P., and Guterman, H. A. (2000). Situation trait relevance, trait expression, and cross-situational consistency: testing a principle of trait activation. J. Res. Pers. 34, 397–423. doi: 10.1006/jrpe.2000.2292
+van der Horst, A. C., Klehe, U. C., Brenninkmeijer, V., and Coolen, A. C. (2021). Facilitating a successful school-to-work transition: comparing compact careeradaptation interventions. J. Vocat. Behav. 128:103581. doi: 10.1016/j.jvb.2021.103581
+Vella, S., Oades, L., and Crowe, T. (2011). The role of the coach in facilitating positive youth development: moving from theory to practice. J. Appl. Sport Psychol. 23, 33–48. doi: 10.1080/10413200.2010.511423
+Wang, H. J., Demerouti, E., and Le Blanc, P. (2017). Transformational leadership, adaptability, and job crafting: the moderating role of organizational identification. J. Vocat. Behav. 100, 185–195. doi: 10.1016/j.jvb.2017.03.009
+Wang, F., Lee, E. K. O., Wu, T., Benson, H., Fricchione, G., Wang, W., et al. (2014). The effects of tai chi on depression, anxiety, and psychological well-being: a systematic review and meta-analysis. Int. J. Behav. Med. 21, 605–617. doi: 10.1007/ s12529-013-9351-9
+Wayne, P. M., and Kaptchuk, T. J. (2008). Challenges inherent to tai chi research: part II—defining the intervention and optimal study design. J. Altern. Complement. Med. 14, 191–197. doi: 10.1089/acm.2007.7170b
+Xia, T., Gu, H., Huang, Y., Zhu, Q., and Cheng, Y. (2020). The relationship between career social support and employability of college students: a moderated mediation model. Front. Psychol. 11:28. doi: 10.3389/fpsyg.2020.00028
+Zacher, H. (2014). Individual difference predictors of change in career adaptability over time. J. Vocat. Behav. 84, 188–198. doi: 10.1016/j.jvb.2014.01.001
+Zhang, D., and Xia, C. (2021). Ice and snow sports education based on 5G cloud computing to improve the social adaptability of southern university students. Sci. Program. 2023:1. doi: 10.1155/2023/9867894
+
+Frontiers in Psychology
+
+09
+
+frontiersin.org
+
+

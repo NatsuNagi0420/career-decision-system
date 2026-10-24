@@ -1,0 +1,7 @@
+{
+  "_comment": "青穗集 · 穗奈40场景动作与补图交接 v01；planned表示待制作，不是已接入业务。",
+  "file": "tools/validate_delivery.py",
+  "dependency": "Python 3 + Pillow",
+  "checks": "逐项文件/格式/透明度/坐标/手腕接缝存在性/预览存在性；不验证美术与Cubism；含ORA基础结构或PSD文件头识别",
+  "sampleManifest": "examples/delivery_manifest.template.json"
+}

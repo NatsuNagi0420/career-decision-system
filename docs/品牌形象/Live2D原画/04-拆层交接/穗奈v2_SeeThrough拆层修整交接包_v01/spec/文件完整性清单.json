@@ -1,0 +1,65 @@
+{
+  "_comment": "青穗集 · 输入交接包完整性清单；不含本清单自身，校验值不代表美术质量。",
+  "files": [
+    {
+      "path": "00_开始前请读我.md",
+      "bytes": 2378,
+      "sha256": "9eefc3ecc609a23ab43918398050777f6d36cca98f1974719e02657b05bce719"
+    },
+    {
+      "path": "01_完整修整任务.md",
+      "bytes": 7688,
+      "sha256": "26691de8fc57a7dd3540382107bb8e50f4e4b303a591cf703cbad885859ec169"
+    },
+    {
+      "path": "02_验收清单.md",
+      "bytes": 2367,
+      "sha256": "e44215a0ffa234baa3562542ea00c839bd226f1df09cfe31500b27128f1d352c"
+    },
+    {
+      "path": "03_直接发给Manus的提示词.txt",
+      "bytes": 1097,
+      "sha256": "6c3d1b2d92f55749cf377e6a40d4dd0148112e02310f93cabcbb10e8bd9f941f"
+    },
+    {
+      "path": "audit/confirmed-face-comparison.png",
+      "bytes": 166311,
+      "sha256": "0cecb8dd12ff7b9c7641a2ff9cebb398848cd91ea31f262f202bdf34536e5a2e"
+    },
+    {
+      "path": "audit/confirmed-input-vs-psd.png",
+      "bytes": 292862,
+      "sha256": "f349adaf805742ffce5c971bcc601c9479fa1e36951936b9d0c641e014c18802"
+    },
+    {
+      "path": "audit/face-findings.png",
+      "bytes": 118256,
+      "sha256": "0176b2347d8a82054df2b0bd5ef9c3c4f0bc5845882e40be032f653d1473cd4d"
+    },
+    {
+      "path": "audit/layer-contact-sheet.png",
+      "bytes": 331814,
+      "sha256": "481b7cfe9cf501937411a680a84afa52d30f0bab930be7b760829c1afcae1a25"
+    },
+    {
+      "path": "audit/审查结论与纠正.md",
+      "bytes": 1839,
+      "sha256": "a1a4f0d221d68a464c99e6a4bcce40d7fc1cdf7298146c2d9f3cbe258adc8e61"
+    },
+    {
+      "path": "input/seethrough_output.psd",
+      "bytes": 11312286,
+      "sha256": "086541839732657cd5a3d4b78fdcf93e76ad7fdf2e0c8a0458c51a47cf387ee7"
+    },
+    {
+      "path": "input/穗奈_Live2D全身立绘_整体风格统一.png",
+      "bytes": 3445906,
+      "sha256": "552bac8795fd85fce19e762c6525aff82241368c96868b7bdc78b70755b5addd"
+    },
+    {
+      "path": "spec/输入与图层清单.json",
+      "bytes": 17816,
+      "sha256": "f70c153db908b5cd11781ef69fa7c1ea28291bbdd2a9615f7a5eded75cfa47ff"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "controls": [
+    {
+      "sid": "inkColor",
+      "label": "主标题颜色"
+    },
+    {
+      "sid": "accentColor",
+      "label": "麦穗颜色"
+    },
+    {
+      "sid": "mutedColor",
+      "label": "副标题颜色"
+    }
+  ]
+}

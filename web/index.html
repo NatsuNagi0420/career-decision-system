@@ -1,18 +1,25 @@
+<!-- 青穗集 · 求职成长桌面入口：所有界面字体本地加载，不依赖外部 CDN。 -->
 <!doctype html>
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/webp" href="/brand/logo-head.webp" />
-    <title>青穗集 · 职业决策 Agent</title>
-    <!-- The reference is built on Plus Jakarta Sans + Material Symbols. Both faces are
-         vendored under this origin now (`npm run fonts`); no request leaves the page. -->
+    <link rel="icon" type="image/webp" href="/api/assets/brand/logo-head.webp" />
+    <title>青穗集 · 求职成长桌面</title>
+    <!-- Pixel titles and readable Chinese body text are separate type roles. -->
     <link rel="preload" href="/fonts/material-symbols-outlined.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href="/fonts/plus-jakarta-sans.latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/fusion-pixel-12px-zh-hans.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="/fonts.css" />
+    <!-- 首个脚本到达前的静态回退；不依赖播放器，不展示虚构百分比。 -->
+    <style>
+      .initial-startup { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0; padding: 30px; box-sizing: border-box; background: #171c2f; color: #b6b8ce; font: 13px/1.8 "Microsoft YaHei", sans-serif; text-align: center; }
+      .initial-startup img { display: block; width: min(580px, 86vw); max-width: 100%; height: auto; opacity: .35; }
+      .initial-startup p { margin: 20px 0 0; }
+      @media (prefers-reduced-motion: reduce) { .initial-startup img { opacity: 1; } }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><main class="initial-startup" aria-label="正在打开青穗集"><img src="/api/assets/projects/qingsuiji-boot/scene-1/poster.svg" width="640" height="340" alt="青穗集 CAREER DESKTOP" /><p role="status">正在打开你的成长桌面…</p><noscript><p>此页面需要 JavaScript 才能登录和使用，请启用后刷新。</p></noscript></main></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -1,0 +1,1148 @@
+Generative AI exposure across occupational sectors and changes in unemployment in Sweden
+Authors: Aron Resebo and Maryan Ali
+HT2025 Bachelor thesis, 15 credits Subject: Economics √ñrebro University School of Business Supervisor: Daniela Andr√©n Grading teacher: Fredrik Andersson Examiner: Daniel Knutsson
+
+Abstract
+This thesis examines whether the development of generative artificial intelligence is associated with changes in average unemployment across occupational sectors in Sweden. Treating the public release of ChatGPT in November 2022 as a common timing event, the study applies a two-way fixed-effects difference-in-differences framework to monthly unemployment data across 22 occupational sectors. Occupational exposure to generative AI is measured using a task-based classification derived from existing literature, distinguishing between sectors with high and low exposure. The main empirical finding is that unemployment increased more on average in occupational sectors classified as highly exposed to generative AI relative to less exposed sectors following November 2022. The estimated difference-in-differences coefficient is statistically significant at the 5 percent level based on a two-sided t-test with standard errors clustered at the occupational-sector level but should be interpreted with caution due to the limited number of clusters and potential heterogeneity across sectors. The findings contribute with post-2022 information from the Swedish labor market to the literature on artificial intelligence and unemployment, suggesting that generative AI may be associated with short-term labor market disruptions, even if long-run productivity gains and task reallocation may offset these impacts.
+2
+
+Table of contents
+Abstract ............................................................................................................. 2 Table of contents ................................................................................................. 3 1. Introduction .................................................................................................... 5
+1.1 Purpose and research question....................................................................... 5 1.2 Empirical strategy ....................................................................................... 5 1.3 Limitations................................................................................................. 6 1.4 Assumptions............................................................................................... 6 1.5 Relevance .................................................................................................. 7 1.6 Disposition................................................................................................. 7 2. Theoretical background..................................................................................... 8 2.1 A short introduction to AI ............................................................................. 8 2.2 The effect of AI on labor .............................................................................. 8 2.3 AI and productivity...................................................................................... 9 2.4 Timeline of recent developments ................................................................... 9 2.5 Conclusion of theoretical background........................................................... 10 3. Previous studies ............................................................................................. 11 3.1 Demand for AI skills in the labor market ...................................................... 11 3.2 Measuring occupational exposure to artificial intelligence ............................... 11 3.3 AI adoption and employment effects in online vacancies. ................................ 12 3.4 Short-run employment effects of generative AI .............................................. 12 3.5 Evidence on AI, hiring, and employment in Sweden. ...................................... 13 3.6 Summary of previous studies. ..................................................................... 13 4. Data ............................................................................................................. 14 4.1 Dataset and sources ................................................................................... 14 4.2 Sample construction .................................................................................. 14 4.3 Outcome variables and control variables ....................................................... 14 4.4 Descriptive Statistics ................................................................................. 16 4.5 Assessment of data reliability and limitations ................................................ 18 4.6 Institutional definition, selection, and occupational measurement ..................... 18
+3
+
+5. Method......................................................................................................... 19 5.1 Identification and estimation strategy ........................................................... 20 5.2 Empirical framework ................................................................................. 21
+6. Results ......................................................................................................... 22 6.1 Correlation matrix results ........................................................................... 22 6.2 Difference-in-Difference regression results ................................................ 23
+7. Hypothesis test .............................................................................................. 24 8. Validation of the empirical framework and robustness checks ............................... 26 8.1 Parallel trends assumption ............................................................................. 26 8.2 Event Study................................................................................................. 28 8.3 Selection bias and potential outcomes.............................................................. 30 8.4 Weighting ................................................................................................... 31 9. Conclusion ....................................................................................................... 32 10. References .................................................................................................. 35 11. Appendix........................................................................................................ 39 Use of generative AI ............................................................................................. 45
+4
+
+1. Introduction
+Recent advances in generative artificial intelligence have raised concerns about their potential effects on labor market outcomes, particularly unemployment across occupations with differing exposure to automation technologies. While a growing empirical literature examines the relationship between technological change and employment, most existing studies rely on data ending before the public release of large-scale generative AI systems such as ChatGPT in late 2022. As a result, there is limited empirical evidence on whether the recent big number of generative AI model launches is associated with observable changes in unemployment patterns across occupations in the period following its widespread availability.
+1.1 Purpose and research question
+The purpose of this paper is to examine whether unemployment evolved differently across occupational sectors with varying exposure to generative artificial intelligence following the public release of ChatGPT in November 2022 (Lodefalk, 2024). Using panel data on occupational sectors from Sweden between January 2021 through October 2025, the analysis investigates whether occupational sectors classified as highly exposed to generative AI experienced changes in unemployment relative to less exposed occupations in the postNovember 2022 period. While previous studies on automation, employment and unemployment rely primarily on data ending in or before 2022 (Alekseeva et al., 2021; Felten et al., 2021; Acemoglu et al., 2022; Georgieff and Hyee, 2022; Engberg et al., 2025), this study extends the existing methodology by incorporating more recent data, trying to find indications on unemployment in occupational sectors associated with exposure to generative AI technologies.
+1.2 Empirical strategy
+The empirical strategy is aimed at identifying average changes in unemployment between highly and weakly AI-exposed occupational sectors, using the release of ChatGPT in November 2022 as the common treatment timing. Occupational sectors are classified as either highly or weakly exposed to generative AI based on task-based measures from the existing
+5
+
+literature later described. The treatment group consists of highly exposed occupations, while less exposed occupations serve as the control group. Setting up the difference-in-differences estimator this way measures the average change in unemployment between highly and weakly AI-exposed occupational sectors after November 2022 (Angrist & Pischke, 2009; Wooldridge, 2019; Cunningham, 2021).
+1.3 Limitations
+Job vacancies from Arbetsf√∂rmedlingen are used as a proxy for labor demand, but not all vacancies are posted through this channel. It is previously estimated that only 30-50% of all vacancies are posted via Arbetsf√∂rmedlingen (Tillv√§xtverket 2021). The AI exposure measure is based on task-based indices originally developed for U.S. occupations and adapted to Swedish SSYK codes. This mapping may involve measurement error, and the binary classification of high versus low exposure simplifies what may be a continuous and heterogeneous degree of AI exposure. The analysis treats the release of ChatGPT in November 2022 as an exogenous shock, when it is possible that adoption of generative AI is gradual and may differ across firms and occupations (OECD 2025). The study is aimed at capturing occupational sector-level short-run effects and is unlikely to identify individuallevel displacement, task reallocation within occupations, or long-run structural changes in unemployment. The empirical specification includes a time-varying control to capture shortrun occupational dynamics. While this may improve precision, it changes the estimand relative to a baseline difference-in-differences design, implying that the estimated effects should be interpreted as conditional associations rather than unconditional associated effects.
+1.4 Assumptions
+This study relies on several identifying assumptions necessary for the difference-indifferences design to estimate credible average effect of generative AI exposure on unemployment in different occupational sectors. Most importantly, in the absence of generative AI, unemployment in highly and weakly AI-exposed occupations is assumed to have evolved in parallel over time, labelled the parallel trends assumption (Angrist & Pischke, 2009; Wooldridge, 2019; Cunningham, 2021). It is also assumed that highly and weakly AI-
+6
+
+exposed occupational sectors did not systematically adjust employment patterns in anticipation of the release prior to November 2022. Spillovers between occupational sectors are assumed to be limited, such that the exposure in one occupational sectors does not directly affect unemployment in other occupational sectors. Exposure is assumed to be uncorrelated with post-treatment shocks to unemployment, conditional on the included fixed effects. Unobserved effects are also assumed to affect all occupational sectors in the same way (Angrist & Pischke, 2009).
+1.5 Relevance
+Since most of the recent studies focus on data up to or prior to 2022 (Alekseeva et al. 2021; Acemoglu et al. 2022 & Lodefalk et al. 2024), there are good reasons to try and keep research on the topic of AI‚Äôs effects on the labor market up to date (Lodefalk et al. 2024). Findings from Hoi, Reshel and Zhou (2024) indicate that a broader labor displacement may occur in targeted sectors, that is, sectors with high exposure to AI as defined by previous studies, when the analysis is using up-to-date data.
+1.6 Disposition
+The disposition is constructed as: Part two describes theoretical background and discusses the fundamentals of AI, its capabilities and a timeline of recent developments in the field. Part three highlights previous studies and what type of methods used in those studies. Part four gives information of the variables used in this model such as descriptive and summary statistics along with tables representing them. Part five focuses on the method and model used in this study, aiming at giving a better understanding of how and why the chosen empirical model is designed. Part six gives a brief summary of the results. Part seven describes the main hypothesis and inference test. Part eight provides information on robustness checks and validation of the model. Part nine with concluding remarks is aimed at giving a summary of the entire study along with its potential strengths and weaknesses. Additional tables and variation in models are presented in the appendix.
+7
+
+2. Theoretical background
+2.1 A short introduction to AI
+A short definition of AI is in place in order to better understand the technology and its potential impact on labor, in terms of demand. Artificial intelligence, AI, is a computerized system that solves problems that traditionally demand human intelligence. AI uses large amounts of data in order to make predictions and can thereby give recommendations or even make decisions based on its results (Lodefalk, 2024). The term generative AI refers to specific AI models that are capable of generating content such as text, images, video or audio from data (Feuerriegel et al. 2024; Brynjolfsson et al. 2023). Examples of generative AI models include DALL-E 2, GPT-4, Grok and LLaMA (Wang, 2024; Ghaseminejad, 2025). An important class of generative AI is large language models, LLMs. An LLM is trained to predict the next word in a sequence, given what has come before, using a big database of text (Lodefalk, 2024). This enables it to generate grammatically correct and meaningful text. While the term emphasizes human language, the same methods can apply to other sequential data (Brynjolfsson et al. 2023).
+2.2 The effect of AI on labor
+There have been two important sides to what impact AI will have on labor in terms of supply and demand. On one side, Acemoglu & Restrepo (2019) argues that development of AI up until 2019 was done towards automation, with decreasing labor demand as a consequence. On the other side, Lodefalk (2024) suggests that while AI may displace some existing jobs and duties, it is also likely to generate other forms of jobs. Brynjolfsson & Mitchell (2017) means, in line with Acemoglu and Restrepo (2019), that whenever a task is possible to be done by some version of machine learning, and it is cheaper to do so, profit-maximizing entrepreneurs and managers will seek to substitute labor with machines. A more dramatic phrasing about the situation is done by Mutascu and Hegerty (2023) where they express that even professions that people ought to be ‚Äúsafe‚Äù, such as higher-level thinking and organizational work might be at risk if AI becomes sufficiently advanced, underlining the importance to better seek understanding of its potential impact on the labor market. Taken together, these perspectives
+8
+
+illustrate that AI‚Äôs impact on job vacancies and unemployment reflects a complex situation where AI might both displace and create jobs, not simply reducing the demand for labor.
+2.3 AI and productivity
+Building on the information on what potential impact AI might have on labor in section 2.2, medium-term productivity gains from AI are expected to be positive but modest in aggregate and heterogeneous across economies (Misch et al., 2025). The short-term effects from productivity increase on a micro level, i.e. specific sectors or occupations, suggest that it might be upwards of as much as 50% in the case of software engineers (Misch et al., 2025). A study by Gao and Feng (2023) finds that for every 1% increase in AI penetration across manufacturing industries in China is associated with a total factor productivity increase of about 14.2%. In labor-market terms, productivity improvements tend to increase labor demand via lower unit costs and higher output, while automation reduces demand for specific tasks and occupations (Pissarides, 2000; Acemoglu & Restrepo, 2019). Depending on the occupational sector and task in which AI is able to improve productivity, the direct net effect might be ambiguous in terms of vacancies and unemployment (Agrawal et al., 2019).
+2.4 Timeline of recent developments
+There has been a drastic increase in launches and available AI models between 2022 and 2024 (Ghaseminejad Raeini, 2025). A sample of these models is listed in table 1. Considering that many of these models were released from 2022- onwards, their presumed impact on unemployment or labor demand (Feuerriegel et al. 2024) remains difficult to empirically assess due to their recent deployment and limited data. Worth mentioning in addition to this table is that after the launch of ChatGPT in November 2022, OpenAI had within two months over 100 million subscribers (Engberg et al. 2025), adding some perspective to the possible adoption-rate from that moment forward.
+9
+
+Table 1: Timeline of different companies AI models.
+
+Year 2022 2023 2023 2023
+2023 2023 2023 2024 2024 2024
+
+Company OpenAI Meta Google Microsoft
+Anthropic Mistral AI xAI OpenAI Midjourney DeepSeek
+
+Model ChatGPT (GPT 3.5) LLaMA Gemini BingGPT
+Claude Mistral Grok Sora Midjourney 6.1 V2
+
+Source: Adapted from Ghaseminejad Raeini (2025) and Wang (2024).
+
+2.5 Conclusion of theoretical background
+The theoretical background helps defining artificial intelligence as a technology capable of performing non-routine tasks that traditionally require human intelligence through data-driven decision-making (Lodefalk, 2024). Special attention has been given to generative AI and large language models which are capable of generating output in form of text, images, audio and video (Brynjolfsson et al. 2023; Feuerriegel et al. 2024). The recent developments of AImodels demonstrate a rapid expansion in terms of availability (Ghaseminejad Raeini, 2025; Wang, 2024). The different sides of arguments to what impact this will have on vacancies and unemployment, caused by either automation or productivity gains, together with the important timeline of developments composed from Ghaseminejad Raeini (2025) and Wang (2024) suggests that there is still limited empirical analysis displaying uniform conclusions. This further highlights the importance to seek better understanding of this development and its potential impact on vacancies and unemployment.
+
+10
+
+3. Previous studies
+3.1 Demand for AI skills in the labor market
+Alekseeva et al. (2021) studied the demand for AI skills in USAs labor market using data from job ads and if there is a posted wage premia in occupations that require at least some set of AI skills. Their definition of AI-related skills comes from key words in job ads such as: Artificial Intelligence, machine vision, deep learning, image processing among others. The study was conducted using data on posted job ads from Burning Glass Technologies, now Lighcast, between January 2010 to July 2019. The key findings from this study were that they saw an increasing trend in the share of posted job ads that required AI skills over time, from less than 0.1 % in 2010 to about 0.6% in 2019. This study also gives a visual representation of how the AI required skill share evolve by different industry sectors and occupations over time, highlighting that sectors like information, finance and insurance are among those who seek most AI skills. Overall, these findings point towards AI as a complementary technology; firms seek to value and demand labor who can work with AI skills, in line with the idea presented by Lodefalk (2024), rather than that AI would work as a replacement for labor.
+3.2 Measuring occupational exposure to artificial intelligence
+Felten et al. (2021) approaches the potential effects of AI on labor markets by developing a new measure called AIOE, AI Occupational Exposure, which links common AI applications to workplace abilities across occupations. This measure indicates the likelihood that an occupation interacts with AI, without judging whether AI complements or substitutes human labor. The measure is constructed by linking widely used AI applications, identified through the Electronic Frontier Foundation, EFF, AI Progress Measurement project, which tracks and categorizes the development of AI technologies, to data on occupational abilities from the Occupational Information Network, O*NET, a U.S. Department of Labor database that provides detailed information on the skills, tasks, and abilities required for different occupations in the modern-day American workplace. Key findings include that the occupations with highest exposure to AI include genetic counselors, financial examiners and actuaries. The occupations with lowest exposure to AI were dancers, fitness trainers and
+11
+
+aerobics instructors. On an aggregate level, they constructed a similar AI exposure measure called AIIE, AI Industry Exposure, where the results suggested that securities and other financial institutions had the highest exposure as opposed to crop production which had the lowest exposure. As a concluding remark they emphasize that there is still little systematic evidence of what impact AI and automation will have on the labor force, but that the AIOE and AIIE measures can be a useful tool to explore the circumstances in which AI may or may not substitute or complement human labor.
+3.3 AI adoption and employment effects in online vacancies.
+Acemoglu et al. (2022) studies the adoption of AI in USA and its effects on the labor market. They also use data from Lightcast but with a bit shorter time span, from 2010 through 2018. They approach AI adoption by linking a task-based perspective to a task structure of an establishment. Key findings include that AI-exposed establishments simultaneously reduce hiring in non-AI positions. This indicates that AI adoption does displace some tasks internally. At an aggregate level however, the study detects no sizable impact on employment or wages across industries or occupations, suggesting that the scale of AI adoption in this period is still too small to reshape the labor market as a whole.
+3.4 Short-run employment effects of generative AI
+Hoi, Reshel and Zhou (2024) investigate if there is empirical evidence on the short-term effects of generative AI on the labor market using data on job ads scraped from the site Upwork, which posts freelance projects available and corresponding payment per project. They found that since the launch of ChatGPT in November 2022, freelancers working in writing-related services experienced a decrease of 2% in the number of monthly jobs posted and a decrease of 5.2% in monthly earnings, compared to other freelancers in different occupations, both with statistical significance. They make a similar approach to the generative purpose models DALL-E 2, which can create realistic original images and art from a text description. It can combine concepts, attributes and styles (OpenAI 2025), and Midjourney, which works in a similar way as DALL-E 2 but is developed by the company Midjourney Inc.
+12
+
+(Midjourney 2025). These findings suggest that there might be some adverse effects in terms of employment with the rapid advance and adoption of this new technology.
+3.5 Evidence on AI, hiring, and employment in Sweden.
+Lodefalk et al. (2024) investigate how artificial intelligence influences hiring patterns in Sweden using job-posting data from the Swedish Public Employment Service (AF) covering 2014‚Äì2022. They find that establishments with greater exposure to AI increase hiring in both AI-related and non-AI roles, without any reduction in overall employment. This contrasts with Acemoglu et al. (2022), who show that in the United States, higher AI exposure is associated with lower non-AI hiring, suggesting labor displacement. Taken together, the evidence implies that in Sweden, AI appears to complement labor rather than substitute it.
+3.6 Summary of previous studies.
+The reviewed literature highlights that AI‚Äôs impact on labor markets varies, but the Swedish study stands out. While studies from the United States and internationally document rising demand for AI skills and signs of task-level displacement, such as reduced non-AI hiring (Acemoglu et al., 2022) or short-term labor displacement in freelance markets (Hoi et al. 2024), Sweden appears to follow a different pattern. Lodefalk et al. (2024) finds that Swedish establishments with higher AI exposure increase hiring in both AI and non-AI sectors without reducing overall employment. In contrast to U.S. findings, this suggests that in Sweden AI functions primarily as a complementary technology, supporting labor rather than replacing it. However, most data used in these previous studies, except for the one done by Hoi et al. (2024), are prior to or up until 2022, where much of the generative AI was launched to a broader public and potentially having a much bigger impact onwards.
+13
+
+4. Data
+4.1 Dataset and sources
+This study uses monthly administrative data from the Swedish Public Employment Service (Arbetsf√∂rmedlingen). Both datasets span 58 months (January 2021 to October 2025), providing 22 months of pre- treatment data (before ChatGPT‚Äôs release in November 2022) and 36 months of post-treatment data. Unemployment data are sourced from The Swedish Public Employment. Arbetsf√∂rmedlingen, measuring the total number of registered unemployed individuals by occupational category. Job vacancies data are also obtained from Arbetsf√∂rmedlingen and capture all advertised vacancies registered on their platform. Both datasets are disaggregated by occupational category (yrkesomr√•den) following the Swedish Standard Classification of Occupations (SSYK 2012). The data are publicly available and accessed through Arbetsf√∂rmedlingens statistical database in November 2025.
+4.2 Sample construction
+The final dataset is constructed by merging unemployment and vacancy data at the occupation-month level, resulting in a balanced panel of 1,276 observations. The sample consists of 22 occupational sectors based on the aggregated SSYK-groups used by Arbetsf√∂rmedlingen. (See Table 2: AI exposure Classification).
+4.3 Outcome variables and control variables
+Outcome and control variables: Unemployment (unemployed) is the primary outcome variable and is measured as the monthly number of registered unemployed individuals per occupational sector. Vacancies measure the monthly number of advertised job vacancies
+14
+
+per occupational sector. To account for skewness and facilitate interpretation, log transformed versions of both variables are also constructed and used in supplementary specifications. Key explanatory variables: AI exposure is defined as a binary indictor equal to 1 for occupations classified as highly exposed to generative AI, and 0 otherwise (1= high exposure, 0 = low exposure. The classification is based on occupation task characteristics assigned to occupational categories following prior research by Alekseeva et al. (2021); Felten et al. (2021); Acemoglu et al. (2022); Georgieff & Hyee (2022) and Engberg et al. (2025). Seven occupational groups are classified as highly exposed. These are predominantly cognitive, text-intensive, or analytical tasks where generative AI can feasibly substitute or complement human labor. The remaining 14 occupational groups are classified as low exposure (AI_exp = 0), reflecting a greater reliance as their core tasks involve physical, manual, or interpersonal activities with limited generative AI applicability. (See Table 2: AI exposure Classification) Post period indicator (Post) is a binary indicator equal to 1 for all months from November 2022 onward, representing the period after ChatGPT's public release. The interaction term AI_Post ( AI exposure x post) constitutes the treatment variable in the difference-indifference framework and captures differential changes in labour-market outcomes for highly exposed occupations after the introduction of generative AI. The Lagged controls: To account for occupation-specific labour-market dynamics, the model includes lagged values of the outcome variable. Specifically,lagged vacancies are included when unemployment is the dependent variable. These lagged controls are predetermined with respect to current treatment status and capture short-run market-labour momentum and occupation-specific trends.
+15
+
+Table 2. AI Exposure classification by occupational sectors.
+
+AI Exposure
+
+Occupational sectors
+
+High (1)
+
+Business, administration and legal professionals
+
+High (1)
+
+Managers and executives
+
+High (1)
+
+Data/IT
+
+High (1)
+
+Sales, marketing and public relations professionals
+
+High (1)
+
+Creative artists, designers and media workers
+
+High (1)
+
+Technical and engineering work
+
+High (1)
+
+Natural science work
+
+Low (0)
+
+Building and constructions work
+
+Low (0)
+
+Craft work
+
+Low (0)
+
+Hospitality- and restaurant work
+
+Low (0)
+
+Healthcare professionals
+
+Low (0)
+
+Industrial work
+
+Low (0)
+
+Electrical and electronic work; metal and machinery
+
+Low (0)
+
+Personal care work
+
+Low (0)
+
+Military work
+
+Low (0)
+
+Agricultural, forestry and fishery work
+
+Low (0)
+
+Pedagogical work
+
+Low (0)
+
+Sanitary work
+
+Low (0)
+
+Social work
+
+Low (0)
+
+Safety work
+
+Low (0) Low (0)
+
+Transportational work Undefined
+
+Note: AI exposure classification based on task characteristics adapted from previous literature described in section 4.2. High exposure (AI_exp = 1): 7 occupational sectors. Low exposure (AI_exp = 0): 15 occupational sectors.
+
+4.4 Descriptive Statistics
+
+Table 3a. Descriptive Statistics
+
+Variables
+
+N
+
+Mean
+
+Median
+
+SD
+
+Min
+
+Max
+
+Unemployed
+
+1276 16453.835
+
+15087 12171.203
+
+88
+
+59430
+
+Vacancies
+
+1276
+
+5368.485
+
+3561.5 7910.793
+
+1
+
+65015
+
+AI exposure
+
+1276
+
+0.318
+
+0
+
+.466
+
+0
+
+1
+
+Post
+
+1276
+
+0.621
+
+1
+
+.485
+
+0
+
+1
+
+Note: Sample includes 22 occupational sectors over 58 months (January 2021-october 2025). Job vacancies and unemployment are monthly counts per occupation category. Source: Authors‚Äô calculations using Swedish Public Employment Service (Arbetsf√∂rmedlingen).
+
+A complete mapping of unemployment and vacancy trends for each occupational sector is plotted in the appendix, figures 5 through 10.
+
+16
+
+Table 3b. Descriptive statistics (log variables)
+
+N
+
+Mean
+
+Median
+
+SD
+
+Min
+
+Max
+
+log unemployed
+
+1276
+
+9.239
+
+9.622
+
+1.282
+
+log vacancies
+
+1276
+
+7.599
+
+8.178
+
+1.986
+
+Note: Log variables are natural logarithms. Source: Authors‚Äô calculations
+
+4.477 0
+
+10.993 11.082
+
+Tables 3a and 3b report descriptive statistics for unemployment, vacancies, AI exposure, and
+
+the post-treatment period across the full sample. Average unemployment amounts to
+
+approximately 16,454 individuals per occupation-month, while vacancies average around
+
+5,368 indicting substantial heterogeneity across occupational groups, while the post-treatment
+
+period accounts for about 62 percent of the sample. Log unemployment has a mean of 9.239,
+
+while log vacancies average 7.599. The variation in both variables suggests a pronounced
+
+difference in labor market outcomes across occupation. Motivating the use of a difference-in-
+
+differences framework to study post 2022 developments.
+
+Table 4a. Descriptive Statistics: AI-exposed Occupations (AI exposure = 1)
+
+N
+
+Mean
+
+Median
+
+SD
+
+Min
+
+Max
+
+log unemployed log vacancies
+
+406
+
+9.24
+
+8.996
+
+.91
+
+7.665
+
+10.993
+
+406
+
+8.031
+
+8.256
+
+1.042
+
+5.894
+
+10.395
+
+Note: AI-exposed occupations N denotes occupation month observations. Unemployment is monthly occupation level count. Log variables are natural logarithms. Data source: Swedish Public Employment Service (Arbetsf√∂rmedlingen). Source: Authors‚Äô calculations
+
+Table 4b. Descriptive Statistics: Non-AI Exposed Occupations (AI exposure = 0)
+
+N
+
+Mean
+
+Median
+
+SD
+
+Min
+
+Max
+
+log unemployed log vacancies
+
+870
+
+9.239
+
+9.757
+
+1.422
+
+4.489
+
+10.779
+
+870
+
+7.429
+
+8.147
+
+2.179
+
+.693
+
+11.082
+
+Note: AI-exposed occupations N denotes occupation month observations. Unemployment is monthly occupation level count. Log variables are natural logarithms. Source: Authors‚Äô calculations
+
+Table 4a and 4b present statistics for log unemployment and log vacancies for AI-exposed
+
+occupation and the control group, respectively. AI exposed occupations exhibit slightly lower
+
+average log unemployment compared to the control group, while average log vacancies are
+
+higher among AI-exposed sectors. Dispersion of both variables is larger in the control group,
+
+as reflected by higher standard deviations. Overall, this indicates systematic difference in
+
+labor market outcomes between AI-exposed and non-AI exposed occupations prior to formal
+
+econometric analysis.
+
+17
+
+4.5 Assessment of data reliability and limitations
+Limitations of the dataset concern potential measurement error in the classification of AI exposure across occupational groups. In this analysis aggregated SSYK occupational categories have been used to construct the binary AI exposure indicator by mapping taskbased exposure measures from previous studies by Alekseeva et al. (2021); Felten et al. (2021); Acemoglu et al. (2022); Georgieff & Hyee (2022) and Engberg et al. (2025). Each occupational category may contain substantial heterogeneity in tasks and job roles with varying degrees of AI relevance. As a result some occupations may be misclassified as either high or low AI exposure. This may likely bias estimated treatment effects, which may lead to an underestimation of the true treatment effect. In addition, spillover effects across occupations cannot be ruled out. The adoption of generative AI in highly exposed occupations may indirectly affect labor demand and unemployment in less exposed but related occupations through relocation of tasks. Such cross occupation spillovers would violate the stable unit of treatment value assumption underlying the difference-in-differences framework and would tend to bias the estimated treatment effects toward zero. Therefore, the estimated difference-in-differences coefficients should be interpreted as conservative estimates of the impact generative AI has on unemployment.
+4.6 Institutional definition, selection, and occupational measurement
+The unemployment data used in this study come from Arbetsf√∂rmedlingen‚Äôs register-based verksamhetsstatistik, administrative activity statistics, and do not constitute official labormarket statistics in the sense of Statistics Sweden (SCB). Sweden‚Äôs official unemployment rate is produced by SCB through the Labour Force Survey, AKU, whereas Arbetsf√∂rmedlingen‚Äôs statistics consist of all individuals who are registered in the agency‚Äôs database as unemployed (Arbetsf√∂rmedlingen, 2026). Arbetsf√∂rmedlingen‚Äôs statistics count all individuals registered as unemployed on the last day of the month, regardless of concurrent employment (Arbetsf√∂rmedlingen, 2026). Formally, Arbetsf√∂rmedlingen defines inskrivna arbetsl√∂sa as the sum of openly unemployed individuals and those who are unemployed while participating in active labor-market programs, arbetsl√∂sa i program (Arbetsf√∂rmedlingen, 2026). This introduces a selection mechanism that is relevant for identification. Registration is voluntary and linked to eligibility for benefits and program participation, and different
+18
+
+occupational sectors may differ in their tendency to register when unemployed. In particular, workers in highly AI-exposed occupations, such as IT, managers and engineers, may be more likely to rely on private recruitment channels and may therefore be less likely to register than workers in more routine-based occupations (Tillv√§xtverket, 2021). If generative AI imposes changes in job search behaviour across occupations after 2022, part of the measured postNovember effect may operate through changes in registration behaviour rather than through job loss alone. Another institutional issue concerns how unemployment is assigned to occupational sectors. In Arbetsf√∂rmedlingen‚Äôs registers, individuals are classified by their registered occupational background, yrkesbakgrund, which typically reflects the most recently stated or historically recorded occupation, not necessarily the occupation the individual is currently seeking (Arbetsf√∂rmedlingen, 2026). Occupational codes are updated only when jobseekers revise the information, and updates may occur with delay. During periods of structural change, such as the broader launch of generative AI models, displaced workers may actively seek jobs outside their previous occupation while remaining coded under their old one. This would create measurement error in the Ì†µÌ∞¥Ì†µÌ∞ºÌ†µÌ±íÌ†µÌ±•Ì†µÌ±ùÌ†µÌ±ñ-variable so that the estimated difference-in-differences coefficient captures changes in registered unemployment by registered occupational background, not necessarily changes in true unemployment by current task or job. Because both registration and occupational updating may respond ambiguously to technological change, the direction of bias is theoretically unknown. Nonetheless, since Arbetsf√∂rmedlingen applies the same definitions and coding rules consistently over time and across occupations, the difference-in-differences framework remains informative about relative changes across occupational sectors after November 2022.
+5. Method
+To estimate the effect of generative AI on unemployment outcomes across occupational sectors, this study uses a difference-in-differences framework with two-way fixed effects. The identification strategy follows recent empirical work on AI and labour markets, which exploits sudden technological shocks to measure heterogenous occupational-sector exposure. We focus on the public release of ChatGPT on November 2022. This serves as a hypothetical and exogenous shock that rapidly and unexpectedly increased awareness and adoption of advanced generative AI tools among firms and workers. By using this sharp timing, the
+19
+
+difference-in-differences design compares changes in mean unemployment outcomes between occupational sectors classified as highly exposed and low exposed, after November 2022.
+5.1 Identification and estimation strategy
+The analysis is based on a two-way fixed effects difference-in-differences framework comparing highly AI-exposed occupations with less exposed ones before and after November 2022, when generative AI became publicly available. Occupation fixed effects absorb all time-invariant differences across occupational groups, such as long run differences in skill. Month fixed effects control for macroeconomic shocks that affect all occupations simultaneously. The model is estimated using ordinary least squares, OLS. Standard errors are clustered at the occupation level to address serial correlation and within occupational sector dependence over time. To improve the credibility of the estimates in the setting with a binary, time-varying treatment, the model includes lagged values of the outcome variable. These lagged controls help capture occupation-specific labor market momentum and reduce serial correlation, while remaining predetermined with regards to current treatment. This modeling choice aligns with recent DiD research on time varying treatments (Cerulli &Ventura, 2019) and is consistent with empirical implementations in Hui, Reshef & Zhou (2024). Identification of the treatment effects relies on the parallel-trends assumption, meaning that in the absence of the AI shock, labor-market outcomes in highly exposed and less exposed occupations would have evolved similarly over time. In the data some observations are classified as having ‚Äúundefined‚Äù occupations. In the baseline specification, these observations are retained in the sample and treated as a separate occupational category to preserve the full panel structure and avoid losing sectors that are relevant for inference. However, because this category groups together heterogenous workers, we also estimate all models excluding observations with ‚Äúundefined‚Äù occupation as a robustness check. These results are reported in the appendix, table 9, and are used to assess whether the main findings are sensitive to how these observations are handled.
+20
+
+5.2 Empirical framework
+
+The empirical analysis is based on the following difference-in-difference specification model:
+
+Where:
+
+Ì†µÌ±¶Ì†µÌ±ñ,Ì†µÌ±° = Ì†µÌªºÌ†µÌ±ñ + Ì†µÌªæÌ†µÌ±° + Ì†µÌªø(Ì†µÌ∞¥Ì†µÌ∞ºÌ†µÌ±íÌ†µÌ±•Ì†µÌ±ùÌ†µÌ±ñ ‚àó Ì†µÌ±ÉÌ†µÌ±úÌ†µÌ±†Ì†µÌ±°Ì†µÌ±°) + Ì†µÌ±ãÌ†µÌ±ñ,Ì†µÌ±°‚àí1 + Ì†µÌºÄÌ†µÌ±ñÌ†µÌ±°
+
+Ì†µÌ±¶Ì†µÌ±ñ,Ì†µÌ±° = No. of unemployed individuals in occupational sector Ì†µÌ±ñ at time Ì†µÌ±°. Ì†µÌªºÌ†µÌ±ñ = Occupational sector fixed effects (controls for occupational category heterogeneity). Ì†µÌªæÌ†µÌ±° = Month fixed effects (controls for macro events). Ì†µÌªø = The coefficient of interest, signs the effect on unemployment of AI exposed occupations in sector Ì†µÌ±ñ after time t (November 2022, when ChatGPT was released).
+
+Ì†µÌ±ãÌ†µÌ±ñ,Ì†µÌ±°‚àí1 = Time-varying controls, No. of vacancies in occupational category Ì†µÌ±ñ at time Ì†µÌ±°‚àí1. Ì†µÌºÄÌ†µÌ±ñ,Ì†µÌ±° = Error term for sector Ì†µÌ±ñ at time Ì†µÌ±°.
+
+Setting up the AI exposure measure, we use information from previous studies done by Alekseeva et al. (2021); Felten et al. (2021); Acemoglu et al. (2022); Georgieff & Hyee (2022) and Engberg et al. (2025) so that:
+
+Ì†µÌ∞¥Ì†µÌ∞ºÌ†µÌ±íÌ†µÌ±•Ì†µÌ±ùÌ†µÌ±ñ
+
+=
+
+{
+
+1 0
+
+if if
+
+occupational occupational
+
+sector sector
+
+Ì†µÌ±ñ Ì†µÌ±ñ
+
+is is
+
+AI exposed not AI exposed
+
+The Ì†µÌ±ÉÌ†µÌ±úÌ†µÌ±†Ì†µÌ±°Ì†µÌ±°-term is a time indicator that marks the periods when generative AI is considered to be in effect. We define a common timing event month T and set:
+
+Ì†µÌ±ÉÌ†µÌ±úÌ†µÌ±†Ì†µÌ±°Ì†µÌ±°
+
+{
+
+0 1
+
+Ì†µÌ±ñÌ†µÌ±ì Ì†µÌ±ñÌ†µÌ±ì
+
+Ì†µÌ±° Ì†µÌ±°
+
+< Ì†µÌ±á ‚â• Ì†µÌ±á
+
+So that the interaction term Ì†µÌ±ÉÌ†µÌ±úÌ†µÌ±†Ì†µÌ±°Ì†µÌ±° ‚àó Ì†µÌ∞¥Ì†µÌ∞ºÌ†µÌ±íÌ†µÌ±•Ì†µÌ±ùÌ†µÌ±ñ measures the average change in occupational sectors with high AI exposure at and after time Ì†µÌ±°.
+
+The only true occupational sector specific time-varying information available is: The total number of vacancies & unemployed individuals in the 22 occupational sectors. These variables may indicate some demand and supply conditions in each occupational sector. According to Wooldridge (2023), time-varying covariates may be included in difference-indifferences models if they are not themselves directly affected by the treatment and are used to better capture heterogeneous trends rather than to control away causal effects. Because
+21
+
+generative AI may plausibly affect labor demand and hence vacancies, including vacancies would risk bad controls. To mitigate this concern, lagged vacancies is included, which are predetermined with respect to current unemployment outcomes. Even so, this specification changes the estimand relative to a baseline difference-in-differences estimand so that the estimated coefficient should be interpreted as a conditional average partial effect of AI exposure on unemployment, holding constant prior vacancies conditions.
+
+6. Results
+This section presents the empirical results of the analysis. Beginning by reporting simple correlations between the main variables to provide an overview of their unconditional relationships. Then the main results from the difference-in-differences regression and parallel trends assumption are then presented, suggesting the estimated average effect of generative AI exposure on unemployment, controlling for lagged vacancies and time- & sector-fixed effects, across occupational sectors after the release of ChatGPT in November 2022.
+
+6.1 Correlation matrix results
+
+Table 5. Correlation Matrix
+
+Variables
+
+(1)
+
+(2)
+
+(3)
+
+(4)
+
+(1) unemployed
+
+1.000
+
+(2) vacancies
+
+0.374*
+
+1.000
+
+(0.000)
+
+(3) AIexp
+
+-0.047
+
+-0.042
+
+1.000
+
+(0.092)
+
+(0.135)
+
+(4) Post
+
+-0.052
+
+-0.028
+
+0.000
+
+(0.064)
+
+(0.317)
+
+(1.000)
+
+(5) AIexp_post
+
+-0.033 (0.236)
+
+-0.064* (0.023)
+
+0.726* (0.000)
+
+Note: * shows significance at p < 0.05. Source: Authors‚Äô calculations
+
+1.000
+0.388* (0.000)
+
+(5) 1.000
+
+The correlation matrix indicates a moderate positive correlation between unemployment and vacancies, with a correlation coefficient of 0.374. AI exposure is weakly correlated with
+22
+
+unemployment -0.047 and vacancies -0.042 and the correlation is statistically insignificant. The interaction term between AI exposure and the post-treatment period exhibits a small negative correlation with unemployment -0.033 and slightly stronger negative correlation with vacancies -0.064. AI exposure and the post treatment are positively correlated with the interaction term. Overall, the magnitude of the correlations is mostly suggesting that multicollinearity is unlikely to be a concern in the regression analysis.
+
+6.2 Difference-in-Difference regression results
+
+Table 6. Difference-in-differences results (Outcome: Unemployed)
+
+Variables
+
+(1)
+
+(2)
+
+Level
+
+Log
+
+AI exposure x Post Lagged vacancies Lagged log(vacancies)
+
+1,930.431** (904.473) -0.064 (0.059)
+
+0.168*** (0.051)
+-0.010 (0.031)
+
+Observations R-squared Occupation fixed effects Monthly fixed effects
+Adj. R-squared
+
+1,254 0.981 Yes Yes
+0.980
+
+1,254 0.995 Yes Yes
+0.995
+
+Note: Cluster robust standard errors in parentheses *** p<0.01, ** p<0.05, * p<0.1 Source: Authors‚Äô calculations
+
+Table 6 reports the difference-in-differences estimated with unemployed as the outcome variable. Both the dependent variable, unemployed, and the lagged vacancies variable are strictly positive across all sector-month observations, allowing a log-log transformation without loss of data. Consequently, the regression retains all 1,254 observations. The interaction term between AI exposure and the post-treatment period is positive and statically significant in both specifications. In the level specification, the coefficient indicates an increase in unemployment in highly AI exposed occupational sectors after November 2022
+23
+
+relative to the control group. Given the additive structure in the difference-in-differences framework (Angrist & Pischke, 2009), this is to be interpreted as the associated increased mean unemployment in highly AI-exposed occupational sectors across all periods from November 2022 through October 2025. In the log specification, the estimated coefficient of 0.167 is significant at the one percent level, implying an associated mean increase in unemployment of approximately 18 percent in highly AI-exposed occupational sectors compared to non-AI-exposed occupational sectors from November 2022 through October 2025, holding other factors constant. Lagged vacancies enter with a negative but statistically insignificant coefficient in both specifications. Using a two-way fixed-effects model generates a high Ì†µÌ±Ö2 and Ì†µÌ±éÌ†µÌ±ëÌ†µÌ±óÌ†µÌ±¢Ì†µÌ±†Ì†µÌ±°Ì†µÌ±íÌ†µÌ±ë Ì†µÌ±Ö2, but it is expected that most of the variation is explained using this setup (Wooldridge, 2019).
+
+7. Hypothesis test
+
+From the equation in section 5.2, Ì†µÌ±¶Ì†µÌ±ñ,Ì†µÌ±° = Ì†µÌªºÌ†µÌ±ñ + Ì†µÌªæÌ†µÌ±° + Ì†µÌªø(Ì†µÌ∞¥Ì†µÌ∞ºÌ†µÌ±íÌ†µÌ±•Ì†µÌ±ùÌ†µÌ±ñ ‚àó Ì†µÌ±ÉÌ†µÌ±úÌ†µÌ±†Ì†µÌ±°Ì†µÌ±°) + Ì†µÌ±ãÌ†µÌ±ñ,Ì†µÌ±°‚àí1 + Ì†µÌºÄÌ†µÌ±ñÌ†µÌ±°
+
+The coefficient of interest, Ì†µÌªø, measures the difference in unemployment of AI exposed sectors
+
+relative to non-AI-exposed sectors after November 2022, when ChatGPT was released. To
+
+formally set up our hypothesis, we want to test if the coefficient Ì†µÌªø is statistically significant,
+
+conditional on sector fixed effects, time fixed effects and lagged vacancies. Since the
+
+direction of the effect is unknown ex ante, a two-sided t-test is used:
+
+H0: Ì†µÌªø = 0, H1: Ì†µÌªø ‚â† 0 Where Ì†µÌ∞ª0 is the null hypothesis stating that there is no effect from the coefficient Ì†µÌªø, suggesting that there is no difference in average unemployment between AI-exposed and non-
+
+AI-exposed sectors after November 2022. The alternative hypothesis, Ì†µÌ∞ª1, states that the coefficient Ì†µÌªø is statistically significant from zero, indicating a positive or negative average
+
+effect on unemployment between AI-exposed and non-AI-exposed sectors over all Ì†µÌ±ÉÌ†µÌ±úÌ†µÌ±†Ì†µÌ±°Ì†µÌ±°periods. The statistic used to test this hypothesis against the two-sided alternative is the t-
+
+statistic (Wooldridge, 2019), and it is defined in our model as:
+
+Ì†µÌ±°Ì†µÃÇÌªø
+
+=
+
+Ì†µÃÇÌªø Ì†µÌ±ÜÌ†µÌ∞∏(Ì†µÃÇÌªø)
+
+,
+
+where
+
+Ì†µÃÇÌªø
+
+is
+
+the
+
+estimated coefficient and the standard errors, SE‚Äôs, are clustered at sector level. From the
+
+24
+
+regression results in table 6, the t-statistic equation is:
+
+1930.431 2.134 = 904.473
+
+Before making any inference from this equation, clustering standard errors is something worth
+
+discussing further. Conventional standard errors are derived under the assumption of
+
+homoskedastic and independently distributed errors and yield inference based on the standard
+
+normal distribution (Greene, 2018; Wooldridge, 2019; Stock & Watson, 2020). Angrist and
+
+Pischke (2009, 2014) together with Cunningham (2021) emphasize that difference-in-
+
+differences designs are particularly vulnerable to serial correlation, since outcomes within the
+
+same group tend to be correlated over time. When treatment varies at the group level,
+
+regression residuals are unlikely to be independent across observations within groups, leading
+
+conventional standard errors to understate true sampling variability. To address this issue,
+
+standard errors are clustered at the group level, allowing for arbitrary serial correlation within
+
+sectors while maintaining independence across sectors, which typically results in larger
+
+standard errors (Wooldridge, 2019). Moreover, when the number of clusters is limited, Angrist
+
+and Pischke (2009) highlight that inference should be based on a t-distribution with degrees of
+
+freedom determined by Ì†µÌ∞∫ ‚àí Ì†µÌ∞æ, where G is the number of clusters and K is the number of
+
+regression coefficients, following work by other authors, rather than on the standard normal
+
+distribution. When this is taken into consideration, inference is based on a t-distribution with
+
+22 ‚àí 1 = 21 degrees of freedom. Recalling the previous stated t-statistic from the difference-
+
+in-differences regression:
+
+1930.431 2.134 = 904.473
+
+Against the two-sided t-distribution with 21 degrees of freedom, which is 2.08:
+
+2.08 < 2.134
+
+Since the absolute value of the t-statistic is larger than the t-distribution with 21 degrees of freedom, we reject the null hypothesis that Ì†µÌ∞ª0: Ì†µÌªø = 0. This provides evidence that the estimated difference-in-differences coefficient is statistically significant at a 5% level against the two-sided alternative. This suggests that there is a statistically significant difference in unemployment between AI-exposed and non-AI-exposed sectors after November 2022, conditional on sector fixed effects, time fixed effects and a time-varying control. Comparing this to the conventional normal approximation, which uses a critical value of 1.96, the small-
+25
+
+cluster adjustment raises the threshold to which the t-statistic is compared. This reduces the risk of a Type I error, which is the risk of falsely rejecting the null hypothesis when it is actually true (Wooldridge, 2019), avoiding spurious claims of statistical significance.
+8. Validation of the empirical framework and robustness checks
+8.1 Parallel trends assumption The key identifying assumption in a difference-in-differences model is the parallel trends assumption (Angrist & Pischke, 2009, 2014; Cunningham, 2021), meaning that the trends in unemployment would have evolved similarly in both the highly AI-exposed sectors and less AI-exposed sectors in the absence of generative AI. A visual comparison between the two groups is graphed in figure 1.
+Figure 1. Parallel trends in mean unemployment per sector and group between Ai-exposed and non-AI-exposed occupational sectors. The dashed black line indicates November 2022. Source: Authors‚Äô calculations.
+Leading up to November 2022, the AI-exposed and non-AI-exposed groups evolve similarly in parallel, giving visual support for the parallel trends assumption. After November 2022, the vertical black dashed line, highlights the point of origin for generative AI and following from there, a gradual steeper increase in unemployment follows the group with high AI-exposure
+26
+
+relative to the non-AI-exposed group. To try and better visualize the effect of interest, that is, the effect of generative AI on unemployment, figure 2 graphs the counterfactual outcome for the AI-exposed sectors, suggesting how unemployment would have evolved in the group of occupational sectors that is AI-exposed, in the absence of generative AI. In appendix, figures 11 and 12 displays the plotted figures of parallel trends using logs instead of levels, aimed at better capturing differences in changes rather then levels (Angrist & Pischke, 2014).
+
+Figure 2. Parallel trends in mean unemployment per sector-group with the additional dashed green line indicating the counterfactual outcome of AI-exposed sectors, suggesting the development in mean unemployment of AIexposed sectors in the absence of generative AI. The dashed black line indicates November 2022. Source: Authors‚Äô calculations.
+
+The parallel trends are formally plotted as: For group Ì†µÌ±î ‚àà {non-AI-exp, AI-exposed} and month Ì†µÌ±°, Ì†µÌ±ñ index occupational sectors, Ì†µÌ±° index months, Ì†µÌ±àÌ†µÌ±ñÌ†µÌ±° is the number of unemployed individuals in occupational sector Ì†µÌ±ñ at time Ì†µÌ±°,
+
+Ì†µÌ∞∫Ì†µÌ±ñ
+
+denotes
+
+occupational
+
+sector
+
+Ì†µÌ±ñ¬¥s
+
+group
+
+so
+
+that:
+
+Ì†µÌ∞∫Ì†µÌ±ñ
+
+=
+
+{
+
+1 0
+
+if if
+
+sector sector
+
+Ì†µÌ±ñ Ì†µÌ±ñ
+
+is is
+
+AI-exposed non-AI-exposed
+
+Ì†µÃÖÌ±àÌ†µÌ±îÌ†µÌ±°
+
+=
+
+‚àëÌ†µÌ±ñ Ì†µÌ±àÌ†µÌ±ñÌ†µÌ±°1{Ì†µÌ∞∫Ì†µÌ±ñ = Ì†µÌ±î} ‚àëÌ†µÌ±ñ 1{Ì†µÌ∞∫Ì†µÌ±ñ = Ì†µÌ±î}
+
+,
+
+Ì†µÌ±î ‚àà {0, 1}
+
+This produces the cross-sectional average unemployment per sector in group Ì†µÌ±î at month Ì†µÌ±°. 27
+
+8.2 Event Study To further assess the parallel trends assumption, a pre-November 2022 event study is created, inspired by Angrist & Pischke (2009) and Cunningham (2021). The event study plots the coefficients from the Difference-in-differences framework described in section 5.2 so that each blue point in figure 3 corresponds to an estimate of unemployment between AI-exposed and non-AI-exposed sectors at all months prior to the launch of ChatGPT, making October 2022 the baseline reference for comparison. Formally, each dot is an estimate of Ì†µÃÇÌªΩÌ†µÌ±ò from: Ì†µÌªΩÌ†µÌ±ò = [Ì†µÌ∞∏(Ì†µÌ±àÌ†µÌ±ñÌ†µÌ±°|Ì†µÌ∞¥Ì†µÌ∞ºÌ†µÌ±íÌ†µÌ±•Ì†µÌ±ùÌ†µÌ±ñ = 1, Ì†µÌºèÌ†µÌ±° = Ì†µÌ±ò) ‚àí Ì†µÌ∞∏(Ì†µÌ±àÌ†µÌ±ñÌ†µÌ±°|Ì†µÌ∞¥Ì†µÌ∞ºÌ†µÌ±íÌ†µÌ±•Ì†µÌ±ùÌ†µÌ±ñ = 0, Ì†µÌºèÌ†µÌ±° = Ì†µÌ±ò) ‚àí Ì†µÌ∞∏(Ì†µÌ±àÌ†µÌ±ñÌ†µÌ±°|Ì†µÌ∞¥Ì†µÌ∞ºÌ†µÌ±íÌ†µÌ±•Ì†µÌ±ùÌ†µÌ±ñ = 1, Ì†µÌºèÌ†µÌ±° = ‚àí1) ‚àí Ì†µÌ∞∏(Ì†µÌ±àÌ†µÌ±ñÌ†µÌ±°|Ì†µÌ∞¥Ì†µÌ∞ºÌ†µÌ±íÌ†µÌ±•Ì†µÌ±ùÌ†µÌ±ñ = 0, Ì†µÌºèÌ†µÌ±° = ‚àí1)], where: Ì†µÌ±àÌ†µÌ±ñÌ†µÌ±° is the number of unemployed individuals in occupational sector Ì†µÌ±ñ at time Ì†µÌ±°, Ì†µÌºèÌ†µÌ±° is the time relative to the reference period which occurs at one month prior to the release of ChatGPT, October 2022, so that all estimated coefficients are differences in the unemployment gap between sectors with high and low AI exposure relative to this period.
+Figure 3. Event study of the parallel trends in unemployment between sector groups that are AI-exposed and non-AI-exposed, all months leading up to the release of ChatGPT. Source: Authors‚Äô calculations.
+28
+
+The vertical blue lines in figure 3 display the 95% confidence intervals calculated from: Ì†µÃÇÌªΩÌ†µÌ±ò ¬± 1.96 ‚àó Ì†µÌ±ÜÌ†µÌ∞∏(Ì†µÃÇÌªΩÌ†µÌ±ò), clustering standard errors on sector level to account for within-sector correlation. The graphical inspection shows that coefficients fluctuate around zero, and confidence intervals grow further away from the reference period, reflecting less precision in estimates further away from the reference period, but taken together with no systematic trend in the coefficients, it suggests some support for the parallel trends assumption. Figure 4 displays a dynamic event study of all periods where pre-November 2022 coefficients provide a visual check of the parallel trends assumption already assessed in closer detail in figure 3, while post-November 2022 coefficients capture the dynamics of the changes in unemployment in AI-exposed occupational sectors relative to non-AI-exposed occupational sectors. Confidence intervals are again calculated using sector-clustered standard errors to account for within-sector correlation.
+Figure 4. Event study displaying how the difference in unemployment evolves over all observed time periods. The gradual deviation from the baseline suggests higher unemployment in sectors with high exposure to AI relative to sectors with low exposure to AI. Source: Authors‚Äô calculations.
+29
+
+8.3 Selection bias and potential outcomes
+
+Following what is briefly described in section 4.4 and extended is the problem of selection bias and a further assessment of the parallel trends assumption. Selection bias occurs when the
+comparability between the two groups chosen, in this case the AI-exposed and non-AIexposed occupational sectors, differ in ways that matter to the potential outcome of interest
+(Angrist & Pischke, 2009; Cunningham, 2021). To formally look at what selection bias implies, the selection bias-framework by Cunningham (2021) is used but remodelled to fit the
+empirical framework, described in detail in section 5.2. The difference-in-differences estimator from this framework, Ì†µÃÇÌªøÌ†µÌ∞∑Ì†µÌ±ñÌ†µÌ∞∑, can be decomposed as:
+Ì†µÃÇÌªøÌ†µÌ∞∑Ì†µÌ±ñÌ†µÌ∞∑ = ‚èüÌ†µÌ∞∏[ Ì†µÌ±åÌ†µÌ∞¥Ì†µÌ∞º(1) ‚àí Ì†µÌ±åÌ†µÌ∞¥Ì†µÌ∞º(0) ‚à£ Ì†µÌ±ÉÌ†µÌ±úÌ†µÌ±†Ì†µÌ±° ] +
+Ì†µÌ∞¥Ì†µÌ±áÌ†µÌ±á
+‚èü(Ì†µÌ∞∏[Ì†µÌ±åÌ†µÌ∞¥Ì†µÌ∞º(0) ‚à£ Ì†µÌ±ÉÌ†µÌ±úÌ†µÌ±†t] ‚àí Ì†µÌ∞∏[Ì†µÌ±åÌ†µÌ∞¥Ì†µÌ∞º(0) ‚à£ Ì†µÌ±ÉÌ†µÌ±üÌ†µÌ±í]) ‚àí (Ì†µÌ∞∏[Ì†µÌ±åÌ†µÌ±õÌ†µÌ±úÌ†µÌ±õÌ†µÌ∞¥Ì†µÌ∞º(0) ‚à£ Ì†µÌ±ÉÌ†µÌ±úÌ†µÌ±†Ì†µÌ±°] ‚àí Ì†µÌ∞∏[Ì†µÌ±åÌ†µÌ±õÌ†µÌ±úÌ†µÌ±õÌ†µÌ∞¥Ì†µÌ∞º(0) ‚à£ Ì†µÌ±ÉÌ†µÌ±üÌ†µÌ±í])
+Ì†µÌ±ÅÌ†µÌ±úÌ†µÌ±õ‚àíÌ†µÌ±ùÌ†µÌ±éÌ†µÌ±üÌ†µÌ±éÌ†µÌ±ôÌ†µÌ±ôÌ†µÌ±íÌ†µÌ±ô Ì†µÌ±°Ì†µÌ±üÌ†µÌ±íÌ†µÌ±õÌ†µÌ±ëÌ†µÌ±† Ì†µÌ±èÌ†µÌ±ñÌ†µÌ±éÌ†µÌ±†
+
+Where ATT formally is the average treatment effect on the treated (Cunningham, 2021), which translates to the average causal effect of generative AI exposure on AI-exposed sectors. The second term, non-parallel trends bias, indicates that if the parallel trends assumption hold, this term equals zero and thus, the causal effect of interest is captured entirely by the Ì†µÃÇÌªøÌ†µÌ∞∑Ì†µÌ±ñÌ†µÌ∞∑estimator (Cunningham, 2021). To uncover if there exists any selection bias, the term Ì†µÌ∞∏[Ì†µÌ±åÌ†µÌ∞¥Ì†µÌ∞º(0)|Ì†µÌ±ÉÌ†µÌ±úÌ†µÌ±†Ì†µÌ±°] is problematic since this is the counterfactual outcome of AI-exposed sectors post November 2022, had they not been exposed by generative AI, and thus cannot be directly observed. An illustration of all the potential outcomes at hand in the difference-in-differences model is shown in table 7.
+
+Table 7. Potential outcomes in the 2x2 difference-in-differences design.
+
+Occupational sector AI-exposed (observed) AI-exposed (unobserved) Non-AI-exposed (observed)
+
+Pre Ì†µÌ∞∏ [Ì†µÌ±åÌ†µÌ∞¥Ì†µÌ∞º (0)]
+Ì†µÌ∞∏ [Ì†µÌ±åÌ†µÌ±õÌ†µÌ±úÌ†µÌ±õÌ†µÌ∞¥Ì†µÌ∞º (0)
+
+Post
+Ì†µÌ∞∏ [Ì†µÌ±åÌ†µÌ∞¥Ì†µÌ∞º (1)] Ì†µÌ∞∏ [Ì†µÌ±åÌ†µÌ∞¥Ì†µÌ∞º (0)] Ì†µÌ∞∏ [Ì†µÌ±åÌ†µÌ±õÌ†µÌ±úÌ†µÌ±õÌ†µÌ∞¥Ì†µÌ∞º (0)]
+
+Counterfactual ‚àö
+
+Note: Information given in the parentheses informs if the sectors were (0) not exposed and (1) exposed to generative AI. Source: Authors‚Äô own illustrations.
+In fact, there are two counterfactual outcomes given this design of the difference-indifferences model, but the hypothetical counterfactual that is not affecting the outcome of the Ì†µÃÇÌªøÌ†µÌ∞∑Ì†µÌ±ñÌ†µÌ∞∑-estimator is the notion of what would have happened to the non-AI-exposed sectors if
+
+30
+
+they had been exposed to generative AI. Conceptually, selection bias is particularly relevant in this setting because AI-exposed sectors are likely inherently different from non-AI-exposed sectors in ways that may affect unemployment independently of generative AI. These sectors may for example be more likely to adopt digital technologies, accelerate automation, and respond more rapidly to structural shifts in post-COVID digitalization trends. If such differences in underlying dynamics are not fully accounted for, the observed post-November 2022 differences in average unemployment could reflect pre-existing sectoral trends rather than the causal effect of generative AI. The difference-in-differences design may mitigate this concern by comparing changes over time within sectors, but the validity of the estimates still hinges on the parallel trends assumption (Angrist & Pischke, 2009; Cunningham, 2021), that in the absence of generative AI, AI-exposed and non-AI-exposed sectors would have experienced similar unemployment trends.
+8.4 Weighting
+The baseline difference-in-differences specification in section 5.2 is estimated by ordinary least squares, assigning equal weight to each sector‚Äìtime observation. Consequently, the estimated Ì†µÃÇÌªø-coefficient identifies the average treatment effect across occupational sectors rather than across the individuals represented in those sectors, as differences in sector size are not accounted for in the estimation. Larger and smaller sectors therefore contribute equally to the identifying variation. This approach may yield a valid average sector estimand, but it does not account for heterogeneity in sector size, which may be relevant for how the average individual in each sector is affected. Angrist and Pischke (2014) and Stock and Watson (2020) emphasize that the weighted least squares estimator is more efficient than ordinary least squares only under restrictive conditions, most importantly when the conditional variance of the error term is known or correctly specified (Stock & Watson, 2020). In practice, this requires to correctly model the heteroskedastic structure of the error term and use weights proportional to the inverse of the conditional error variance (Stock & Watson, 2020). In difference-in-differences settings however, treatment occurs at group level and outcomes are observed repeatedly over time, making the error structure both heteroskedastic and serially correlated in ways that are difficult to model. Also, the introduction of generative AI in November 2022 may itself alter the variance of outcomes across groups and over time. Under these conditions, weighting by outcome levels in unemployment are unlikely to correspond to
+31
+
+the true conditional variance function. As a result, weighted least squares does not generally deliver efficiency gains and may perform worse than unweighted ordinary least squares (Angrist & Pischke, 2014), but for the purpose of at least considering the difference, the regression output from using weighted least squares is shown in table 8, in the appendix. Interpreting the results from this table implies that larger occupational sectors experienced smaller average post-November 2022 differences in unemployment compared to smaller occupational sectors, holding everything else constant. Weighting the regression by sector size can be interpreted as approximating the average effect across workers rather than across sectors (Angrist & Pischke, 2014). Keeping inference at sector level, the model specification compares changes at group level between those that are more AI-exposed compared to those that are non-AI-exposed after November 2022. . Tabulated values for each occupational sector is provided in the appendix, table 10.
+9. Conclusion
+This study set out to examine whether the rapid developments in generative artificial intelligence, started off by the public release of ChatGPT in November 2022, is associated with changes in unemployment outcomes across occupational sectors in Sweden. The main empirical finding is that unemployment increased more on average in occupational sectors that were highly exposed to generative AI relative to less exposed after November 2022, but the results ought to be interpreted with caution. The empirical design implies a sharp posttreatment indicator that treats the public release of ChatGPT in November 2022 as a technological shock when actual adoption is plausible to be gradual and heterogeneous across occupational sectors (Agrawal et al., 2019), implying that the estimates may capture short term adjustments in unemployment across sectors rather than the causal effect of adoption itself. Exposure to generative AI across occupational sectors is measured using a binary taskbased indicator that classifies occupations as either highly or weakly exposed based on previous literature and does not account for within-occupational sector differences and might thus overstate the average effect of generative AI on unemployment as it is empirically designed. Adding weights to each occupational sector indicates that the average effect from generative AI on unemployment is lowered and renders the difference-in-differences estimator insignificant but given the structure of the data, Stock & Watson (2020) and Angrist & Pischke (2009) warns about its unreliability. Inference is made using 22 occupational sectors
+32
+
+as the clustering unit. The limited number of clusters may also affect the reliability of the cluster-robust inference (Angrist & Pischke, 2009, 2014), despite taking cautious steps to avoid over stating statistical significance. The empirical framework all together relies heavily on the parallel trends assumption, which cannot be stressed enough according to Angrist & Pischke (2009, 2014) and Cunningham (2021), and cannot be tested entirely since the counterfactual outcome of what would have happened to the AI exposed occupational sectors, had they not been exposed to generative AI is ambiguous. All that being said, this study with this set of definitions on AI exposure across these 22 occupational sectors using previously stated controls, we find that occupational sectors that are more exposed to generative AI were associated with a higher average unemployment relative to those that are less exposed to generative AI after November 2022, with statistical significance at a 5% level using a twosided hypothesis test with 21 degrees of freedom. This does not imply that generative AI unanimously affects unemployment in these sectors altogether, but it highlights that the transition may be uneven and disruptive, reinforcing the need for continuous empirical monitoring and policy frameworks that support knowledge of rapid technological change, as is mentioned in almost all previous research in this study. These findings contribute to the literature on artificial intelligence and labor markets by providing post-2022 insights from the Swedish labor market. Prior studies using pre-2022 data generally find limited or no aggregated negative unemployment effects of AI adoption, both internationally (Acemoglu et al., 2022; Felten et al., 2021) and in Sweden specifically (Lodefalk et al., 2024). In contrast, recent evidence from Hui, Reshef & Zhou (2024) suggests that generative AI may have immediate adverse effects on unemployment and earnings in exposed tasks. The results of this study are suggestive of the latter findings, that generative AI may generate short-run labormarket disruptions that were not fully captured in earlier analyses of narrower or less capable AI technologies. In the long run, productivity gains and task reallocation may offset or reverse these effects, a possibility also emphasized by Agrawal, Gans & Goldfarb (2019) and Lodefalk (2024). These findings could also point to several directions for future research. An important direction is to potentially move beyond sector-level data and study individual workers or firms. This would help to better understand whether the observed effects reflect actual job losses or rather changes in task composition within existing jobs. Future work could also use more direct measures of AI adoption, such as firms-level usage of generative AI tools instead of relying on exposure proxies based on task characterizes. Finally, as generative AI adoption becomes more widespread, longer observation periods should be studied in order to fully assess whether the short-run labor market disruptions documented here are followed by
+33
+
+reallocation and employment growth in new tasks and occupations. Given the limitations of our short post-treatment period and aggregate focus, these extensions would provide a more comprehensive understanding of generative AIs evolving
+34
+
+10. References
+Acemoglu, D., Autor, D., Hazell, J. and Restrepo, P. (2022). Artificial intelligence and jobs: Evidence from online vacancies. Journal of Labor Economics, 40(S1), pp. S5‚Äì40.
+Acemoglu, D. and Restrepo, P. (2019). The Wrong Kind of AI? Artificial Intelligence and the Future of Labor Demand. NBER Working Paper No. 25682.
+Agrawal, A., Gans, J.S. and Goldfarb, A. (2019). Artificial Intelligence: The Ambiguous Labor Market Impact of Automating Prediction. NBER Working Paper No. 25619.
+Alekseeva, L., Azar, J., Gin√©, M., Samila, S. and Taska, B., 2021. The demand for AI skills in the labor market. Labour Economics, 71, p.102002.
+Angrist, J.D. & Pischke, J.S., 2014. Mastering ¬¥metrics: The path from cause to effect.
+Angrist, J.D. & Pischke, J.S., 2009. Mostly harmless econometrics: An empiricist's companion.
+Arbetsf√∂rmedlingen. Tidigare statistik, tidsserier. Available at: AF [2026-01-01]
+Brynjolfsson, E., Li, D. and Raymond, L.R. (2023). Generative AI at work. NBER Working Paper No. 31161. National Bureau of Economic Research.
+Brynjolfsson, E. & Mitchell, T. (2017). What can machine learning do? Workforce implications, Science, 358(6370), pp. 1530‚Äì1534.
+35
+
+Cerulli, G. & Ventura, M. (2019). Estimation of pre- and posttreatment average treatment effects with binary time-varying treatment using Stata. The Stata Journal, 19(3), pp. 551‚Äì565.
+Cunningham, S. (2021). Causal inference: The mixtape.
+Greene, William H. (2018) Econometric analysis, 8th edition.
+Engberg, E., Koch, M., Lodefalk, M. & Schroeder, S. (2025). Artificial intelligence, tasks, skills, and wages: Worker-level evidence from Germany. Research policy, 2025-10, Vol.54 (8), p.105285, Article 105285.
+Felten, E., Raj, M. & Seamans, R. 2021. Occupational, industry, and geographic exposure to artificial intelligence: A novel dataset and its potential uses. Strategic Management Journal 42. pp. 2195‚Äì2217.
+Feuerriegel, S., Hartmann, J., Janiesch, C. and Zschech, P. (2024). Generative AI. Business & Information Systems Engineering, 66(1), pp. 111‚Äì126.
+Filippucci, F., Gal, P., Laengle, K. and Schief, M. (2025). Macroeconomic productivity gains from artificial intelligence in G7 economies. OECD Artificial Intelligence Papers, No. 41.
+Gao, X. and Feng, H. (2023). AI-driven productivity gains: Artificial intelligence and firm productivity, Sustainability, 15(11), p. 8934.
+Georgieff, A. & Hyee, R. (2022). Artificial Intelligence and Employment: New Cross-Country Evidence. Front. Artif. Intell. 5:832736.
+36
+
+Ghaseminejad Raeini, M. (2025). The evolution of language models: From N-Grams to LLMs, and beyond. Natural Language Processing Journal, 12, article 100168.
+Hui, X. Reshef, O. Zhou, L. (2024) The Short-Term Effects of Generative Artificial Intelligence on Employment: Evidence from an Online Labor Market. Organization science Vol.35 (6), p.1977-1989.
+Lodefalk, M. Engberg, E. Hellsten, M. Javed, F. Sabolov√°, R. Schroeder, S. Tang, A. (2024). Artificial intelligence, hiring and employment: job postings evidence from Sweden. Applied economics letters, 2025, p.1-6.
+Lodefalk, M. (2024). Artificiell intelligens och jobben.
+Misch, F., Park, B., Pizzinelli, C. and Sher, G. (2025). AI and productivity in Europe. IMF Working Paper. Washington, DC: International Monetary Fund.
+Mutascu, M. and Hegerty, S.W. (2023). Predicting the contribution of artificial intelligence to unemployment rates: an artificial neural network approach, Journal of Economics and Finance, 47. pp. 400‚Äì416.
+Nigar, M., Juli, J.F., Golder, U., Alam, M.J. and Hossain, M.K. (2025). Artificial intelligence and technological unemployment: Understanding trends, technology's adverse roles, and current mitigation guidelines. Journal of Open Innovation, 11(3), p. 100607.
+Pissarides, C.A. (2000). Equilibrium unemployment theory. 2nd ed.
+Tillv√§xtverket. (2021). Vad s√§ger 6,7 miljoner jobbannonser om framtidens arbetsmarknad? Textanalys av jobbannonser i Platsbanken 2006‚Äì2020. Rapport 2021:2.
+37
+
+Stock, James H. & Watson, Mark W. (2020) Introduction to Econometrics, 4th edition. Wang, H. (2024). Decoding herding dynamics in the generative AI investment amid key technological advancements: A timeline perspective. Finance Research Letters, 64, Article 105432. Wooldridge, J.M., 2019. Introductory Econometrics: A Modern Approach. 7th ed. Cengage Learning. Wooldridge, J.M., 2023. Simple approaches to nonlinear difference-in-differences with panel data. The econometrics journal, 2023-09, Vol.26 (3), p.C31-C66.
+38
+
+11. Appendix
+
+Table 8. Difference-in-differences regressions (1) unweighted and (2) weighted.
+
+(1)
+
+(2)
+
+Outcome variable
+
+Unemployment
+
+Unemployment
+
+AI exposure x Post
+
+1930.431*
+
+1554.830
+
+(904.473)
+
+(1409.448)
+
+Lagged vacancies
+
+-0.064
+
+-0.072
+
+(0.059)
+
+(0.067)
+
+Constant
+
+16335.630***
+
+25541.260***
+
+(405.709)
+
+(652.608)
+
+Observations
+
+1254
+
+1254
+
+R-squared
+
+0.981
+
+0.976
+
+Sector fixed effects
+
+Yes
+
+Yes
+
+Time fixed effects
+
+Yes
+
+Yes
+
+Adj. R-squared
+
+0.979
+
+0.974
+
+F-statistic
+
+3.800
+
+1.840
+
+Note: Cluster robust standard errors in parentheses, * p<0.05, ** p<0.01, *** p<0.001. Source: Authors‚Äô calculations.
+
+Table 9. Difference-in-differences regressions (1) levels and (2) logs excluding undefined
+
+(1)
+
+(2)
+
+Outcome variable
+
+Unemployment
+
+Unemployment
+
+AI exposure x Post
+
+1545.015
+
+0.149***
+
+(842.630)
+
+(0.049)
+
+Lagged vacancies
+
+-0.060
+
+-0.017
+
+(0.055)
+
+(0.034)
+
+Constant
+
+16132.730***
+
+9.301***
+
+(407.609)
+
+(0.272)
+
+Observations
+
+1197
+
+1197
+
+R-squared
+
+0.985
+
+0.996
+
+Sector fixed effects
+
+Yes
+
+Yes
+
+Time fixed effects
+
+Yes
+
+Yes
+
+Adj. R-squared
+
+0.984
+
+0.995
+
+F-statistic
+
+3.400
+
+5.740
+
+Note: Cluster robust standard errors in parentheses, * p<0.05, ** p<0.01, *** p<0.001. Source: Authors‚Äô calculations.
+
+39
+
+Table 10: Tabulated statistics of sector sizes
+
+Sector
+
+Min
+
+Admin, Econ & Law 24270
+
+Beauty care
+
+4180
+
+Sanitation
+
+22959
+
+Construction
+
+11258
+
+Craft
+
+4680
+
+Culture
+
+5984
+
+Data/IT
+
+7320
+
+Healthcare
+
+18971
+
+Hotel & Restaurants 30553
+
+Installation
+
+14891
+
+Managers & Execs
+
+6119
+
+Manufacturing
+
+15968
+
+Military
+
+88
+
+Natural resources
+
+7665
+
+Natural science
+
+2131
+
+Pedagogical
+
+13706
+
+Safety
+
+1468
+
+Sales & Marketing
+
+40282
+
+Social
+
+24743
+
+Technical
+
+5169
+
+Transport
+
+27606
+
+Undefined
+
+15697
+
+Source: Authors‚Äô calculations.
+
+Max
+34702 6493 29464 21564 7181 9499 15028 26124 47986 24427 11194 25364
+208 13488 3249 20215 2363 59430 33268 8716 41452 29100
+
+Median
+27773.5 4637.5
+24535.5 15126.5
+5328.5 7267 9538 21038 33024 16489
+8172.5 18343.5
+120 9427.5
+2461 15263.5
+1723.5 45594 26753 6482.5 32491.5 21028
+
+Mean
+28344.121 4952.793
+25148 16014.052 5495.017 7236.276 10171.914 21369.034 34711.155 17398.328 8197.655 18664.397
+127.328 9375.828 2537.431 15747.724 1759.534 46171.224 27519.052 6636.276 32504.707 21902.517
+
+Figure 5. Trends in unemployment and vacancies over all measured months for 3 out of 7 AI-exposed occupational sectors. The left axis is the number of unemployed individuals and right axis is the number of vacancies. The black dashed line indicates the launch of ChatGPT in November 2022. Source: Authors‚Äô calculations.
+40
+
+Figure 6. Trends in unemployment and vacancies over all measured months for 4 out of 7 AI-exposed occupational sectors. The left axis is the number of unemployed individuals and right axis is the number of vacancies. The black dashed line indicates the launch of ChatGPT in November 2022. Source: Authors‚Äô calculations.
+Figure7. Trends in unemployment and vacancies over all measured months for 4 out of 15 non-AI-exposed occupational sectors. The left axis is the number of unemployed individuals and right axis is the number of vacancies. The black dashed line indicates the launch of ChatGPT in November 2022. Source: Authors‚Äô calculations.
+41
+
+Figure 8. Trends in unemployment and vacancies over all measured months for 4 out of 15 non-AI-exposed occupational sectors. The left axis is the number of unemployed individuals and right axis is the number of vacancies. The black dashed line indicates the launch of ChatGPT in November 2022. Source: Authors‚Äô calculations.
+Figure 9. Trends in unemployment and vacancies over all measured months for 4 out of 15 non-AI-exposed occupational sectors. The left axis is the number of unemployed individuals and right axis is the number of vacancies. The black dashed line indicates the launch of ChatGPT in November 2022. Source: Authors‚Äô calculations.
+42
+
+Figure 10. Trends in unemployment and vacancies over all measured months for the last 3 out of 15 non-AIexposed occupational sectors. The left axis is the number of unemployed individuals and right axis is the number of vacancies. The black dashed line indicates the launch of ChatGPT in November 2022. Source: Authors‚Äô calculations.
+Figure 11. Parallel trends in mean log unemployment across sectors by group, for AI-exposed and non-AIexposed sectors. The dashed black line indicates November 2022. Source: Authors‚Äô calculations.
+43
+
+Figure 12. Parallel trends in mean log unemployment across sectors by group, for AI-exposed and non-AIexposed sectors. The counterfactual outcome represents the notion of how unemployment would have evolved across AI-exposed occupational sectors, had they not been exposed to generative AI. The dashed black line indicates November 2022. Source: Authors‚Äô calculations
+44
+
+Use of generative AI
+Generative AI model used: OpenAI ChatGPT 5.2. Prompts: - ‚ÄúThis is a working paper from IMF: AI and Productivity in Europe Florian Misch; Ben Park; Carlo Pizzinelli; Galen Sher 2025. Make it a harvard style reference‚Äù - ‚ÄúCan you make this a harvard style reference? Artikel AI-Driven Productivity Gains: Artificial Intelligence and Firm Productivity Gao, Xueyuan ; Feng, Hua Sustainability, 202306, Vol.15 (11), p.8934, Article 8934‚Äù - ‚ÄúCan you make this a harvard style reference? Artikel The evolution of language models: From N-Grams to LLMs, and beyond Ghaseminejad Raeini, Mohammad Natural Language Processing Journal, 2025-09, Vol.12, p.100168, Article 100168‚Äù - ‚ÄúAnd this book: Equilibrium unemployment theory. Pissarides, Christopher A. 2000‚Äù - ‚ÄúCan you correct the English grammar and spelling mistakes in this paragraph without changing its meaning or structure?‚Äù
+45
+
+

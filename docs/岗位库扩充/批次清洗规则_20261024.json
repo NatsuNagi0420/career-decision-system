@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "archive_sha256": "913e07115dfe789cdad29a50aba097de1c8d9fb0919bec733e9acf96a5a6c7ca",
+  "review_status": "needs_human_review",
+  "note": "本地Agent基于包内原文的保守分类和隔离建议，不表示人工审核，也不改变雇主原文。",
+  "company_aliases": {
+    "Caterpillar": "Caterpillar Inc."
+  },
+  "entries": [
+    {
+      "source_url": "https://careers.ti.com/zh-CN/sites/CX/job/25016927/",
+      "expected_title": "2027校招- 模拟IC测试工程师 / Test Engineer",
+      "expected_jd_sha256": "3a0778e4939dd0a0e8c18b361147c1b00e85c5bf5e70834b57e730eb5136af3a",
+      "action": "reclassify",
+      "direction_codes": [
+        "hardware-electronics"
+      ],
+      "flags": [
+        "industry_specific"
+      ],
+      "note": "模拟IC产品测试与制造验证，不等同于软件质量测试。"
+    },
+    {
+      "source_url": "https://irootech.zhiye.com/campus/detail?jobAdId=bb5502bf-0672-4b14-a06f-83439fea561a",
+      "expected_title": "【2027届校招】可靠性测试工程师(J13666)",
+      "expected_jd_sha256": "947f17a3e4175771d8f20abef1fb727cf1d409cef946996cd74bfcc79e5eff72",
+      "action": "reclassify",
+      "direction_codes": [
+        "industrial-engineering"
+      ],
+      "flags": [
+        "industry_specific"
+      ],
+      "note": "叉车/工程机械可靠性试验，与软件测试主路径分开。"
+    },
+    {
+      "source_url": "https://whxmc.zhiye.com/campus/detail?jobAdId=64430dcb-1ae4-4677-96e8-461c600210da",
+      "expected_title": "2027届-XMC-研发产品测试工程师(J11651)",
+      "expected_jd_sha256": "09767796e312e907d559baf659b38205711957d72d19ed8ed605d7a24c6f76e2",
+      "action": "reclassify",
+      "direction_codes": [
+        "hardware-electronics"
+      ],
+      "flags": [
+        "industry_specific"
+      ],
+      "note": "CP/FT量产测试与测试硬件，转入硬件电子方向。"
+    },
+    {
+      "source_url": "https://career.hebut.edu.cn/correcruit/content/id/81538.html",
+      "expected_title": "2027应届生-测试工程师",
+      "expected_jd_sha256": "a8b9b4f71fc26b4561e4323691ef3c20399bdc293b7a89401d42c88ae45c2e8c",
+      "action": "quarantine",
+      "direction_codes": [],
+      "flags": [
+        "direction_unresolved"
+      ],
+      "note": "正文未明确软件测试，电子/自动化产品测试方向待核对，暂不进入推荐检索。"
+    },
+    {
+      "source_url": "https://maxscend.zhiye.com/campus/detail?jobAdId=f1434037-0141-466c-bb90-106324592085",
+      "expected_title": "【27届校招】测试开发工程师",
+      "expected_jd_sha256": "57fbcf97329213b895cfa0289155c1ff53315b1ca9af270a756e9ea8e4c2681c",
+      "action": "reclassify",
+      "direction_codes": [
+        "hardware-electronics"
+      ],
+      "flags": [
+        "industry_specific"
+      ],
+      "note": "ATE平台、射频电路及量产导入为主，转入硬件电子方向。"
+    },
+    {
+      "source_url": "https://longsys.zhiye.com/campus/detail?jobAdId=ed323178-f65e-4147-a3b3-04291b1e5a5b",
+      "expected_title": "2027届-测试开发工程师（中山）(J11393)",
+      "expected_jd_sha256": "0a85e1bf972330e98c6e5e44323a32f610a86fa98c9efd4a2aab35fefc943ac2",
+      "action": "reclassify",
+      "direction_codes": [
+        "hardware-electronics"
+      ],
+      "flags": [
+        "industry_specific"
+      ],
+      "note": "存储产品与ATE测试为主；保留脚本开发要求，不把岗位等同于Web软件测试。"
+    },
+    {
+      "source_url": "https://careers.caterpillar.com/zh/%E8%81%8C%E4%BD%8D/r0000387379/2027%E6%A0%A1%E5%9B%AD%E6%8B%9B%E8%81%98-%E7%A0%94%E5%8F%91%E7%B1%BB-%E7%94%B5%E5%AD%90%E7%94%B5%E6%B0%94%E8%BD%AF%E4%BB%B6-%E6%B5%8B%E8%AF%95%E6%96%B9%E5%90%91/",
+      "expected_title": "噪声与振动测试工程师",
+      "expected_jd_sha256": "421f141db0677c6f0f2f4be3b0fb2f7db1bcb2e113aa428951e4cc8fe21e3d9c",
+      "action": "reclassify",
+      "direction_codes": [
+        "industrial-engineering"
+      ],
+      "flags": [
+        "industry_specific"
+      ],
+      "note": "NVH噪声振动测试，机械/声学要求为主。"
+    },
+    {
+      "source_url": "https://jpmc.fa.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1002/job/210761734",
+      "expected_title": "2027 China Seasonal Internship Program - Research & Analytics",
+      "expected_jd_sha256": "913ee45fa6f68fdaa71564687b27685ddb2d885034ba4d3dcf76d5ae94da5f62",
+      "action": "reclassify",
+      "direction_codes": [
+        "consulting-research"
+      ],
+      "flags": [
+        "industry_specific"
+      ],
+      "note": "投行行业研究、估值与资本市场分析，不能直接等同于技术数据分析。"
+    },
+    {
+      "source_url": "https://careers.sap.com/job/Shanghai-SAP-China-iXp-Intern-Compliance-DSA-Analyst-Shanghai-200040/1432190233/",
+      "expected_title": "SAP China iXp Intern - Compliance DSA Analyst - Shanghai",
+      "expected_jd_sha256": "a38a96b21374f962a06a7280788f32e72ce79fffbce0854a049c5cbf8f20ccc8",
+      "action": "reclassify",
+      "direction_codes": [
+        "legal-compliance"
+      ],
+      "flags": [
+        "industry_specific"
+      ],
+      "note": "合规调查及尽职审查为主，不仅因Analyst标题归入技术数据分析。"
+    },
+    {
+      "source_url": "https://job.tiangong.edu.cn/correcruit/content/id/55561.html",
+      "expected_title": "前端开发实习生",
+      "expected_jd_sha256": "26caa67d81e28fc892bb465fecd6b15142f441a724232a775617124d8d717dff",
+      "action": "flag",
+      "direction_codes": null,
+      "flags": [
+        "field_conflict"
+      ],
+      "note": "页面薪资字段与正文薪资口径不同；保留两边原文，不换算不择一。"
+    },
+    {
+      "source_url": "https://www.yingjiesheng.com/job-008-057-423.html",
+      "expected_title": "2027招聘Java开发工程师",
+      "expected_jd_sha256": "15923893430ef89b2a6f10f86605efd5ccd87d4a7a0ee2bab55f6e201c05eec2",
+      "action": "flag",
+      "direction_codes": null,
+      "flags": [
+        "field_conflict"
+      ],
+      "note": "页面两处日期不同；保持发布日期未知，保留原文。"
+    },
+    {
+      "source_url": "http://www.yingjiesheng.com/job-008-105-421.html",
+      "expected_title": "数据分析实习生",
+      "expected_jd_sha256": "9c638c6c430df284ca0be0ba7aa0c0e11e03005afe7019586b48c4a80b9678a3",
+      "action": "flag",
+      "direction_codes": null,
+      "flags": [
+        "recruitment_type_uncertain"
+      ],
+      "note": "页面全职字段与实习要求需结合解释；保持招聘阶段unknown。"
+    }
+  ]
+}

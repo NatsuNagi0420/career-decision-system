@@ -377,6 +377,9 @@ function AgentTurn({
  * follow-up reads as a question she is actually asking, not a generated filler.
  */
 function FollowUps({ artifact, goal, onAsk }: { artifact: ArtifactEntry | null; goal: string | null; onAsk: (text: string) => void }) {
+  if (artifact && ["ResumeDraft", "JobMatchReport", "LearningPathDraft"].includes(artifact.artifact_type)) {
+    return null;
+  }
   const hints = ((artifact?.content as Record<string, unknown> | undefined)?.uncertainties ?? []) as unknown[];
   const picks = hints.filter((entry): entry is string => typeof entry === "string" && entry.length > 6).slice(0, 3);
   if (!picks.length) {

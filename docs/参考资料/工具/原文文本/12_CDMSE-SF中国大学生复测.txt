@@ -1,0 +1,630 @@
+Vol 14, Issue 5, (2024) E-ISSN: 2222-6990
+
+Revisiting Reliability and Validity of Career Decision-making Self-efficacy Short-form Scale
+among College Students in China
+
+Dan Linge1,2, Azlina Mohd Kosnin1
+1School of Education, Faculty of Social Sciences and Humanities,Universiti Teknologi Malaysia, Johor, Malaysia, 2School of Mathematical Sciences, Chongqing Normal University,
+Chongqing, China Corresponding Author Email: danlinge007@163.com
+
+To Link this Article: http://dx.doi.org/10.6007/IJARBSS/v14-i5/21556
+
+DOI:10.6007/IJARBSS/v14-i5/21556
+
+Published Date: 20 May 2024
+
+Abstract This study re-examined the reliability and validity of the Chinese version of the short form of career decision-making self-efficacy. This is because in the current complex world situation, college students' career decision-making self-efficacy is closely related to their career path choice and social and economic development. Previous research has shown that a number of psychologists and educators around the world have studied the career decision-making selfefficacy short form(CDMSE-SF), but significant differences have emerged. This study uses quantitative research methods to measure the CDMSE-SF in Chinese version among college students based on Bandura's self-efficacy theory and Crites' career maturity model as the theoretical framework. The sample is composed of year three or year four college students, 483 valid data points were divided into two samples. Sample 1 was subjected to item analysis, exploratory factor analysis, internal consistency reliability, and split-half reliability, while sample 2 was subjected to confirmatory factor analysis. The results showed that the original 25-item CDSES-SF was not supported by a sample of 280 Chinese university students (Sample 1). However, the modified CDSES-SF 13-item five-factor model fits the data well. Therefore, the revised CDSES-SF can be used to understand the career decision-making behavior of Chinese college students, and the research results can be applied to curriculum development and consulting services for college students’ career education to improve college students’ employability and confidence. Keywords: Career Decision-Making Self-Efficacy, Career Decision-Making Self-Efficacy Short Form (CDMSE-SF), Reliability, Validity, Chinese University Students
+Introduction According to Bandura (1977), individuals' evaluations of their abilities have a significant impact on their self-regulatory systems. This concept is known as self-efficacy, which
+
+1036
+
+INTERNATIONAL JOURNAL OF ACADEMIC RESEARCH IN BUSINESS AND SOCIAL SCIENCES
+Vol. 1 4 , No. 5, 2024, E-ISSN: 2 2 2 2 -6990 © 2024
+essentially refers to the belief that individuals have in their own ability to accomplish a task. A general sense of self-efficacy differs from a domain-specific sense of self-efficacy, as described by (Schwarzer & Jerusalem, 1995). In every aspect of an individual's life, a sense of self-efficacy is present, enabling the individual to organize their life rationally and effectively in all circumstances and allowing their behavior to be evaluated in any setting. In contrast, Ashton and Webb (1986) argue that self-efficacy varies widely across different domains, as it is a mental or emotional state experienced by the body when performing a specific task. Compared to general self-efficacy, domain-specific self-efficacy can more accurately predict people's cognitive abilities and behaviors in specific areas (Paunonen & Hong, 2010; Grether et al., 2018). Currently, domain-specific selfefficacy focuses on teacher self-efficacy (Moore & Esselman, 1992; White, 2009). Academic self-efficacy Khan (2023); Dogan (2015) and social self-efficacy (Connolly, 1989). Given the high level of interest in employment, there is an increasing emphasis on career decision selfefficacy (Reese & Miller, 2006; Chuanget et al., 2020).
+In 1983, Taylor and colleagues introduced the concept of career decision-making selfefficacy, drawing from Bandura's Self-Efficacy Theory and Career Maturity Theory. This concept refers to individuals' confidence in their ability to carry out the necessary tasks for making career decisions. They also developed the Career Decision-Making Self-Efficacy Scale (CDMSE-S), which encompasses self-assessment (SA), occupational information (OI), goal setting (GS), planning (PL), and problem solving (PS). The scale comprises 50 items, and participants were requested to assess their confidence in carrying out each task using a 10-point Likert scale. A condensed version of the Career Decision-Making Self-Efficacy Scale (CDMSE-S), called the CDMSE-SF, was created by Betz et al. in 1996. It consists of 25 items derived from the original scale and is rated on a 5-point Likert scale.
+A review of the reliability of CDMSE-S was published in a study by (Nilsson et al., 2002). They reviewed seven articles on the application of CDMSE-S and CDMSE-SF, as well as 41 published journal papers. The review revealed that the alpha reliability coefficients for CDMSE-S and CDMSE-SF ranged from 0.83 to 0.97.Additionally, using a university sample as an example, Betz and Voyten (1997) obtained internal reliability coefficients ranging from 0.69 to 0.83 for the CDMSE-SF subscales and an overall score coefficient of 0.93 for the CDMSE-S using a university sample. When Watson and Ellis (2001) examined a sample of university students from Africa, they found that the total score coefficient was 0.91, with only one subscale having an internal reliability of less than 0.70.
+Variations in the factor structure of the CDMSE-SF have been observed in cross-cultural settings, emphasizing the necessity for additional research. In Creed et al.'s study (2002), they examined the structural validity of the CDMSE-SF in 979 GIS students from South Africa and Australia who were unable to name five components. According to Creed et al (2002), 979 GIS students in Australia and South Africa completed the CDMSE-SF to assess its effectiveness. For each sample, three factors—information collection, decision-making, and problem-solving—were identified. When Demetris Chaney (2007) administered the CDMSESF to 220 African American college students, he discovered that, unlike the results primarily from white American participants, the sample supported a four-factor structure instead of a five-factor structure.
+Long (2003) translated Betz and Taylor's Career Decision-Making Self-Efficacy Scale (CDMSE-SF) into Mandarin for the first time and preserved the original 25 items for the Chinese version of the scale. The researchers used a sample of 419 year one to year four college students from two universities in Shanghai. The data was analyzed using
+1037
+
+INTERNATIONAL JOURNAL OF ACADEMIC RESEARCH IN BUSINESS AND SOCIAL SCIENCES
+Vol. 1 4 , No. 5, 2024, E-ISSN: 2 2 2 2 -6990 © 2024
+LISREL 8,50 software to conduct confirmatory factor analysis (CFA), which revealed that the five-factor model demonstrated a good fit.
+Long's (2003) questionnaire has been utilized in subsequent studies to assess the level of career decision-making self-efficacy among Chinese college students, although only a small number of studies have done so. For example, Cui (2017) examined the correlation between career decision-making self-efficacy and employability among medical college students. The results of 261 questionnaires showed an alpha coefficient of 0.81 for the scale. Similarly, Shi (2022) utilized the same scale in a study on career decision-making self-efficacy and employment stress, and found an overall internal consistency reliability of 0.832 for the scale. However, both studies only conducted an overall reliability test for the Long questionnaire and did not assess its validity.
+Hampton (2005) conducted another translation, but he did not include the Mandarintranslated questionnaire in the paper. The 256 Chinese university students in the study did not support the initial 25-item CDMES-SF, according to the report. The results of the principal axis factor (PAF) analysis of variance with maximum variance rotations were complex and uninterpretable. Ultimately, only the 13-item three-factor model was retained. The results of the CFA of the three-factor model on another sample group (157 university students) were favorable. However, Hampton's findings were not widely utilized in China. In summary, the cross-cultural tests of the CDMSE-SF have shown inconsistent results, with variations among Chinese college students. The literature review revealed that the most recent study on the reliability and factor structure of the CDMSE-SF in China was conducted in 2005. Given the economic changes and the impact of COVID-19, Chinese college students are now confronted with significant challenges in finding employment. These changes in the education and employment system have an impact on the assessment of occupational competence and the perceived self-efficacy in the decision-making process of choosing a career. Therefore, a more recent test is necessary.
+In addition, previous studies have focused on the entire group of college students. In China's university education and training, students face heavy coursework in the first two years, leaving them with limited opportunities to engage with the real employment environment (Jiang, 2020). It is only in their third year that college students have access to career guidance classes, internships related to their professional fields, and training in resume writing and interview guidance (Zhang, 2022). During their final year of college, most students need to balance completing their graduation thesis with searching for a job, unless they have been accepted into graduate school. This also means that if the study population includes all the years of the university, it may not accurately represent the average level of career decision-making self-efficacy. This is because students in the first two years of university may not often consider employment issues. This study aims to further validate and assess the reliability of the CDMSE-SF by specifically targeting senior students (year three and four) in Chinese universities.
+According to previous studies on Chinese college students conducted by CDMSESF, Long's version is widely used. However, no other researchers have conducted validity tests to support Long's claim of the 5-factor model. All studies have only reported the overall internal consistency of the scale. Hampton's translated version did not support the fivefactor model but instead proposed a three-factor model. Perhaps due to differences in translation. Since Long's version is more widely used in China, there is a need to revisit the validity and reliability of the scale based on the five-factor model.
+1038
+
+INTERNATIONAL JOURNAL OF ACADEMIC RESEARCH IN BUSINESS AND SOCIAL SCIENCES
+Vol. 1 4 , No. 5, 2024, E-ISSN: 2 2 2 2 -6990 © 2024
+Method Participants
+First, permission was obtained from a comprehensive university located in a mediumsized city in western China. And then, 10 classes attended by third- and fourth-year students at the university were selected, and a total of 510 online questionnaires were distributed in these classes. A total of 483 validly answered questionnaires were retained after eliminating those with consistent patterns of responses and too many missing answers, resulting in an effective recovery rate of 94.7%).
+The data for the subjects was randomly divided into two groups. A total of 280 participants were grouped in Sample 1, which consisted of 183 year three participants and 97 year four participants, including 82 males and 198 females. Sample 2 consisted of 203 participants, including 129 year three and 74 year four participants, with 59 males and 144 females. The decision to use two samples was based on the requirement for both exploratory factor analysis (EFA) and confirmatory factor analysis (CFA) of the collected data.
+
+Instrument Since previous research has shown that the Chinese version of the CDMSE-SF by Long (2003) corresponds with the understanding of Chinese students, it was utilized in this study. The tool includes all 25 items of the CDMES-SF Betz et al (1996), encompassing the five dimensions of problem solving (PS), goal setting (GS), planning (PL), self-assessment (SA), and occupational information (OI). Each item was rated on a five-point scale ranging from "not at all confident" to "completely confident," with one indicating the lowest level and five indicating the highest. Higher scores indicate a greater sense of self-efficacy in that dimension, and higher total scores indicate a stronger overall career decision-making selfefficacy.
+
+Results
+
+SPSS 25.0 was utilized to perform item analysis, internal consistency reliability, split-half
+
+reliability, and exploratory factor analysis (EFA) for Sample 1. While the Chinese version of
+
+the CDMES-SF maintains the five dimensions, it is essential to calculate the variance
+
+explained for each of the five dimensions and to assess whether all the questions are
+
+appropriately categorized into these dimensions. Instead,
+
+AMOS
+
+24.0
+
+will
+
+be used to perform a confirmatory factor analysis (CFA) on Sample 2.
+
+Item Analysis First, the scores of each item in Sample 1 were calculated. Based on the total scores, subjects ranked in the top 27% were categorized as the high group, while those ranked in the bottom 27% were categorized as the low group. An independent samples t-test was then conducted. 25 items were grouped into high and low categories at a significance level of P<0.01, indicating a strong differentiation between the high and low groups for each item.
+Second, we examined the correlation between each question item and the score of the subscale to which it belongs using Pearson's correlation. From the results, it was found that there was a significant positive correlation between each item and its subscale. The correlation coefficients ranged from 0.734 to 0.863, as shown in the table. All the questions in the questionnaire were initially retained.
+
+1039
+
+INTERNATIONAL JOURNAL OF ACADEMIC RESEARCH IN BUSINESS AND SOCIAL SCIENCES
+Vol. 1 4 , No. 5, 2024, E-ISSN: 2 2 2 2 -6990 © 2024
+
+Table 1 Correlation of the individual items of the subscales
+
+Q1
+
+Q6
+
+Q11
+
+Q16
+
+Q21
+
+1. SA 0.734**
+
+0.761**
+
+0.792**
+
+0.799**
+
+0.812**
+
+Q2
+
+Q7
+
+Q12
+
+Q17
+
+Q22
+
+2. OI 0.749**
+
+0.748**
+
+0.837**
+
+0.793**
+
+0.770**
+
+Q3
+
+Q8
+
+Q13
+
+Q18
+
+Q23
+
+3. GS 0.800**
+
+0.816**
+
+0.852**
+
+0.810**
+
+0.863**
+
+Q4
+
+Q9
+
+Q14
+
+Q19
+
+Q24
+
+4. PL 0.766**
+
+0.839**
+
+0.818**
+
+0.818**
+
+0.813**
+
+Q5
+
+Q10
+
+Q15
+
+Q20
+
+Q25
+
+5. PS 0.809**
+
+0.825**
+
+0.799**
+
+0.788**
+
+0.775**
+
+**indicates at the 0.01 level, so the correlation is significant
+
+Reliability Analysis The calculation of the coefficient for the total scale indicated a high level of reliability with an alpha value of 0.967. The subscales also demonstrated good internal consistency with values of 0.837 (SA), 0.846 (OI), 0.885 (GS), 0.867 (PL) and 0.858 (PS). This suggests that the questionnaire has good internal consistency. In addition, the split-half reliability coefficients of the total scale and subscales ranged from 0.817 to 0.947, indicating a high level of split-half reliability and good overall reliability.
+
+Exploratory Factor Analysis Sample 1 underwent exploratory factor analysis, and the results indicated that the data was suitable for this type of study. Since the KMO value of 0.959 exceeds 0.9, factor analysis can be conducted on the data. With a p-value of less than 0.01 and a significant result from Bartlett's test of sphericity (χ2 = 5285.752), the items may share common components, making them suitable for exploratory factor analysis.
+By applying principal component analysis and factor analysis to the 25 items of the scale, five common factors were extracted based on the criterion of eigenvalues greater than 1, which could explain 71.11% of the variance. Using the maximum variance method, it was found that several items (1, 2, 4, 5, 6, 7, 18, 19) did not correspond to the dimension to which they belonged in terms of content, so they were considered for deletion.
+After conducting a secondary factor analysis, it was determined that items 10, 13, and 25 were still inconsistent with their respective dimensions. As a result, these items were deleted, and the factor analysis was repeated. The Rotated Component Matrix after these deletions can be seen in the table. 2. Items 11, 16, 12, 17, and 22 are in dimension 1. To separate the items into different dimensions, item 16 is removed. This action ensures that item 11 and item 21 remain in dimension 3, effectively separating them from the items in dimension 1.
+
+1040
+
+INTERNATIONAL JOURNAL OF ACADEMIC RESEARCH IN BUSINESS AND SOCIAL SCIENCES
+Vol. 1 4 , No. 5, 2024, E-ISSN: 2 2 2 2 -6990 © 2024
+
+Table 2
+
+Rotated Component Matrix after two deletions
+
+Question
+
+Factor 1
+
+Factor 2
+
+Factor 3
+
+Factor 4
+
+Factor 5
+
+1. Q11
+
+,408
+
+,590
+
+2. Q16
+
+,523
+
+3. Q21
+
+,812
+
+4. Q12
+
+,737
+
+5. Q17
+
+,640
+
+6. Q22
+
+,734
+
+7. Q3
+
+,760
+
+8. Q8
+
+,744
+
+9. Q23
+
+,435
+
+10. Q9
+
+,483
+
+11. Q14
+
+,579
+
+12. Q24
+
+,797
+
+13. Q15
+
+,714
+
+14. Q20
+
+,686
+
+After deleting item 16, the rotated component matrix for the 5-factor structure of the 13 topics was obtained. The commonality of each item was then calculated, and the results are shown in the table. 3.
+
+Table 3
+
+Rotated Component Matrix and Commonality of the CDMSE-SF
+
+Question Factor 1 Factor 2 Factor 3 Factor 4 Factor 5
+
+1. Q12 .788
+
+2. Q22 .701
+
+3. Q17 .637
+
+4. Q3
+
+.756
+
+5. Q8
+
+.744
+
+6. Q23
+
+.421
+
+7. Q21
+
+.820
+
+8. Q11
+
+.601
+
+9. Q24
+
+.796
+
+10. Q14
+
+.658
+
+11. Q9
+
+.486
+
+12. Q15
+
+.734
+
+13. Q20
+
+.693
+
+Commonality 0.795 0.739 0.749 0.768 0.803 0.806 0.842 0.728 0.869 0.777 0.727 0.847 0.798
+
+Confirmatory Factor Analysis A confirmatory factor analysis (CFA) was conducted on a separate dataset (N=203) using the statistical software AMOS 24 to assess the validity of the five-component structure derived from the exploratory factor analysis. The maximum likelihood (ML) approach was utilized in the CFA analysis.
+The chi-square/degrees of freedom ratio (χ2/df), goodness-of-fit index (GFI), comparative fit index (CFI), and root mean square error of approximation (RMSEA) were calculated following the guidelines of (McDonald and Ho, 2002). A χ2/df ratio between 1
+
+1041
+
+INTERNATIONAL JOURNAL OF ACADEMIC RESEARCH IN BUSINESS AND SOCIAL SCIENCES
+Vol. 1 4 , No. 5, 2024, E-ISSN: 2 2 2 2 -6990 © 2024
+and 2 indicates a very good fit for the model, while a ratio between 2 and 5 suggests a fair fit. The indicators that reflect the similarity of the model include GFI and CFI. A higher value indicates better similarity, with values above 0.8 considered acceptable and above 0.9 considered very good. The main indicator reflecting the difference of the model is RMSEA, with a lower value indicating better fit. Values below 0.08 are acceptable, and values below 0.05 are even better.
+A standardized test of the 5-factor model was conducted, and the results showed that the indices were as follows: χ2/df=1,837, GFI=0.937, CFI=0.975, and RMSEA=0.064. These results indicated that the structural validity of the revised scale was good.
+Discussion Self-efficacy has received increased attention due to globalization and industrial restructuring following COVID-19, with researchers placing growing emphasis on self-efficacy in employment. The government and society are concerned about the employment of college students, especially in China, as it directly impacts the stability and economic growth of the nation. In fact, drawing on the research of international scholars, Chinese researchers like Peng and Long (2001) created a Chinese adaptation of the Career Decision-Making SelfEfficacy (CDMSE) scale. However, they discovered that the questionnaire had poor structural validity. Since the CDMSE-SF has shown good reliability and validity in previous studies conducted in other cultures, this study used Chinese college students as the subjects to evaluate the reliability and analyze the factor structure of the Chinese version of the CDMSE-SF.
+First, item analyses revealed that each item of the scale was significantly correlated with the total score of the corresponding subscale. Additionally, significant differences were observed between the high and low subgroups on all items, indicating that the individual items of the Chinese version of the CDMSF-SF demonstrate a high degree of discrimination. All 25 items from the original English scale were included in the Chinese version of the scale and were subsequently analyzed.
+Secondly, the reliability analysis showed that the alpha reliability coefficient of the total scale was 0.967, which was similar to the result reported by Hampton (2005) that the reliability of the 25-item CDSES-SF total scale was 0.91. The values of the subscales (0.80 - 0.84) are similar to the range of coefficients for the subscales in the sample of 603 students previously reported by (Betz et al., 2005). The Spearman-Brown split reliabilities of the subscales ranged from 0.817 to 0.947, suggesting that the scales have good internal consistency. Therefore, the Chinese version of the CDMSE-SF demonstrates good reliability and high stability. These results are consistent with the reliability data reported in other studies (Betz et al., 1996; Betz and Voyten, 1997; Gloria and Hird, 1999).
+Thirdly, the results of the EFA suggest that the Chinese version of the CDMSE-SF can maintain the five-factor structure based on the five theoretical dimensions proposed by Crites (1961): Self-Assessment (SA), Occupational Information (OI), Goal Setting (GS), Planning (PL), and Problem Solving (PS). However, not all the topics align with the understanding of self-efficacy of Chinese university students in career decisionmaking, leading to the deletion of 12 items that did not fit into the dimensions. Afterward, the remaining 13 items could still be classified into the 5 dimensions, and the 5-factor structure was also supported by the results of the CFA. This differs from the results of both Long (2003) and Hampton (2005) in their studies of Chinese college students.
+1042
+
+INTERNATIONAL JOURNAL OF ACADEMIC RESEARCH IN BUSINESS AND SOCIAL SCIENCES
+Vol. 1 4 , No. 5, 2024, E-ISSN: 2 2 2 2 -6990 © 2024
+
+Compared to Long's (2003) findings, although the 5-factor structure
+
+was maintained, the 25-item questionnaire was not preserved. This could be attributed to
+
+the insignificance of certain behaviors in influencing the self-efficacy of Chinese college
+
+students in career decision-making. For instance, "drawing up a plan for the next five years"
+
+or "being able to determine their ideal job" may have limited impact on the current choices
+
+of college students.
+
+On the other hand, Hampton (2005) retained 13 questions, but they were significantly
+
+different from the questions retained in this study. It was found that past studies had
+
+identified knowledge of industry developments as an important factor in career decision-
+
+making self-efficacy. For example, topics such as "identifying employment trends for a
+
+specific occupation in the next decade" or "identifying individuals, companies,
+
+and institutions relevant to one's future career" were included. However, the
+
+questions addressed in this study are more focused on the competencies or evaluation of
+
+competencies that college students possess when entering the job market, such as "Ability to
+
+change jobs if not satisfied with the current career" or "Ability to prepare a strong
+
+resume." Resume. This
+
+trend may
+
+be attributed to
+
+the diminishing
+
+impact of industrial development on college students' self-efficacy in the career selection
+
+process. This is likely because students now have easier access to information about industry
+
+development through the Internet and classroom instruction compared to 20 years ago. Due
+
+to the prevalence of similar majors in Chinese universities and the growing competition for
+
+college students in the job market, current college students believe that employability will
+
+have a more significant impact on their self-efficacy in finding a job.
+
+Fourth, the 5-factor structure was significantly different from that of the samples
+
+analyzed in South Africa, Australia, and the United States, indicating cultural variations in the
+
+CDMSE-SF. Confirmatory factor analyses indicated that all fit indices for the revised 5-factor
+
+structure scale met the value requirements, suggesting that the scale demonstrates good
+
+construct validity.
+
+Conclusion Career decision-making self-efficacy is widely used in the field of occupational psychology, career counseling, and career planning.The first career decision-making self-efficacy scale(CDMSE), was developed in 1983.Later, a simpler version of the scale, called the COMSESF, was developed by Bates and Taylor.While previous research has shown that the short form of the career decision-making self-efficacy scale has good reliability, the factor structure has significant cross-cultural differences. The earliest research on career decision-making selfefficacy in China was conducted in 2001, but the reliability of the Chinese version of the COMSE-SF also showed differences in subsequent studies. China is a country with a large employment pool. With more than 10 million college graduates looking for jobs in recent years, college students' assessment of their abilities and confidence in finding a job are crucial to their success in finding a job. The last reliability test of the Chinese version of the CDMSE-SF was conducted in 2005. As we all know, the rapid development of science and technology and the industrial restructuring have brought about great changes to the employment environment of college students. Therefore, it is necessary to re-test the reliability of the Chinese version of the CDME-SF in order to determine whether the scale is suitable for the current employment environment and can accurately measure the confidence level of college students when looking for a job.
+
+1043
+
+INTERNATIONAL JOURNAL OF ACADEMIC RESEARCH IN BUSINESS AND SOCIAL SCIENCES
+Vol. 1 4 , No. 5, 2024, E-ISSN: 2 2 2 2 -6990 © 2024
+In this study, the 13-item CDSES-SF (Chinese version) with a 5-factor structure was obtained by using exploratory factor analysis, and then through confirmatory factor analysis, it was found that all the indicators met the psychometric standards with good reliability and validity, indicating that the revised CDSES-SF (Chinese version) can be used to assess the self-efficacy of career choice among Chinese college student, and thus to help the universities implement various measures to cultivate college students' employability skills and improve their problem-solving abilities when facing employment challenges.
+
+Reference
+
+Abdinoor, N. M. (2020). Socio-economic status, career decision-making self-efficacy, career
+
+maturity, and gender with secondary school students in northern Kenya. International.
+
+Journal of Multidisciplinary and Current Educational Research, 2(4), 160-167.
+
+Ashton, P. T., Webb, R. B. (1986). Making a Difference: Teachers' Sense of Efficacy and Student
+
+Achievement. New York: Longman Publ.
+
+Bandura, A. (1977). Self –efficacy: Toward a Unifying Theory of Behavioral Change.
+
+Psychological Review, (84), 191-215.
+
+Betz, N. E., Klein, K. L., Taylor, K. M. (1996). Evaluation of a Short Form of the Career Decision-
+
+Making Self-Efficacy Scale. Journal of Career Assessment, 4(1), 47–57. https:
+
+//doi.org/10.1177/106907279600400103.
+
+Betz, N. E., Voyten, K. K. (1997). Efficacy and outcome expectations influence career
+
+exploration and decidedness. The Career Development Quarterly, 46(2), 179-189. https:
+
+//doi.org/10.1002/j.2161-0045.1997.tb01004.x.
+
+Chaney, D., Hammond, M. S., Betz, N. E., & Multon, K. D. (2007). The Reliability and Factor
+
+Structure of the Career Decision Self-Efficacy Scale-SF With African Americans. Journal
+
+of Career Assessment, 15(2), 194-205. https://doi.org/10.1177/1069072706298020.
+
+Chuang, N. K., Lee, P. C., Kwok, L. (2020). Assisting students with career decision-making
+
+difficulties: Can career decision-making self-efficacy and career decision-making profile
+
+help? Journal of Hospitality, Leisure, Sport & Tourism Education, 26, 100235. https:
+
+//doi.org/10.1016/j.jhlste.2019.100235.
+
+Creed, P. A., Patton, W., Watson, M. B. (2002). Cross-cultural equivalence of the career
+
+decision-making self-efficacy scale-short form: An Australian and South African
+
+comparison. Journal
+
+of
+
+career
+
+assessment,
+
+10(3),
+
+327-342.
+
+https://doi.org/10.1177/10672702010003004.
+
+Crites, J. O. (1961). A model for the measurement of vocational maturity. Journal of
+
+counseling psychology, 8(3), 255 p. https://doi.org/10.1037/h0048519.
+
+Cui, Y. L., Xu, F. F., Cui, L. L. (2017). The relationship between medical students’ achievement
+
+motivation, career efficacy and employability. Chinese Journal of Health Psychology,
+
+25(2), 240-244.
+
+Dogan, U. (2015). Student engagement, academic self-efficacy, and academic motivation as
+
+predictors of academic performance. The Anthropologist, 20(3), 553-561. https:
+
+//doi.org/10.1080/09720073.2015.11891759.
+
+Grether, T., Sowislo, J. F., Wiese, B. S. (2018). Top-down or bottom-up? Prospective relations
+
+between general and domain-specific self-efficacy beliefs during a work-family
+
+transition. Personality and Individual Differences, 121, 131-139.
+
+Hampton, N. Z. (2005). Testing for the Structure of the Career Decision Self-Efficacy Scale-
+
+Short Form Among Chinese College Students. Journal of Career Assessment, 13(1), 98-
+
+113. https: //doi.org/10.1177/1069072704270298.
+
+1044
+
+INTERNATIONAL JOURNAL OF ACADEMIC RESEARCH IN BUSINESS AND SOCIAL SCIENCES
+Vol. 1 4 , No. 5, 2024, E-ISSN: 2 2 2 2 -6990 © 2024
+
+Jiang, L. (2020). A brief discussion on the innovation of ideological and political education in
+
+higher vocational colleges under the background of school-enterprise cooperation.
+
+Western Journal, 3, 3 p.
+
+Khan, M. (2023). Academic self-efficacy, coping, and academic performance in
+
+college. International Journal of undergraduate research and creative activities, 5(1), 3
+
+p. https: //doi.org/10.7710/2168-0620.1006.
+
+Lee, S., Jung, J., Baek, S. (2022). The Relationship between Career Decision-Making Self-
+
+Efficacy, Career Preparation Behaviour and Career Decision Difficulties among South
+
+Korean
+
+College
+
+Students.
+
+Sustainability,
+
+14(21),
+
+14384p.
+
+https://doi.org/10.3390/su142114384.
+
+Liu, Y., Draper, J., Dawson, M. (2023). The relationship between work experience and career
+
+expectations: career decision-making self-efficacy as mediator. Journal of Hospitality &
+
+Tourism Education, 35(3), 213-224. https://doi.org/10.1080/10963758.2022.2034118.
+
+Long, Y. M. (2004). Research on college students' sense of efficacy in career choice. Shanghai:
+
+SHNU Publ. https://doi.org/10.7666/d.d008304.
+
+Mahmud, M. I., Xiong, T. Y., Rosli, N. N., Kee, C. P. (2020). Effectiveness of job readiness course
+
+on career self-efficacy between two groups of undergraduates. PalArch's Journal of
+
+Archaeology
+
+of
+
+Egypt/Egyptology,
+
+17(3),
+
+314-322.
+
+https://doi.org/10.48080/jae.v17i3.86.
+
+McDonald, R. P., Ho, M. H. R. (2002). Principles and practice in reporting structural equation
+
+analyses. Psychological methods, 7(1), 64 p. https://doi.org/10.1037/1082-
+
+989x.7.1.64.
+
+Moore, W. P., & Esselman, M. E. (1992). Teacher Efficacy, Empowerment, and a Focused
+
+Instructional
+
+Climate:
+
+Does
+
+Student
+
+Achievement
+
+Benefit?
+
+https://doi.org/10.4236/ce.2021.1210173.
+
+Nilsson, J. E., Schmidt, C. K., Meek, W. D. (2002). Reliability generalization: An examination of
+
+the career decision-making self-efficacy scale. Educational and Psychological
+
+Measurement, 62(4), 647-658. https://doi.org/10.1177/0013164402062004007.
+
+Peng, Y. X., Long, L. R. (2001). Research on the self-efficacy assessment of career decision-
+
+making among college students. Applied Psychology, 2, 38-43.
+
+Reese, R. J., Miller, C. D. (2006). Effects of a university career development course on career
+
+decision-making self-efficacy. Journal of Career assessment, 14(2), 252-266.
+
+https://doi.org/ 10.1177/1069072705274985.
+
+Schwarzer, R., Jerusalem, M. (1995). Generalized self-efficacy scale. J. Weinman, S. Wright, &
+
+M. Johnston, Measures in health psychology: A user’s portfolio. Causal and control
+
+beliefs, 35, 37 p.
+
+Shi, Y. (2022). Research on the relationship between graduate employment pressure and
+
+career selection efficacy. Shanxi: Xi'an Institute of Physical Education.
+
+Taylor, K. M., Betz, N. E. (1983). Applications of self-efficacy theory to the understanding and
+
+treatment of career indecision. Journal of vocational behavior, 22(1), 63-81. https:
+
+//doi.org/10.1016/0001-8791(83)90006-4.
+
+Turda, E. S., Albulescu, I. (2023). Romanian Translation and Linguistic Validation of the Career
+
+Decision-Making Self-Efficacy- Short Form. European Proceedings of Educational
+
+Sciences, 6, 476-486. https://doi.org/10.15405/epes.23056.43.
+
+Watson, M. B., Brand, H. J., Stead, G. B., Ellis, R. R. (2001). Confirmatory factor analysis of the
+
+career decision-making self-efficacy scale among South African university students. SA
+
+Journal of Industrial Psychology, 27(1), 43-46. https://doi.org/10.4102/sajip.v27i1.774.
+
+1045
+
+INTERNATIONAL JOURNAL OF ACADEMIC RESEARCH IN BUSINESS AND SOCIAL SCIENCES
+Vol. 1 4 , No. 5, 2024, E-ISSN: 2 2 2 2 -6990 © 2024
+White, D. P. (2009). Differences: The effects of teacher efficacy on student achievement in an urban district (Doctoral dissertation, Virginia Tech).
+Winingsih, E., Hambali, I., Hidayah, N. (2023). Psychological Measurement of the Validity and Reliability of the Short form Career Decision Self-Efficacy Scale. Journal for ReAttach Therapy and Developmental Diversities, 6(5), 449-456.
+Zhang, Y. (2022). Research on employment psychology and adjustment of higher vocational students in the post-epidemic era. Employment and Security, 11, 3 p.
+1046
+
+

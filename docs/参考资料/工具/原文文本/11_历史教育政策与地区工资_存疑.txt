@@ -1,0 +1,1128 @@
+1234567890():,;
+
+ARTICLE
+https://doi.org/10.1057/s41599-025-05084-4
+
+OPEN
+
+Long-term impacts of historical education policy on wages in China: insights on over-education
+
+Xiaodong Chen1,2, Ding Li3 & Pengyu Zhu1,2✉
+
+This article contributes to the discourse on the phenomenon of over-education and its implications for labor misallocation within China. The celebrated Imperial Examination System, initiated in the Sui dynasty and enduring until 1905, cultivated an elite-driven society where educational attainments were paramount. Our study delves into historical Jinshi density data—indicative of the highest accolade in said examinations—coupled with insights from the Annual Survey of Industrial Firms. By addressing endogeneity through adjustments for reference materials and transport accessibility, we discern that prefectures exhibiting a 1% enhancement in Jinshi density per 10,000 individuals are subject to a 1030–1710 CNY wage increment presently. This increase is mainly attributed to the continuation of cultural norms inﬂuencing human capital (workers’ degree and positional title structures by gender and direct educational investments) and social capital (innovation, transport, paid-in capital structure, and welfare costs), along with migration patterns that attract talent. Our investigations further illuminate that historical examination practices incentivize ancillary advantages, encompassing welfare programs, as well as public services and amenities.
+
+1 Division of Public Policy, Hong Kong University of Science and Technology, Kowloon, Hong Kong. 2 Center for Applied Economic Social and Environmental Research (CAESER), Hong Kong University of Science and Technology, Kowloon, Hong Kong. 3 School of Public Administration, Southwestern University of Finance and Economics (SWUFE), Chengdu, China. ✉email: pengyuzhu@ust.hk
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | (2025)12:959 | https://doi.org/10.1057/s41599-025-05084-4
+
+1
+
+ARTICLE
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | https://doi.org/10.1057/s41599-025-05084-4
+
+Introduction
+Economists consider education as an effective means to break the cycle of intergenerational poverty. Through a survey of 1120 estimates covering 139 countries from 1950 to 2014, Psacharopoulos and Patrinos (2018) concluded that the returns on education are signiﬁcantly positive. The pioneering human capital theory (Becker, 1991) posits that (i) education develops skills that enhance worker productivity, and (ii) wage differentials reﬂect differences in productivity (Heckman et al., 2018). Associated theories and empirical studies contribute to our understanding of the effects of education and convincingly demonstrate that investing in schooling can yield positive outcomes for individuals in the short-term (Card, 2001; Lefgren and McIntyre, 2006; Barrow et al., 2014; Niklas and Moser, 2017; Deming, 2011; Black, 1999). Usually, the long-lasting effects are investigated by examining whether education experienced at an early age affects career outcomes or, at most, within generations (Brinkman et al., 2017; Bautista et al., 2023). Whereas, to our knowledge, scarce literature concentrates on the long-term effects of education across centuries.
+China’s Imperial Exam System (IES) provides a unique opportunity to examine the long-lasting effects of historical education. While studies on the long-term returns of education are rare, the broader form of this institution (culture) has garnered global attention (Nunn, 2008; Guiso et al., 2016, among others). For instance, the inﬂuential work by Acemoglu et al. (2020) reveals that the effects of colonization policies have enduring impacts. As a crucial component, China’s IES, also known as Keju, offers an excellent opportunity to investigate whether this institution has persistent effects within the country’s context. Moreover, we can explore the long-term economic effects attributable to this educational system. The study most like ours is Chen et al. (2020), which examines the contemporary educational response to the IES. However, our study differs in that we focus on economic paybacks and further employ historic transport accessibility as an instrumental variable for the Keju. Moreover, by utilizing micro-level data on manufacturing workers’ income, we provide further evidence of the persistent effects of the Keju system. Additionally, we address potential estimation concerns by: (1) accounting for standard errors of persistence (Conley and Kelly, 2025) method, and (2) controlling for confounding factors associated with treaty cities.
+This article comprehensively investigates how contemporary workers’ wages respond to the historical IES, which can complement the enduring beneﬁts of education. This can be attributed to higher social status and increased access to political and economic opportunities (Chen et al., 2020). Through manual data collection at the macro level, we establish strong correlations between the logarithm of historical Jinshi density and the logarithm of contemporaneous workers’ wages, as depicted in Fig. 1. Building on this foundation, we propose that the accessibility to reference materials (distance of bamboo and pines to the nearest river) and transportation (distance of each prefecture to the nearest Ming Courier Stations and the Grand Canal) in different regions of ancient China served as possible sources of exogenous shocks affecting regional levels of the IES. We will explain this in detail in the following sections. The article aims to achieve three objectives: (1) to examine the persistence of this educational institution in the context of China and determine whether the relationship depicted in Fig. 1 is spurious; (2) to explore the reasons behind the persistence of this educational institution and its role in enhancing contemporary labor paybacks and welfare by identifying possible channels; (3) to assess the comparability of this persistent educational institution with those in other regions of the world.
+We utilize data on the IES to capture regional variations at the prefecture level between the 13th and 19th centuries, primarily
+
+Fig. 1 The correlation between historical Jinshi density and
+contemporaneous employee pay. Note: Jinshi density per 10 thousand
+people is measured in the Ming-Qing dynasties. The contemporaneous
+wage is measured at the prefecture level in 2004.
+relying on the work of Cao (2000, 2015) and Chen et al. (2020). Our most parsimonious model speciﬁcation involves estimating the response of contemporaneous workers’ wages to historical educational institutions and then using access to the exam (including transportation accessibility and study material accessibility) as instrumental variables. Since our key step is to assess regional educational gaps in historical IES, we consider the density of winners who outperformed others and were granted ofﬁcial titles as a proxy for IES. The titles granted in the IES encompass Jinshi, Juren, and Shengyuan (refer to Appendix Fig. A1 for the hierarchical elite selection process). These densities provide the best indication of regional IES success. In the Ordinary least squares (OLS) estimation, we found that under different speciﬁcations, historical IES success would have boosted contemporaneous wages in 2004 by 3.5–7.5%. This ﬁgure is signiﬁcant enough to explain regional wage gaps and income inequality in China, as reported by Zhang (2021). In comparison, this ﬁgure is smaller than the longterm educational returns reported in France by Maurin and McNally (2008). Although we focus on contemporary wages in 2004 for our baseline estimation, the historical IES also affects other years for which we have data under the OLS speciﬁcation.
+The OLS estimates may be spurious due to several endogenous factors affecting IES success across different prefectures. Though constructing the historical-contemporaneous sample periods, it is plausible that simultaneity unlikely biases our estimates; however, the primary concern remains with the potential omitted variable issue. Note that we have extensively reviewed the literature to identify potential covariates that could bias our estimates. Speciﬁcally, we consider controls from three dimensions: contemporaneous (ﬁrm age, temperature, rainfall, pollution, and nightlight), historical (population density and urbanization rate during the Ming-Qing period), and geographic (distance to the coast, agricultural sustainability, and terrain ruggedness). However, many unobservable factors could still inﬂuence our wage estimates, such as workers’ preferences and abilities, ﬁrms’ endogenous locations, and the intelligence quotient of IES attendees. To address these issues, we propose a practical instrumental approach using access to study materials, speciﬁcally the proximity of bamboo and pine to the nearest river at the prefecture level (Chen et al., 2020).1 Bamboo and pine are crucial raw materials for producing paper and ink, essential for creating woodblock printings of reference books used in the IES. Since ofﬁcials provide nuanced, authoritative interpretations of the Confucian classics—the sole reference material for the IES—the
+
+2
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | (2025)12:959 | https://doi.org/10.1057/s41599-025-05084-4
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | https://doi.org/10.1057/s41599-025-05084-4
+
+ARTICLE
+
+proximity of these resources to rivers can serve as an ideal proxy for access to study materials, as they were mostly transported by water. Additionally, to validate this instrument, we suggest using the proximity of the Grand Canal to the prefecture and the number of Ming dynasty courier stations within the prefecture as proxies for transportation accessibility.
+The presence of bamboo and pine forests serves as an exogenous factor that naturally determines the growth of these plants. Leveraging this premise, our two-stage least squares (2SLS) estimation indicates that workers’ wages could potentially increase by 7.9–13.1% under various econometric speciﬁcations. Notably, when accounting for all covariates and ﬁxed effects, the coefﬁcient magnitude for the 2SLS estimate is twice that of the OLS estimate. This implies that for every 10,000 people, a 1% increase in Jinshi density could lead to a substantial 7.9–13.1% rise in contemporaneous workers’ wages, a statistically and economically signiﬁcant effect. On average, with an additional 1% admission of Jinshi per 10,000 people, workers’ wages could potentially increase by 1030–1710 CNY (equivalent to ~124–207 USD) in 2004. These estimates are based on a baseline average wage of 13,020 CNY (1580 USD) across all ﬁrms in 2004.
+It is worth noting the historical signiﬁcance of the IES effects, particularly when considering that the monthly minimum wage in Shanghai, China’s most developed region, was only 635 CNY in 2004. This highlights the importance of understanding the long-term impact of the IES on workers’ wages. The effects of the IES on wages, as observed in China, can be signiﬁcant when viewed from an international perspective. On average, according to the World Bank (https://data.worldbank.org/indicator/NY. ADJ.NNTY.PC.CD), the global national income per capita was 5894 USD in 2004. In this context, the associated increase in salaries resulting from the historical IES in China is equivalent to 2.1–3.5% of the average employee pay worldwide in 2004; hence, it substantively reduced the wage gap between China and other countries. In the United States, where the median annual income was 44,389 $ in 2004, the induced wage growth from the IES represents ~0.3–0.5% of employee pay. Comparatively, in another sizable emerging country like India, where the average employee pay in 2004 was $548, the increase in salary resulting from the IES amounts to a substantial 22.6–37.8% of India’s employee pay. Overall, these comparisons underscore the importance of understanding the wage effects of the IES not only within China but also on a global scale.
+In our article, we hypothesize that ﬁrms with varying labor and capital densities, different technology levels, and belonging to different industries may respond heterogeneously to historical education. Empirical results, correcting for potential endogeneity, indicate that labor-intensive and high-technology ﬁrms are more positively sensitive to the IES. In terms of industries, capitalintensive and technology-oriented industries have shown signiﬁcant increases because of IES's success.
+Another objective of our analysis is to identify potential channels through which the ancient IES inﬂuences current worker wages. One aspect we investigate is the role of human capital. To test our hypothesis that workers’ educational backgrounds can be impacted by the IES, we collect information on workers’ characteristics. We construct variables for degree structure and title structure by gender based on a nationally representative survey of ﬁrms in 2004. Our estimates show that improvements in workers’ degree structure are closely associated with the IES. According to our ﬁndings, the proportion of male and female workers with postgraduate, graduate, and vocational degrees is signiﬁcantly and positively inﬂuenced by the IES. However, the proportion of workers with middle school degrees is signiﬁcantly and negatively affected by the development of the IES, as indicated by the increase in Jinshi density. Additionally,
+
+we examine the impact of the ancestral exam on the technical title structure, and our results indicate that technical title structures for both males and females have improved.
+Furthermore, we acknowledge that there may be other omitted channels through which the ancient IES inﬂuences workers’ wages. One such channel is the impact of the IES on schooling years, which in turn can affect wages (Ashworth et al., 2017). To address this concern, we manually collect data on schooling years from contemporaneous prefectures, which allows us to capture the prefecture-by-prefecture variation in average schooling years. Our results indicate that education serves as a virtual channel through which the IES can boost workers’ wages. Prefectures that achieved greater success in the historical IES often placed a higher emphasis on education and invested more in educational infrastructure. To capture this aspect, we employ proxies such as the number of universities, educational expenditure, and educational employees. Our ﬁndings reveal that all these contemporaneous educational indicators are positively inﬂuenced by the historical exams. Additionally, we also consider the number of Confucian academies during the Ming-Qing dynasties as an indicator of the historical educational environment. By examining these contemporary educational indicators, we provide further evidence of the long-lasting impact of the IES on educational development and its subsequent effects on workers’ wages. This highlights the importance of historical institutions in shaping modern educational systems and labor market outcomes.
+Moreover, we explore the potential channel of social capital, speciﬁcally in terms of innovation and ﬁrm ownership. It is worth noting that while China had a rich history of technological advancements and innovation prior to the modern era, the development of modern science and the industrial revolution occurred later in the country compared to other regions (Needham, 2013). Therefore, it is important to investigate whether the historical IES had any impact on innovation. One concern is whether the historical IES promoted or hindered innovation, as some critics argue that the exam’s rigid structure may have stiﬂed creativity and hindered the development of innovative thinking (Shi, 2022). To address this question, we manually collect data from city-level yearbooks and use proxies such as research and development (R&D) expenditure per capita, applied patents per capita, authorized patents per capita, and authorized inventions per capita. Our empirical results indicate that the IES had a signiﬁcant positive effect on innovation. While the magnitude of the coefﬁcients varies across the different proxies, the overall ﬁndings suggest that the historical exam system played a role in promoting innovation. This ﬁnding is consistent with previous research that highlights the positive relationship between innovation and wages (Aghion et al., 2017). It suggests that the IES not only had direct effects on workers’ wages through educational attainment but also indirectly inﬂuenced wages through the promotion of innovation. Overall, our analysis provides evidence that the historical IES had a positive impact on innovation, which in turn can contribute to higher wages. This highlights the importance of historical institutions in shaping not only educational outcomes but also broader economic factors such as innovation and ﬁrm ownership.
+The trade-off theory of capital structure posits that ﬁrms’ capital structures can impact employee wages through factors like leverage, regulatory form, and risk management capabilities. To investigate this connection, we analyze the inﬂuence of observed capital structures on employee compensation, building on the research of Chemmanur et al. (2013). Utilizing data from the Annual Survey on Industrial Enterprises, we classify capital ownership into six categories: national capital, collective capital, corporate capital, personal capital, Hong Kong, Macao, and Taiwan Capital, and foreign capital. Our ﬁndings reveal that the
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | (2025)12:959 | https://doi.org/10.1057/s41599-025-05084-4
+
+3
+
+ARTICLE
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | https://doi.org/10.1057/s41599-025-05084-4
+
+historical IES signiﬁcantly affects labor force risk tolerance and personal capital accumulation. Speciﬁcally, we observe that the IES has a negative impact on risk tolerance, leading to reduced personal capital accumulation among the workforces. This suggests that the historical exam may have deterred individuals from taking risks and investing in personal capital, potentially constraining their earning potential. Conversely, the IES exhibits a positive inﬂuence on other capital types when aggregated at the ﬁrm level. Overall, our results indicate that the historical IES inﬂuences ﬁrms’ capital structures, subsequently affecting employee compensation. These ﬁndings underscore the signiﬁcance of considering historical context and institutional factors when exploring the relationship between capital structure and labor market outcomes.
+In the IES, obedience to the emperor and respect for elders were emphasized, with many intellectuals considering it a source of underdevelopment. Indeed, during the later Qing dynasty, the empire faced continuous challenges from the Western world and was compelled to open its doors to trade with foreign nations. However, trade has been shown to impact employee wages (Sampson, 2014; Borrs and Knauth, 2021). The inﬂuence of the IES on trade remains unclear. Our study examines the trade volume through various transportation modes, utilizing both OLS and Instrumental Variable (2SLS) estimates. These transportation modes include railway freight, road freight, water freight, and air freight. The results indicate that, as primary transportation modes for international trade, water and air freight exhibit signiﬁcant and notable responses to the historical IES, whereas the impact on railway and road freight is not statistically signiﬁcant.
+Our contributions primarily hinge on the causal identiﬁcation strategy for the IES from a contemporary viewpoint, which, to the best of our knowledge, could be a comprehensive examination of the enduring effects of historical education on current individual employee wages. The estimate demonstrates relative robustness against dataset substitution, econometric model assumptions, and period variations. Furthermore, by investigating potential channels, we elucidate how the IES inﬂuences workers’ wages. Second, this article could empirically enhance the existing literature on returns to education, as prior studies have primarily focused on education returns within generations. Third, our study contributes to educational history by elucidating the enduring effects of this institution. While previous investigations by Bai and Jia (2016) and Li and Wang (2022) have explored such effects, our study differs as we extend the study parameters to identify the inﬂuence of the IES on employee wages using micro-level and detailed worker information in the manufacturing sector.
+The structure of this article is outlined as follows: section “Background: Keju and Wages” provides a brief overview of the historical context of the IES and wages in Chinese ﬁrms. In section “Identiﬁcation strategy”, we introduce the detailed identiﬁcation strategy concerning the historical Keju exam’s effects on employee pay, both with and without addressing potential endogeneity issues. Section “Data source” offers a concise introduction to the primary datasets utilized in our analysis, while section “Empirical results” empirically investigates the relationship between the IES and employee wages. Section “Robustness” delves into how the IES heterogeneously impacts employee pay across various industries, covering multiple two-digit sectors. Moreover, section “Channel identiﬁcation” elaborates on the channels through which the exam inﬂuences wages, focusing on contemporary factors such as workers’ educational backgrounds, titles, gender, innovation, capital structures, trade volume, digital proﬁciency, and market openness. In section “Fringe beneﬁts”, we brieﬂy discuss the additional effects of the IES on fringe beneﬁts, followed by a detailed exploration of fringe beneﬁts in the subsequent section. The study concludes in section “Conclusion”.
+
+Background: Keju and wages The IES is a national, large-scale exam that is speciﬁc to China. It was consolidated during the Song dynasty (960–1279) and held in high esteem by the Han Chinese population. However, when the Mongols dominated the country and established the Yuan dynasty (1271–1368), the exam lost its emphasis due to ongoing wars. Instead of taking exams, ofﬁcial titles became hereditary during this period. It was only during the Ming dynasty (1368–1644), when the Han Chinese people regained sovereignty, that the exam was formally institutionalized and continued into the Qing dynasty (1636–1912). However, the exam’s long-lasting tradition came to an end following Sun Yat-sen’s revolution, which led to the overthrow of the Qing dynasty. Despite its discontinuation, the effects of the exam continue to persist.
+As shown in Fig. A1, the IES in China had a vertical and hierarchical structure. During the Ming-Qing dynasties, the Keju, which was the name for the exam, consisted of three stages: the prefecture, provincial, and national levels. However, it is important to note that females were not allowed to participate in this exam. The entrance exam, known as Yuankao, was held at the prefecture-level twice every three years, and approximately two million candidates registered for it (Elman, 2000). Only a small percentage, around 1–2% of attendees, were able to pass the exam and were given the title of Shengyuan. These successful candidates were then able to enter the gentry class and receive beneﬁts such as exemption from taxes and corporal punishments. They were also offered opportunities to become tutors, manage local affairs, or become secretarial assistants to ofﬁcials (Chang, 1962). The Shengyuan candidates played a crucial role in the IES, and the exam had a quota system in place to avoid regional conﬂicts and ensure stability. The quota was determined by factors such as population size, taxation obligations, achievements in previous exams, and the size of ofﬁcial schools (Chang, 1955). Generally, the quota for Shengyuan remained consistent during the Ming and Qing dynasties, with only minor adjustments made by Emperors Kangxi and Xianfeng in 1670 and 1850, respectively, for political stability.
+In the subsequent stage of the IES, those who were awarded the Shengyuan title could proceed to the qualifying exams called Xiangshi, which were held at the provincial level every three years. Upon passing the Xiangshi, candidates were granted the prestigious Juren title. On average, out of ~20,000 attendees, around 1241 individuals were awarded the Juren title at each exam. The Juren title made candidates eligible for positions in low-level public administrations. Finally, the successful candidates in the Xiangshi were recommended to participate in the Huikao, which was held at the national level every 3 years. Those who passed the national-level exams were granted the highest attainment in the IES, the Jinshi title. Attaining the Jinshi title was considered a great honor and held the utmost esteem in Confucian culture. The rewards for Jinshi title holders were signiﬁcant. They received lucrative economic beneﬁts, had the opportunity to be selected as middle- and high-level governors, and were recognized with great ritualistic importance. The Jinshi title bestowed upon them a prestigious status in society.
+Principle of Keju. Contemporary critics have debated the signiﬁcance of the IES and the broader issue of access to elite status (Acemoglu and Robinson, 2001). Historians have criticized the IES for potentially stiﬂing critical thinking and creativity, as the exam heavily emphasizes standardized writing (Cho, 2007; Zhu and Chang, 2019). However, it is also argued that the IES contributes to political stability by providing an upward mobility channel for commoners. Given that this institution is multifaceted, it is crucial to consider the historical context. Empirical
+
+4
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | (2025)12:959 | https://doi.org/10.1057/s41599-025-05084-4
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | https://doi.org/10.1057/s41599-025-05084-4
+
+ARTICLE
+
+research by economists has focused on the IES, exploring its impact on contemporary education (Chen et al., 2020), its role in promoting social stability (Bai and Jia, 2016), and its inﬂuence on fostering innovation in China (Shi, 2022). These studies illuminate the various dimensions of the IES and its effects on different aspects of society.
+The IES is not a straightforward examination policy; rather, it serves as a structured pathway for political and social mobility. The exam is often seen as a fair and merit-based system that strives to offer equal opportunities to all male candidates, regardless of their social, economic, or political background. Unlike hereditary systems, the IES did not allow titles to be inherited, meaning that even members of the aristocratic class had to compete on a level playing ﬁeld with commoners. Although there were no strict age limits or restrictions on the number of attempts, participating in the IES did involve certain costs and requirements. Candidates had to invest time and money in their preparations, which included purchasing study materials and references. This could present challenges for those who were extremely poor, as they might not have had the resources to meet these requirements. Historians like Wang (1989) and economists such as Bai and Jia (2016) have calculated the ﬁnancial burden of participating in the IES. They have determined that, on average, a family needed about 1.5 acres of land holdings to support one family member’s participation in the entry exam (Yuankao). However, it is important to note that only a limited percentage of families, ~30–40%, could afford this investment. These ﬁnancial considerations underscore that while the IES aimed to offer equal opportunities, socioeconomic factors could still impact access to the exam for certain individuals.2
+As the emperor himself served as the examiner during the national exam, the Keju system was considered relatively free from cheating. Both the Ming-Qing dynasties and the Tang-Song dynasties implemented various measures to prevent cheating. One such measure, called the transcribing method, was introduced during the post-Tang dynasty era. This method involved designated personnel transcribing the test papers of examinees, which were then sent to the grading department. This process ensured that the reviewers could not identify the examinees’ handwriting, thus reducing the chances of cheating (Xinhua Net, 2014). Additionally, strict rules were enforced to oversee the conduct of the examiners and vice examiners during each examination. These regulations mandated the temporary appointment of multiple examiners and vice examiners to monitor and supervise each other’s actions.
+In addition to these preventive measures, the consequences for cheating in the IES were severe. Various forms of cheating, such as on-the-spot shooting, counterfeiting, substituting, entraining, plagiarizing, passing on answers, or not adhering to seating requirements, would lead to immediate imprisonment with chains by the invigilator. Offenders would be publicly displayed outside the examination hall as a form of punishment (Shang, 2004). Those involved in more serious forms of cheating, such as impersonation, offering bribes, or committing signiﬁcant fraud, often faced even harsher penalties. They could be conscripted into the army or even subjected to the death penalty.
+Overall, the combination of strict preventive measures, such as the transcribing method and the temporary appointment of multiple examiners, along with the severe consequences for cheating, helped uphold the integrity of the Keju system during the Ming-Qing and Tang-Song dynasties.
+Wage in China. To the best of our knowledge, while existing literature has examined the IES, no study to date has speciﬁcally investigated the long-term impact of this educational institution
+
+on wages or income. To address this research gap, we utilize the Annual Survey of Industrial Enterprises (ASIF) dataset, a largescale representative dataset that offers valuable insights into the relationship between the IES and labor outcomes. The dataset covers the period from 1998 to 2007, capturing signiﬁcant economic events such as China’s accession to the World Trade Organization (WTO) in 2001 and the expansion of higher education in 2003. These events are pivotal as they could inﬂuence wage ﬂuctuations and labor market dynamics. Through the analysis of this dataset, our goal is to illuminate the lasting effects of the IES on individuals’ wages or income.
+Based on the data presented in Table B1 of employee salaries in representative ﬁrms in China, there is a noticeable and consistent increase in wages from 1998 to 2007, with an average annual growth rate of 7.9%. However, there is an anomaly in 2002, which can be attributed to the global ﬁnancial crisis that resulted in signiﬁcant layoffs and a rise in the unemployment rate in China. International Labour Ofﬁce (1998) indicated that around 3.5 M individuals were laid off during that period, leading to an unemployment rate of 5–6%. Despite these challenges, the expanding presence of private industry and small and mediumsized enterprises played a role in the growth of productive employment. Even in 1998, despite a relatively lower growth rate compared to other years, there was still a 5.9% increase in employee salaries, attributed to various factors, including ongoing economic development in China. Notably, there was a sharp increase in employee salaries in 2001, with a 16.1% rise compared to the previous year. This surge can be linked to China’s entry into the WTO, which positioned it as a global manufacturing hub. Furthermore, this period marked a transition from highly centralized wage-setting structures with signiﬁcant wage compression to more market-oriented and decentralized wage systems in alignment with China’s WTO accession (Blau and Kahn, 2017). Starting from 2004, there was a substantial and sustained annual growth rate of 8% in employee salaries. This growth can be attributed to factors such as the expansion of higher education (Zhang and Che, 2018) and the implementation of the Minimum Wage Bill. These developments likely contributed to increased labor market demand and enhanced bargaining power for employees.
+It is crucial to acknowledge that the conclusions and ﬁgures provided in this analysis are descriptive in nature and do not establish causal relationships. While the data presented suggests certain patterns and trends, further research is needed to determine the underlying causes and mechanisms driving these observations. Moreover, it is worth noting that the notable decline in wages in 2002 may be linked to the ﬁnancial crisis that occurred in 1998. Economic downturns and ﬁnancial crises can have lasting effects on labor markets and wage dynamics. When comparing wages in China to those in developed countries, it becomes evident that China’s wages are relatively low. For instance, according to OECD statistics, the annual salary in the United States was $44,000 (at current prices) in 2004, whereas in China, it amounted to 12,000 RMB (or ~$1400). This stark contrast demonstrates a signiﬁcant difference of nearly 31 times in wages between the two countries. Consequently, there is potential for conducting further investigations into the persistent effects of education on wage growth, not only in China but also in other emerging countries. Such research endeavors have the potential to inform policies and strategies aimed at enhancing workers’ wages in these regions.
+In conclusion, while the descriptive analysis offers valuable insights into wage trends and international wage differentials, establishing causal relationships requires additional research. Exploring the long-term impacts of education on wage advancement could contribute to enhancing workers’ wages in China and other emerging economies.
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | (2025)12:959 | https://doi.org/10.1057/s41599-025-05084-4
+
+5
+
+ARTICLE
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | https://doi.org/10.1057/s41599-025-05084-4
+
+Theoretical correlations of historical Keju and contemporaneous wages. The correlation between ancient exams and modern wages can be attributed to the transmission of Keju culture across generations. Culture has the ability to endure over extended periods and is often viewed as stable (Boyd and Richerson, 1985; Chen et al., 2020; Giuliano and Nunn, 2021; Cao et al., 2022). The impact of Keju culture on contemporary wages can be understood through this cultural transmission. It is noteworthy that the abolition of the IES did spark a rebellion (Bai and Jia, 2016). However, the persistent culture of valuing learning, prioritizing education, and seeking political success through participation in civil service exams has remained deeply rooted in society as the primary avenue for social mobility (Russell, 1922).
+Theoretical evidence posits that cultural traits can be vertically transmitted across generations, encompassing genetic and family value aspects (Becker, 1991). Education has been demonstrated to have enduring effects through intergenerational transmission (Maurin and McNally, 2008). In the Chinese context, where Confucian norms wield signiﬁcant inﬂuence, students demonstrate heightened dedication to their studies and make substantial investments in tutoring. Utilizing data from China’s Family Panel Survey, research has unveiled that individuals’ attitudes toward education are inﬂuenced by the historical success of the IES (Chen et al., 2020). Regions that excelled in the IES tend to prioritize education as a pivotal avenue for social mobility. Notably, respondents hailing from prefectures with a stronger IES performance also exhibit enhanced academic performance. These ﬁndings underscore how the success and legacy of the IES have shaped cultural values and the emphasis placed on education in China. The enduring impact of the examination system has signiﬁcantly inﬂuenced the perception of education to achieve upward mobility within society. However, it is imperative to consider the broader socio-economic and contextual factors that may impact educational outcomes and social mobility in China. Further research is essential to comprehensively grasp the intricate dynamics involved in the intergenerational transmission of cultural traits and their effects on academic performance and social mobility.
+Hence, a correlation can be established between the historical IES and the current employee pay levels. The IES, as a cultural trait, has transmitted a strong belief that education is the most effective means to accumulate human capital and achieve social mobility. Consequently, it is expected that there will be enduring returns on education in terms of income levels (Maurin and McNally, 2008). The historical inﬂuence of the IES has ingrained the perception that education is a crucial pathway to success and upward mobility in Chinese society. This belief has persisted over time and continues to shape individuals’ investment in education and their expectations of returns on their educational attainment.
+Identiﬁcation strategy OLS estimate. To investigate the long-term correlations between the IES and contemporaneous workers’ wages, we initially employ the following OLS equation:
+ÀÁ ln wi ¼ β lnðIESÞ þ α1Xc þ α2Xh þ α3Xg þ θp þ γind þ εi ð1Þ
+Where i indexes a ﬁrm, and wagei measures the average wages of workers in ﬁrm i. To investigate the long-term correlations between the IES and contemporary workers’ wages, we conducted an analysis using an OLS equation. Speciﬁcally, we utilized data from the ASIF of 2004, which is derived from the census of industrial ﬁrms. Unlike previous studies that focused on prefectures, we chose ﬁrms as our research unit to capture a wider range of variations across ﬁrms, regions, and industries. In the OLS equation, we introduced the IES, represented by the variable
+
+IES, as our main variable of interest. The coefﬁcient associated with IES is of particular signiﬁcance. To proxy the success of the IES, we used the Jinshi density in the Ming-Qing dynasties within a speciﬁc prefecture. By employing a complete natural log speciﬁcation, the estimates we obtained can be interpreted as the effects of a percentage change in Jinshi density per 10,000 people on the percentage change in workers’ wages.
+Certainly, many macroscopic factors confound our estimates of IES effects on contemporaneous wages. To alleviate these potential biases, we have two strategies: (1) adding province ﬁxed effects and industry ﬁxed effects and cluster; (2) controlling several covariates associated with wages. Speciﬁcally, we cluster all covariates into three types: contemporaneous confounding factors, historical confounding factors, and geographic confounding factors. In Eq. (1), θp denotes the province ﬁxed effects while γind stands for industry ﬁxed effects. Xc represents the contemporaneous covariates, and Xh stands for the historical covariates, while Xg stands for the geological covariates.
+Fixed effects and cluster. To enhance the robustness of our analysis, we ﬁrst tackle the challenge of persistent time-speciﬁc attributes at the province level by incorporating province ﬁxed effects. This method helps mitigate potential bias stemming from unobservable factors unique to each province, such as variations in the implementation of the Jinshi system or provincial minimum wage policies. Moreover, the inclusion of province ﬁxed effects enables us to capture variations within provinces. To address common unobservable factors across all ﬁrms but potentially differing across industries, we also include industry ﬁxed effects. These ﬁxed effects enable us to control for industryspeciﬁc factors like subsidies, technological advancements, and macroeconomic policies that may inﬂuence workers’ wages. In our baseline analysis, we cluster the standard errors at the county level. This clustering approach considers the spatial correlation of unobservable factors within each county, thus helping to tackle any issues related to spatial dependence. Through the implementation of these strategies, our goal is to derive more robust and reliable estimates of the link between the IES and contemporary workers’ wages.3
+Baseline controls Contemporaneous confounding factors: Nightlights: Regional economic prosperity exhibits a strong correlation with workers’ wages, as indicated by studies conducted by Hicks (1932), Robinson (1933), and Card (2022). To quantify economic disparities at the prefecture level, nightlight indices are employed, using satellite nightlight density data sourced from the Global DMSP-OLS Nighttime Lights dataset (Henderson et al., 2012).4 Firm age: The inﬂuence of ﬁrm age on ﬁrm performance has been extensively studied (Coad et al., 2018). Older ﬁrms, known as incumbents, typically exhibit higher levels of human capital accumulation and better survival prospects, while younger ﬁrms, referred to as entrants, focus on building such capabilities (Acemoglu and Cao, 2015). Given that entrants may lack a strong foundation in human capital, they may resort to offering higher wages to attract talent, potentially introducing estimation biases. To address this, we include ﬁrm age as a covariate when analyzing the lasting effects of the IES on workers’ wages. Firm age is calculated as the difference between 2004 and the year of establishment (2004—founding year), representing the time gap between 2004 and the ﬁrm’s founding year. Temperature, rainfall, and pollution: The impact of climate change on human capital and ﬁrm productivity is substantial. Chen and Yang (2019) ﬁnd that rising temperatures are linked to a decline in ﬁrms’ productivity, while Kotz et al. (2022) conclude that changes in
+
+6
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | (2025)12:959 | https://doi.org/10.1057/s41599-025-05084-4
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | https://doi.org/10.1057/s41599-025-05084-4
+
+ARTICLE
+
+rainfall have detrimental effects on economic development. Moreover, air pollution’s impact on human capital cannot be overlooked, as it leads to cognitive decline (Zhang et al., 2018), migration (Chen et al., 2020), and productivity loss (Fu et al., 2018). To mitigate potential estimation biases arising from these factors, we include them as additional covariates in our analysis.
+Geography. Consistent with the economic history literature, which underscores the importance of considering key geographic factors with lasting impacts on economic development, we incorporate distance to the coast and terrain ruggedness as fundamental controls in our analysis. Firms located near the coast may have reaped signiﬁcant advantages from trade, technology, and education, particularly given the historical context of certain regions in China closing their borders during that era (Fairbank and Liu, 1980; Chen et al., 2021). Additionally, as noted by Nunn and Puga (2012), terrain ruggedness exerts both direct and indirect inﬂuences, often interacting with historical events.
+
+documented on slips made from bamboo and pine used as printing materials. Due to the high overland transportation costs, canal transportation was the preferred method. Consequently, the location of the printing center was typically near the materials required for printing (refer to Chen et al., 2020 for supporting evidence).
+Therefore, we employ the bamboo and pine location as the instrument, and the examples for geographic location are displayed in Fig. 2 (we also discuss the transport accessibility in the Robustness). The logic is that the success of IES in one prefecture is closely associated with availability to books and the necessary canal transportation (e.g., the Grand Canal).5Hence, the distance of river to its closest bamboos and pines can be plausibly reasonable to instrument the IES development (COVðJinshii; distanceiÞ≠0). Also, the living habitats of ingredients are exogenous, by nature endowÀments, hence wÁe are convinced that this instrument satisﬁes COV wagei; distancei ¼ 0. Therefore, the ﬁrst-stage equation can be represented as:
+
+Historical confounding factors. Historical factors, particularly historical economic prosperity, can potentially introduce biases in our estimates by inﬂuencing Jinshi density and creating correlations with contemporary economic prosperity due to persistent natural endowments and geographical conditions. To address these potential biases, we employ urbanization rate, population density, and agricultural development as proxies, given the limited availability of reliable datasets (Bairoch, 1988). Speciﬁcally, we retrieve annual average population density and the proportion of the urban population during the Ming-Qing period (1393–1920) from Cao (2000 and 2005).
+In Eq. (1), εi is the residual. In standard regression, standard errors are clustered at the county level to allow for within-county autocorrelation.
+2SLS estimates. The traditional IES did not assess educational competencies like STEM (science, technology, engineering, and mathematics). Instead, it focused on evaluating the quality of the eight-legged essay (a standardized writing format) as the sole criterion for scoring, with the “Four Books” and the “Five Classics” serving as authoritative references (McDermott, 2006). The reign of Emperor Wudi of the Han dynasty introduced the “Five Classics”, leading to extensive scholarly efforts in interpreting these texts. The “Four Books” were compiled and annotated by Zhuxi, a non-Confucian scholar dedicated to advancing the “Principle Theory.” These essential references for the IES were
+
+lnðIESÞ ¼ β distancei þ α1xi þ α2xc þ α3xg þ θp þ γind þ εi ð2Þ
+where distance indicates the distance of the river to the closest printing ingredients (bamboos and pines) in ﬁrm i.
+Exclusion restrictions. In our article, a robust and credible instrument should have the ability to impact current employee wages through the historical success of the IES. As noted by Elvin (2004) and Chen et al. (2020), the selection of river, bamboo, and pine forest locations for the printing industry is typically not endogenous. Our instrument is independent of a range of potentially inﬂuential omitted variables strongly correlated with economic tendencies, as evidenced in Appendix Table C1. The table also demonstrates that the proximity of bamboo and pine forests to the nearest river is not directly related to present-day wages, further bolstering the validity of our instrument. During the Ming-Qing dynasties, a predominantly small-scale peasant economy prevailed, with crop sustainability playing a pivotal role in economic tendencies. To examine this connection, we investigated the impact of the distance between rivers and bamboo and pine forests on crop sustainability. The results outlined in Table C2 reveal that the positioning of rivers and bamboo and pine forests did not show a signiﬁcant association with crop sustainability.
+Similarly, results for the Grand Canal and the number of courier stations are reported in Table C3.
+
+Fig. 2 Location of (left) major navigable rivers and pine and bamboo forests and (right) Ming Courier Stations and Route, and the Grand Canal. Source: (1) Chen et al. (2022), (2) https://worldmap.harvard.edu/maps/china-history/Kkj (The Chinese Late Ming Dynasty Courier Route System).
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | (2025)12:959 | https://doi.org/10.1057/s41599-025-05084-4
+
+7
+
+ARTICLE
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | https://doi.org/10.1057/s41599-025-05084-4
+
+Data source We combined two primary data surveys to estimate the long-term effects of education on wages in speciﬁc geographic areas across many of China’s cities, covering the Ming-Qing dynasties and contemporary periods. These surveys included various factors for a comprehensive analysis of education returns. Previous research has highlighted the multiple beneﬁts of education, such as promoting urban–rural equality, skill development, and upward mobility. Our study speciﬁcally investigates the impact of education on long-term wages and fringe beneﬁts.
+Jinshi density. Our data on the IES are sourced from historians Cao (2000, 2015) and Chen et al. (2020). The core explanatory variables in our study are Jinshi density and Juren density, which collectively represent the highest level of achievement in the IES and have far-reaching effects (Ho, 1962). Speciﬁcally, we examine Jinshi density only during the entire Ming-Qing dynasties, as this policy was stable and institutionalized solely during this period spanning 1371–1905.6 The Jinshi data for the IES are obtained from Chen et al. (2020), which, in turn, originates from Zhu and Xie’s (1980) Ofﬁcial Directory of Ming-Qing Civil Exam Graduates.7 They provide detailed characteristics of Jinshi, including birthplace, ranks, and the year of passing the exam. Throughout the Ming-Qing dynasties, a total of ~51,624 individuals were admitted as Jinshi, while our sample covers 46,908 individuals spanning the 500-year timeframe. These participants took part in exams conducted in 278 Chinese historical prefectures, which correspond to 272 cities in contemporaneous China. Moreover, due to signiﬁcant variations in size and population among historical Chinese prefectures, we use Jinshi density and Juren density as proxies for the level of the IES. Drawing from Cao (2000, 2015) and Chen et al. (2020), we compile the normalized Jinshi density and Juren density per 10,000 units. To address skewness, we also apply the natural logarithm transformation, using log (Jinshi density+1) to prevent zero values. During the Ming-Qing dynasties, an average of ~8 Jinshi and 21 Juren were recorded per 10,000 individuals.
+Contemporaneous workers’ wages. We used the historical data from the IES that covers the entire country to include nationwide ﬁrms in our analysis of contemporaneous workers’ wages. We relied on a comprehensive annual survey conducted by China’s Bureau of Statistics, which has been extensively studied by researchers like Yu (2015). This survey includes all large-scale manufacturing factories, including state-owned ﬁrms of all sizes and non-state-owned ﬁrms with annual added values exceeding 5 M RMB (about 0.6 M$). The survey collects detailed information on ﬁrm characteristics like location, juridical person, and accounting measures. Previous studies, such as Brandt et al. (2012), reported that the dataset from 1998 to 2007 included around 2,223,406 observations from 568,888 ﬁrms, representing 90.2% of the total outputs of the manufacturing sector. However, due to cost constraints, the statistics bureau did not collect information on workers every year. A general survey was conducted in 2004, which included workers’ wages and other relevant information. Therefore, we used the annual surveys of industrial ﬁrms from 2004 as the primary dataset, consisting of 279,092 enterprises. Table 1 provides summary statistics, and detailed data sources for other variables are provided in the Appendix Part D.
+Empirical results OLS results. Table 2 shows the OLS baseline estimates for the analysis. In Column (1), the baseline estimate includes ﬁxed effects and clusters. The results reveal that the development level of the IES positively impacts workers’ wages during the same
+
+period. Speciﬁcally, a 1% increase in local Jinshi density per 10,000 people is associated with a signiﬁcant 7.5% increase in wages. As we add covariates in subsequent columns, the estimated coefﬁcient decreases. In Column (2), after introducing contemporaneous factors like ﬁrm age, temperature, air pollution, rainfall, and nightlight, the coefﬁcient decreases to 3.2%. This suggests that the initial coefﬁcient in Column (1) may have been inﬂuenced by these additional factors. In Column (3), when all covariates are included, the estimated coefﬁcient remains stable at 3.5%. This is considered the baseline for our OLS analysis. Interpreting this estimate in terms of average wage per capita (13,020 CNY), the coefﬁcient is equivalent to 456 CNY. This signiﬁcant value explains long-term education returns and emphasizes the importance of the IES development level in understanding wage dynamics.
+The spatial setting in our analysis suggests that ﬁrms within the same prefecture may exhibit spatial correlations due to factors such as agglomeration effects and regional macro policies. To address this, we employ a robustness check by adjusting the standard errors at the city level, allowing for correlations among ﬁrms within the same prefecture. Upon conducting this adjustment, we ﬁnd that our estimates remain consistently signiﬁcant, albeit at the 5% level, as shown in Column (4) of our analysis. This suggests that the impact of IES development on workers’ wages persists even after accounting for spatial correlations among ﬁrms within the same prefecture. Furthermore, we explore the possibility that the effects of Jinshi density, as the highest attainment of IES, may have a stronger inﬂuence on talented workers rather than ordinary workers. To investigate this, we implement two strategies. First, we group two-digit industries into two clusters.8 : labor-intensive industries and hightechnology industries.9 And results provided in Columns (5) and (6) in Table 2 conﬁrm our hypothesis since labor-intensive and high-technology ﬁrms have sharper responses to Jinshi density.
+Another concern is the proxy of the IES. Indeed, Jinshi is the top-notch performer, and on average, for the prefecture, there were only 3.824 Jinshi per 10,000 people in our lengthy sample across 540 years, or equivalent to 46,908 persons. By comparison, in the lengthy sample period, the number of Juren is more than a quintuple of Jinshi.10 On average, there are 10.909 Juren and 98.190 Shengyuan per 10,000 people in our lengthy sample in every prefecture. Therefore, merely focusing on the elite may result in the neglect of the effects of second-tier or third-tier winners of the IES and ﬁnally cause bias in our estimates. Thus, we use Juren as the alternative proxy.11 Consistent with the conclusions for Jinshi, the effects of other IES proxies are positive and statistically signiﬁcant. A notable phenomenon is that Juren density exerts its effects more. A possible explanation is that Shengyuan has the lowest passing rate (about 1–1.5%, as estimated by Ji, 2006), and Juren was possessed with the highest openness rate, for that 45.1% of Juren comes from an ordinary background while 37.2% of Jinshi comes from the common background (Ho, 1962). According to Elman (2000), inspired by public perception and forced by cultural monopoly, roughly 2.5% male population attended the Xiangshi to pursue the Juren degree.
+Based on our ﬁndings, we observe that both levels (Jinshi and Juren) of the IES impact the contemporaneous wages of workers. This discovery motivates us to conduct thorough estimates that include both levels in our subsequent analysis. By integrating both Jinshi and Juren levels of the IES, we aim to offer a more comprehensive insight into the factors inﬂuencing workers’ wages. This approach enables us to consider the combined effects and interactions between the various components of the IES, strengthening the robustness and completeness of our analysis.
+
+8
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | (2025)12:959 | https://doi.org/10.1057/s41599-025-05084-4
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | https://doi.org/10.1057/s41599-025-05084-4
+
+ARTICLE
+
+Table 1 Summary statistics.
+
+Variable
+Wage per capita (logged) Jinshi density (logged) Juren density (logged) Shengyuan density (logged) Nightlight (logged) Agricultural suitability (logged) Distance to costal (logged) Terrain ruggedness (logged) Historical population density (logged) Historical urbanization rate (logged) Firms’ age (logged) Temperature (logged) Rainfall (logged) Pollution (logged) Female ratio Female postgraduates’ ratio Female graduates’ ratio Female vocational graduates’ ratio Female high school graduate’s ratio Female primary school graduate’s ratio Female senior title ratio Female middle title ratio Female junior title ratio Male ratio Male postgraduates’ ratio Male graduates’ ratio Male vocational graduates’ ratio Male high school graduate’s ratio Male primary school graduate’s ratio Male senior title ratio Male middle title ratio Male junior title ratio Overall welfare cost (logged) Unemployment insurance (logged) Medical insurance (logged) Housing fund (logged) Training fees (logged) National capital (logged) Collective capital (logged) Corporate capital Personal capital (logged) Hong Kong, Macao and Taiwan capital (logged) Foreign capital (logged) R&D per capita (logged) Patent application (logged) Patent authorization (logged) Invention authorized (logged) Schooling year (logged) University (logged) Education cost (logged) Employees in education sector (logged) Trade by railway (logged) Trade by road (logged) Trade by water (logged) Trade by air-plane (logged)
+
+Obs
+250,176 250,176 250,176 250,176 250,176 250,176 250,176 250,176 250,176 250,176 250,176 250,176 250,176 250,176 250,076 245,863 245,863 245,863 245,863 245,863 250,076 250,076 250,076 250,076 250,076 250,076 250,076 250,076 250,076 250,076 250,076 250,076 250,176 250,176 250,176 250,176 250,176 250,176 250,176 250,176 250,176 250,176 250,176 243 226 224 223 243 243 243 243 240 240 240 284
+
+Mean
+2.391 1.542 2.486 4.787 −0.386 3.202 11.549 0.111 3.009 0.08 1.839 2.78 4.348 3.862 0.266 0.002 0.03 0.093 0.328 0.547 0.041 0.290 0.670 0.734 0.003 0.035 0.082 0.327 0.553 0.084 0.332 0.583 0.704 0.124 0.443 0.096 0.081 0.799 0.828 2.186 3.929 0.928 0.829 8.531 2.864 2.336 0.835 2.184 1.409 8.683 0.378 7.954 3.708 2.603 5.306
+
+Data Source: Cao (2000, 2015); Chen et al. (2020); Annual Survey of Industrial Firms (2004); City-level Statistics Yearbook.
+
+Std. Dev.
+0.55 1.04 1.064 0.565 1.549 0.686 1.195 0.107 0.781 0.066 0.905 0.23 0.34 0.238 0.125 0.02 0.09 0.154 0.267 0.332 0.143 0.327 0.349 0.125 0.019 0.078 0.105 0.225 0.289 0.175 0.288 0.323 0.542 0.317 0.607 0.317 0.173 2.542 2.419 3.645 3.847 2.716 2.595 1.535 1.127 1.093 0.859 0.093 0.895 0.713 0.208 0.796 2.891 4.029 2.345
+
+Min
+−3.918 0 0 0
+−7.069 0.55 9.731 0.005
+−1.297 0 0 1.273 2.318 1.919 0 0 0 0 0 0 0 0 0 0.5 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2.595 0.674 0.487 0.027 1.936 0.000 6.713 0.029 5.832 0 0 0
+
+Max
+6.232 3.959 5.901 5.825 2.74 4.838 14.698 0.821 4.153 0.307 6.004 3.192 4.871 4.435 0.5 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 6.767 5.419 6.369 5.254 4.007 11.734 10.462 11.843 11.117 11.327 11.547 11.974 7.324 6.835 4.957 2.460 4.304 11.786 1.456 10.331 10.189 14.298 9.013
+
+2SLS results. To address potential endogeneity concerns in our initial OLS estimate, we present the 2SLS estimates in Table 3. In this analysis, we utilize the distance of navigating the river to the printing ingredient as an instrument. In the top panel of Table 3, we report the ﬁrst-stage estimation results. These results show negative and highly signiﬁcant coefﬁcients when controlling for ﬁxed effects and considering the distance to printing ingredients either with or without contemporaneous controls. This is
+
+reﬂected in Columns (1) and (2) of the table. Additionally, we calculate the Kleibergen-Paap Wald F-statistic to assess the validity of identiﬁcation. Without weather controls (Column 1), the Kleibergen-Paap Wald F-statistic is calculated to be 332.443 (Kleibergen and Paap, 2006). When weather controls are included, the F-statistic (KP) is 328.083 (Column 2). In both cases, the F-statistic indicates no weak identiﬁcation, as the value is much larger than the critical value of 16.38. Furthermore, when we
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | (2025)12:959 | https://doi.org/10.1057/s41599-025-05084-4
+
+9
+
+Table 2 OLS estimates: The Impact of Jinshi density on contemporaneous per capita wage.
+
+ARTICLE
+10
+
+Jinshi density in Ming-Qing(logged) Jinshi density × Labor intensive Jinshi density × High technology Contemporaneous controls:
+Firm age (logged) Temperature (logged) Rainfall (logged) Pollution (logged) 2004 nightlight (logged) Historical controls: Population density in Ming-Qing (logged) Urbanization rate in Ming-Qing (logged) Geographical controls: Distance to coast (logged) Agricultural Suitability Terrain ruggedness R2 Cluster Observations Provincial ﬁxed effects Industrial ﬁxed effects
+
+(1) Wage (logged) 0.075*** (0.021) 0.196 County 250,176 Yes Yes
+
+(2) 0.032*** (0.009) 0.021*** (0.001) 0.098*** (0.022) 0.082*** (0.010) −0.265*** (0.007) 0.089*** (0.001) 0.200 County 250,176 Yes Yes
+
+(3) 0.035*** (0.009) 0.020*** (0.001) −0.006 (0.023) 0.086*** (0.011) −0.248*** (0.012) 0.076*** (0.002) 0.064*** (0.005) −0.017 (0.060) −0.015*** (0.003) 0.006 (0.003) 0.315*** (0.032) 0.194 County 250,176 Yes Yes
+
+(4) 0.035** (0.014) 0.020*** (0.004) −0.006 (0.105) 0.086 (0.050) −0.248*** (0.068) 0.076*** (0.025) 0.064** (0.032) −0.017 (0.517) −0.015 (0.019) 0.006 (0.019) 0.315** (0.156) 0.216 City 250,176 Yes Yes
+
+(5) Labor-intensive industry 0.075*** (0.009) 0.069*** (0.004) 0.015*** (0.003) −0.007 (0.091) 0.081* (0.046) −0.249*** (0.055) 0.072*** (0.011) 0.065*** (0.023) −0.024 (0.309) −0.008 (0.014) 0.004 (0.013) 0.308*** (0.117) 0.228 County 250,176 Yes Yes
+
+(6) High-technology industry 0.032*** (0.008) 0.049*** (0.013) 0.021*** (0.003) −0.006 (0.090) 0.087* (0.046) −0.252*** (0.056) 0.076*** (0.011) 0.065** (0.023) −0.023 (0.320) −0.014 (0.014) 0.006 (0.013) 0.311*** (0.118) 0.231 County 250,176 Yes Yes
+
+Each column represents a separate cross-sectional OLS regression. Column (1) reports the effects of Jinshi density on wage per worker, with provincial and industrial ﬁxed effects controlled. In column (2), the contemporaneous controls are added, including ﬁrm age, temperature change, rainfall, and air pollution. Historical and geographic controls are further added in column (3), containing nightlight in 2004, population density in Ming-Qing, the urbanization rate in Ming-Qing, as well as the distance to coast, agricultural sustainability, and terrain ruggedness. All OLS regressions are clustered at the county level. In column (4), we cluster the standard errors at the city level. In order to further investigate the industrial heterogeneity, we add the interaction term of Jinshi density and labor-intensive industry, Jinshi density and high technology industry, respectively, in columns (5) and (6). These estimated Jinshi density effects can be interpreted as the percentage changes in wages per worker with a percent change in Jinshi density. The KP F-statistic is the Kleibergen-Paap Wald rk F-statistic for weak identiﬁcation in the ﬁrst stage (Kleibergen and Paap, 2006). ***denotes signiﬁcant at 1% level, **denotes signiﬁcant at 5% level, *denotes signiﬁcant at 10% level.
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | https://doi.org/10.1057/s41599-025-05084-4
+include all covariates and adjust clusters at the prefecture level, our conclusions remain robust. This ensures that our ﬁndings are not driven by omitted variable bias or endogeneity concerns. Moreover, our results indicate that capital-intensive and hightechnology industries beneﬁt more from the IES. This suggests that these industries experience greater positive effects on workers’ wages compared to other sectors.
+The lower panel of Table 3 presents the 2SLS estimates of the effects of Jinshi density on contemporaneous workers’ wages. Using the instrumented Jinshi density, without weather control (reported in Column (1)), we observe a signiﬁcant positive effect on contemporaneous workers’ wages. This ﬁnding aligns with the instrument’s ability to correct for potential biases arising from omitted variables. The coefﬁcient of the OLS estimates only undergoes a change in magnitude in the 2SLS estimates when all controls are added. Speciﬁcally, a 1% increase in Jinshi density corresponds to a 7.9% increase in wages. To put this into perspective, this implies that the annual average level for workers’ wages (in CNY) can increase by 1,028.58 CNY in response to a 1% increase in Jinshi density. To account for spatial correlations due to agglomeration effects within cities, we cluster the standard errors by city in Column (4). Importantly, we ﬁnd no noticeable loss of signiﬁcance when employing this clustering strategy. This suggests that our results remain robust even after considering spatial correlations within cities. Moreover, by addressing the potential endogeneity issue through the 2SLS approach, we are able to draw valid conclusions regarding the interaction terms included in Columns (5) and (6). These interaction terms examine the differential effects of Jinshi density on workers’ wages across different industry types. Our results indicate that capital-intensive industries and high-technology industries beneﬁt more from higher Jinshi density. Speciﬁcally, workers’ wages would increase by 7.9% for capital-intensive industries and 3.1% for high-technology industries when compared to labor-intensive and low-technology industries, respectively.
+To assess the magnitude of these effects, let’s consider the promotion of Jinshi density by 1% and its impact on average ﬁrm-level workers’ wages in 2004. Based on our estimates, a 1% increase in Jinshi density is associated with a 7.9% increase in workers’ wages. This suggests that promoting Jinshi density by 1% through various means could result in an increase of approximately 215.05 million CNY in average ﬁrm-level workers’ wages in 2004. In equivalent terms, this amounts to approximately 25.97 thousand dollars.12 Across all ﬁrms registered in the ASIF, workers’ wages may be increased by 53.8 billion CNY, which is equivalent to 6.5 billion dollars, accounting for 0.34% of China’s GDP in that year.
+Therefore, comparing two threads of literature involving historical education and contemporaneous wages is beneﬁcial as it allows us to estimate the long-term effects of education on current workers’ wages. One thread of literature focuses on the short-term returns of education. Studies by Hoekstra (2009) and Saavedra (2009) examine the impact of attending elite universities on earnings early in people’s careers and ﬁnd that around 10% of salary increases can be attributed to attending renowned universities in America. In China, Li et al. (2012) use the Chinese Gaokao as an exogenous shock and ﬁnd an additional gross return equivalent to 10.7% in salaries for those who enter elite colleges (“211 programs”). Ashenfelter and Krueger (1994) use twins to control for confounding factors and reveal 12–16% increases in wages due to education in the United Kingdom. Clark and Martorell (2014) focus on high school credentials and conclude that high school diplomas generate additional incomes of less than 10%. Overall, the results of most of the literature focusing on short-term returns of education, with various model speciﬁcations, are comparable to our estimates, although our
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | (2025)12:959 | https://doi.org/10.1057/s41599-025-05084-4
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | https://doi.org/10.1057/s41599-025-05084-4
+
+ARTICLE
+
+Table 3 2SLS estimates - Jinshi density effects on contemporaneous per capita wage.
+
+Panel A: First stage
+Dependent variable:
+River distance to bamboo/ pine (no log) KP-F statistics Panel B: Second stage Dependent variable: Jinshi density in MingQing(logged) Jinshi density × Labor intensive Jinshi density × High technology Cluster Observations Firm controls Other controls Provincial ﬁxed effects Industrial ﬁxed effects
+
+(1)
+
+(2)
+
+(3)
+
+Jinshi density in Ming-Qing(logged)
+
+−0.135*** (0.007) 332.443
+
+−0.132*** (0.007) 328.083
+
+−0.104*** (0.014) 260.957
+
+(4)
+−0.104*** (0.014) 52.876
+
+(5)
+Labor -intensive industry
+
+(6)
+High-technology industry
+
+−0.094*** (0.005) −0.102***
+
+(0.006)
+
+337.130
+
+257.790
+
+Wage (logged) 0.122*** (0.014) 0.131*** (0.016) 0.079*** (0.021) 0.079*** (0.018) 0.114*** (0.024)
+
+0.076*** (0.021)
+
+0.079*** (0.024)
+
+0.031** (0.013)
+
+County 250,176 No No Yes Yes
+
+County 250,176 Yes No Yes Yes
+
+County 250,176 Yes Yes Yes Yes
+
+City 250,176 Yes Yes Yes Yes
+
+County 250,176 Yes Yes Yes Yes
+
+County 250,176 Yes Yes Yes Yes
+
+Each Column in each panel represents a separate cross-sectional 2SLS regression. Panel A displays ﬁrst-stage results of the 2SLS estimate, showing river distance to the bamboo/pine forest effects on the regional Jinshi density. In Panel B, Column (1) reports the effects of Jinshi density effects to wage per worker without any covariates. We add ﬁrm controls and other controls stepwise in Columns (2) and (3). In Column (4), we adjust the cluster to the city level. In Columns (5) and (6), to investigate whether capital-intensive and high technology ﬁrms beneﬁt more, we add the interaction term respectively. Covariates include rainfall and air pollution, nightlight in 2004, population density in Ming-Qing, the urbanization rate in Ming-Qing, distance to coast, agricultural sustainability, and terrain
+ruggedness. All regressions are clustered at the county level, unless noted. These estimated Jinshi density effects can be interpreted as the percentage changes in wages per worker with a percent change in Jinshi density. The KP F-statistic is the Kleibergen-Paap Wald rk F-statistic for weak identiﬁcation in the ﬁrst stage (Kleibergen and Paap, 2006). *** denotes signiﬁcant at 1% level, ** denotes signiﬁcant at 5% level, * denotes signiﬁcant at 10% level.
+
+coefﬁcients represent persistent effects. In addition to focusing on the short-term effects of education, the fact that our estimates of elasticities are at least as signiﬁcant as or less signiﬁcant than previous papers could be attributed to the use of different datasets. Previous studies mostly use small sets of individuals, while our analysis encompasses ﬁrm-level employee pay across the entire country.
+Another body of literature examines the long-term effects of education, although it has not been given as much attention. Akresh et al. (2018) investigate the long-term effects of education by analyzing the school construction program implemented by the Indonesian government. Their study focuses on intergenerational effects and ﬁnds that education can lead to improvements in living standards. Chen et al. (2020) examine the effects of historical education on current education. They ﬁnd that historical education can result in an additional 8.5% increase in years of schooling. While the magnitude of these coefﬁcients may not be directly comparable to our analysis due to differences in explanatory variables or unexplained factors, these studies provide solid evidence of the long-term returns of education.
+
+largest ASIF usually has multiple plant locations with branches, and second, this setting makes our estimates comparable with previous literature. Though the most prominent ﬁrms that are winsorized could have a disproportionate response to IES development (Jinshi density), results reported in Column (2) show that the results are similar using the non-winsorized data. Another issue causing bias in our estimates is the winners’ migration across prefectures because skills can be transferred.14 In Column (3), estimates indicate that our baseline conclusion is very robust, while excluding talented migrants, it is found that the point estimates enlarge by tenfold. This suggests historical migration potentially biases effects on wages downwards. At the same time, the direction and signiﬁcance level are consistent.15 In column (4), we drop the entrants across 2003–2004 since entering ﬁrms may affect labor market by wage penalty (Nyström and Elvung, 2015), and results indicate our baseline estimate is rather robust to entrants. In addition, we use different function forms in Columns (5), reporting estimate of non-log Jinshi density on logged workers’ wages, Column (6) provides logged Jinshi density effects on logged workers’ wage, Column (7) shows non-logged Jinshi density effects on non-logged workers’ wages.
+
+Robustness Econometric speciﬁcation. Correcting for potential endogeneity improves the reliability of our results, while uncertainties introduce bias in our 2SLS estimates. Table 4 presents results of robustness. Our baseline estimates employ an econometric model speciﬁcation that clusters the standard errors at both the ﬁrm and city levels. In Column (1), we cluster the standard errors at the province level to account for spatial and temporal correlation of workers’ wages within a particular province.13 The estimate indicates no signiﬁcance loss, suggesting no spurious regression problem exists. Besides, the KP-F statistics in the ﬁrst stage for the regional cluster is 68.092, much higher than the critical value (16.38). Then, we winsorize the annual average ﬁrm-level wage by top and bottom 0.5% for considerations in two aspects. First, the
+
+Alternative instrument-transportation accessibility. We further use transportation accessibility as the instrument to test the effectiveness of study material accessibility. In Ming-Qing periods, there is limited transportation access to the national capital (Peking) to attend the ﬁnal exam, while the Ming courier system and the great canal provide the most convenient access, which has been scarcely discussed. These two transportation approaches can potentially be a solid instrument (Zhu, 2021).
+The Grand Canal: China’s Grand Canal, as depicted in Fig. 2(b), was originally constructed to facilitate north-south connectivity and transport cereals. It holds the distinction of being the largest and oldest waterway in the world. Historian Adam Smith, in his work published in 1776 [2010, p. 4], acknowledged the extensive
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | (2025)12:959 | https://doi.org/10.1057/s41599-025-05084-4
+
+11
+
+ARTICLE
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | https://doi.org/10.1057/s41599-025-05084-4
+
+Table 4 Robustness check—alternative econometric setting, excluded Jinshi migration and ﬁrm entry.
+
+(1)
+
+(2)
+
+(3)
+
+Dependent variable:
+
+Wage (logged)
+
+Panel A: Jinshi density Jinshi density in Ming-Qing (logged) KP-F statistics Cluster Observations Provincial ﬁxed effects Industrial ﬁxed effects
+
+Cluster adjustments
+0.079*** (0.023)
+68.092 City 250,176 Yes Yes
+
+Windsorized sample
+0.077*** (0.021)
+260.957 County 247,676 Yes Yes
+
+Excluding Migrant Jinshi
+0.784*** (0.282)
+14.577 County 150,176 Yes Yes
+
+(4)
+Excluding entering ﬁrms
+0.079*** (0.019)
+344.290 County 147,174 Yes Yes
+
+(5)
+Wage (no log) Functional form
+1.326*** (0.061)
+260.957 County 250,176 Yes Yes
+
+Each Column in each panel represents a separate cross-sectional 2SLS regression. Column (1) provides alternative cluster to province-level. In Column (2), we winsorize the sample by both top and bottom 0.5%. Additionally, in Column (3), we regress the Jinshi density effects on contemporaneous wages excluding migrant Jinshi and entering ﬁrms in Column (4). In Columns (5), we adjust the function form of Jinshi density and contemporaneous wages. Provincial ﬁxed effects and industrial ﬁxed effects are included. Covariates include rainfall and air pollution, nightlight in 2004, population density in Ming-Qing, urbanization rate in Ming-Qing, as well as distance to coast, agricultural sustainability and terrain ruggedness as covariates. All OLS regressions are clustered in ﬁrm level. These estimated Jinshi density effects can be interpreted as the percentage changes in wages of per worker with the percent change in Jinshi density. The KP F-statistic is the Kleibergen-Paap Wald rk F-statistic for weak identiﬁcation in the ﬁrst stage (Kleibergen and Paap, 2006). *** denotes signiﬁcant at 1% level, ** denotes signiﬁcant at 5% level, * denotes signiﬁcant at 10% level.
+
+nature of the Grand Canal, surpassing other prominent canals such as the Nile and the Ganges. The maintenance and operation of the canal were overseen by the central government, which utilized it for transporting grain taxes. This ensured that the canal remained in good condition and could be utilized by private entities for trade and recreational purposes as well, contributing to its commercial signiﬁcance. In fact, the ofﬁcial transportation of grain taxes directly contributed to commercial prosperity, as the ofﬁcial boats were permitted to transport duty-free commodities during their services. Furthermore, individuals who held the titles of Jinshi, Juren, and Shengyuan were exempted from the burdensome tolls associated with canal usage. This exemption provided additional incentives and privileges to those holding these prestigious ranks, further contributing to the economic importance and functionality of the Grand Canal.16 The Grand Canal has historically served as the primary mode of transportation for southern examinees. As a result, the distance between a prefecture and the Grand Canal is expected to be closely related to the success level of the IES. This is primarily due to the high cost of land transportation for commoners, especially in southern prefectures. However, this relationship has not been systematically examined in previous studies. It is important to note that we anticipate the distance to satisfy exclusive constraints. This is because the Grand Canal closed in 1826, resulting in the discontinuation of its persistent effects on employee pay. A signiﬁcant breach of the canal prompted the government to explore alternative methods of transporting tribute rice, ultimately leading to the closure of the canal.
+By investigating the relationship between the distance from a prefecture to the Grand Canal and the success level of the IES, we aim to ﬁll this gap in existing research. We recognize that the closure of the canal had far-reaching implications, particularly for the trade and transportation networks of the affected prefectures. These changes may have had a signiﬁcant impact on the educational opportunities and outcomes for examinees in those regions.
+The Chinese Late Ming dynasty Courier Route System: In Ming dynasty, to maintain dominance, the founder Emperor Zhu Yuanzhang established strict post organization and management system. Emperor Yongle and Xuande further promoted the development of courier route systems. By the middle of the Ming dynasty, a huge post road network had been formed nationwide.
+
+The route system links labor force and capital in different areas. As a result, the regional prosperity is greatly promoted and six commodity distribution centers are constructed including Lingnan market (岭南市场), Jiangnan market (江南市场), Huguang market (湖广市场), Zhangquan market (章泉市场), Huabei market (华北市场) and Shanxi market (山西市场). In the Yangtze River Delta region, silk and cotton textile industry has begun to take shape, while cash crops (such as sugar) mostly traded in Pearl River delta regions. Timely transmit ofﬁcial documents and receive ofﬁcials have been another function of the Courier Route System. Additionally, the transport system also served candidates at all levels who went to provincial and capital cities to take part in imperial examinations. Therefore, the number of courier stations is also closely associated with the access to participate in the ﬁnal long-lasting exam.
+The distance to the Grand Canal and the number of courier stations can be valid instruments since transportation determines the access to the ﬁnal exam held in national capital -- Peking. Another concern is whether this alternative instrument satisﬁes the exclusion restrictions. The locations of the Grand Canal and Ming courier system are impossibly endogenously chosen for contemporaneous employee pay. Our proposed instruments are orthogonal to a set of confounding omitted variables that are closely associated with the economic propensity,17 as replicated in Table C3. In addition, our results also display that the distance to the Grand Canal and the number of courier stations are not directly linked to contemporaneous wages. Thus, the instruments are reliable.
+Our research ﬁndings are presented in Table 5, which provides estimates related to the effects of Jinshi density on employee pay. Columns (1) to(3) present these estimates without any controls, with ﬁrm controls, and with all controls included, respectively. All estimates are clustered at the county level, and Column (3) serves as the baseline when utilizing the Distance to the Grand Canal and the number of Ming Courier stations as instruments. The ﬁrst stage results indicate that a 1% increase in the distance from the Grand Canal leads to a 6.9% decrease in Jinshi density. Conversely, a 1% increase in the number of Ming Courier stations is associated with a 49.5% increase in Jinshi density. The KP-F statistics, measuring the strength of the instruments, is 519.718, signiﬁcantly surpassing the critical value of 16.38. The results of the second stage regression demonstrate that a 1% increase in
+
+12
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | (2025)12:959 | https://doi.org/10.1057/s41599-025-05084-4
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | https://doi.org/10.1057/s41599-025-05084-4
+
+ARTICLE
+
+Table 5 Alternative instrument—Jinshi density effects on contemporaneous per capita wage.
+
+(1)
+
+(2)
+
+Panel A: First stage
+
+Dependent variable:
+
+Jinshi density in Ming-Qing(logged)
+
+Distance to the Great Canal (logged) The number of Ming Courier station (logged) KP-F statistics Panel B: Second stage Dependent variable: Jinshi density in Ming-Qing(logged) Cluster Observations Firm controls Other controls Provincial ﬁxed effects Industrial ﬁxed effects
+
+−0.152*** (0.009) −0.125*** (0.007) 0.586*** (0.022) 0.605*** (0.024)
+
+348.010
+
+347.859
+
+Wage per worker (logged)
+
+0.100*** (0.025) 0.085*** (0.027)
+
+County
+
+County
+
+250,059
+
+250,059
+
+No
+
+Yes
+
+No
+
+No
+
+Yes
+
+Yes
+
+Yes
+
+Yes
+
+(3)
+−0.069*** (0.016) 0.495*** (0.018)
+519.718
+0.087** (0.035) County 250,059 Yes Yes Yes Yes
+
+(4)
+−0.069* (0.035) 0.495*** (0.037)
+125.309
+0.087** (0.039) City 250,059 Yes Yes Yes Yes
+
+(5)
+−0.082*** (0.016) 0.418*** (0.121)
+15.317
+0.060*** (0.014) Province 241 Yes Yes Yes Yes
+
+Each Column in each panel represents a separate cross-sectional 2SLS regression. Panel A displays ﬁrst-stage results of the 2SLS estimate, showing river distance to the bamboo/pine forest effects on the regional density. In Panel B, Column (1) reports the effects of Jinshi density effects to wage per worker without any covariates. We add ﬁrm controls and other controls stepwise in Columns (2) and (3). In Column (4), we adjust the cluster to the city level. In Columns (5), we report results of city-level 2SLS estimates. Covariates include rainfall and air pollution, nightlight in 2004, population density in Ming-Qing, the urbanization rate in Ming-Qing, distance to coast, agricultural sustainability, and terrain ruggedness. All 2SLS regressions are clustered at the county level. These estimated Jinshi density effects can be interpreted as the percentage changes in wages per worker with a percent change in Jinshi density. The KP F-statistic is the Kleibergen-Paap Wald rk F-statistic for weak identiﬁcation in the ﬁrst stage (Kleibergen and Paap, 2006). *** denotes signiﬁcant at 1% level, ** denotes signiﬁcant at 5% level, * denotes signiﬁcant at 10% level.
+
+Fig. 3 The Jinshi density effects on wage per worker by periods, with OLS and 2SLS estimates. a Provides historical education success effects on wage per work, with OLS speciﬁcation, while the effects estimated by 2SLS estimate are performed in (b). The 95% conﬁdence interval is provided.
+
+Jinshi density corresponds to an 8.7% increase in employee pay. To further strengthen our analysis, we cluster the data at the city level, as shown in Column (4). Although some signiﬁcance is diminished, the coefﬁcient remains statistically signiﬁcant at the 10% level. As a robustness check, we examine the prefecture-level data, and the results reinforce the reliability of our ﬁrm-level estimates.
+Robustness—is 2004 special?. To explore the relationship between historical wage levels and contemporary employee pay, we employ the cross-sectional data due to the limitations of panel data availability. We select the year 2004 as the baseline estimate, as it allows us to capture comprehensive information on workers employed in industrial ﬁrms in China. This choice is based on the availability of a general survey conducted in that year. However, we acknowledge potential concerns regarding the endogenous selection of 2004 as the survey period.
+
+To examine the effects of historical Jinshi density on contemporaneous wages, we conduct separate regressions for each year between 1998 and 2007. Figure 3a illustrates the results of the OLS estimation, highlighting the effects of Jinshi density on employee pay. In Fig. 3b, we present the instrumented Jinshi density effects using an instrumental variable approach. Across all speciﬁcations from 1998 to 2007, our ﬁndings consistently indicate a positive association between historical education success, as measured by Jinshi density, and contemporary employee pay. This suggests that higher historical educational achievements are linked to higher wages in the present.
+Macro evidence. We acknowledge another concern related to the potential idiosyncrasies of micro-level data collected by the National Bureau of Statistics in China. There is a possibility that the results obtained in our article regarding the estimates may be
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | (2025)12:959 | https://doi.org/10.1057/s41599-025-05084-4
+
+13
+
+ARTICLE
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | https://doi.org/10.1057/s41599-025-05084-4
+
+Table 6 Macro evidence: Jinshi density effects on contemporaneous per capita wage in industrial sectors.
+
+(1)
+
+(2)
+
+OLS
+
+Panel A: First stage
+Dependent variable:
+River distance to bamboo/pine (no log) KP-F statistics Panel B: second stage Dependent variable: Jinshi density in Ming-Qing (logged) R2 Cluster Observations Controls Provincial ﬁxed effects
+
+Wage per work (logged)
+
+0.161*** (0.033)
+
+0.076*** (0.026)
+
+0.682
+
+0.799
+
+Province
+
+Province
+
+241
+
+241
+
+No
+
+Yes
+
+Yes
+
+Yes
+
+(3)
+
+(4)
+
+2SLS
+
+Jinshi density in Ming-Qing(logged)
+
+−0.113*** (0.008) 182.325
+
+−0.086*** (0.008) 107.967
+
+0.190*** (0.050)
+Province 241 No Yes
+
+0.109* (0.060)
+Province 241 Yes Yes
+
+Each Column represents a separate cross-sectional regression, with the OLS estimation in Columns (1) and (2), while the 2SLS estimation is in Columns (3) and (4). City-level wage data are from Citylevel yearbooks. Panel A displays ﬁrst-stage results of the 2SLS estimate, showing river distance to the bamboo/pine forest effects on the regional density. In Panel B, Column (1) reports the effects of Jinshi density effects to wages per worker without any covariates. In Column (2), we add all covariates using the OLS estimate. In Column (3), Jinshi density effects on employee pay are reported with a 2SLS estimate without any covariates, correcting for potential endogeneity. While in Column (4), all covariates are included. Covariates include rainfall and air pollution, nightlight in 2004, population density in Ming-Qing, the urbanization rate in Ming-Qing, the distance to the coast, agricultural sustainability, and terrain ruggedness. All OLS regressions are clustered at the ﬁrm level. These estimated Jinshi density effects can be interpreted as the percentage changes in wages per worker with a percent change in Jinshi density. The KP F-statistic is the Kleibergen-Paap Wald rk F-statistic for weak identiﬁcation in the ﬁrst stage (Kleibergen and Paap, 2006). ***denotes signiﬁcant at 1% level, **denotes signiﬁcant at 5% level, *denotes signiﬁcant at 10% level.
+
+coincidental or inﬂuenced by speciﬁc characteristics of the data. In order to address this concern and enhance the robustness of our ﬁndings, we have re-evaluated the estimates by utilizing income data available in the city-level yearbook.18
+Table 6 presents the ﬁndings regarding the effects of Jinshi density on contemporary income from a macro perspective. The table includes four columns that provide different estimates. Columns (1) and (2) present the OLS estimates without and with covariates, respectively. To address the potential endogeneity issue, Columns (3) and (4) present the results of the 2SLS estimation. By instrumenting Jinshi density using the average distance to the nearest pine and bamboo forests, we obtain estimates that correct for endogeneity biases. At the macro level, our analysis reveals a highly signiﬁcant 7.9% increase in income associated with historical exams. Furthermore, when we instrument Jinshi density, we ﬁnd a close association between a 1% increase in Jinshi density and a signiﬁcant 10.9% increase in employee pay.
+Moreover, it is noteworthy that the magnitude of the coefﬁcients obtained using the macro-level instrumental variable approach is comparable to those obtained using micro-level ASIF data. This consistency reinforces the reliability and robustness of our ﬁndings.
+Exogenous shocks. In addition to the factors previously discussed, it is important to consider the historical context of modern China, which was characterized by periods of turmoil and war. Legislative wage formulation was not possible until the establishment of the People’s Republic of China (PRC) in 1949. Subsequently, from 1949 to the present day, there have been various signiﬁcant events that could potentially introduce biases into our estimates. These events include the Reform of the Wage Systems in the 1950s, the Great Proletarian Cultural Revolution, and the Reform and Open-up Policy in 1978. To account for the historical shocks and changes in China’s wage systems during this period, we speciﬁcally examined the effects of Jinshi density on employee pay after the establishment of the PRC. Our analysis reveals that, despite the disruptive events and reforms, historical educational success (as represented by Jinshi density) continues to exert signiﬁcant effects on contemporary employee pay in China.
+Tables 7 and 8 present speciﬁc estimation results focusing on different years to examine the effects of historical educational
+
+success on employee pay. We initiate the estimation process from the establishment of the PRC in 1949 and proceed at 10-year intervals, including the years 1959, 1969, 1979, 1989, and 1999. This approach allows us to analyze the long-term effects while excluding potential exogenous shocks that may have occurred between these intervals. In order to conduct a comprehensive analysis, we perform the estimation at different levels of granularity based on the available data. Speciﬁcally, we conduct prefecture-level analysis in 1989 (Column 5) and 1999 (Column 6), as well as provincial-level analysis in 1949 (Column 1), 1959 (Column 2), 1969 (Column 3), and 1979 (Column 4).19
+Our analysis reveals that in nearly all the selected periods, historical educational success (IES) signiﬁcantly inﬂuences employee pay in China. This ﬁnding suggests that the potential exogenous shocks, such as the Reform of the Wage Systems in the 1950s, the Great Proletarian Cultural Revolution, and the Reform and Open-up Policy in 1978, do not appear to introduce bias into our estimates.20
+Treaty ports. The Open-Door Policy in the late Qing dynasty may have introduced bias into our baseline estimates, as these regions were subject to unique economic incentives (Keller et al., 2017). During the Treaty Port Era (1842–1943), military actions by Western countries led to the opening of an increasing number of ports for foreign trade. This status not only facilitated foreign trade but also attracted investments, resulting in urbanization. Over time, economic policies favoring trade liberalization further accelerated growth, transforming these areas into major economic hubs and illustrating the complex interplay between historical circumstances and economic development.
+Considering this, we have excluded cities with treaty ports listed in the Treaty of Nanking, the Treaty of Tientsin, the Convention of Peking, and the Treaty of Shimonoseki. The results are reported in Table 8, with cities related to the Treaty of Nanking excluded in Column 1, cities related to the Treaty of Tientsin further excluded in Column 2, and cities related to the Convention of Peking excluded in Column 3. Finally, cities associated with all three treaties and the Treaty of Shimonoseki are excluded simultaneously. The results across these columns are consistent with our baseline estimates, suggesting that our baseline results are not signiﬁcantly affected by the presence of treaty ports or the Open-Door Policy.
+
+14
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | (2025)12:959 | https://doi.org/10.1057/s41599-025-05084-4
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | https://doi.org/10.1057/s41599-025-05084-4
+
+ARTICLE
+
+Table 7 Exogenous shocks since the establishment of the People’s Republic of China.
+
+Dependent Variable:
+
+(1) 1952 Wage (logged)
+
+(2) 1959
+
+(3) 1969
+
+(4) 1979
+
+(5) 1989
+
+(6) 1999
+
+Panel A: OLS
+Jinshi density in MingQing(logged) R2 Panel B: 2SLS Jinshi density in MingQing(logged) Observations KP-F statistics Cluster Controls Provincial ﬁxed effects
+
+0.197*** (0.037) 0.134*** (0.027) 0.084*** (0.024) 0.056*** (0.016) 0.054** (0.020) 0.127*** (0.028)
+
+0.705
+
+0.582
+
+0.479
+
+0.563
+
+0.561
+
+0.731
+
+0.158*** (0.049) 0.092* (0.050) 0.044 (0.044) 0.085** (0.039) 0.070* (0.040) 0.173*** (0.051)
+
+22 9.717 Province Yes No
+
+20 9.009 Province Yes No
+
+20 9.009 Province Yes No
+
+26 11.626 Province Yes No
+
+213 115.374 Province Yes Yes
+
+199 129.608 Province Yes Yes
+
+Each column in each panel represents a separate cross-sectional regression. Panel A reports OLS estimates while Panel B clusters 2SLS estimates. Columns (1) to (4) provide provincial regression regarding historical Jinshi density effects on employee pay across 1949–1979, with 10 years as an interval due to limited data availability at the prefecture level. Due to a lack of data in 1949–1951, we regard the wage in 1953 as the alternative year. Columns (5) and (6) report prefecture-level regression regarding historical Jinshi density effects on employee pay in 1989 and 1999. These estimated Jinshi density effects can be interpreted as the percentage changes in wages per worker with a percent change in Jinshi density. Columns (1) to(4) do not include ﬁxed effects due to limited observations, while Columns (5) and (6) include province ﬁxed effects. Covariates include rainfall and air pollution, nightlight in 2004, population density in Ming-Qing, the urbanization rate in Ming-Qing, the distance to the coast, agricultural sustainability, and terrain ruggedness. The KP F-statistic is the Kleibergen-Paap Wald rk F-statistic for weak identiﬁcation in the ﬁrst stage (Kleibergen and Paap, 2006). ***denotes signiﬁcant at 1% level, **denotes signiﬁcant at 5% level, *denotes signiﬁcant at 10% level.
+
+Table 8 Robustness: the effects of treaty cities.
+
+Dependent Variable: Jinshi density in Ming-
+Qing(logged) Observations KP-F statistics Cluster Controls Industry ﬁxed effects Provincial ﬁxed effects
+
+(1) Treaty of Nanking (1842)
+0.0681*** (0.0168)
+216,813 34.343 Province Yes Yes Yes
+
+(2) Treaty of Tientsin (1858)
+0.0671*** (0.0168)
+209,719 27.331 Province Yes Yes Yes
+
+(3) Convention of Peking (1860)
+0.0677*** (0.0169)
+203,627 27.338 Province Yes Yes Yes
+
+(4) Treaty of Shimonoseki (1895)
+0.0823*** (0.0189)
+184,711 25.366 Province Yes Yes Yes
+
+Each column in each panel represents a separate cross-sectional regression. We exclude treaty ports gradually by time. Column (1) excludes treaty ports listed in the Treaty of Nanking published in 1842, including Shanghai, Guangzhou, Fuzhou, Xiamen, and Ningbo. Subsequently, Column (2) excludes cities that appeared in the Treaty of Tientsin (1858), including Yantai, Haikou, Zhenjiang, Hankou, Jiujiang, and Nanjing. Further, in Column (3), we exclude cities that appeared in the Convention of Peking in 1860 regarding Tianjin. In Column (4), cities that appeared in the Treaty of Shimonoseki (1895) are excluded, including Shashi, Chongqing, Suzhou, and Hangzhou. All columns include industry ﬁxed effects and province ﬁxed effects. The standard errors are clustered at the province level. Covariates include rainfall and air pollution, nightlight in 2004, population density in Ming-Qing, the urbanization rate in Ming-Qing, the distance to the coast, agricultural sustainability, and terrain ruggedness. The KP F-statistic is the Kleibergen-Paap Wald rk F-statistic for weak identiﬁcation in the ﬁrst stage (Kleibergen and Paap, 2006). ***denotes signiﬁcant at 1% level, **denotes signiﬁcant at 5% level, *denotes signiﬁcant at 10% level.
+
+Standard errors of persistency. Our historical educational policy assumes that our data exhibits signiﬁcant spatial trends and autocorrelation. This raises the possibility that our large t-value may result from insufﬁcient control for spurious correlation (Conley and Kelly, 2025). To address this, we conduct two diagnostic tests: a placebo test in which the treatment is replaced with spatial noise, and a synthetic outcomes test to examine the hypothesis that the outcome results from a trend combined with a spatial noise process independent of the treatment. Results (see Appendix part F) indicate that there are limited effects on our baseline signiﬁcance.
+Channel identiﬁcation This section provides potential channels through which the IES exerts persistent effects on employee pay. Speciﬁcally, we reveal that human capital (education, degree structure, title), social capital (paid-in capital structure, innovation, digital development, and trade) are the main contributors. We will detail the channel identiﬁcation in the following sub-sections.
+
+Human capital: valuing education culture Education. According to Chen et al.’s (2020) estimation, the impact of contemporaneous education is found to be signiﬁcant, using data from China’s micro census in 2010. To validate this, we collected macro city-level educational data from 2004. Table 9, Panel A, presents the OLS estimates for comparison. Accounting for endogeneity, the 2SLS estimate, which allows for spatial correlation within provinces by clustering, is presented in Panel B. Speciﬁcally, we examine four education indicators. In Column (1) of Panel A, the estimate for schooling years shows that a 1% increase in Jinshi density leads to a 5.4% increase in schooling years according to the OLS estimate. After correcting for simultaneity and omitted variable biases using instrumental variables, the coefﬁcient remains positive at 5.6% in the 2SLS estimate. This result is consistent with Chen et al.’s (2020) ﬁndings (7.9% for the OLS estimate).
+In Column (2), Panels A and B present the OLS and 2SLS estimates regarding Jinshi density effects on the number of
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | (2025)12:959 | https://doi.org/10.1057/s41599-025-05084-4
+
+15
+
+ARTICLE
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | https://doi.org/10.1057/s41599-025-05084-4
+
+Table 9 Channel - Jinshi density effects on contemporaneous education.
+
+Dependent Variable:
+Panel A: OLS
+Jinshi density in MingQing(logged) R2 Panel B: 2SLS Jinshi density in MingQing(logged) Observations KP-F statistics Cluster Controls Provincial ﬁxed effects Industrial ﬁxed effects
+
+(1) ln (education year+1)
+0.054*** (0.006)
+0.800
+0.056*** (0.011)
+243 97.835 Province Yes Yes Yes
+
+(2) ln (university+1)
+0.404*** (0.090)
+0.573
+0.477*** (0.196)
+243 97.835 Province Yes Yes Yes
+
+(3) ln (education costs+1)
+
+(4) ln (education employee+1)
+
+0.173*** (0.046)
+0.572
+0.321*** (0.108)
+243 97.835 Province Yes Yes Yes
+
+0.038** (0.018)
+0.539
+0.058** (0.029)
+243 97.835 Province Yes Yes Yes
+
+Each Column in each Panel represents a separate cross-sectional regression, with endogeneity issues uncontrolled in Panel A and controlled in Panel B. In Column (1), results of the Jinshi density effects on schooling are displayed, while effects on the number of universities are presented in Column (2). Columns (3) and (4) report estimates on education costs and employees in the sector, respectively. Covariates include rainfall and air pollution, nightlight in 2004, population density in Ming-Qing, the urbanization rate, the distance to the coast, agricultural sustainability, and terrain ruggedness. All regressions are clustered at the province level. These estimated Jinshi density effects can be interpreted as the percentage changes in wages per worker with a percent change in Jinshi density. The KP F-statistic provided in Panel B is the Kleibergen-Paap Wald rk F-statistic for weak identiﬁcation in the ﬁrst stage (Kleibergen and Paap, 2006). ***denotes signiﬁcant at 1% level, **denotes signiﬁcant at 5% level, *denotes signiﬁcant at 10% level.
+
+universities. Results associated with instrumented 2SLS estimate indicate 1% gains of Jinshi density promote educational infrastructure (university expansion) by 47.7% (40.4% for OLS estimate). In Column 3, consistent with the crude and instrumented estimates, we uncover that 17.3% and 32.1% additional educational investments per thousand CNY will be promoted by the Jinshi density, respectively. The magnitude of the coefﬁcient is large enough to explain previous literature on educational attainment due to Keju. In Column (4), we examine whether increased employees in the educational sector are associated with the Jinshi density. Results indicate that civil servants are employed in the education sector by 5.8% per 10,000 people in accordance with an instrumented estimate (3.8% for the OLS estimate).
+Degree Structure. Given that the IES selects only elites, while contemporaneous education is inclusive, it is crucial to investigate whether the IES improves the degree structure of current workers and ultimately boosts their income. In Table 10, Columns (3) to (7) present a detailed analysis of this relationship. Workers’ educational attainment is classiﬁed into ﬁve categories: Postgraduate degree, Graduate degree, Vocational degree, Highschool degree, and Middle-school degree. Column (3) reports the effects of Jinshi density on the postgraduate ratio among workers, with Panel A focusing on females and Panel B on males. Column (4) provides estimates for the graduate ratio, Column (5) reports information on the vocational ratio, Column (6) provides information on the high-school ratio, and Column (7) presents information on the middle-school ratio.
+The Jinshi density improves the degree structure of ASIF. Speciﬁcally, the workers’ ratio with a postgraduate degree, a graduate degree, and a vocational degree has been greatly boosted, both for male and female workers. For female workers, high school degree owners respond negatively to Jinshi density increase while male workers respond positively, though neither is statistically signiﬁcant. By comparison, the Jinshi density is negatively associated with middle school degree holders. Point estimates observed for male and female degree structures are roughly consistent.
+Technical title. In addition to the degree structure, workers’ technical titles are closely associated with their wages. To
+
+investigate the heterogeneous effects of IES level on the human capital of ASIF, we estimate whether the IES enhances the proportion of workers holding speciﬁc job titles. Table 11 presents the effects of Jinshi density on ﬁrms’ degree structure, with estimates for females clustered in Columns (1) to (3) and estimates for males in Columns (4) to (6).
+Columns (1) and (4) present the effects of Jinshi density on the proportion of workers holding senior titles for males and females, respectively. Speciﬁcally, both male and female workers experience a 0.1% increase in the proportion of senior title holders due to a 1% gain in Jinshi density. The effects of Jinshi density on middle title holders are ﬁve times stronger than those on senior title holders for female workers (0.5%), while for male workers, the effects are four times stronger (0.4%), as demonstrated in Columns (2) and (5) respectively. The magnitudes of the coefﬁcients for junior titles are the same as those for middle titles (0.5% for females and 0.4% for male workers), as reported in Columns (3) and (6).
+Social Capital: Innovation ability and source of paid-in-capital Innovation ability. According to Needham (2013), the Chinese possess expertise in employing practical knowledge for meeting human needs, while the industrial revolution and modern science emerged primarily in the Western world rather than in China. One possible explanation is that the IES suppresses critical thinking and innovation abilities. However, this argument has been empirically refuted by Shi (2022), which suggests that Keju (IES) signiﬁcantly enhances innovation, promotes ﬁrm entry, and improves ﬁrm performance. By inﬂuencing innovation, worker wages can ultimately be improved. To investigate the innovation channel, we examine the effects of the IES on innovation.
+Table 11 presents the detailed results of the effects of Jinshi density on innovation, with OLS estimates in Panels A and 2SLS estimates in Panel B. We examine innovation using four proxies: R&D expenditure per capita, patent applications per capita, patent authorizations per capita, and invention authorizations per capita. In the OLS speciﬁcation, a 1% increase in Jinshi density is associated with an additional 24.6% increase in R&D expenditure per capita, which is statistically signiﬁcant. After correcting for potential endogeneity issues, the coefﬁcient increases to 30.6%, although with some loss of signiﬁcance. The estimate for patent
+
+16
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | (2025)12:959 | https://doi.org/10.1057/s41599-025-05084-4
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | https://doi.org/10.1057/s41599-025-05084-4
+
+ARTICLE
+
+Table 10 Channel - Jinshi density effects on workers’ degree structure.
+
+Panel A: Female
+Dependent Variable:
+Jinshi density in MingQing(logged) Observations KP-F statistics Panel B: Male Dependent Variable:
+Jinshi density in MingQing(logged) Observations KP-F statistics Cluster Controls Provincial ﬁxed effects Industrial ﬁxed effects
+
+(1) 2SLS
+
+(2) 2SLS
+
+(3) 2SLS
+
+(4) 2SLS
+
+(5) 2SLS
+
+Female degree structure
+Female postgraduate ratio 0.001*** (0.000)
+
+Female graduate ratio 0.009*** (0.003)
+
+Female vocational ratio 0.011** (0.005)
+
+Female high school Female middle school
+
+ratio
+
+ratio
+
+−0.002 (0.005) −0.019* (0.010)
+
+245,863 264.137 Male degree structure Male postgraduate ratio
+0.001*** (0.000)
+
+245,863 264.137
+
+245,863 264.137
+
+245,863 264.137
+
+Male graduate ratio Male vocational ratio Male high school ratio
+0.008*** (0.003) 0.007** (0.003) 0.002 (0.005)
+
+245,863 264.137
+Male middle school ratio −0.019* (0.010)
+
+250,076 267.005 County Yes Yes Yes
+
+250,076 267.005 County Yes Yes Yes
+
+250,076 267.005 County Yes Yes Yes
+
+250,076 267.005 County Yes Yes Yes
+
+250,076 267.005 County Yes Yes Yes
+
+Each Column in each Panel represents a separate cross-sectional regression. Panel A displays the results of the Jinshi density effects on the female degree structure (Columns 1–5), while panel B presents the estimates of Jinshi density effects on the degree structure (Columns 1–5). Covariates include rainfall and air pollution, nightlight in 2004, population density in Ming-Qing, the urbanization rate in Ming-Qing, distance to coast, agricultural sustainability, and terrain ruggedness. All OLS regressions are clustered at the ﬁrm level. These estimated Jinshi density effects can be interpreted as the percentage changes in wages per worker with a percent change in Jinshi density. The KP F-statistic is the Kleibergen-Paap Wald rk F-statistic for weak identiﬁcation in the ﬁrst stage (Kleibergen and Paap, 2006). ***denotes signiﬁcant at 1% level, **denotes signiﬁcant at 5% level, *denotes signiﬁcant at 10% level.
+
+Table 11 Channel - Jinshi density effects on contemporaneous workers’ titles.
+
+Dependent Variable:
+Jinshi density in MingQing(logged) KP-F statistics Cluster Observations Controls Provincial ﬁxed effects Industrial ﬁxed effects
+
+(1)
+
+(2)
+
+2SLS
+
+2SLS
+
+Female technical structure
+
+(3) 2SLS
+
+(4)
+
+(5)
+
+2SLS
+
+2SLS
+
+Male technical structure
+
+(6) 2SLS
+
+Female senior title ratio 0.001* (0.001)
+260.994 County 250,076 Yes Yes Yes
+
+Female middle title ratio 0.004*** (0.001)
+260.994 County 250,076 Yes Yes Yes
+
+Female junior title ratio 0.004*** (0.001)
+267.005 County 250,076 Yes Yes Yes
+
+Male senior title ratio
+0.001** (0.000) 258.235 County 250,076 Yes Yes Yes
+
+Male middle title ratio 0.005*** (0.001)
+258.235 County 250,076 Yes Yes Yes
+
+Male junior title ratio 0.005*** (0.001)
+258.235 County 250,076 Yes Yes Yes
+
+Each column represents a separate cross-sectional regression. In Columns (1) to (3), results of the Jinshi density effects on female technical structure are provided, while effects on the male technical structure are presented in Columns (4) to (6). Speciﬁcally, Columns (1) and (4) report Jinshi’s density effects on the ratio of employees with the Senior title of female and male, respectively. Columns (2) and (5) provide Jinshi density effects on the ratio of employees with the Middle title of female and male, respectively. Columns (3) and (6) provide Jinshi density effects on the ratio of employees with the Junior title of female and male, respectively. Covariates include rainfall and air pollution, nightlight in 2004, population density in Ming-Qing, the urbanization rate in Ming-Qing, distance to coast, agricultural sustainability, and terrain ruggedness. All 2SLS regressions are clustered at the county level. These estimated Jinshi density effects can be interpreted as the percentage changes in wages per worker with a percent change in Jinshi density. The KP F-statistic is the Kleibergen-Paap Wald rK F-statistic for weak identiﬁcation in the ﬁrst stage (Kleibergen and Paap, 2006). ***denotes signiﬁcant at 1% level, **denotes signiﬁcant at 5% level, *denotes signiﬁcant at 10% level.
+
+applications per capita is presented in Column (2). According to the instrumented estimate, which corrects for omitted variable issues, Panel B indicates that a 1% increase in Jinshi density is associated with an additional 34.6% increase in patent applications per capita.
+Similar results are observed for authorized patents per capita, with a 21.5% increase indicated by the OLS estimate and a 31.9% increase by the 2SLS estimate. Combining Columns (2) and (3), we can conclude that both the intention and ability to innovate have been accelerated. Regarding authorized inventions, the 2SLS estimate suggests that a 1% increase in Jinshi density is associated with an additional 49.7% of inventions (33.2% for the OLS
+
+estimate). The KP-F statistics for all regressions fall is 79.85, which exceeds the critical value of 16.38.
+Sources of paid-in capital. Another potential channel through which the IES affects workers’ wages is the paid-in-capital structure. This structure serves as the foundation for proﬁt distribution or dividend distribution within an enterprise, as well as determining the owner’s claim to net assets during the liquidation of the enterprise. The ASIF considers six sources of paid-incapital, including national capital, collective capital, corporate capital, personal capital, capital from Hong Kong, Macao, and Taiwan, as well as foreign capital.
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | (2025)12:959 | https://doi.org/10.1057/s41599-025-05084-4
+
+17
+
+ARTICLE
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | https://doi.org/10.1057/s41599-025-05084-4
+
+Table 12 Channel - Jinshi density effects on contemporaneous innovation.
+
+Dependent Variable:
+Panel A: OLS
+Jinshi density in MingQing(logged) R2 Panel B: 2SLS Jinshi density in MingQing(logged) Observations KP-F statistics Cluster Controls Provincial ﬁxed effects Industrial ﬁxed effects
+
+(1)
+ln (RD per capita +1)
+
+(2)
+ln (patent application per capita+1)
+
+(3)
+ln (patent authorization per capita+1)
+
+(4)
+ln (invention authorization per capita+1)
+
+0.246*** (0.051) 0.231** (0.085)
+
+0.609
+
+0.835
+
+0.306* (0.172)
+
+0.346*** (0.149)
+
+243 79.835 Province Yes Yes Yes
+
+226 84.334 Province Yes Yes Yes
+
+0.215** (0.084)
+0.840
+0.319*** (0.118)
+224 83.133 Province Yes Yes Yes
+
+0.332*** (0.084)
+0.782
+0.497*** (0.130)
+223 84.784 Province Yes Yes Yes
+
+Each Column in each Panel represents a separate cross-sectional regression, with endogeneity issues uncontrolled in Panel A and Panel B. In Column (1), results of the Jinshi density effects on RD per capita are displayed, while effects on the patent application are presented in Column (2). Columns (3) and (4) report estimates on invention authorization per capita and invention authorization per capita, respectively. Covariates include rainfall and air pollution, nightlight in 2004, population density in Ming-Qing, the urbanization rate in Ming-Qing, distance to coast, agricultural sustainability, and terrain ruggedness. All 2SLS regressions are clustered at the province level. These estimated Jinshi density effects can be interpreted as the percentage changes in wages per worker with a percent change in Jinshi density. The KP F-statistic provided in Panel B is the Kleibergen-Paap Wald rk F-statistic for weak identiﬁcation in the ﬁrst stage (Kleibergen and Paap, 2006). ***denotes signiﬁcant at 1% level, **denotes signiﬁcant at 5% level, * enotes signiﬁcant at 10% level.
+
+Table 12 presents detailed estimates regarding Jinshi density. Panel B, speciﬁcally in Column (1), reveals that a 1% increase in Jinshi density is signiﬁcantly associated with a 7.8% increase in national paid-in capital, according to the instrumented estimate. In contrast, the OLS estimate, as replicated in Panel A, Column (1), suggests a smaller effect of 2.8%. Column (2) provides estimates for collective capital, indicating that a 1% increase in Jinshi density is associated with an additional 4.4% in collective capital based on the instrumented results shown in Panel B, whereas the biased OLS estimate suggests limited and insignificant effects. The response of corporate capital is also notable (as replicated in Column (3)). After correcting for potential endogeneity, the coefﬁcient magnitude of corporate capital decreases to approximately 10% from the original 12.7% in the OLS estimate. Conversely, personal capital exhibits a negative response to an increase in Jinshi density. The 2SLS estimate indicates that a 1% increase in Jinshi density is associated with a signiﬁcant reduction of 30.2% in personal capital (Panel B, Column 4), compared to the OLS estimate of −11.8% per Jinshi density increase. In Column (5), we demonstrate that a 1% increase in Jinshi density results in a 27.7% boost in capital from Hong Kong, Macao, and Taiwan, as indicated by the instrumented results. Additionally, foreign capital shows a 15.9% increase induced by the increase in Jinshi density.
+
+Migration. According to Ding (2021) and other studies, college education has shown positive short-term effects on internal migration, suggesting that education can impact employee wages through long-term migration trends. In China, signiﬁcant country-wide migrations, like the “Chuang Guandong” movement, have occurred, involving the relocation of individuals from North China to the northeast region. To validate this relationship, we analyze the effects of Jinshi density on contemporary migration, speciﬁcally focusing on the immigration rate and outmigration rate in 2000. The immigration rate is directly sourced from the population census, while the out-migration rate data is obtained from research conducted by Chen, Oliva and Zhang (2022).
+
+Netout½15;
+
+60c;2000
+
+¼
+
+Pop½15;
+
+60c;2000 À Pop½25; 60c;2005 Pop½15; 60c;2000
+
+À
+
+D½15;
+
+60
+
+Where Netout denotes the net out-migration rate, Pop2000 represents the total population aged between 15 and 60. Pop2005 is the overall population aged between 25 and 60. D denotes an approximate measure of deaths for the same population during the ﬁve-year interval. In our dataset, due to limited surveys, we cannot obtain the death counts in the whole ﬁve-year period. Therefore, following Feng et al. (2010); Chen et al. (2022), we estimate the overall death counts by timing ﬁve. And the results are reliable and comparable to true deaths.
+Table 13 reports estimate regarding Jinshi density effects on contemporaneous migration. The OLS estimate suggests 3.9% immigration rate, and correcting for the endogeneity increases the coefﬁcient to 5.6%, is closely associated with Jinshi density. The coefﬁcient observed for the out-migration rate is −13.2%, though not that signiﬁcant. This indicates regions with higher Jinshi density attract immigration while repressing out-migration.
+Fringe beneﬁts In addition to wages, other aspects like pension coverage are important for workers’ well-being. Studies, such as Yao and Zhong (2013), also explore fringe beneﬁts. Workers with higher education levels are often given priority when negotiating fringe beneﬁts in unionized ﬁrms. However, there is limited detailed evidence on the long-term educational impact of these fringe beneﬁts. Some literature, like Freeman and Medoff (1984) and Buchmueller et al. (2002), suggests that fringe beneﬁts for older ﬁrms or workers can be enhanced through collective bargaining. Given that we account for ﬁrm age in our analysis, this factor should not bias our estimates. In this section, we utilize datasets from ASIF and city-level statistical yearbooks to further examine workers’ access to other welfare beneﬁts and public facilities.
+Welfare. After passing the IES, the attendees were granted access to ofﬁcialdom. Speciﬁcally, as mentioned in Jiang and Kung (2020), Jinshi title holders at least took up the county-level magistrate position, while even those who failed the ﬁnal exam (Huishi), Juren title holders, were also eligible for the magistrate position. Typically, these political elites repay their hometown by donating social capital to improve their living standards and social status or by bringing more educational resources to foster an academic atmosphere. Historic capital accumulation might
+
+18
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | (2025)12:959 | https://doi.org/10.1057/s41599-025-05084-4
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | https://doi.org/10.1057/s41599-025-05084-4
+
+ARTICLE
+
+Table 13 Channel - Jinshi density effects on ﬁrms’ source of paid-in capital.
+
+Dependent Variable:
+Panel A: OLS
+Jinshi density in MingQing(logged) R2 Panel B: 2SLS Jinshi density in MingQing(logged) Observations KP-F statistics Cluster Controls Provincial ﬁxed effects Industrial ﬁxed effects
+
+(1)
+ln (national capital)
+
+(2)
+ln (collective capital)
+
+(3)
+ln (corporate capital)
+
+(4)
+ln (personal capital)
+
+(5)
+
+(6)
+
+ln (HK, Macon, and ln (foreign
+
+TW capital)
+
+capital)
+
+0.028*** (0.006) 0.260
+
+0.001 (0.026) 0.084
+
+0.078** (0.034) 0.044*** (0.012)
+
+250,176 260.957 County Yes Yes Yes
+
+250,176 260.957 County Yes Yes Yes
+
+0.127*** (0.040)
+0.038
+0.100*** (0.021)
+250,176 260.957 County Yes Yes Yes
+
+−0.118** (0.053) 0.069* (0.038)
+
+0.114
+
+0.110
+
+−0.302*** (0.078) 250,176 260.957 County Yes Yes Yes
+
+0.277** (0.116)
+250,176 260.957 County Yes Yes Yes
+
+0.099*** (0.032) 0.055
+0.159*** (0.057) 250,176 260.957 County Yes Yes Yes
+
+Each Column in each Panel represents a separate cross-sectional regression, with the endogeneity issue corrected. In Column (1), the results of the Jinshi density effects on the national capital are displayed. In contrast, effects on collective capital are presented in Column (2), effects on corporate capital are presented in Column (3), effects on personal capital are presented in Column (4), and effects on HK, Macao, and Taiwan capital are presented in Column (5). Effects on foreign capital are presented in Column (6). Covariates include rainfall and air pollution, nightlight in 2004, population density in Ming-Qing, the urbanization rate, the distance to the coast, agricultural sustainability, and terrain ruggedness. All OLS regressions are clustered at the ﬁrm level. These estimated Jinshi density effects can be interpreted as the percentage changes in wages per worker with a percent change in Jinshi density. The KP F-statistic provided in Panel B is the Kleibergen-Paap Wald rk F-statistic for weak identiﬁcation in the ﬁrst stage (Kleibergen and Paap, 2006). ***denotes signiﬁcant at 1% level, **denotes signiﬁcant at 5% level, *denotes signiﬁcant at 10% level.
+
+also inﬂuence contemporary welfare. The ASIF collects data on overall welfare costs, unemployment insurance costs, medical insurance costs, housing costs, and training fees.21
+According to State Taxation Administration in China, the welfare expenses of the enterprise’s employees can be withdrawn at 14% of their wages, but are excluded from wages.22 In Column (1) of Table 14, the effects of IES on per capita welfare costs are reported, using either the OLS estimate (Panel A) or the instrumented estimate (Panel B). It is found that a 1% increase in Jinshi density leads to a 4.4% boost in welfare expenses for workers in the instrumented estimate (1.8% in the OLS estimate), and both estimates are highly signiﬁcant. Moving on to another component of fringe beneﬁts, Column (2) examines unemployment insurance, which is a government program aimed at guaranteeing workers’ basic living. The results show that a 1% increase in Jinshi density is associated with an additional 0.4% of unemployment insurance in the 2SLS estimate, while the OLS estimate indicates a 0.6% increase. For medical insurance, which compensates workers for economic losses caused by disease risks, a per Jinshi density increase is associated with a 4.7% rise in expenditures in the instrumented estimate (5.5% in the OLS estimate). Regarding the housing provident fund, a 1.4% increase in beneﬁts is signiﬁcantly observed in both the instrumented and OLS estimates. This suggests that living standards also respond positively to historical education. Additionally, training fees yield more beneﬁts and positively respond to historical educational attainment, serving as a cost-effective approach to enhancing workers’ skills.
+Public service and facilities. An additional advantage to consider is the provision of public services and amenities. The calibre of these services frequently holds signiﬁcant weight in shaping the functional effectiveness of urban areas within particular sectors (Bhattacharya et al., 2016), which in turn impinges upon the aggregate quality of life, contentment, cost of living, and ultimately, the income levels. In this segment, we have undertaken a meticulous compilation of data concerning public services from municipal yearbooks. This dataset encompasses health service metrics like the proximity of hospitals and availability of medical professionals, cultural access as measured by cinema availability, indices reﬂecting the quality of transportation infrastructure,
+
+Table 14 Channel - Jinshi density effects on the migration.
+
+Dependent variable:
+Panel A: OLS
+Jinshi density in MingQing(logged) R2 Panel B: 2SLS Jinshi density in MingQing(logged) KP-F statistics Cluster Observations Provincial ﬁxed effects Industrial ﬁxed effects
+
+(1) Immigration (2000)
+
+(2)
+Out-migration (2000)
+
+0.039*** (0.008)
+0.742
+0.056*** (0.016)
+107.967 Province 241 Yes Yes
+
+0.005 (0.039)
+0.239
+−0.132 (0.116)
+107.967 Province 241 Yes Yes
+
+Each column in each panel for Juren represents a separate cross-sectional regression. In Panel A, we report the OLS estimate and in Panel B, we report the 2SLS estimate. All regressions are clustered at the province level. These estimated Jinshi density effects can be interpreted as the percentage changes in wages per worker with the percent change in Jinshi density. Column (1) reports Jinshi density effects on immigration rate, while Column (2) introduces Jinshi density effects on out-migration rate. Covariates include rainfall and air pollution, nightlight in 2004, population density in Ming-Qing, the urbanization rate in Ming-Qing, the distance to the coast, agricultural sustainability, and terrain ruggedness. The KP F-statistic is the Kleibergen-Paap Wald rk F-statistic for weak identiﬁcation in the ﬁrst stage (Kleibergen and Paap, 2006). ***denotes signiﬁcant at 1% level, **denotes signiﬁcant at 5% level, *denotes signiﬁcant at 10% level.
+
+including the extent of roads and availability of public buses, and the level of education and literacy as suggested by per capita book ownership.
+As shown in Tables 15 and 16, all the public services and facilities exhibit a positive response to the historical Keju IES. Panel A presents the effects of Jinshi density on public services and facilities without correcting for the endogeneity issue (OLS estimate), while Panel B displays the estimates after correcting for endogeneity (2SLS). Regardless of the correction for endogeneity, the conclusion that historical education positively promotes public services and facilities holds true. Notably, there is a signiﬁcant statistical association between historical education and a 49.3% increase in book density (per capita ownership), as well as a 52.4% increase in
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | (2025)12:959 | https://doi.org/10.1057/s41599-025-05084-4
+
+19
+
+ARTICLE
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | https://doi.org/10.1057/s41599-025-05084-4
+
+Table 15 Jinshi density effects on fringe beneﬁts (welfare).
+
+Dependent Variable:
+Panel A: OLS
+Jinshi density in Ming-Qing(logged) R2 Panel B: 2SLS Jinshi density in Ming-Qing(logged) Observations KP-F statistics Cluster Controls Provincial ﬁxed effects Industrial ﬁxed effects
+
+(1) ln (overall welfare cost/L + 1)
+0.018** (0.009) 0.128
+0.044*** (0.017) 250,176 260.957 County Yes Yes Yes
+
+(2) ln (medical insurance/L + 1)
+0.055*** (0.014) 0.190
+0.047* (0.026) 250,176 260.957 County Yes Yes Yes
+
+(3) ln (housing fund/L + 1)
+0.014** (0.006) 0.130
+0.014* (0.008) 250,176 260.957 County Yes Yes Yes
+
+Each column in each Panel represents a separate cross-sectional regression, with the endogeneity issue uncorrected in Panel A and corrected in Panel B. In Columns (1) to (3), we provide estimates of
+Jinshi’s effects on overall welfare costs, medical insurance, and housing funds, respectively. Covariates include rainfall and air pollution, nightlight in 2004, population density in Ming-Qing, the urbanization rate, the distance to the coast, agricultural sustainability, and terrain ruggedness. All OLS and 2SLS regressions are clustered at the ﬁrm level. These estimated Jinshi density effects can be interpreted as the percentage changes in wages per worker with a percent change in Jinshi density. The KP F-statistic provided in Panel B is the Kleibergen-Paap Wald rk F-statistic for weak identiﬁcation in the ﬁrst stage (Kleibergen and Paap, 2006). ***denotes signiﬁcant at 1% level, **denotes signiﬁcant at 5% level, *denotes signiﬁcant at 10% level.
+
+Table 16 Jinshi density effects on fringe beneﬁts (Public Service and Facilities).
+
+Dependent Variable:
+Panel A: OLS
+Jinshi density in MingQing(logged) R2 Panel B: 2SLS Jinshi density in MingQing(logged) Observations KP-F statistics Cluster Controls Provincial ﬁxed effects Industrial ﬁxed effects
+
+(1)
+
+(2)
+
+(3)
+
+ln (Hospital+1) ln (doctor density ln (cinema
+
++1)
+
+density+1)
+
+0.110 (0.070) 0.130*** (0.034) 0.006 (0.005)
+
+0.406
+
+0.672
+
+0.336
+
+0.290* (0.150) 0.163* (0.085) 0.021* (0.012)
+
+243 98.969 Province Yes Yes Yes
+
+243 98.969 Province Yes Yes Yes
+
+243 98.969 Province Yes Yes Yes
+
+(4)
+ln (road density +1)
+
+(5)
+ln (bus density +1)
+
+(6)
+ln (book density +1)
+
+0.264*** (0.091) 0.330** (0.127) 0.400*** (0.079)
+
+0.746
+
+0.676
+
+0.668
+
+0.303* (0.183) 0.524* (0.282) 0.493*** (0.110)
+
+243 98.969 Province Yes Yes Yes
+
+243 102.030 Province Yes Yes Yes
+
+243 98.969 Province Yes Yes Yes
+
+Each column in each Panel represents a separate cross-sectional regression, with the endogeneity issue uncorrected in Panel A and corrected in Panel B. In Columns (1) - (6), we provide estimates of Jinshi’s effects on hospital density, doctor density, cinema density, road density, bus density, and book density, respectively. Covariates include rainfall and air pollution, nightlight in 2004, population density in Ming-Qing, the urbanization rate in Ming-Qing, distance to coast, agricultural sustainability, and terrain ruggedness. All OLS regressions are clustered at the ﬁrm level. These estimated Jinshi density effects can be interpreted as the percentage changes in wages per worker with a percent change in Jinshi density. The KP F-statistic provided in Panel B is the Kleibergen-Paap Wald rk F-statistic for weak identiﬁcation in the ﬁrst stage (Kleibergen and Paap, 2006). ***denotes signiﬁcant at 1% level, **denotes signiﬁcant at 5% level, *denotes signiﬁcant at 10% level.
+
+bus density. The estimates for Juren density further support our conclusion regarding the effects of IES on public services and facilities.
+
+the IES is unique to China, our empirical paradigm can be applied to other regions or countries with sufﬁcient variation in institutional and individual data, such as the Civil Servants Institution in England.
+
+Conclusion
+Through an investigation of the persistent returns of the IES, an educational institution, speciﬁcally on contemporary employee pay, we have discovered a signiﬁcantly positive correlation between success in the IES and current workers’ wages. This ﬁnding suggests that the signiﬁcance of the IES, as the essential elite-selection system in ancient China, may have been underestimated. Our estimate is nearly exhaustive as we have utilized the distance from the river to the closest pine and bamboo forests at the prefecture level. This empirical pattern contributes to the debate regarding the cost-beneﬁts of the IES. However, it is consistent with most interpretations of the positive effects of the exam on contemporaneous human capital and innovation, while also negatively impacting entrepreneurship (Li and Wang, 2022). More broadly, these ﬁndings provide insights into how institutions inﬂuence individuals. Although
+
+Data availability The datasets generated and/or analysed during the current study are available from the corresponding author upon reasonable request.
+Received: 21 July 2024; Accepted: 20 May 2025;
+Notes
+1 In this article, we average the distances of the river to the nearest bamboo forests and pine forests.
+2 Noteworthy, the data should be used with caution since it is obtained by surveying one region, and it ignores the heterogeneity in China.
+3 In China, the minimum wage standard is typically set at the county level, and industrial agglomeration primarily occurs at the county level as well.
+
+20
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | (2025)12:959 | https://doi.org/10.1057/s41599-025-05084-4
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | https://doi.org/10.1057/s41599-025-05084-4
+
+ARTICLE
+
+4 In our analysis, we use nightlight data as a proxy for measuring regional development levels instead of GDP to address potential manipulation concerns in China, as emphasized by Chen et al. (2021).
+5 In the robustness, we further examine the instrument of transportation accessibility. 6 The Ming dynasty began in 1368, and the Qing dynasty ended in 1912. However, the
+available data for the IES only covers the period from 1371 to 1905. 7 Chen et al. (2020) provide informative details about the IES. Mistakes were identiﬁed
+in their datasets, and there are concerns about accuracy, prompting a review by consulting Zhu and Xie (1980). The datasets contain repeated observations that need to be addressed. 8 There are 41 two-digit industries in our sample. 9 Labor intensity is deﬁned as the ratio of the wage bill to outputs. Firms with belowmedium labor intensity are considered labor-intensive, while those with abovemedium labor intensity are classiﬁed as capital-intensive. High-technology industries are identiﬁed based on the OECD (2011) deﬁnition. 10 While gazetteers are available at the provincial level, the precise number of Juren (successful candidates in the imperial examinations) across the Ming-Qing dynasties is uncertain. This uncertainty arises because four provinces do not provide data that covers the entire sample. 11 In the IES, there were three levels of educational attainment: Jinshi, Juren, and Shengyuan (Xiucai). Shengyuan is the primary and entry-level educational attainment at the prefecture level. The successful candidate of this exam can proceed to the “Xiangshi” examination held at the provincial level. Those who pass the provincial “Xiangshi” exam are known as “Juren.” Juren can then participate in the “Huishi” examination conducted at the central level, and the highest achievers are awarded the title of “Jinshi.” 12 we can use the following formula: Increase in ﬁrm-level workers’ wages = the number of employees * wage per capita * effect coefﬁcients. On average, the surveyed industrial ﬁrms in China had approximately 209.07 workers per ﬁrm. Increase in ﬁrm-level workers’ wages = 209.07 employees* 13.02 thousand CNY* 7.9% = 215.05 million CNY 13 The spatial correlation within one province could be signiﬁcant. Because, for example, the minimum wage in China is based on province-level (see treaty 7 in Regulations in Minimum wages). http://www.mohrss.gov.cn/xxgk2020/gzk/gz/ 202112/t20211228_431587.html 14 In the migration process, externalities may be generated (Dustmann and Glitz, 2011), agricultural productivity may be affected (Rozelle et al., 1999), and labor migration may also affect the human capitals of original communities (Dinkelman and Mariotti, 2016). 15 In our sample, by retrieving the Ming-Qing Jinshi Timing Beilu Suoyin, about 2.65% Jinshi (1370) migrated to host prefecture rather than birthplace to attend the national exam. 16 Private commercial ships often extended invitations to Juren and Shengyuan, offering them the opportunity to board the ship together and beneﬁt from toll exemptions. These invitations were typically accompanied by provisions such as foodstuff and credit fees. 17 According to our estimates, both distance to the Grand Canal and the number of courier stations are not signiﬁcantly associated with economic prosperity. Theoretically, the Grand canal is constructed to transport foodstuff and the courier system is constructed to transmit ofﬁcial documents to distant prefectures and borderlands. 18 It should be noted that in this estimate, we do not have ﬁrm-level controls and we adjust the ﬁxed effects to provincial level and cluster by province to allow spatial correlations within provinces. 19 It should be noted that most of China’s provinces do not have sufﬁcient data on employee pay in 1949. On this basis, we select 1952 as the nearest alternative period. 20 One exception is instrumented IES effects on the workers’ wages in 1969 (Column 3 in Panel B), which can be attributed to the Great Cultural Revolution, which destroyed the wage system completely. 21 To avoid the potential biases induced by the outlier, we winsorize the per capita fringe beneﬁts by the top and bottom 0.5%, including overall welfare, unemployment insurance, medical insurance, housing fund, and training fees to keep consistent with previous literature (Fu et al., 2018). 22 See more details from the following website regarding ofﬁcial regulations on workers’ welfare. http://www.chinatax.gov.cn/chinatax/n362/c5136/content.html.
+References
+Acemoglu D, Cao D (2015) Innovation by entrants and incumbents. J Econ Theory 157:255–294
+Acemoglu D, Claire L, Pascual R (2020) Competing with robots: ﬁrm-level evidence from France. AEA Pap Proc 110:383–388
+Acemoglu D, Robinson JA (2001) A theory of political transitions. Am Econ Rev 91(4):938–963
+Aghion P, Bergeaud A, Blundell R, Grifﬁth R (2017) Innovation, ﬁrms and wage inequality. Working paper
+
+Akresh R, D Halim, M Kleemans (2018) Long-term and intergenerational effects of education: evidence from school construction in Indonesia. NBER Working Paper No. 25265
+Ashenfelter O, Krueger AB (1994) Estimates of the economic returns to schooling from a new sample of twins. Am Econ Rev 84(5):1157–1173
+Ashworth J, Hotz VJ, Maurel A, Ransom T (2017) Changes across cohorts in wage returns to schooling and early work experiences, NBER Working Paper No. 24160
+Bai Y, Jia R (2016) Elite recruitment and political stability: the impact of the abolition of China’s civil service exam. Econometrica 84:677–733
+Bairoch P (1988) Cities and economic development: from the dawn of history to the present. University of Chicago Press, Chicago, IL
+Barrow L, Richburg-Hayes L, Elena Rouse C, Brock T (2014) Paying for performance: the education impacts of a community college scholarship program for low-income adults. J Labor Econ 32(3):563–599
+Bautista MA, González F, Martínez LR, Muñoz P, Prem M (2023) The intergenerational transmission of higher education: evidence from the 1973 coup in Chile. Explor Econ Hist 90:101540
+Becker GS (1991) A treatise on the family. Harvard University Press, Cambridge, MA Bhattacharya S, Saha S, Banerjee S (2016) Income inequality and the quality of
+public services: a developing country perspective. J Dev Econ 123:1–17 Black SE (1999) Do better schools matter? parental valuation of elementary edu-
+cation. Q J Econ 114(2):577–599 Blau FD, Kahn LM (2017) The gender wage gap: extent, trends, and explanations. J
+Econ Lit 55(3):789–865 Borrs L, Knauth F (2021) Trade, technology, and the channels of wage inequality.
+Eur Econ Rev 131:103607. 2021 Boyd R, Richerson PJ (1985) Culture and the evolutionary process. University of
+Chicago Press, Chicago, IL Brandt L, Van Biesebroeck J, Zhang Y (2012) Creative accounting or creative
+destruction? ﬁrm-level productivity growth in Chinese manufacturing. J Dev Econ 97(2):339–351 Brinkman SA, Hasan A, Jung H, Kinnell A, Pradhan M (2017) The impact of expanding access to early childhood education services in rural Indonesia. J Labor Econ 35(S1):S305–S335 Buchmueller TC, Dinardo J, Valletta RG (2002) Union effects on health insurance provision and coverage in the United States. Ind Labor Relat Rev 55(4):610–627 Cao J, Xu Y, Zhang C (2022) Clans and calamity: how social capital saved lives during China’s great famine. J Dev Econ 157:102865 Cao S, Zhongguo Renkou Shi, Di wu Juan (2001) History of Population in China, Volume 5, Shanghai: Fudan University Press Cao S (2015) Zhongguo Renkou Shi, Ming Shiqi (History of Population in China, the Ming Period), Manuscript Card D (2001) Estimating the return to schooling: progress on some persistent econometric problems. Econometrica 69(5):1127–1160 Card D (2022) Who set your wage? Am Econ Rev 112(4):1075–1090 Chang C (1962) The income of the Chinese gentry. University of Washington Press, Seattle, WA Chang C (1955) The Chinese gentry: studies on their role in nineteenth-century Chinese society. University of Washington Press, Seattle, WA Chemmanur TJ, Cheng Y, Zhang T (2013) Human capital, capital structure, and employee pay: an empirical analysis. J Financ Econ 110(2):478–502 Chen F, Shi B, Xu M (2020) The political origin of differences in long-term economic prosperity: centralization versus decentralization. Cliometrica 14:581–639 Chen S, Oliva P, Zhang P (2022) The effect of air pollution on migration: evidence from China. J Dev Econ 156:102833 Chen S, Xue Q, Zhu Z (2021) Theory and evidence on China’s GDP manipulation. J Econ Behav Organ 189:657–671 Chen X, Yang L (2019) Temperature and industrial output: ﬁrm-level evidence from China. J Environ Econ Manag 95:257–274 Chen Y, Ziying F, Gu X, Zhou L-A (2020) Arrival of young talent: the send-down movement and rural education in China. Am Econ Rev 110(11):3393–3430 Cho S (2007) Nurturing creative problem-solving ability of the gifted in confucian society. J Gift/Talent Educ 17(2):392–412 Clark D, Martorell P (2014) The signaling value of a high school diploma. J Political Econ 122(2):282–318 Coad A, Rubæk JH, Krafft J, Quatraro F (2018) Firm age and performance. J Evol Econ 28:1–11 Conley TG, Kelly M (2025) The standard errors of persistence. J Int Econ 153, 104027 Deming DJ (2011) Better schools, less crime? Q J Econ 126(4):2063–2115 Ding X (2021) College education and internal migration in China. China Econ Rev 69:101649 Dinkelman T, Mariotti M (2016) The long-run effects of labor migration on human capital formation in communities of origin. Am Econ J 8(4):1–35 Dustmann C, Glitz A (2011) Chapter 4 - migration and education. Handb Econ Educ 4:327–439
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | (2025)12:959 | https://doi.org/10.1057/s41599-025-05084-4
+
+21
+
+ARTICLE
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | https://doi.org/10.1057/s41599-025-05084-4
+
+Elman BA (2000) A cultural history of civil examinations in late imperial China. University of California Press, Berkeley, CA
+Elvin M (2004) Retreat of the elephants: an environmental history of China. Yale University Press, New Haven, CT
+Fairbank JK, Liu KC (eds) (1980) The cambridge history of China. Cambridge University Press, Cambridge, UK
+Feng S, Krueger AB, Oppenheimer M (2010) Linkages among climate change, crop yields and Mexico-US cross-border migration. Proc Natl Acad Sci USA 107(32):14257–14262
+Freeman RB, Medoff JL (1984) What do unions do? Basic Books, New York, USA Fu S, Viard VB, Zhang P (2018) Air pollution and manufacturing ﬁrm pro-
+ductivity: nationwide estimates for China. Econ J 131(640):3241–3273 Giuliano P, Nunn N (2021) Understanding cultural persistence and change. Rev
+Econ Stud 88(4):1541–1581 Guiso L, Sapienza P, Zingales L (2016) ‘Long-term persistence’. J Eur Econ Assoc
+14(6):1401–1436 Heckman JJ, Humphries JE, Veramendi G (2018) Returns to education: the causal
+effects of education on earnings, health, and smoking. J Political Econ 126(S1):S197–S246 Henderson JV, Storeygard A, Weil DN (2012) Measuring economic growth from outer space. Am Econ Rev 102(2):994–1028 Hicks J (1932) The theory of wages. Macmillan, London Ho P (1962) The ladder of success in imperial China. Columbia University Press, New York, NY Hoekstra M (2009) The effect of attending the ﬂagship state university on earning: a discontinuity approach. Rev Econ Stat 91(4):717–724 International Labour Ofﬁce (1998) World employment report 1998–99: Employability in the global economy: How training matters. International Labour Ofﬁce Ji Y (2006) ‘Mingqing kejuzhi de shehui zhenghe gongneng: yi shehui liudong wei shijiao (The function of Keju on social integration in the Ming-Qing period from the perspective of social mobility)’. Shehui 26(6):190–214 Jiang Q, Kung JK-S (2020) Social mobility in late imperial China: reconsidering the ‘ladder of success’ hypothesis. Mod China 47(5):009770042091452 Keller W, Santiago JA, Shiue CH (2017) China’s domestic trade during the TreatyPort era. Explor Econ Hist 63:26–43 Kotz M, Levermann A, Wenz L (2022) The effect of rainfall changes on economicproduction. Nature 601:223–227 Kleibergen F, Paap R (2006) Generalized reduced rank tests using the singular value decomposition J Econom 133:97–126 Lefgren L, McIntyre F (2006) The relationship between women’s education and marriage outcomes. J Labor Econ 24(4):787–830 Li H, Meng L, Shi X, Wu B (2012) Does attending elite colleges pay in China? J Comp Econ 40(1):78–88 Li L, Wang Z (2022) Understanding the long-term effects of Keju: the case of entrepreneurship in China. Econ Transit Inst Change 30(4):665–689 Maurin E, McNally S (2008) Vive la révolution! long-term educational returns of 1968 to the angry students. J Labor Econ 26(1):1–33 McDermott JP (2006) A social history of the Chinese book: books and literati culture in late imperial China. Hong Kong University Press, Hong Kong Needham J (2013) The grand titration: science and society in east and west. Routledge, London Niklas E, Moser C (2017) Returns to education through access to higher-paying ﬁrms: evidence from US matched employer-employee data. Am Econ Rev 107(5):374–378 Nunn N (2008) The long term effects of Africa’s slave trades. Q J Econ 123(1):139–176 Nunn N, Puga D (2012) Ruggedness: the blessing of bad geography in Africa. Rev Econ Stat 94(1):20–36 Nyström K, Gulzat ZE (2015) New Firms as Employers. Labour 29:348–366 OECD Directorate for Science, Technology and Industry. 2011. ISIC Rev. 3 Technology Intensity Deﬁnition, https://www.oecd.org/sti/ind/48350231.pdf Psacharopoulos G, Patrinos HA (2018) Returns to investment in education: a decennial review of the global literature. Educ Econ 26(5):445–458 Robinson J (1933) The economics of imperfect competition. MacMillan Press, London Rozelle S, Taylor JE, deBrauw A (1999) Migration, remittances, and agricultural productivity in China. Am Econ Rev 89:287–291 Russell B (1922) The problem of China. Allen & Unwin, London Saavedra JE (2009) The role of resources and incentives in education production. Ph.D. Thesis, Harvard University Sampson T (2014) Selection into trade and wage inequality. Am Econ J 6(3):157–202 Shang Y (2004) Qingdai Keju Kaoshi Shulu Ji Youguan Zhuzuo (review of the civil exam in Qing China). Bai Hua Wen Yi Chu Ban She, Tianjin Shi X (2022) Human capital and innovation: the persistent effects of civil examination system on innovation and ﬁrm dynamics in China. Electron J doi:10.2139/ssrn.4134833
+
+Wang Y (1989) Qingdai keju renkou yanjiu (research on the civil service exam population). Renkou yanjiu (Popul Res) 3:42–47
+Yao Y, Zhong N (2013) Unions and workers’ welfare in Chinese ﬁrms. J Labor Econ 31(3):633–667
+Yu M (2015) Processing trade, tariff reductions, and ﬁrm productivity: evidence from Chinese ﬁrms. Econ J 125(585):943–988
+Zhang J(2021) A survey on income inequality in China J Econ Lit 59(4):1191–1239 Zhang L, Che L (2018) Human capital, technology adoption, and ﬁrm perfor-
+mance: impacts of China’s higher education expansion in the late 1990s. Econ J 128(614):2282–2320 Zhang X, Chen X, Zhang X (2018) The impact of exposure to air pollution on cognitive performance. Proc Natl Acad Sci USA 115(37):9193–9197 Zhu B, Xie P (1980) Ming-Qing Jinshi Timing Beilu Suoyin (Ofﬁcial directory of Ming-Qing. civil exam graduates). Shanghai Gu Ji Chu Ban She, Shanghai Zhu N, Chang L (2019) Education and parenting in China. In Sorbing E and Lansford JE (eds) School systems, parental behavior, and academic achievement: an international perspective. Springer Nature, pp 15–28 Zhu P (2021) Does high-speed rail stimulate urban land growth? Experience from China. Transp Res D 98:102974
+Acknowledgments
+This work was supported by the Hong Kong Research Grants Council (RGC) Research Fellow Scheme (RFS) [grant number HKUST RFS2425-6H03]; the Hong Kong Public Policy Research (PPR) Funding Scheme [grant number 2024.A7.032.24B]; the Inaugural CLP Research Fellowship Program Award [grant number RFP2022HKUST]; the Innovation and Technology Support Program, Hong Kong SAR Government [grant number ITS/003/24SC]; and the Hong Kong Research Grants Council (RGC) Strategic Topics Grant (STG) [grant number STG2/E- 605/23-N]. Chen thanks Meng Lu for her support.
+Author contributions
+Xiaodong Chen, Ding Li, and Pengyu Zhu conceptualized the study, Xiaodong Chen conducted the initial planning, Pengyu Zhu and Xiaodong Chen constructed the dataset, Xiaodong Chen performed the statistical analysis, and wrote the paper. Xiaodong Chen revised the article, while Ding Li provided some data and assisted with the revisions.
+Ethical approval
+Ethical approval was not required as the study did not involve human participants.
+Informed consent
+This article does not involve any studies conducted with human participants by the authors; therefore, obtaining consent was not required.
+Competing interests
+The authors declare no competing interests.
+Additional information
+Supplementary information The online version contains supplementary material available at https://doi.org/10.1057/s41599-025-05084-4.
+Correspondence and requests for materials should be addressed to Pengyu Zhu.
+Reprints and permission information is available at http://www.nature.com/reprints
+Publisher’s note Springer Nature remains neutral with regard to jurisdictional claims in published maps and institutional afﬁliations.
+Open Access This article is licensed under a Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License, which permits any non-commercial use, sharing, distribution and reproduction in any medium or format, as long as you give appropriate credit to the original author(s) and the source, provide a link to the Creative Commons licence, and indicate if you modiﬁed the licensed material. You do not have permission under this licence to share adapted material derived from this article or parts of it. The images or other third party material in this article are included in the article’s Creative Commons licence, unless indicated otherwise in a credit line to the material. If material is not included in the article’s Creative Commons licence and your intended use is not permitted by statutory regulation or exceeds the permitted use, you will need to obtain permission directly from the copyright holder. To view a copy of this licence, visit http://creativecommons.org/ licenses/by-nc-nd/4.0/.
+© The Author(s) 2025
+
+22
+
+HUMANITIES AND SOCIAL SCIENCES COMMUNICATIONS | (2025)12:959 | https://doi.org/10.1057/s41599-025-05084-4
+
+

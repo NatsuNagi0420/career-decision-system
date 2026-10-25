@@ -1,10 +1,10 @@
-/** 青穗集 · 前端开发代理：默认接 TypeScript Agent，显式配置可回到旧 Python 服务。 */
+/** 青穗集 · 前端开发代理：默认连接当前 TypeScript Agent。 */
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { fileURLToPath } from "node:url";
 
 // The dev server proxies /api and /healthz to the selected local service, so the
-// browser never needs CORS. Set VITE_BACKEND_ORIGIN to point elsewhere.
+// browser never needs CORS. Set VITE_BACKEND_ORIGIN only when connecting to another compatible Agent endpoint.
 const backend = process.env.VITE_BACKEND_ORIGIN ?? "http://127.0.0.1:8110";
 
 export default defineConfig({

@@ -15,7 +15,7 @@ npm start
 
 访问 http://127.0.0.1:8110 。首次使用注册本地账号（密码至少 8 位），打开「模型设置」。开发时使用 npm run dev，同时启动 8110 服务和 5173 Vite；若已启动正式服务，请先在它的终端 Ctrl+C，避免占用同一端口。
 
-- 当前只维护 agent/var/agent.sqlite；岗位与账号、会话共库。旧 Python/MySQL 在线库已退休；主库中的历史归档已删除，不合并成当前账号。外部旧备份删除被系统策略拦截，仍保留但不会读取。新版没有内置公共账号或默认密码。
+- 当前只维护 agent/var/agent.sqlite；岗位与账号、会话共库。旧版数据库不属于当前运行链路；主库中的历史归档已删除，不合并成当前账号。本机备份不会自动合并到当前账号，只有明确恢复时才会读取。新版没有内置公共账号或默认密码。
 - 新版状态默认在 agent/var/：agent.sqlite、workspaces/、artifacts/。备份时先停服务，并备份整个目录；密钥使用 DPAPI 时依赖原 Windows 用户，复制数据库到其他用户不会自动解密。
 - 默认只监听本机回环地址，不应作为公网多租户服务发布。
 - Agent 核心要求 Node.js 22.17.0 以上；本轮 Windows 实测使用 22.17.0。原生组件的传递依赖 undici 8.11.2 声明要求 22.19.0 以上，推荐新安装使用 Node.js 22.19.0 以上。当前原生 ACL/runner 路径已通过实测，但本轮没有升级系统 Node，也没有验证未使用的 HTTP 代理模块。node:sqlite 仍可能提示实验性 API；发布前需固定运行环境。
@@ -44,7 +44,7 @@ npm start
 7. 主动停止、提交去重、单对话串行、步骤/执行时长/输出预算、SSE 断线重放。
 8. 服务重启后，运行中任务标记为「中断」并保留记录，不自动重复有副作用的工具。等待审批的任务保留确认状态。若密钥已安全保存且仍可用，可继续；若选择仅内存并在等待时重启，需先停止旧轮次、重填并测试密钥后发起新轮次，已生成文件仍可单独确认下载。
 
-目前 **没有** 通用浏览器操作、任意桌面 GUI 操作、自动投递职位、专用联网搜索工具、PDF/DOCX 简历解析、专业排版模板导出，也没有把旧版职业能力全部迁进新底座。旧业务源码继续保存在 legacy/server-python/ 和旧版界面供追溯，但默认数据库连接和旧启动入口已停用。本阶段是可执行底座，不是已经上线的完整求职产品。
+目前 **没有** 通用浏览器操作、任意桌面 GUI 操作、自动投递职位、专用联网搜索工具、PDF/DOCX 简历解析、专业排版模板导出，也没有把所有职业能力都迁进新底座。本阶段是可执行底座，不是已经上线的完整求职产品。
 
 ## 4. 命令沙箱
 
@@ -83,7 +83,7 @@ docker pull python:3.12-slim
 显式容器验收（实际创建短时容器，不自动安装或拉镜像）：
 
 ~~~powershell
-.\scripts\verify-agent.ps1 -WithDocker
+.\scripts\verify\verify-agent.ps1 -WithDocker
 ~~~
 
 本轮电脑没有 Docker，容器实测明确跳过，不能称为通过。容器仍依赖宿主引擎和内核，绑定成果目录也没有磁盘硬配额。用户层文件工具由可信控制服务处理受限相对路径，与任意代码沙箱是两条执行路径。
@@ -158,7 +158,7 @@ npm --prefix agent run relay:token -- revoke <凭证的hash>
 ## 6. 验证与边界
 
 ~~~powershell
-.\scripts\verify-agent.ps1
+.\scripts\verify\verify-agent.ps1
 ~~~
 
 顺序执行两端类型检查、Node/Vitest 测试、生产构建。日志写入项目 logs/agent-foundation-implementation-20261020/。用例使用独立目录，不改旧业务数据库。Windows 会自动包含原生受限命令实测，其他平台明确跳过；Docker 实测仍需 -WithDocker。Windows DPAPI 用假密钥做实际加解密。本轮单独日志在 logs/windows-native-sandbox-20261022/。
@@ -172,7 +172,7 @@ npm --prefix agent run relay:token -- revoke <凭证的hash>
 
 ~~~text
 src/config.ts / auth.ts / secrets.ts   配置、账号和凭据
-src/store.ts                          独立 SQLite，不修改旧 MySQL
+src/store.ts                          独立 SQLite，当前运行链路的唯一主库
 src/provider.ts / model.ts / profiles.ts  模型发现、协议兼容与连接能力实测
 src/runtime.ts                        自研 decide/execute/observe 循环
 src/tools.ts / files.ts / sandbox.ts   参数、资料区、版本与命令后端选择
@@ -200,5 +200,4 @@ Agent 执行循环、工具、审批和状态由本项目实现；Windows 原生
 
 ## 统一岗位数据（2026-10-24）
 
-岗位、方向、批次、原始交付及待审资料已迁入同一个 agent.sqlite，不再读取 agent/data 下的 JSON 副本。后续使用根目录 npm run catalogue:import 命令。旧 Python 服务已移入 legacy/server-python/，旧 MySQL 与 checkpoint 已退休，主库历史归档已清除；当前数据的备份位置和边界见 [数据库统一维护](../docs/agent-foundation/DATABASE_20261024.md)。
-
+岗位、方向、批次、原始交付及待审资料已迁入同一个 agent.sqlite，不再读取 agent/data 下的 JSON 副本。后续使用根目录 npm run catalogue:import 命令。旧版服务与迁移入口已从当前仓库清理，主库历史归档已清除；当前数据的备份位置和边界见 [数据库统一维护](../docs/agent-foundation/DATABASE_20261024.md)。

@@ -3,7 +3,7 @@
 
 ## 1. 交付范围
 
-本轮把约定的「自有通用任务底座」落成可独立启动的一版，不把它说成整个求职产品已经完成，也不把脚本测试说成真实模型验收。保留 React、像素字体、开机动画、穗奈素材与旧 Python 业务。
+本轮把约定的「自有通用任务底座」落成可独立启动的一版，不把它说成整个求职产品已经完成，也不把脚本测试说成真实模型验收。保留 React、像素字体、开机动画和穗奈素材；当前运行服务以 TypeScript Agent 为准。
 
 默认链路：React → 本机 TypeScript HTTP/SSE 服务（8110）→ 自有决定/执行/观察循环 → 明确开放的工具 → 独立资料副本与成果版本。模型由用户接口或可选官方中转提供，执行代码的权限不等于模型权限。
 
@@ -29,7 +29,7 @@
 - 前端：33 个测试文件，196 项通过，含新增事件归并与 HTTP 空正文回归。
 - 后端源代码、测试/夹具、前端 TypeScript 类型检查通过。
 - 两端生产构建通过。
-- 未改旧 Python 业务代码和数据库，本轮没有重新运行其 MySQL 全量测试；不能由新测试推断旧业务全部通过。
+- 本轮验证只覆盖当前 TypeScript Agent、React 前端和 SQLite 主库；不把历史文档中的旧系统测试记录当作当前运行链路证据。
 - 浏览器通过 Chrome 扩展操作，使用独立的 8111 验收服务、8131 脚本模型和虚构资料；不污染 8110 默认数据。
 - 验收过程初次发现的失败日志保留，并明确以最终 verification.json、agent-tests.log、web-tests.log 为准。
 
@@ -74,7 +74,7 @@ D:/Project/career-decision-system/logs/agent-foundation-implementation-20261020/
 - 项目根目录 npm run setup / npm run build / npm start；默认 http://127.0.0.1:8110 。
 - 首次注册新本地账号；没有分发默认公共账号。旧账号仍属于原数据库。
 - 开发 npm run dev；旧版 npm run dev:legacy（原数据库、8100 后端和 5174 前端）。
-- 统一验证 .\scripts\verify-agent.ps1；显式 -WithDocker 才进行真实容器测试，不自动装依赖或拉镜像。
+- 统一验证 .\scripts\verify\verify-agent.ps1；显式 -WithDocker 才进行真实容器测试，不自动装依赖或拉镜像。
 - 官方及本机配置：D:/Project/career-decision-system/agent/.env 。本轮从公开模板新建空白 .env，没有覆盖任何旧凭据。
 - 使用与官方部署详情：D:/Project/career-decision-system/agent/README.md 。
 - 自有核心：D:/Project/career-decision-system/agent/src/runtime.ts 。

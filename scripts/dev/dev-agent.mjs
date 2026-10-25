@@ -1,0 +1,48 @@
+/** 青穗集 · 当前开发启动器：同时启动 TypeScript Agent 与 React/Vite 桌面。 */
+import { spawn } from "node:child_process";
+import { fileURLToPath } from "node:url";
+import { dirname, resolve, join } from "node:path";
+const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
+const children = [];
+function run(file, args, dir, env = process.env) {
+    const child = spawn(file, args, {
+        cwd: join(root, dir),
+        env,
+        stdio: "inherit",
+        windowsHide: true,
+        shell: false,
+    });
+    children.push(child);
+    child.once("error", (error) => {
+        console.error("无法启动服务：" + error.message);
+        stop(1);
+    });
+    child.once("exit", (code) => {
+        if (!closing) stop(code ?? 1);
+    });
+    return child;
+}
+let closing = false;
+function stop(code = 0) {
+    if (closing) return;
+    closing = true;
+    for (const child of children) if (!child.killed) child.kill();
+    process.exitCode = code;
+}
+for (const signal of ["SIGINT", "SIGTERM"]) process.once(signal, () => stop());
+run(process.execPath, ["--import", "tsx", "src/main.ts"], "agent");
+    run(
+        process.execPath,
+        [
+            "node_modules/vite/bin/vite.js",
+            "--host",
+            "127.0.0.1",
+            "--port",
+            "5173",
+            "--strictPort",
+        ],
+        "web",
+    );
+    console.log(
+        "新版开发界面：http://127.0.0.1:5173；本机服务：http://127.0.0.1:8110",
+    );

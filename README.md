@@ -36,9 +36,8 @@ npm start
 - `web/`：当前 React/Vite 穗奈桌面、对话交互、个人页和岗位/简历组件。
 - `assets/web/`：运行时公共网页素材；页面通过 Agent 的只读素材接口读取。
 - `docs/`：产品决策、架构说明、岗位库导入规则、研究笔记和品牌交接文档。
-- `scripts/`：开发启动、验证、岗位库导入和数据库维护脚本。
-- `legacy/server-python/`：已退休的 Python/FastAPI/LangGraph/MySQL 实现，只供追溯，不参与默认启动。
-- `spikes/`：一次性验证，不作为运行时依赖。
+- `scripts/`：按 `dev/`、`catalogue/`、`verify/` 分组的开发、岗位库和验证脚本。
+- `backups/`、`logs/`：本机运行产生的备份与日志，不进入版本库。
 
 ## 唯一主库
 
@@ -60,7 +59,7 @@ npm run catalogue:import -- --archive "docs/岗位库扩充/待导入/新批次.
 npm run check
 npm test
 npm run build
-python scripts/test-merge-job-catalogue.py
+python scripts/catalogue/test-merge-job-catalogue.py
 ```
 
 测试使用临时数据库和明确的模型替身；通过不代表任意真实模型都能稳定完成职业任务。真实模型请求会产生费用，并受第三方隐私、接口兼容性和本地沙箱权限影响。

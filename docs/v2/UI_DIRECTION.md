@@ -7,8 +7,8 @@
 - 状态：方向稿（S6 系列的第一份）。未改动任何生产代码。
 - 依据：本文所有"现在有什么"都来自读码与实测，数字写在各节里；外部事实只引一处并在 §7 注明。
 - 配图：
-  - 现状：`spikes/ui-direction/current-desktop.png`（2026-10 真机首屏，由 `npm run verify:e2e` 截）
-  - 方向草图：`spikes/ui-direction/desktop.png`（1440×900，源文件 `desktop.html`，自包含可离线打开）
+  - 现状：`docs/v2/ui-direction-prototype/current-desktop.png`（2026-10 真机首屏，由 `npm run verify:e2e` 截）
+  - 方向草图：`docs/v2/ui-direction-prototype/desktop.png`（1440×900，源文件 `desktop.html`，自包含可离线打开）
 
 ## 1. 先量了三件事，它们决定了方案长什么样
 

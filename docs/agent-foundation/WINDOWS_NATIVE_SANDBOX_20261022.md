@@ -70,4 +70,4 @@ React 工作区 → TypeScript Agent → run_command
 - 固定组件版本：@deepseek-ai/dsh-sandbox-windows-acl@0.2.1-rc.2。说明与 MIT 许可副本在本轮 logs 的 references/；以安装包原许可证为准。
 - 本机 Node.js 22.17.0 已通过实际使用的 ACL/runner 路径；自动 peer 链中的 undici 8.11.2 要求 Node.js 22.19.0 以上，安装时仍有引擎警告。新环境建议 Node.js 22.19.0 以上；本轮没有升级用户系统 Node，也没有验证未使用的 HTTP 代理模块。
 
-scripts/agent-foundation-preflight.mjs 只检查默认/进程环境指定后端的安装前提，不读取 .env 或凭据，不授予 ACL、不启动隔离任务；它的成功不能替代页面的真实环境自检。全量回归入口 scripts/verify-agent.ps1 在 Windows 自动包含原生实测，Docker 仍需显式 -WithDocker。
+scripts/dev/agent-foundation-preflight.mjs 只检查默认/进程环境指定后端的安装前提，不读取 .env 或凭据，不授予 ACL、不启动隔离任务；它的成功不能替代页面的真实环境自检。全量回归入口 scripts/verify/verify-agent.ps1 在 Windows 自动包含原生实测，Docker 仍需显式 -WithDocker。

@@ -62,15 +62,8 @@ agent/relay-var/
 *.sqlite-wal
 *.sqlite-shm
 
-# Repository preparation: keep local source material and retired runtime state out of Git.
+# Local scratch and generated source material never enter Git.
 tmp/
-legacy/server-python/.env
-legacy/server-python/var/
-legacy/server-python/.venv/
-legacy/server-python/.pytest_cache/
-legacy/server-python/.ruff_cache/
-legacy/server-python/**/__pycache__/
-legacy/server-python/*.log
 
 # Raw research and art handoff files stay in the local workspace or an artifact store.
 docs/参考资料/**/*.pdf

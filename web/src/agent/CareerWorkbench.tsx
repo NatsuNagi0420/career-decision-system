@@ -10,7 +10,8 @@ import { ASSESSMENT_LABEL, ACTION_LABEL, CAREER_TABS, EMPTY_CAREER_PROFILE, PROF
   type CareerTab, type CareerProfileInput, type CareerState, type CareerChange, type CareerJob,
   type CareerAction, type CareerCheck, type CareerProposal } from "./career";
 import { ComponentIcon } from "./ComponentAssets";
-import { GrowthSummary, SKILL_STAGES } from "./CareerComponents";
+import { SKILL_STAGES } from "./CareerComponents";
+import { ProfileDossier } from "./ProfileDossier";
 import type { AgentFile } from "./types";
 import { catalogueReferenceNotice } from "../../../agent/src/job-catalogue-contract";
 
@@ -23,6 +24,7 @@ export function CareerWorkbench({ workspace, onJob, tab, onTab, files, hidden, o
 }) {
   const { state, error, notice, saving, loading, refresh, change, dismissNotice } = workspace;
   const { confirm, dialog } = usePixelConfirm();
+  const [profileEditorOpen, setProfileEditorOpen] = useState(false);
   useEffect(() => { onPending(state?.proposals.length ?? 0); }, [state?.proposals.length, onPending]);
   async function remove(type: "job.delete" | "action.delete", id: string, title: string) {
     if (await confirm({ title: "移除这项内容？", description: <p>将从职业工作台中移除「{title}」。相关的对话和原始文件仍可单独查看。</p>, confirmLabel: "确认移除" })) await change({ type, id }, "已移除。");
@@ -43,9 +45,13 @@ export function CareerWorkbench({ workspace, onJob, tab, onTab, files, hidden, o
       <div className="workbench-page-heading"><div><span className="workbench-eyebrow">{state.profile.goal || "从一个小目标开始"}</span><h2>{title.label}</h2></div><span className="workbench-save-state"><i />{state.updated_at ? "已保存到当前账号" : "还没有保存材料"}</span></div>
       {state.proposals.length > 0 && <section className="workbench-proposals" aria-label="穗奈的待确认建议"><header><span><AgentIcon name="activity" size={17} />穗奈整理了 {state.proposals.length} 份建议</span><small>确认后才写入工作台</small></header>{state.proposals.map(proposal => <Proposal key={proposal.id} proposal={proposal} state={state} saving={saving} change={change} onPrompt={onPrompt} />)}</section>}
       <section id="career-panel-profile" role="tabpanel" aria-labelledby="career-tab-profile" hidden={tab !== "profile"}>
-        <GrowthSummary state={state} loading={false} error="" onOpen={() => document.querySelector<HTMLTextAreaElement>(".workbench-profile-form textarea")?.focus()} onPrompt={onPrompt} />
-        <div className="workbench-intro"><div><h3>{state.profile.confirmed_at ? "每一份经历，都可以继续补充" : "先从你做过的事开始"}</h3><p>把真实经历、期待和约束放在一起。穗奈会以此帮你比较方向，你随时可以修改。</p></div><button className="workbench-secondary" type="button" onClick={() => onPrompt(careerPrompt("profile"))}><AgentIcon name="activity" size={15} />和穗奈一起整理</button></div>
-        <ProfileEditor profile={state.profile} saving={saving} change={change} />
+        <ProfileDossier state={state} onEdit={() => setProfileEditorOpen(true)} onPrompt={onPrompt} />
+        <div className="workbench-intro profile-dossier-conversation-entry"><div><h3>继续和穗奈聊，画像会跟着事实更新</h3><p>你可以从最近做过的一件事开始。穗奈会先追问和整理，提出更新后等你确认。</p></div><button className="workbench-secondary" type="button" onClick={() => onPrompt(careerPrompt("profile"))}><AgentIcon name="activity" size={15} />继续对话</button></div>
+        <details className="workbench-profile-edit" open={profileEditorOpen} onToggle={event => setProfileEditorOpen(event.currentTarget.open)}>
+          <summary><span><ComponentIcon name="edit-record" size={17} />修正已确认材料</span><small>适合纠正一处事实</small></summary>
+          <p>补充新经历时，优先继续和穗奈对话；直接编辑后保存的内容也会成为后续对照依据。</p>
+          <ProfileEditor profile={state.profile} saving={saving} change={change} />
+        </details>
       </section>
       <section id="career-panel-jobs" role="tabpanel" aria-labelledby="career-tab-jobs" hidden={tab !== "jobs"}>
         {!!state.saved_jobs?.length && <section className="saved-job-list" aria-label="收藏的岗位"><h3>我的收藏 <small>{state.saved_jobs.length}</small></h3>{state.saved_jobs.map(job => <div className="saved-job-row" key={job.catalogue_id}><button type="button" disabled={!job.available} onClick={() => onJob(job.catalogue_id)}><ComponentIcon name="employment" size={22}/><span><strong>{job.title}</strong><small>{[job.company, job.city].filter(Boolean).join(" · ") || "岗位资料已移除"}</small></span><ComponentIcon name="open-arrow" size={17}/></button><button type="button" className="component-icon-button bookmark-button" data-saved="true" title="取消收藏" aria-label={"取消收藏：" + job.title} disabled={saving} onClick={() => void change({type:"catalogue.save",catalogue_id:job.catalogue_id,saved:false},"已取消收藏。其他资料保持原样。") }><ComponentIcon name="bookmark-star" size={22}/></button></div>)}</section>}

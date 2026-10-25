@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { COMPONENT_ICONS, ComponentIcon } from "./ComponentAssets";
 import { GrowthSummary, JobRecommendationCard, ProfileUpdateStrip, SkillDetailPopover } from "./CareerComponents";
+import { ProfileDossier } from "./ProfileDossier";
 import { EMPTY_CAREER_PROFILE, type CareerState } from "./career";
 import { jobsByRun } from "./job-cards";
 import type { ChatMessage } from "./types";
@@ -74,4 +75,32 @@ it("所有新图标都来自后端统一资源路径并有实际文件", () => {
     expect(source).toMatch(/^\/api\/assets\/brand\/career-components\//);
     expect(existsSync(new URL("../../../assets/web/"+source.slice("/api/assets/".length),import.meta.url)),source).toBe(true);
   }
+});
+
+describe("证据型职业画像", () => {
+  it("把已确认事实、技能依据和待了解内容放在同一份画像里", () => {
+    const input = state();
+    input.profile = { ...input.profile, goal: "寻找前端实习", experience: "用 React 完成过一个课程项目", confirmed_at: "2026-10-24" };
+    input.skills = [{ name: "React", stage: "project", evidence: [{ source_id: "profile.experience", quote: "用 React 完成过一个课程项目" }], confirmed_at: "2026-10-24" }];
+    input.sources = [
+      { id: "profile.goal", kind: "user_confirmed", text: "寻找前端实习" },
+      { id: "profile.experience", kind: "user_confirmed", text: "用 React 完成过一个课程项目" },
+      { id: "job.sample", kind: "job_sample", text: "熟悉 React" },
+    ];
+    const html = renderToStaticMarkup(<ProfileDossier state={input} onEdit={noop} onPrompt={noop} />);
+    expect(html).toContain("寻找前端实习");
+    expect(html).toContain("Lv.2 · 项目实践");
+    expect(html).toContain("用 React 完成过一个课程项目");
+    expect(html).toContain("还需要继续了解");
+    expect(html).not.toContain("熟悉 React");
+    expect(html).not.toMatch(/匹配度|可信度|精通/);
+  });
+
+  it("空画像引导回到对话，不伪造内容", () => {
+    const html = renderToStaticMarkup(<ProfileDossier state={state()} onEdit={noop} onPrompt={noop} />);
+    expect(html).toContain("你的职业画像正在形成");
+    expect(html).toContain("从对话开始");
+    expect(html).toContain("技能会在穗奈从经历中找到明确依据");
+    expect(html).not.toContain("未填写");
+  });
 });

@@ -38,6 +38,7 @@ describe("工具结果的岗位卡片", () => {
     expect(html).toContain('aria-pressed="true"');
     expect(html).toContain("取消收藏");
     expect(html).toContain("和我对照");
+    expect(html).toContain("agent-menu-option job-menu-option");
     expect(html).toContain("当前状态待核实");
     expect(html).not.toMatch(/匹配度|适合度|90%/);
   });

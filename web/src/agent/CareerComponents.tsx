@@ -22,10 +22,10 @@ export function JobRecommendationCard({ job, saved, saving, disabled, onOpen, on
     <div className="component-job-meta">{job.company && <span><ComponentIcon name="company" size={15} />{job.company}</span>}{job.city && <span><ComponentIcon name="location" size={15} />{job.city}</span>}{WORK_TYPE_LABEL[job.work_type] && <span><ComponentIcon name="employment" size={15} />{WORK_TYPE_LABEL[job.work_type]}</span>}</div>
     {job.matched_terms.length > 0 && <div className="component-tags" aria-label="检索关键词">{job.matched_terms.map(term => <span key={term}>{term}</span>)}</div>}
     {job.excerpt && <button type="button" className="job-reference-card__excerpt" onClick={onOpen}>{job.excerpt}</button>}
-    <footer><small>{job.reference_notice}</small><div className="component-button-group"><button type="button" className="component-primary" disabled={disabled} onClick={() => onPrompt(jobPrompt(job,"compare"))}><ComponentIcon name="compare" size={18} />和我对照</button>
+    <footer><small>{job.reference_notice}</small><div className="component-button-group job-reference-card__actions"><button type="button" className="component-primary" disabled={disabled} onClick={() => onPrompt(jobPrompt(job,"compare"))}><ComponentIcon name="compare" size={18} />和我对照</button>
       <ComposerMenu label={"岗位操作：" + job.title} title="岗位操作" trigger={<ComponentIcon name="more" size={18} />} disabled={disabled} align="end">{close => <>
-        <button role="menuitem" type="button" onClick={() => { close(); onPrompt(jobPrompt(job,"action")); }}><ComponentIcon name="task-list" />加入下一步</button>
-        <button role="menuitem" type="button" onClick={() => { close(); onPrompt(jobPrompt(job,"direction")); }}><ComponentIcon name="career-compass" />考虑这个方向</button>
+        <button className="agent-menu-option job-menu-option" role="menuitem" type="button" onClick={() => { close(); onPrompt(jobPrompt(job,"action")); }}><ComponentIcon name="task-list" />加入下一步</button>
+        <button className="agent-menu-option job-menu-option" role="menuitem" type="button" onClick={() => { close(); onPrompt(jobPrompt(job,"direction")); }}><ComponentIcon name="career-compass" />考虑这个方向</button>
       </>}</ComposerMenu></div></footer>
   </article>;
 }

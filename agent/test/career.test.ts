@@ -2,6 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { fixture, ScriptedModel, reply, tool } from "./helpers.js";
+import { CAREER_GUIDANCE_INSTRUCTIONS } from "../src/career-guidance.js";
 import { emptyCareerState } from "../src/career.js";
 import { id } from "../src/store.js";
 
@@ -29,6 +30,32 @@ test("职业接口要求登录、按账号隔离，并拒绝旧版本覆盖和�
   assert.equal(isolated.json().revision, 0);
   assert.equal(isolated.json().profile.experience, "");
   assert.throws(() => f.runtime.career.change(f.user.id, { revision: 1, change: { type: "profile.save", profile: { ...inputProfile, goal: "", experience: "" } } }), /至少填写/);
+});
+
+test("职业对话允许先保存部分画像草稿，并明确需要本人确认", () => {
+  assert.match(CAREER_GUIDANCE_INSTRUCTIONS, /不必等六项字段齐全/);
+  assert.match(CAREER_GUIDANCE_INSTRUCTIONS, /待确认草稿/);
+});
+
+test("画像草稿是增量更新，不会用未知空字段覆盖已有事实", async t => {
+  const f = await fixture(t), career = f.runtime.career;
+  const change = (value: unknown) => career.change(f.user.id, { revision: career.get(f.user.id).revision, change: value });
+  change({ type: "profile.save", profile: inputProfile });
+  const state = career.get(f.user.id);
+  const proposal = career.propose(f.user.id, f.conversation.id, {
+    context_version: state.context_version,
+    title: "补充画像事实",
+    data: { kind: "profile", profile: { goal: "寻找后端实习", education: "", experience: "", skills: "", preferences: "", weekly_hours: "" } },
+  });
+  const pending = career.get(f.user.id).proposals[0]!;
+  assert.equal(pending.data.kind, "profile");
+  if (pending.data.kind === "profile") {
+    assert.equal(pending.data.profile.experience, inputProfile.experience);
+    assert.equal(pending.data.profile.goal, "寻找后端实习");
+  }
+  const approved = change({ type: "proposal.decide", id: proposal.proposal_id, approved: true });
+  assert.equal(approved.profile.experience, inputProfile.experience);
+  assert.equal(approved.profile.goal, "寻找后端实习");
 });
 
 test("职业工具读取后只能提交草稿，用户确认才保存，跨对话继续读取", async t => {

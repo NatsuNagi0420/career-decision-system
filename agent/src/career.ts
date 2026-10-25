@@ -142,11 +142,26 @@ export class CareerWorkspace {
     return this.store.transaction(() => {
       const state = this.get(userId);
       invariant(parsed.context_version === state.context_version, 409, "职业资料已经更新，请先重新读取再生成建议。");
-      this.validateProposal(state, parsed.data);
-      const proposal = { ...parsed, id: id(), created_at: now(), conversation_id: conversationId,
-        ...(parsed.data.kind === "catalogue_job" ? { catalogue_sample: this.catalogue.catalogueSelection(parsed.data.catalogue_id) } : {}) };
+      // 对话画像是增量更新：未知字段不能因为模型留空而覆盖已有确认材料；清空字段仍可通过工作台的直接编辑入口完成。
+      const normalized = parsed.data.kind === "profile" ? {
+        ...parsed,
+        data: {
+          ...parsed.data,
+          profile: {
+            goal: parsed.data.profile.goal || state.profile.goal,
+            education: parsed.data.profile.education || state.profile.education,
+            experience: parsed.data.profile.experience || state.profile.experience,
+            skills: parsed.data.profile.skills || state.profile.skills,
+            preferences: parsed.data.profile.preferences || state.profile.preferences,
+            weekly_hours: parsed.data.profile.weekly_hours || state.profile.weekly_hours,
+          },
+        },
+      } : parsed;
+      this.validateProposal(state, normalized.data);
+      const proposal = { ...normalized, id: id(), created_at: now(), conversation_id: conversationId,
+        ...(normalized.data.kind === "catalogue_job" ? { catalogue_sample: this.catalogue.catalogueSelection(normalized.data.catalogue_id) } : {}) };
       // 同一类未确认草稿仅保留最新版；不同岗位的对照互不覆盖。
-      state.proposals = state.proposals.filter(p => p.data.kind !== parsed.data.kind || p.data.kind === "comparison" && parsed.data.kind === "comparison" && p.data.job_id !== parsed.data.job_id);
+      state.proposals = state.proposals.filter(p => p.data.kind !== normalized.data.kind || p.data.kind === "comparison" && normalized.data.kind === "comparison" && p.data.job_id !== normalized.data.job_id);
       invariant(state.proposals.length < 12, 400, "请先处理工作台中已有的待确认建议。");
       state.proposals.push(proposal);
       this.write(userId, state);

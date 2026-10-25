@@ -707,7 +707,7 @@ export class Runtime {
           CAREER_GUIDANCE_INSTRUCTIONS,
           this.guidance.instructions(run),
           legacyResumeTask ? RESUME_SKILL_INSTRUCTIONS : RESUME_COACHING_INSTRUCTIONS,
-          "需要把整理结果放进工作台时，用 propose_career_update 提交 profile、comparison 或 actions 草稿；只有用户在工作台确认后才生效。不得用 write_file 假装更新职业档案。",
+          "需要把整理结果放进工作台时，用 propose_career_update 提交 profile、comparison 或 actions 草稿；只要本轮出现明确的用户职业事实，profile 草稿可以先填已确认的部分，不必等待所有字段齐全；只有用户在工作台确认后才生效。不得用 write_file 假装更新职业档案。",
           "岗位仅代表用户提供的样本。对照逐字引用岗位要求，个人依据逐字引用 sources；未提供材料不等于不会。不给录用概率或未经校准的职业适合度。提交行动结果后，应重新读取当前资料并提出更新建议。",
           "保持自然对话，不展示五步清单或要求先填完资料。普通聊天直接回答，复杂执行可用 plan_tasks 给简短计划。",
           "只有工具成功返回才算执行过；不得把计划、代码建议或模型文字说成已创建文件。",

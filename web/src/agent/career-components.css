@@ -101,6 +101,7 @@
 .profile-update-strip { width:min(100%,var(--career-component-width));margin:16px 0;padding:13px 18px;border-left-color:#8fb39b; }
 .profile-update-strip > header { display:flex;align-items:center;gap:9px; }
 .profile-update-strip h3 { margin:0;font-size:.95em;font-weight:400; }
+.profile-update-strip__state { margin-left:auto;color:#6d9a7f;font-size:.78em;white-space:nowrap; }
 .profile-update-strip dl { margin:12px 0; }
 .profile-update-strip dl > div { display:grid;grid-template-columns:110px minmax(0,1fr);gap:10px;margin:6px 0;font-size:.9em; }
 .profile-update-strip dt { color:var(--component-muted); }

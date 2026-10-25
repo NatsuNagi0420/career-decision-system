@@ -1,0 +1,157 @@
+/** 青穗集 · 用户画像档案页样式：以状态、来源和模块分组表达信息层级。 */
+.profile-dossier {
+  --profile-navy: #29235f;
+  --profile-ink: #292641;
+  --profile-muted: #77738d;
+  --profile-line: #e7e2f0;
+  --profile-soft: #f8f6ff;
+  --profile-lavender: #cec2ff;
+  --profile-lavender-soft: #eee9ff;
+  --profile-cream: #fffdf7;
+  --profile-mint: #d8f3e5;
+  --profile-mint-strong: #8bd9b3;
+  --profile-peach: #f8d0c4;
+  --profile-peach-strong: #dc9c7d;
+  display: grid;
+  gap: 16px;
+  color: var(--profile-ink);
+}
+.profile-dossier button { font: inherit; }
+.profile-dossier-icon { display: inline-block; flex: none; object-fit: contain; image-rendering: pixelated; }
+.profile-dossier-page-header { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 2px 0 17px; border-bottom: 2px solid #dcd6ee; }
+.profile-dossier-page-title { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.profile-dossier-brand-mark, .profile-dossier-identity-icon { display: grid; place-items: center; flex: none; border: 2px solid var(--profile-navy); background: var(--profile-lavender-soft); box-shadow: 3px 3px 0 var(--profile-lavender); }
+.profile-dossier-brand-mark { width: 49px; height: 49px; }
+.profile-dossier-kicker { display: block; color: #827b9c; font-size: 9px; font-weight: 800; letter-spacing: .13em; }
+.profile-dossier-page-title h3 { margin: 2px 0 3px; color: var(--profile-navy); font-size: 24px; font-weight: 700; line-height: 1.25; }
+.profile-dossier-page-title p { margin: 0; color: var(--profile-muted); font-size: 10px; line-height: 1.6; }
+.profile-dossier-page-meta { display: grid; justify-items: end; gap: 8px; color: var(--profile-muted); font-size: 10px; }
+.profile-dossier-page-meta > span:last-child { display: inline-flex; align-items: center; gap: 5px; }
+.profile-dossier-status-pill { display: inline-flex; align-items: center; gap: 4px; width: max-content; padding: 4px 7px; border: 1px solid; font-size: 9px; font-weight: 700; line-height: 1.2; white-space: nowrap; }
+.profile-dossier-status-pill--confirmed { border-color: #9fcdb4; color: #397557; background: #effaf3; }
+.profile-dossier-status-pill--judgement { border-color: #b8a9e3; color: #63538f; background: #f2efff; }
+.profile-dossier-status-pill--pending { border-color: #e1b49d; color: #8a5f4d; background: #fff5ef; }
+.profile-dossier-understanding { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 11px 14px; border-left: 5px solid #9384d3; background: #f2efff; }
+.profile-dossier-understanding > strong { flex: none; color: var(--profile-navy); font-size: 12px; }
+.profile-dossier-understanding > span { flex: 1; color: #5e5974; font-size: 10px; line-height: 1.55; }
+.profile-dossier-legend { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.profile-dossier-overview { padding: 16px 18px 13px; border: 3px solid var(--profile-navy); outline: 2px solid var(--profile-lavender); outline-offset: -8px; background: var(--profile-cream); box-shadow: 4px 5px 0 #29235f1c; }
+.profile-dossier-overview-label { display: flex; align-items: center; gap: 9px; color: var(--profile-navy); font-size: 13px; font-weight: 800; }
+.profile-dossier-overview-label small { margin-left: auto; color: #8a849b; font-size: 9px; font-weight: 400; }
+.profile-dossier-module-number { display: inline-grid; place-items: center; width: 22px; height: 20px; color: #635b89; background: var(--profile-lavender-soft); border: 1px solid #c6bae8; font-size: 9px; font-weight: 800; }
+.profile-dossier-overview-main { display: flex; gap: 18px; margin-top: 12px; padding-top: 12px; border-top: 1px dashed #dcd6ee; }
+.profile-dossier-identity { display: flex; align-items: flex-start; gap: 12px; min-width: 245px; max-width: 36%; }
+.profile-dossier-identity-icon { width: 61px; height: 61px; }
+.profile-dossier-identity h4 { margin: 1px 0 4px; color: var(--profile-navy); font-size: 16px; font-weight: 800; line-height: 1.4; overflow-wrap: anywhere; }
+.profile-dossier-identity p { margin: 0 0 7px; color: var(--profile-muted); font-size: 9px; line-height: 1.55; }
+.profile-dossier-overview-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); flex: 1; }
+.profile-dossier-overview-stats > div { min-width: 0; padding: 5px 12px; border-left: 2px solid var(--profile-lavender); }
+.profile-dossier-overview-stats > div:nth-child(2) { border-left-color: var(--profile-mint-strong); background: #f5fcf8; }
+.profile-dossier-overview-stats > div:nth-child(3) { border-left-color: var(--profile-peach-strong); background: #fff9f5; }
+.profile-dossier-overview-stats span { display: block; margin-bottom: 4px; color: #8a849b; font-size: 9px; }
+.profile-dossier-overview-stats strong { display: block; color: #45405f; font-size: 11px; line-height: 1.5; overflow-wrap: anywhere; }
+.profile-dossier-overview-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; padding-top: 10px; border-top: 1px dashed #dcd6ee; color: #827c94; font-size: 9px; }
+.profile-dossier-edit-link, .profile-dossier-small-action { display: inline-flex; align-items: center; gap: 5px; border: 0; color: #63538f; background: transparent; cursor: pointer; font-size: 10px; font-weight: 700; }
+.profile-dossier-edit-link:hover, .profile-dossier-small-action:hover { color: var(--profile-navy); text-decoration: underline; }
+.profile-dossier-grid { display: grid; gap: 16px; }
+.profile-dossier-grid--two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.profile-dossier-module { min-width: 0; padding: 15px 17px 13px; border: 2px solid #cfc3ff; background: var(--profile-cream); }
+.profile-dossier-module--wide { width: 100%; }
+.profile-dossier-module-head { display: flex; align-items: center; gap: 8px; min-width: 0; padding-bottom: 10px; border-bottom: 1px solid #ded8ed; }
+.profile-dossier-module-head h3 { margin: 0; color: var(--profile-navy); font-size: 14px; font-weight: 800; }
+.profile-dossier-module-icon { display: grid; place-items: center; width: 29px; height: 29px; background: var(--profile-lavender-soft); border: 1px solid #c6bae8; }
+.profile-dossier-module-hint { margin-left: auto; color: #8d879c; font-size: 9px; white-space: nowrap; }
+.profile-dossier-record-list { display: grid; }
+.profile-dossier-record { display: grid; grid-template-columns: 29px minmax(0, 1fr) auto; align-items: start; gap: 9px; padding: 10px 0; border-bottom: 1px solid #eeebf3; }
+.profile-dossier-record:last-child { border-bottom: 0; }
+.profile-dossier-record-icon { display: grid; place-items: center; width: 29px; height: 29px; background: #f4f0ff; }
+.profile-dossier-record-main { min-width: 0; }
+.profile-dossier-record-label { color: #77718c; font-size: 9px; }
+.profile-dossier-record-value { margin-top: 3px; color: #47435d; font-size: 11px; font-weight: 700; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+.profile-dossier-record[data-empty="true"] .profile-dossier-record-value { color: #a69fae; font-weight: 400; }
+.profile-dossier-source { display: flex; align-items: center; gap: 4px; min-width: 0; margin-top: 6px; color: #817b94; font-size: 8px; line-height: 1.4; }
+.profile-dossier-source > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.profile-dossier-source small { flex: none; color: #a49daf; font-size: 8px; }
+.profile-dossier-module-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 25px; padding-top: 7px; border-top: 1px dashed #ded8ed; }
+.profile-dossier-experience { padding: 13px 14px; margin-top: 13px; border-left: 4px solid var(--profile-lavender); background: #f8f6ff; }
+.profile-dossier-experience-title { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.profile-dossier-experience h4 { margin: 0; color: #373350; font-size: 12px; font-weight: 800; }
+.profile-dossier-experience p { margin: 8px 0 0; color: #514d65; font-size: 10px; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; }
+.profile-dossier-experience .profile-dossier-source { margin-top: 9px; }
+.profile-dossier-empty { display: flex; align-items: center; gap: 9px; min-height: 58px; color: #867f96; font-size: 10px; }
+.profile-dossier-empty > span { flex: 1; }
+.profile-dossier-skill-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding-top: 13px; }
+.profile-dossier-skill { min-width: 0; padding: 11px; border: 1px solid #e1dcef; background: #fff; }
+.profile-dossier-skill > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 7px; }
+.profile-dossier-skill-title { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.profile-dossier-skill-title > div { min-width: 0; }
+.profile-dossier-skill h4 { margin: 0; color: #373350; font-size: 11px; font-weight: 800; overflow-wrap: anywhere; }
+.profile-dossier-skill-title span { display: block; margin-top: 3px; color: #635b89; font-size: 9px; line-height: 1.4; }
+.profile-dossier-record-action { display: grid; place-items: center; width: 23px; height: 23px; flex: none; border: 1px solid #d8d0e8; color: #74689b; background: #fff; cursor: pointer; }
+.profile-dossier-record-action:hover { border-color: #9788ca; background: var(--profile-lavender-soft); }
+.profile-dossier-skill-use { margin: 9px 0 7px; color: #77718c; font-size: 9px; }
+.profile-dossier-quote { margin-top: 6px; }
+.profile-dossier-quote blockquote, .profile-dossier-evidence blockquote { margin: 0; padding: 7px 8px; border-left: 3px solid #afa1dc; color: #5b5670; background: #f8f6ff; font-size: 9px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+.profile-dossier-quote .profile-dossier-source { margin: 5px 0 0; }
+.profile-dossier-skill > .profile-dossier-status-pill { margin-top: 8px; }
+.profile-dossier-muted { padding: 13px 0 5px; color: #8d879c; font-size: 10px; line-height: 1.7; }
+.profile-dossier-question-list { display: grid; }
+.profile-dossier-question-list > button { display: grid; grid-template-columns: 23px minmax(0, 1fr) auto 15px; align-items: start; gap: 7px; width: 100%; padding: 9px 0; border: 0; border-bottom: 1px solid #eeebf3; color: var(--profile-ink); background: transparent; text-align: left; cursor: pointer; }
+.profile-dossier-question-list > button:last-child { border-bottom: 0; }
+.profile-dossier-question-list > button:hover { background: #fbf8ff; }
+.profile-dossier-question-index { display: grid; place-items: center; width: 20px; height: 20px; color: #635b89; background: #f0ecff; border: 1px solid #c6bae8; font-size: 8px; font-weight: 800; }
+.profile-dossier-question-list > button > span:nth-child(2) { min-width: 0; }
+.profile-dossier-question-list strong { display: block; color: #47435d; font-size: 10px; line-height: 1.4; }
+.profile-dossier-question-list small { display: block; margin-top: 3px; color: #8d879c; font-size: 8px; }
+.profile-dossier-follow-up-cta { display: flex; align-items: center; justify-content: space-between; gap: 9px; margin-top: 10px; padding: 9px 10px; border: 1px dashed #b4a8dc; background: #f4f0ff; }
+.profile-dossier-follow-up-cta > span { color: #605a78; font-size: 9px; line-height: 1.45; }
+.profile-dossier-continue-button { display: inline-flex; align-items: center; gap: 5px; flex: none; padding: 7px 9px; border: 2px solid var(--profile-navy); color: #fffdf7; background: var(--profile-navy); box-shadow: 2px 2px 0 var(--profile-lavender); cursor: pointer; font-size: 9px; font-weight: 700; }
+.profile-dossier-continue-button:hover { transform: translate(-1px, -1px); }
+.profile-dossier-evidence-list { display: grid; padding-top: 6px; }
+.profile-dossier-evidence { border-bottom: 1px solid #eeebf3; }
+.profile-dossier-evidence:last-child { border-bottom: 0; }
+.profile-dossier-evidence summary { display: grid; grid-template-columns: minmax(0, 1fr) minmax(120px, .8fr) 14px; align-items: center; gap: 10px; padding: 9px 0; cursor: pointer; list-style: none; }
+.profile-dossier-evidence summary::-webkit-details-marker { display: none; }
+.profile-dossier-evidence-heading { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.profile-dossier-evidence-heading > span { display: grid; gap: 2px; min-width: 0; }
+.profile-dossier-evidence-heading strong { color: #47435d; font-size: 10px; font-weight: 700; overflow-wrap: anywhere; }
+.profile-dossier-evidence-heading small { color: #8d879c; font-size: 8px; }
+.profile-dossier-evidence-preview { min-width: 0; overflow: hidden; color: #817b94; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.profile-dossier-evidence blockquote { margin: 0 0 10px 25px; }
+.profile-dossier-footnote { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-top: 4px; color: #827c94; font-size: 9px; }
+.profile-dossier-footnote > span { display: inline-flex; align-items: center; gap: 5px; }
+@media (min-width: 2000px) {
+  .profile-dossier { gap: 22px; }
+  .profile-dossier-page-title h3 { font-size: 32px; }
+  .profile-dossier-page-title p, .profile-dossier-understanding > span, .profile-dossier-overview-footer, .profile-dossier-footnote { font-size: 13px; }
+  .profile-dossier-kicker { font-size: 12px; }
+  .profile-dossier-module-head h3, .profile-dossier-overview-label { font-size: 18px; }
+  .profile-dossier-module-hint, .profile-dossier-status-pill, .profile-dossier-overview-stats span, .profile-dossier-source, .profile-dossier-source small, .profile-dossier-record-label, .profile-dossier-record-value, .profile-dossier-experience p, .profile-dossier-skill-use, .profile-dossier-skill-title span, .profile-dossier-quote blockquote, .profile-dossier-question-list strong, .profile-dossier-question-list small, .profile-dossier-follow-up-cta > span, .profile-dossier-continue-button, .profile-dossier-evidence-preview, .profile-dossier-evidence-heading strong, .profile-dossier-evidence-heading small { font-size: 13px; }
+  .profile-dossier-overview-stats strong { font-size: 15px; }
+  .profile-dossier-module { padding: 22px 24px 18px; }
+  .profile-dossier-record { padding: 14px 0; }
+  .profile-dossier-skill { padding: 16px; }
+}
+@media (max-width: 1100px) {
+  .profile-dossier-overview-main { display: grid; }
+  .profile-dossier-identity { max-width: none; }
+  .profile-dossier-overview-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 0; }
+  .profile-dossier-skill-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .profile-dossier-page-header, .profile-dossier-understanding, .profile-dossier-overview-footer, .profile-dossier-footnote { align-items: flex-start; flex-direction: column; }
+  .profile-dossier-page-meta { justify-items: start; }
+  .profile-dossier-understanding > span { width: 100%; }
+  .profile-dossier-grid--two { grid-template-columns: 1fr; }
+  .profile-dossier-overview { padding: 13px 14px 11px; }
+  .profile-dossier-overview-label small, .profile-dossier-module-hint { display: none; }
+  .profile-dossier-overview-stats { grid-template-columns: 1fr 1fr; }
+  .profile-dossier-overview-stats > div { padding: 5px 8px; }
+  .profile-dossier-skill-grid { grid-template-columns: 1fr; }
+  .profile-dossier-module { padding: 13px 13px 11px; }
+  .profile-dossier-question-list > button { grid-template-columns: 23px minmax(0, 1fr) 15px; }
+  .profile-dossier-question-list .profile-dossier-status-pill { display: none; }
+  .profile-dossier-evidence summary { grid-template-columns: minmax(0, 1fr) 14px; }
+  .profile-dossier-evidence-preview { display: none; }
+  .profile-dossier-follow-up-cta { align-items: flex-start; flex-direction: column; }
+}

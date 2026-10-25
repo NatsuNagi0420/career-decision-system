@@ -42,11 +42,10 @@ export function CareerWorkbench({ workspace, onJob, tab, onTab, files, hidden, o
     {error && <div className="workbench-feedback workbench-feedback--error" role="alert"><span>{error}</span><button type="button" disabled={saving} onClick={() => void refresh()}>刷新资料</button></div>}
     {notice && <div className="workbench-feedback" role="status"><AgentIcon name="check" size={16} /><span>{notice}</span><button type="button" aria-label="关闭工作台提示" onClick={dismissNotice}><AgentIcon name="close" size={14} /></button></div>}
     {!state ? <div className="workbench-loading" role="status"><CareerIcon name="sprout" size={46} /><p>{loading ? "正在打开你的职业空间…" : "暂时未能读取工作台，请重试。"}</p></div> : <div className="workbench-scroll">
-      <div className="workbench-page-heading"><div><span className="workbench-eyebrow">{state.profile.goal || "从一个小目标开始"}</span><h2>{title.label}</h2></div><span className="workbench-save-state"><i />{state.updated_at ? "已保存到当前账号" : "还没有保存材料"}</span></div>
+      {tab !== "profile" && <div className="workbench-page-heading"><div><span className="workbench-eyebrow">{state.profile.goal || "从一个小目标开始"}</span><h2>{title.label}</h2></div><span className="workbench-save-state"><i />{state.updated_at ? "已保存到当前账号" : "还没有保存材料"}</span></div>}
       {state.proposals.length > 0 && <section className="workbench-proposals" aria-label="穗奈的待确认建议"><header><span><AgentIcon name="activity" size={17} />穗奈整理了 {state.proposals.length} 份建议</span><small>确认后才写入工作台</small></header>{state.proposals.map(proposal => <Proposal key={proposal.id} proposal={proposal} state={state} saving={saving} change={change} onPrompt={onPrompt} />)}</section>}
       <section id="career-panel-profile" role="tabpanel" aria-labelledby="career-tab-profile" hidden={tab !== "profile"}>
         <ProfileDossier state={state} onEdit={() => setProfileEditorOpen(true)} onPrompt={onPrompt} />
-        <div className="workbench-intro profile-dossier-conversation-entry"><div><h3>继续和穗奈聊，画像会跟着事实更新</h3><p>你可以从最近做过的一件事开始。穗奈会先追问和整理，提出更新后等你确认。</p></div><button className="workbench-secondary" type="button" onClick={() => onPrompt(careerPrompt("profile"))}><AgentIcon name="activity" size={15} />继续对话</button></div>
         <details className="workbench-profile-edit" open={profileEditorOpen} onToggle={event => setProfileEditorOpen(event.currentTarget.open)}>
           <summary><span><ComponentIcon name="edit-record" size={17} />修正已确认材料</span><small>适合纠正一处事实</small></summary>
           <p>补充新经历时，优先继续和穗奈对话；直接编辑后保存的内容也会成为后续对照依据。</p>

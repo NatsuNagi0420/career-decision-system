@@ -91,15 +91,18 @@ describe("证据型职业画像", () => {
     expect(html).toContain("寻找前端实习");
     expect(html).toContain("Lv.2 · 项目实践");
     expect(html).toContain("用 React 完成过一个课程项目");
-    expect(html).toContain("还需要继续了解");
+    expect(html).toContain("待继续了解");
     expect(html).not.toContain("熟悉 React");
     expect(html).not.toMatch(/匹配度|可信度|精通/);
+    const assets = [...html.matchAll(/class="profile-dossier-icon [^"]*" src="([^"]+)"/g)].map(match => match[1]!);
+    expect(assets.length).toBeGreaterThan(8);
+    for (const source of assets) expect(existsSync(new URL("../../../assets/web/" + source.slice("/api/assets/".length), import.meta.url)), source).toBe(true);
   });
 
   it("空画像引导回到对话，不伪造内容", () => {
     const html = renderToStaticMarkup(<ProfileDossier state={state()} onEdit={noop} onPrompt={noop} />);
-    expect(html).toContain("你的职业画像正在形成");
-    expect(html).toContain("从对话开始");
+    expect(html).toContain("职业画像正在形成");
+    expect(html).toContain("从一件小事开始");
     expect(html).toContain("技能会在穗奈从经历中找到明确依据");
     expect(html).not.toContain("未填写");
   });

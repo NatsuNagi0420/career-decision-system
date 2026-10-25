@@ -75,6 +75,7 @@ import "./desktop-window.css";
 import "./companion-guidance.css";
 import "./message-interactions.css";
 import "./career-components.css";
+import "./profile-dossier.css";
 function companionPreference(userId: number, key: string) { try { return localStorage.getItem("suinai." + key + "." + userId) !== "0"; } catch { return true; } }
 function remember(id: string) {
     try {

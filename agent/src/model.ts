@@ -366,6 +366,17 @@ export class CompatibleModel implements Model {
           text += value.delta;
           request.onDelta?.(value.delta);
         }
+        const outputIndex = Number(value.output_index ?? 0);
+        if ((value.type === "response.output_item.added" || value.type === "response.output_item.done") && isRecord(value.item) && value.item.type === "function_call") {
+          const item = value.item;
+          const slot = { id: typeof item.call_id === "string" ? item.call_id : "", name: typeof item.name === "string" ? item.name : "", arguments: typeof item.arguments === "string" ? item.arguments : "" };
+          slots.set(outputIndex, slot);
+          if (slot.id && slot.name && slot.arguments) request.onToolDelta?.({ ...slot });
+        }
+        if (value.type === "response.function_call_arguments.delta" && typeof value.delta === "string") {
+          const slot = slots.get(outputIndex);
+          if (slot) { slot.arguments += value.delta; if (slot.id && slot.name) request.onToolDelta?.({ ...slot }); }
+        }
         if (value.type === "response.completed" && isRecord(value.response)) {
           final = parseResponses(value.response);
           completed = true;
@@ -405,6 +416,7 @@ export class CompatibleModel implements Model {
             if (typeof fn.arguments === "string")
               slot.arguments += fn.arguments;
             slots.set(index, slot);
+            if (slot.id && slot.name && slot.arguments) request.onToolDelta?.({ ...slot });
           }
       }
     };

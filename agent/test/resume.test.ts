@@ -3,6 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { fixture, ScriptedModel, reply, tool } from "./helpers.js";
 import { id } from "../src/store.js";
+import { readPartialResumeJson } from "../src/resume-stream.js";
 import { renderResumeHtml } from "../src/resume-render.js";
 import type { ResumeState, ResumeChange, ResumeBody, ResumeSelection } from "../src/resume-contract.js";
 
@@ -145,4 +146,84 @@ test("手填的姓名与联系方式不随工坊上下文发送给模型，正�
   const context = JSON.stringify(f.runtime.resume.context(f.user.id));
   assert.doesNotMatch(context, /本地私有姓名|private-contact/);
   assert.match(context, /React/);
+});
+
+test("简历 JSON 参数分片仅读取完整值，转义、截断和非法代码不会被补造", () => {
+  const input = JSON.stringify({ request_id: "请求", data: { kind: "rewrite", body: { summary: { text: '引用 \"React\" 与反斜杠 \\', fact_ids: ["one"] }, sections: [] } } });
+  assert.deepEqual(JSON.parse(JSON.stringify(readPartialResumeJson(input))), JSON.parse(input));
+  assert.equal((readPartialResumeJson('{"text":"尚未完成') as any).text, undefined);
+  assert.equal((readPartialResumeJson('{"done":"完整","next":"截断') as any).done, "完整");
+  assert.equal((readPartialResumeJson('{"done":"完整","next":"截断') as any).next, undefined);
+  assert.equal(readPartialResumeJson('{"x":alert(1)}'), null);
+  assert.equal(readPartialResumeJson('{"x":1} additional'), null);
+  assert.equal(readPartialResumeJson('['.repeat(30)), null);
+});
+
+test("生成中的简历段落必须引用已确认事实，不保存、不过期覆盖，也不接受新增数字", async t => {
+  const f = await fixture(t), state = readySelection(f), draft = body(state);
+  const pending = change(f, { type: "task.request", kind: "rewrite" });
+  const encode = (value: ResumeBody, requestId = pending.pending!.id) => JSON.stringify({ request_id: requestId, data: { kind: "rewrite", body: value } });
+  const serialized = encode(draft), endOfEducation = serialized.indexOf('},{"kind":"projects"') + 1;
+  assert.ok(endOfEducation > 0);
+  const live = f.runtime.resume.livePreview(f.user.id, f.conversation.id, serialized.slice(0, endOfEducation));
+  assert.equal(live?.body.sections.length, 1);
+  assert.equal(live?.body.sections[0].entries[0].title, "软件工程本科");
+  assert.equal(f.runtime.resume.get(f.user.id).body, null);
+  assert.equal(f.runtime.resume.get(f.user.id).revision, pending.revision);
+  const invalid = structuredClone(draft); invalid.sections[1].entries[0].bullets.push("提升效率 99%");
+  assert.equal(f.runtime.resume.livePreview(f.user.id, f.conversation.id, encode(invalid)), null);
+  invalid.sections[1].entries[0].bullets.pop(); invalid.sections[1].entries[0].fact_ids = [state.facts[2].id];
+  assert.equal(f.runtime.resume.livePreview(f.user.id, f.conversation.id, encode(invalid)), null);
+  assert.equal(f.runtime.resume.livePreview(f.user.id, f.conversation.id, encode(draft, id())), null);
+  change(f, { type: "task.cancel" });
+  assert.equal(f.runtime.resume.livePreview(f.user.id, f.conversation.id, serialized), null);
+});
+
+test("真实任务在模型尚未结束时已发布纸面段落，完成后才保存完整正文", async t => {
+  let f: Awaited<ReturnType<typeof fixture>>, requestId = "", full: ResumeBody;
+  let release!: () => void, announce!: () => void;
+  const generated = new Promise<void>(resolve => { announce = resolve; });
+  const proceed = new Promise<void>(resolve => { release = resolve; });
+  t.after(() => release());
+  const model = new ScriptedModel(async (request, index) => {
+    if (index > 0) return reply("草稿已整理，请核对。");
+    const call = tool("propose_resume_update", { request_id: requestId, data: { kind: "rewrite", body: full } });
+    const end = call.arguments.indexOf('},{"kind":"projects"') + 1;
+    request.onToolDelta?.({ ...call, arguments: call.arguments.slice(0, end) });
+    announce();
+    await proceed;
+    return reply("", [call]);
+  });
+  f = await fixture(t, { model });
+  full = body(readySelection(f));
+  requestId = change(f, { type: "task.request", kind: "rewrite" }).pending!.id;
+  const run = f.runtime.start(f.user, f.conversation.id, f.profile.id, "请起草简历", id());
+  await generated;
+  const event = f.store.events(f.conversation.id).find(event => event.kind === "resume.preview");
+  assert.ok(event);
+  assert.equal((event.data.draft as any).body.sections.length, 1);
+  assert.equal(f.store.run(f.user.id, run.id).status, "running");
+  assert.equal(f.runtime.resume.get(f.user.id).body, null);
+  release(); await f.runtime.waitIdle();
+  assert.deepEqual(f.runtime.resume.get(f.user.id).body, full);
+  assert.equal(f.store.run(f.user.id, run.id).status, "completed");
+});
+
+test("选择的简历模板同时用于真实交付 HTML，拒绝任意模板值", async t => {
+  const f = await fixture(t), state = readySelection(f), draft = body(state);
+  change(f, { type: "task.request", kind: "rewrite" }); propose(f, { kind: "rewrite", body: draft });
+  change(f, { type: "document.save", header: { name: "模板测试", headline: "前端实习", contact: "" }, body: draft });
+  const confirmed = change(f, { type: "document.confirm" });
+  for (const template_id of ["one-page", "study", "compact"]) {
+    const exported = await f.app.inject({ method: "POST", url: "/api/v1/agent/resume/export", headers: f.headers, payload: { revision: confirmed.revision, conversation_id: f.conversation.id, template_id } });
+    assert.equal(exported.statusCode, 200);
+    const artifacts = exported.json().artifacts as { id: string; name: string }[];
+    const file = f.store.artifact(f.user.id, artifacts.find(file => file.name.endsWith(".html"))!.id);
+    const html = (await f.workspace.artifactBytes(file)).toString("utf8");
+    assert.ok(html.includes('body class="resume-theme-' + template_id + '"'));
+    const margin = template_id === "study" ? "18mm 17mm" : template_id === "compact" ? "10mm 12mm" : "14mm 15mm";
+    assert.ok(html.includes("@page{size:A4;margin:" + margin + "}"));
+  }
+  const invalid = await f.app.inject({ method: "POST", url: "/api/v1/agent/resume/export", headers: f.headers, payload: { revision: confirmed.revision, conversation_id: f.conversation.id, template_id: "arbitrary" } });
+  assert.equal(invalid.statusCode, 400);
 });

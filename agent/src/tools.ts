@@ -62,8 +62,8 @@ const descriptions: Record<keyof typeof schemas, string> = {
   list_career_directions: "从离线库读取职业方向、技能、成长路径及样本数量。旧库数量是标题线索，新批次数量是待审核分类；均不是市场统计或当前在招数量。可按 query 搜索，limit 最多 25。",
   search_job_samples: "从清洗合并的离线岗位库检索参考。可按关键词、direction_code、城市及实习/应届线索筛选；scope 可选 collected/legacy/all。默认排除明确关闭或截止日已过的记录，其余仍不保证在招。仅用户需要历史研究时使用 availability=all_references。相关性不是适合度，零结果不代表市场不存在，不得偷偷放宽用户约束。比较前用 read_job_sample 读完整原文。",
   read_job_sample: "按 search_job_samples 返回的 id 读取完整岗位原文、日期、来源证据及审核提示。采集时间是采集方报告，不证明当前在招；方向和来源未完成人工逐条审核。用户希望保留参考时，读取职业 context_version，再以 catalogue_job 提出待确认建议。",
-  read_career_context: "读取当前用户已保存的职业档案、岗位原文、行动结果及来源 ID；普通闲聊不必调用。先读取 context_version，再根据这些材料生成草稿。",
-  propose_career_update: "提出职业档案、岗位参考样本、岗位对照或学习行动草稿，展示在工作台等待用户确认；不会直接更改已确认内容。skills 用于有引文的实践阶段记录（contact/project/independent），必须引用 read_career_context 返回的非岗位 sources，用户确认不是能力认证；catalogue_job 只提交已检索的 catalogue_id，原文由服务端固定，不需要复制或改写。context_version 来自刚读取的资料；comparison 的 requirement 与 evidence.quote 必须逐字来自对应原文。",
+  read_career_context: "读取当前用户已保存的职业档案、岗位原文、行动结果、来源 ID 和 pending_proposals 的完整待确认草稿；普通闲聊不必调用。先读取 context_version，再根据这些材料生成草稿。用户要求修改已有建议时，必须读取对应 pending_proposals.data，不能只依赖标题或历史对话。",
+  propose_career_update: "提出职业档案、岗位参考样本、岗位对照或学习行动草稿，展示在工作台等待用户确认；不会直接更改已确认内容。skills 用于有引文的实践阶段记录（contact/project/independent），必须引用 read_career_context 返回的非岗位 sources，用户确认不是能力认证；catalogue_job 只提交已检索的 catalogue_id，原文由服务端固定，不需要复制或改写。context_version 来自刚读取的资料；comparison 的 requirement 与 evidence.quote 必须逐字来自对应原文。修改已有建议时提交完整替代草稿，同类型同岗位的旧草稿会被替换。",
   list_files:
     "列出本段对话已导入的 inputs 与可修改的 outputs。不能访问本机其他路径。",
   read_file: "读取资料区 UTF-8 文本，支持分段读取。只能使用列出的相对路径。",

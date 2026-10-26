@@ -316,3 +316,27 @@ test("模型能力测试实际验证聊天、工具参数和工具续答；不�
   assert.equal(chatOnly.capabilities.chat, true);
   assert.equal(chatOnly.capabilities.tools, false);
 });
+
+test("Chat 与 Responses 在工具尚未完成时持续提供参数快照，仍以完整响应决定执行", async () => {
+  const argumentsText = JSON.stringify({ request_id: "test", data: { kind: "rewrite", body: { summary: { text: "", fact_ids: [] }, sections: [] } } });
+  const halfway = Math.floor(argumentsText.length / 2);
+  for (const api_kind of ["chat-completions", "responses"] as const) {
+    const toolCall = { type: "function_call", call_id: "preview-call", name: "propose_resume_update", arguments: argumentsText };
+    const events = api_kind === "chat-completions" ? [
+      { choices: [{ delta: { tool_calls: [{ index: 0, id: "preview-call", function: { name: "propose_resume_update", arguments: argumentsText.slice(0, halfway) } }] } }] },
+      { choices: [{ delta: { tool_calls: [{ index: 0, function: { arguments: argumentsText.slice(halfway) } }] }, finish_reason: "tool_calls" }] },
+    ] : [
+      { type: "response.output_item.added", output_index: 0, item: { ...toolCall, arguments: "" } },
+      { type: "response.function_call_arguments.delta", output_index: 0, delta: argumentsText.slice(0, halfway) },
+      { type: "response.function_call_arguments.delta", output_index: 0, delta: argumentsText.slice(halfway) },
+      { type: "response.completed", response: { status: "completed", output: [toolCall] } },
+    ];
+    const snapshots: string[] = [];
+    const model = new CompatibleModel({ ...connection, api_kind }, async () => sse(events), false);
+    const result = await model.complete({ ...request(), stream: true, onToolDelta: call => snapshots.push(call.arguments) });
+    assert.equal(snapshots[0], argumentsText.slice(0, halfway));
+    assert.equal(snapshots.at(-1), argumentsText);
+    assert.equal(result.tool_calls[0].arguments, argumentsText);
+    assert.equal(result.tool_calls[0].name, "propose_resume_update");
+  }
+});

@@ -18,6 +18,8 @@ export interface ResumeState {
   header: ResumeHeader; body: ResumeBody | null; confirmed_at: string | null;
   pending: { id: string; kind: ResumeTaskKind } | null;
 }
+/** 仅供生成中预览；须与当前 pending 和 context_version 匹配，不代表保存、确认或交付。 */
+export interface ResumeLiveDraft { request_id: string; context_version: number; body: ResumeBody }
 export type ResumeChange =
   | { type: "materials.save"; source_text: string; source_name: string; target: ResumeTarget }
   | { type: "task.request"; kind: ResumeTaskKind }

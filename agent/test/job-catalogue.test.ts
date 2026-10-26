@@ -105,7 +105,7 @@ test("模型只能提议保留岗位，确认后固定原文和历史来源，�
   assert.throws(() => career.propose(other.user.id, f.conversation.id, input), /不存在/);
 });
 
-test("放弃岗位建议不写资料；确认使用旧资料的建议被拒绝", async t => {
+test("放弃岗位建议不写资料；新增独立岗位不使保留建议失效", async t => {
   const f = await fixture(t, { catalogue: true }), career = f.runtime.career;
   const input = { context_version: 0, title: "历史样本", data: { kind: "catalogue_job", catalogue_id: sample().id } };
   const first = career.propose(f.user.id, f.conversation.id, input);
@@ -113,8 +113,9 @@ test("放弃岗位建议不写资料；确认使用旧资料的建议被拒绝",
   assert.equal(career.get(f.user.id).jobs.length, 0); assert.equal(career.get(f.user.id).context_version, 0);
   const draft = career.propose(f.user.id, f.conversation.id, input);
   career.change(f.user.id, { revision: career.get(f.user.id).revision, change: { type: "job.add", job: { title: "用户自带JD", company: "", url: "", description: "熟悉测试流程。" } } });
-  assert.throws(() => career.change(f.user.id, { revision: career.get(f.user.id).revision, change: { type: "proposal.decide", id: draft.proposal_id, approved: true } }), /旧资料/);
-  assert.equal(career.get(f.user.id).jobs.length, 1);
+  assert.equal(career.view(f.user.id).proposals[0]!.stale, false);
+  career.change(f.user.id, { revision: career.get(f.user.id).revision, change: { type: "proposal.decide", id: draft.proposal_id, approved: true } });
+  assert.equal(career.get(f.user.id).jobs.length, 2);
 });
 
 test("Agent 在当前职业对话中真实调用检索、读原文、读档案和提议工具", async t => {

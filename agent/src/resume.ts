@@ -1,9 +1,10 @@
 /** 青穗集 · 求职简历状态机：账号隔离、原文引用、人工确认、过期任务拒绝及不可变历史，不让模型直接定稿。 */
 import { z } from "zod";
 import { Store, id, now } from "./store.js";
-import { invariant } from "./errors.js";
+import { readPartialResumeJson } from "./resume-stream.js";
+import { invariant, isRecord } from "./errors.js";
 import { emptyResumeState } from "./resume-contract.js";
-import type { ResumeBody, ResumeChange, ResumeFact, ResumeState, ResumeSelection, ResumeTaskKind } from "./resume-contract.js";
+import type { ResumeBody, ResumeLiveDraft, ResumeChange, ResumeFact, ResumeState, ResumeSelection, ResumeTaskKind } from "./resume-contract.js";
 
 const text = (max: number) => z.string().trim().max(max);
 const refs = z.array(text(80).min(1)).min(1).max(16);
@@ -74,7 +75,7 @@ function checkNumbers(value: string, evidence: string) {
   const available = new Set(numbers(evidence));
   invariant(numbers(value).every(n => available.has(n)), 400, "改写中出现了依据里没有的数字，请删除或补充真实材料。");
 }
-export function validateResumeBody(state: ResumeState, body: ResumeBody, modelOutput: boolean) {
+export function validateResumeBody(state: ResumeState, body: ResumeBody, modelOutput: boolean, complete = true) {
   invariant(state.facts_confirmed && state.selection_confirmed && state.selection, 409, "请先确认经历和本次要展示的内容。");
   invariant(unique(body.sections.map(s => s.kind)), 400, "同一类简历章节不能重复。");
   const included = new Set(state.selection.choices.filter(c => c.use !== "omit").map(c => c.fact_id));
@@ -85,7 +86,7 @@ export function validateResumeBody(state: ResumeState, body: ResumeBody, modelOu
   check(body.summary.text, body.summary.fact_ids);
   for (const section of body.sections) for (const entry of section.entries) check([entry.title, entry.subtitle, entry.period, ...entry.bullets].join("\n"), entry.fact_ids);
   const used = new Set([...body.summary.fact_ids, ...body.sections.flatMap(section => section.entries.flatMap(entry => entry.fact_ids))]);
-  invariant([...included].every(ref => used.has(ref)), 400, "本次选择展示的经历没有全部进入正文，请补齐或返回修改取舍，不能静默丢弃内容。");
+  invariant(!complete || [...included].every(ref => used.has(ref)), 400, "本次选择展示的经历没有全部进入正文，请补齐或返回修改取舍，不能静默丢弃内容。");
 }
 
 export class ResumeWorkspace {
@@ -201,6 +202,27 @@ export class ResumeWorkspace {
     invariant(state.source_text, 400, "请先保存经历原文：聊一点你实际做过的事情就好，暂时没有 JD 也没关系。");
     if (task !== "facts") invariant(state.facts_confirmed, 409, "请先亲自确认经历。");
     if (task === "rewrite") invariant(state.selection_confirmed, 409, "请先确认本次简历要展示的经历。");
+  }
+  /** 生成中的内容仅供纸面展示；沿用正文的来源与数字校验，不保存也不替用户确认。 */
+  livePreview(userId: number, conversationId: string, argumentsText: string): ResumeLiveDraft | null {
+    this.store.conversation(userId, conversationId);
+    const input = readPartialResumeJson(argumentsText), state = this.get(userId);
+    if (!isRecord(input) || !state.pending || state.pending.kind !== "rewrite" || input.request_id !== state.pending.id || !isRecord(input.data) || input.data.kind !== "rewrite" || !isRecord(input.data.body)) return null;
+    const partial = input.data.body;
+    const summary = resumeBodyInput.shape.summary.safeParse(partial.summary);
+    const sections: ResumeBody["sections"] = [];
+    if (Array.isArray(partial.sections)) for (const section of partial.sections) {
+      if (!isRecord(section) || !kind.safeParse(section.kind).success || !Array.isArray(section.entries)) continue;
+      const entries = section.entries.flatMap(entry => {
+        const parsed = resumeBodyInput.shape.sections.element.shape.entries.element.safeParse(entry);
+        return parsed.success ? [parsed.data] : [];
+      });
+      if (entries.length) sections.push({ kind: section.kind as ResumeFact["kind"], entries });
+    }
+    const body: ResumeBody = { summary: summary.success ? summary.data : { text: "", fact_ids: [] }, sections };
+    if (!body.summary.text && !body.sections.length) return null;
+    try { validateResumeBody(state, body, true, false); } catch { return null; }
+    return { request_id: state.pending.id, context_version: state.context_version, body };
   }
   propose(userId: number, conversationId: string, input: unknown) {
     this.store.conversation(userId, conversationId);

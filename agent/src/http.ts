@@ -182,14 +182,14 @@ export function createApp(options: AppOptions) {
   });
   app.post("/api/v1/agent/resume/export", async request => {
     const user = auth.user(request.headers.authorization);
-    const body = z.object({ revision: z.number().int().nonnegative(), conversation_id: z.string().uuid() }).strict().parse(request.body);
+    const body = z.object({ revision: z.number().int().nonnegative(), conversation_id: z.string().uuid(), template_id: z.enum(["one-page", "study", "compact"]).default("one-page") }).strict().parse(request.body);
     store.conversation(user.id, body.conversation_id);
     runtime.guidance.assertResumeAccess(user.id, body.conversation_id);
     runtime.assertConversationIdle(user, body.conversation_id);
     const state = runtime.resume.confirmed(user.id, body.revision);
     const base = "outputs/resume-v" + state.revision;
-    const html = renderResumeHtml(state.header, state.body!);
-    const document = JSON.stringify({ schema_version: 1, header: state.header, body: state.body }, null, 2);
+    const html = renderResumeHtml(state.header, state.body!, false, body.template_id);
+    const document = JSON.stringify({ schema_version: 1, template_id: body.template_id, header: state.header, body: state.body }, null, 2);
     const artifacts = [];
     for (const [extension, content] of [["html", html], ["json", document]]) {
       const artifact = await workspace.write(body.conversation_id, null, base + "." + extension, content);
@@ -245,6 +245,10 @@ export function createApp(options: AppOptions) {
         steps: config.maxSteps,
         run_timeout_ms: config.runTimeoutMs,
         max_run_output_tokens: config.maxRunOutputTokens,
+        context_max_tokens: config.contextMaxTokens,
+        context_reserve_tokens: config.contextReserveTokens,
+        context_recent_tokens: config.contextRecentTokens,
+        context_max_tool_chars: config.contextMaxToolChars,
       },
     };
   });

@@ -13,6 +13,10 @@ export interface Config {
   modelTimeoutMs: number;
   maxOutputTokens: number;
   maxRunOutputTokens: number;
+  contextMaxTokens: number;
+  contextReserveTokens: number;
+  contextRecentTokens: number;
+  contextMaxToolChars: number;
   sandboxProvider: "auto" | "windows-native" | "docker";
   dockerCommand: string;
   dockerImage: string;
@@ -50,6 +54,11 @@ export function loadConfig(env = process.env): Config {
   const officialModelDisplayName = env.OFFICIAL_MODEL_DISPLAY_NAME?.trim() || "Suinai Flash";
   if (officialModelDisplayName.length > 60)
     throw new AppError(500, "OFFICIAL_MODEL_DISPLAY_NAME 最多 60 个字符。");
+  const contextMaxTokens = number(env, "AGENT_CONTEXT_MAX_TOKENS", 32000, 8000, 120000);
+  const contextReserveTokens = number(env, "AGENT_CONTEXT_RESERVE_TOKENS", 8000, 2000, 40000);
+  const contextRecentTokens = number(env, "AGENT_CONTEXT_RECENT_TOKENS", 10000, 1000, 60000);
+  if (contextReserveTokens >= contextMaxTokens)
+    throw new AppError(500, "AGENT_CONTEXT_RESERVE_TOKENS 必须小于 AGENT_CONTEXT_MAX_TOKENS。");
   return {
     host,
     deploymentMode: deploymentMode as Config["deploymentMode"],
@@ -73,6 +82,10 @@ export function loadConfig(env = process.env): Config {
       128,
       100000,
     ),
+    contextMaxTokens,
+    contextReserveTokens,
+    contextRecentTokens,
+    contextMaxToolChars: number(env, "AGENT_CONTEXT_MAX_TOOL_CHARS", 12000, 800, 64000),
     sandboxProvider: sandboxProvider as Config["sandboxProvider"],
     dockerCommand: env.AGENT_DOCKER_COMMAND ?? "docker",
     dockerImage: env.AGENT_DOCKER_IMAGE ?? "python:3.12-slim",

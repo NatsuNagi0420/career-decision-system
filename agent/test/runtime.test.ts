@@ -595,3 +595,72 @@ test("审批刚出现便立即确认时不会丢失续跑，也不重复工具�
     1,
   );
 });
+
+
+test("修改待确认建议时裁剪旧岗位工具历史，仍保留当前问题", async (t) => {
+  const editPrompt = [
+    "我想修改职业工作台里这份待确认建议。",
+    "标题：岗位对照",
+    "建议 ID：00000000-0000-0000-0000-000000000001",
+    "类型：comparison",
+    "请先读取最新职业工作台。",
+  ].join("\n");
+  const model = new ScriptedModel((request, index) => {
+    const visible = JSON.stringify(request.messages);
+    assert.doesNotMatch(visible, /旧岗位历史正文/);
+    assert.ok(visible.length < 20000);
+    if (index === 0) return reply("", [tool("read_career_context", {})]);
+    if (index === 1) return reply("想先改哪一部分？工作地点、在校与实习节奏，还是 Agent 基座？");
+    assert.match(visible, /工作地点、在校与实习节奏，还是 Agent 基座/);
+    assert.match(visible, /我都满足/);
+    return reply("新的待确认草稿已经整理好，请检查后再确认。");
+  });
+  const f = await fixture(t, { model });
+  f.store.message(f.conversation.id, null, "assistant", "更早的普通对话");
+  for (let index = 0; index < 24; index++)
+    f.store.message(
+      f.conversation.id,
+      null,
+      "tool",
+      "旧岗位历史正文 " + "x".repeat(6500),
+    );
+  const first = f.runtime.start(f.user, f.conversation.id, f.profile.id, editPrompt, id());
+  await f.runtime.waitIdle();
+  assert.equal(f.store.run(f.user.id, first.id).status, "completed");
+  const second = f.runtime.start(f.user, f.conversation.id, f.profile.id, "我都满足", id());
+  await f.runtime.waitIdle();
+  assert.equal(f.store.run(f.user.id, second.id).status, "completed");
+  assert.equal(model.requests.length, 3);
+});
+
+test("整轮超时且没有未完成工具时允许安全续接，并重新计算本轮时长", async (t) => {
+  const model = new ScriptedModel(() => reply("续接成功"));
+  const f = await fixture(t, { model, timeout: 1000 });
+  const run = {
+    id: id(),
+    conversation_id: f.conversation.id,
+    user_id: f.user.id,
+    profile_id: f.profile.id,
+    request_id: id(),
+    input: "超时测试",
+    status: "failed" as const,
+    steps: 1,
+    input_tokens: 0,
+    output_tokens: 0,
+    output_budget_used: 10,
+    elapsed_ms: 1000,
+    error: "任务达到时长上限或请求被中断，已停止。",
+    error_code: "run_timeout",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+  f.store.saveRun(run, true);
+  f.store.message(f.conversation.id, run.id, "user", run.input);
+  assert.equal(f.runtime.snapshot(f.user, f.conversation.id).runs.at(-1)?.can_retry, true);
+  f.runtime.retry(f.user, run.id, id());
+  await f.runtime.waitIdle();
+  const resumed = f.store.run(f.user.id, run.id);
+  assert.equal(resumed.status, "completed");
+  assert.equal(resumed.retry_count, 1);
+  assert.equal(model.requests.length, 1);
+});

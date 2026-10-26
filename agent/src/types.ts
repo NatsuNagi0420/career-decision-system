@@ -180,6 +180,8 @@ export interface ModelRequest {
   tools: ToolDefinition[];
   signal: AbortSignal;
   onDelta?: (text: string) => void;
+  /** 累积的工具参数快照，仅用于预览；完成和校验前不会执行。 */
+  onToolDelta?: (call: ToolCall) => void;
   forceTool?: string;
   stream?: boolean;
   maxOutputTokens?: number;

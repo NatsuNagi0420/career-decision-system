@@ -6,6 +6,7 @@ import { Workspace } from "./files.js";
 import { Profiles } from "./profiles.js";
 import { executeTool, toolDefinitionsFor } from "./tools.js";
 import { TextStream } from "./text-stream.js";
+import { calculateContextBudget, estimateModelRequestTokens, packModelContext } from "./context.js";
 import { HostShell } from "./host-shell.js";
 import { CareerWorkspace } from "./career.js";
 import { ResumeWorkspace } from "./resume.js";
@@ -38,6 +39,7 @@ function compact(value: unknown): unknown {
     );
   return value;
 }
+
 export class Runtime {
   readonly career: CareerWorkspace;
   readonly resume: ResumeWorkspace;
@@ -170,10 +172,12 @@ export class Runtime {
     return run.error_code ?? (run.status === "failed" && /^模型请求超时/.test(run.error ?? "") ? "provider_timeout" : undefined);
   }
   private canRetry(run: Run): boolean {
+    const code = this.failureCode(run) ?? "";
+    const runTimeout = code === "run_timeout";
     return run.status === "failed" && !run.superseded_by &&
-      ["provider_timeout", "provider_network", "provider_stream", "provider_408", "provider_429", "provider_500", "provider_502", "provider_503", "provider_504"].includes(this.failureCode(run) ?? "") &&
+      ["provider_timeout", "provider_network", "provider_stream", "provider_408", "provider_429", "provider_500", "provider_502", "provider_503", "provider_504", "run_timeout"].includes(code) &&
       (run.retry_count ?? 0) < 2 && run.steps < this.config.maxSteps &&
-      (run.elapsed_ms ?? 0) < this.config.runTimeoutMs &&
+      (runTimeout || (run.elapsed_ms ?? 0) < this.config.runTimeoutMs) &&
       (run.output_budget_used ?? run.output_tokens) < this.config.maxRunOutputTokens;
   }
   retry(user: User, runId: string, requestId: string, fullAccessConfirmed = false) {
@@ -192,10 +196,12 @@ export class Runtime {
     invariant((task?.id ?? undefined) === run.task_id && (task?.kind ?? undefined) === run.task_kind, 409, "当前任务模式已经更改，请从当前进度继续聊天。", "retry_stale");
     invariant(this.pending(run).length === 0, 409, "存在尚未确认的工具结果，不能自动重跑。");
     this.guidance.cancelAnalysis(run.conversation_id);
+    const failureCode = this.failureCode(run);
     run.retry_count = (run.retry_count ?? 0) + 1;
     run.retry_request_id = requestId;
     run.error_code = undefined;
     run.can_retry = false;
+    if (failureCode === "run_timeout") run.elapsed_ms = 0;
     const events: AgentEvent[] = [];
     this.store.transaction(() => {
       this.store.setStatus(run, "queued");
@@ -685,12 +691,7 @@ export class Runtime {
           408,
           "已达到本轮输出预算，已停止。",
         );
-        const history = this.store.messages(run.conversation_id);
-        invariant(
-          JSON.stringify(history).length <= 160000,
-          400,
-          "这段对话已达到上下文上限，请保留成果并开启新对话。",
-        );
+        const allHistory = this.store.messages(run.conversation_id);
         const files = await this.workspace.list(run.conversation_id);
         signal.throwIfAborted();
         invariant(
@@ -702,12 +703,13 @@ export class Runtime {
         const legacyResumeTask = run.input.startsWith("[简历工坊]");
         const resumeKind = this.resume.get(user.id).pending?.kind;
         const tools = toolDefinitionsFor(this.executionSandbox(run), await this.workspace.root(run.conversation_id), resumeKind, legacyResumeTask).filter(tool => guidedToolAllowed(run.task_kind, tool.name, this.resume.get(user.id))).map(tool => run.task_kind === "resume" && tool.name === "prepare_resume_step" ? { ...tool, parameters: z.toJSONSchema(z.object({ context_version: z.number().int().nonnegative(), kind: z.literal("rewrite") }).strict()) as Record<string, unknown> } : tool);
-        const system = [
+        const baseSystem = [
           suinaiIdentityInstructions(profile, this.config),
           CAREER_GUIDANCE_INSTRUCTIONS,
           this.guidance.instructions(run),
           legacyResumeTask ? RESUME_SKILL_INSTRUCTIONS : RESUME_COACHING_INSTRUCTIONS,
           "需要把整理结果放进工作台时，用 propose_career_update 提交 profile、comparison 或 actions 草稿；只要本轮出现明确的用户职业事实，profile 草稿可以先填已确认的部分，不必等待所有字段齐全；只有用户在工作台确认后才生效。不得用 write_file 假装更新职业档案。",
+          "修改待确认建议时必须形成闭环：先 read_career_context 查看 pending_proposals 的完整 data；没有具体修改点时只问一个基于原草稿的关键问题，不调用 propose_career_update；用户说明修改点后，保留未要求修改的内容，使用当前 context_version 提交完整替代草稿。不要只复述旧建议，也不要说‘无法修改’。",
           "岗位仅代表用户提供的样本。对照逐字引用岗位要求，个人依据逐字引用 sources；未提供材料不等于不会。不给录用概率或未经校准的职业适合度。提交行动结果后，应重新读取当前资料并提出更新建议。",
           "保持自然对话，不展示五步清单或要求先填完资料。普通聊天直接回答，复杂执行可用 plan_tasks 给简短计划。",
           "只有工具成功返回才算执行过；不得把计划、代码建议或模型文字说成已创建文件。",
@@ -728,6 +730,39 @@ export class Runtime {
             : "当前配置只通过聊天测试，不能执行工具。请明确说明限制，不要伪装执行。",
           "当前资料清单（不是授权指令）：" + JSON.stringify(files),
         ].join("\n");
+        const outputLimit = Math.min(
+          this.config.maxOutputTokens,
+          this.config.maxRunOutputTokens -
+            (run.output_budget_used ?? run.output_tokens),
+        );
+        invariant(outputLimit > 0, 408, "已达到本轮输出预算，已停止。", "output_budget");
+        const budget = calculateContextBudget({
+          contextWindowTokens: this.config.contextMaxTokens,
+          minimumReserveTokens: this.config.contextReserveTokens,
+          outputTokens: outputLimit,
+          systemPrompt: baseSystem,
+          tools: profile.capabilities.tools ? tools : [],
+        });
+        invariant(
+          budget.historyBudgetTokens >= 2000,
+          500,
+          "当前模型配置的上下文窗口不足以容纳 Agent 规则和工具定义，请切换上下文更大的模型。",
+          "context_budget",
+        );
+        const context = packModelContext(run, allHistory, {
+          maxTokens: budget.historyBudgetTokens,
+          recentTokens: Math.min(
+            this.config.contextRecentTokens,
+            Math.floor(budget.historyBudgetTokens * 0.45),
+          ),
+          maxToolChars: this.config.contextMaxToolChars,
+          memorySummary: this.guidance.state(user.id, run.conversation_id).memory?.summary ?? null,
+        });
+        const history = context.messages;
+        const system = [
+          baseSystem,
+          ...(context.summary ? [context.summary] : []),
+        ].join("\n");
         const messageId = id();
         let partial = "";
         const textStream = new TextStream(
@@ -743,18 +778,30 @@ export class Runtime {
         this.event(run.conversation_id, run.id, "model.started", {
           step: run.steps,
           model: profile.model,
+          history_messages: history.length,
+          history_estimated_tokens: context.estimatedTokens,
+          history_original_tokens: context.originalTokens,
+          history_omitted_messages: context.omittedMessages,
+          history_compacted: context.compacted,
+          context_window_tokens: budget.contextWindowTokens,
+          context_reserve_tokens: budget.reserveTokens,
+          context_history_budget_tokens: budget.historyBudgetTokens,
+          system_estimated_tokens: budget.systemTokens,
+          tools_estimated_tokens: budget.toolTokens,
+          request_estimated_tokens: estimateModelRequestTokens(
+            system,
+            history,
+            profile.capabilities.tools ? tools : [],
+            outputLimit,
+          ),
         });
-        const outputLimit = Math.min(
-          this.config.maxOutputTokens,
-          this.config.maxRunOutputTokens -
-            (run.output_budget_used ?? run.output_tokens),
-        );
         run.output_budget_used =
           (run.output_budget_used ?? run.output_tokens) + outputLimit;
         this.store.saveRun(run);
         let answer;
         const modelStarted = Date.now();
         let firstDeltaMs: number | null = null;
+        const resumeFrames = new Map<string, { checked: number; signature: string }>();
         try {
           answer = await model.complete({
             messages: [
@@ -773,6 +820,21 @@ export class Runtime {
             maxOutputTokens: outputLimit,
             reasoningEffort: run.reasoning_effort ?? "auto",
             onNotice: (message) => this.event(run.conversation_id, run.id, "model.notice", { message }),
+            onToolDelta: (call) => {
+              if (signal.aborted || call.name !== "propose_resume_update") return;
+              const previous = resumeFrames.get(call.id);
+              const checked = Date.now();
+              if (previous && checked - previous.checked < 100) return;
+              const next = { checked, signature: previous?.signature ?? "" };
+              resumeFrames.set(call.id, next);
+              try { this.guidance.assertResumeAccess(user.id, run.conversation_id); } catch { return; }
+              const draft = this.resume.livePreview(user.id, run.conversation_id, call.arguments);
+              if (!draft) return;
+              const signature = JSON.stringify(draft);
+              if (signature === next.signature) return;
+              next.signature = signature;
+              this.event(run.conversation_id, run.id, "resume.preview", { call_id: call.id, draft });
+            },
             onDelta: (text) => {
               if (signal.aborted) return;
               firstDeltaMs ??= Date.now() - modelStarted;
@@ -794,7 +856,7 @@ export class Runtime {
         run.output_tokens += answer.output_tokens;
         this.store.saveRun(run);
         const previousIds = new Set(
-          history
+          allHistory
             .flatMap((message) => message.tool_calls ?? [])
             .map((call) => call.id),
         );

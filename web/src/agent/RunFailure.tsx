@@ -6,7 +6,7 @@ import type { AgentRun } from "./types";
 export function failureMessage(run: AgentRun): string {
   const code = run.error_code ?? "";
   if (code === "provider_timeout" || code === "run_timeout" || /模型请求超时|任务达到时长上限/.test(run.error ?? ""))
-    return "穗奈开了个小差，这次还没答完。";
+    return "穗奈开了个小差，这次还没答完，资料没有被改动。";
   if (code === "provider_429") return "模型服务暂时繁忙，稍后再试试吧。";
   if (["provider_network", "provider_stream", "provider_408", "provider_500", "provider_502", "provider_503", "provider_504"].includes(code))
     return "穗奈刚才没接上，已经完成的操作还在。";

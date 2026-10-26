@@ -1,5 +1,6 @@
 /** 青穗集 · 按需简历小窗：对话负责引导，本窗口只承载原句核对、可选编辑和纸面交付。 */
 import { useEffect, useState, type FormEvent } from "react";
+import { TEMPLATES, useResumeTemplate } from "../state/resumeTemplates";
 import { CareerIcon } from "./CareerVisuals";
 import { AgentIcon } from "./AgentIcon";
 import { ResumeCheckpoint } from "./ResumeCheckpoint";
@@ -14,6 +15,7 @@ export interface ResumeStudioProps {
   onContinue: (message: string) => Promise<void>; onExport: (revision: number) => Promise<AgentFile[]>;
 }
 export function ResumeStudio({ hidden, workspace, busy, onBack, onChat, onContinue, onExport }: ResumeStudioProps) {
+  const [templateId, setTemplateId] = useResumeTemplate();
   const { state, saving, error, apply, refresh } = workspace;
   const [editing, setEditing] = useState(false), [header, setHeader] = useState({ name: "", headline: "", contact: "" });
   const signature = JSON.stringify(state?.header);
@@ -25,6 +27,7 @@ export function ResumeStudio({ hidden, workspace, busy, onBack, onChat, onContin
     <header className="resume-studio-bar"><button className="resume-back" type="button" onClick={onBack}>← 工作台</button><div><CareerIcon name="resume" size={20} /><strong>简历与经历</strong></div><button className="resume-link" type="button" onClick={() => onChat()}>回到和穗奈聊天 <AgentIcon name="chevron" size={14} /></button></header>
     {error && <div className="resume-feedback" role="alert">{error}<button className="resume-link" type="button" onClick={() => void refresh()}>重新读取</button></div>}
     <div className="resume-review-scroll">
+      <div className="resume-template-controls"><span>模板</span><div className="resume-template-options" role="group" aria-label="简历模板">{TEMPLATES.map(template => <button type="button" key={template.id} aria-pressed={templateId === template.id} onClick={() => setTemplateId(template.id)}>{template.name}</button>)}</div></div>
       {!state ? <p role="status">正在读取你的草稿…</p> : !state.body ? <>
         <div className="resume-review-intro"><span className="resume-kicker">YOUR STORY, NOT A FORM</span><h2>不着急填满一张简历</h2><p>先和穗奈聊聊做过的事。她会帮你发现重点、解释为什么值得写；需要核对的内容才会出现在这里。</p><button className="resume-primary" type="button" onClick={() => onChat("我想在当前对话里整理一份简历。请接着已有的经历和方向继续，一次只问一个关键问题，不要让我重新填表，也不要编造经历。")}>在当前对话，按需整理简历 <AgentIcon name="chevron" size={15} /></button></div>
         <ResumeCheckpoint state={state} disabled={disabled} apply={apply} onContinue={onContinue} onCorrect={onChat} onPreview={() => {}} />

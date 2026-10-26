@@ -8,7 +8,7 @@ const noop = () => {};
 describe("穗奈的中断提示", () => {
   it("超时用自然措辞，提供续接与可访问详情，不虚构繁忙或隐藏未完成状态", () => {
     const html = renderToStaticMarkup(<RunFailure run={run} onRetry={noop} onDetails={noop} />);
-    expect(html).toContain("穗奈开了个小差，这次还没答完。");
+    expect(html).toContain("穗奈开了个小差，这次还没答完");
     expect(html).toContain("继续回复");
     expect(html).toContain('aria-label="查看中断原因"');
     expect(html).toContain('role="alert"');

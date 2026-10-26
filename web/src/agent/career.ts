@@ -35,7 +35,7 @@ export type CareerProposalData =
   | { kind: "profile"; profile: CareerProfileInput }
   | { kind: "actions"; actions: CareerActionInput[] }
   | { kind: "comparison"; job_id: string; summary: string; checks: CareerCheck[] };
-export interface CareerProposal { id: string; title: string; context_version: number; data: CareerProposalData; created_at: string; conversation_id: string; catalogue_sample?: CatalogueSelection }
+export interface CareerProposal { id: string; title: string; context_version: number; data: CareerProposalData; created_at: string; conversation_id: string; catalogue_sample?: CatalogueSelection; stale?: boolean; stale_reason?: string }
 export interface CareerComparison { kind: "comparison"; job_id: string; summary: string; checks: CareerCheck[]; fingerprint: string; confirmed_at: string; stale: boolean }
 export interface CareerState {
   skills?: CareerSkill[]; saved_jobs?: SavedCareerJob[];
@@ -66,4 +66,9 @@ export function careerPrompt(tab: CareerTab, job?: CareerJob): string {
   if (tab === "jobs") return start + (job ? "请对照岗位「" + job.title + "」" + (job.company ? "（" + job.company + "）" : "") + "的原始要求与已确认经历，" : "请帮我比较已保存岗位与已确认经历，") + "区分有依据、部分依据、材料不足和冲突，引用岗位原文和个人材料，整理成工作台上的待确认分析。没有资料就先追问，不生成适合度分数。";
   if (tab === "actions") return start + "请基于我的目标、岗位要求、已有经历和可用时间，安排少量可开始的学习与实践行动，说明学习内容、原因和完成材料。把行动建议放到工作台，等我确认。若已有新行动结果，请先说明哪些旧判断需要更新。";
   return start + "我想制作或优化简历。请先确认目标岗位和真实经历；使用当前对话导入的资料，不能编造成果。需要补充时先问我，完成后真实创建并发布可预览的文件。";
+}
+
+// 服务端按资料依赖判定冲突；兼容尚未返回审查结果的旧状态。
+export function careerProposalStale(proposal: CareerProposal, state: CareerState): boolean {
+  return proposal.stale ?? (proposal.context_version !== state.context_version);
 }

@@ -102,6 +102,8 @@
 .profile-update-strip > header { display:flex;align-items:center;gap:9px; }
 .profile-update-strip h3 { margin:0;font-size:.95em;font-weight:400; }
 .profile-update-strip__state { margin-left:auto;color:#6d9a7f;font-size:.78em;white-space:nowrap; }
+.profile-update-strip[data-editing="true"] { border-left-color:#9a83bf; }
+.profile-update-strip__editing { margin:10px 0 0; color:#806895; }
 .profile-update-strip dl { margin:12px 0; }
 .profile-update-strip dl > div { display:grid;grid-template-columns:110px minmax(0,1fr);gap:10px;margin:6px 0;font-size:.9em; }
 .profile-update-strip dt { color:var(--component-muted); }

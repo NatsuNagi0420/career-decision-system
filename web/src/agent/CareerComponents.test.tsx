@@ -108,3 +108,21 @@ describe("证据型职业画像", () => {
     expect(html).not.toContain("未填写");
   });
 });
+
+describe("独立草稿的确认状态", () => {
+  it("服务端确认无冲突时，跨全局版本的卡片仍可点击确认", () => {
+    const input = state(); input.context_version = 2;
+    const proposal = { id: "independent", title: "保留岗位参考", context_version: 1, conversation_id: "chat", created_at: "2026-10-25", stale: false, data: { kind: "catalogue_job" as const, catalogue_id: "sample" } };
+    const html = renderToStaticMarkup(<ProfileUpdateStrip proposal={proposal} state={input} saving={false} disabled={false} onChange={async()=>true} onPrompt={noop} />);
+    expect(html).not.toContain('disabled=""');
+    expect(html).not.toContain("资料已更新");
+    expect(html).toContain("确认更新");
+  });
+  it("即使全局版本未变，原始岗位变化也禁用确认并显示服务端原因", () => {
+    const input = state();
+    const proposal = { id: "conflict", title: "保留岗位参考", context_version: 0, conversation_id: "chat", created_at: "2026-10-25", stale: true, stale_reason: "岗位库原文已更新，请重新读取后提出建议。", data: { kind: "catalogue_job" as const, catalogue_id: "sample" } };
+    const html = renderToStaticMarkup(<ProfileUpdateStrip proposal={proposal} state={input} saving={false} disabled={false} onChange={async()=>true} onPrompt={noop} />);
+    expect(html).toContain("岗位库原文已更新");
+    expect(html).toMatch(/<button[^>]*disabled=""[^>]*>[\s\S]*?确认更新/);
+  });
+});

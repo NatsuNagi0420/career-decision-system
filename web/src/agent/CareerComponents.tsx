@@ -5,7 +5,7 @@ import { AgentIcon } from "./AgentIcon";
 import { ComposerMenu } from "./ComposerMenu";
 import { agentApi } from "./api";
 import { jobPrompt, WORK_TYPE_LABEL, type JobCardData, type JobDetail } from "./job-cards";
-import { PROFILE_FIELDS, type CareerAction, type CareerProposal, type CareerState } from "./career";
+import { careerProposalStale, PROFILE_FIELDS, type CareerAction, type CareerProposal, type CareerState } from "./career";
 import type { CareerChangeHandler } from "./career-workspace";
 import type { CareerSkill } from "../../../agent/src/career-skills";
 
@@ -86,14 +86,27 @@ export function SkillDetailPopover({skill,state,onClose,onPrompt}:{skill:SkillDi
   </div></dialog>;
 }
 export function ProfileUpdateStrip({proposal,state,saving,disabled,onChange,onPrompt}:{proposal:CareerProposal;state:CareerState;saving:boolean;disabled:boolean;onChange:CareerChangeHandler;onPrompt:(text:string)=>void}) {
-  const data=proposal.data, stale=proposal.context_version!==state.context_version;
-  const changes=data.kind==="profile"?PROFILE_FIELDS.filter(field=>state.profile[field.key]!==data.profile[field.key]).map(field=>({name:PROFILE_SUMMARY_LABELS[field.key],value:data.profile[field.key]||"清空这项内容"})):data.kind==="skills"?data.skills.map(item=>({name:item.name,value:SKILL_STAGES[item.stage]})):data.kind==="catalogue_job"?[{name:"保留岗位材料",value:proposal.catalogue_sample?.title||proposal.title}]:data.kind==="actions"?data.actions.map(item=>({name:"下一步",value:item.title})): [{name:"岗位对照",value:data.summary}];
-  return <section className="suinai-component profile-update-strip" aria-label="待确认的职业资料更新"><header><ComponentIcon name="recommendation" size={20}/><h3>{data.kind === "profile" ? "穗奈整理了一版待确认画像" : "穗奈想记下这些"}</h3>{data.kind === "profile" && <span className="profile-update-strip__state">确认后写入</span>}</header><dl>{changes.map((item,index)=><div key={index}><dt>{item.name}</dt><dd>{item.value}</dd></div>)}</dl>
+  const data=proposal.data, stale=careerProposalStale(proposal,state);
+  const [editing,setEditing]=useState(false);
+  useEffect(()=>{setEditing(false);},[proposal.id,proposal.created_at]);
+  const changes=data.kind==="profile"?PROFILE_FIELDS.filter(field=>state.profile[field.key]!==data.profile[field.key]).map(field=>({name:PROFILE_SUMMARY_LABELS[field.key],value:data.profile[field.key]||"清空这项内容"})):data.kind==="skills"?data.skills.map(item=>({name:item.name,value:SKILL_STAGES[item.stage]})):data.kind==="catalogue_job"?[{name:"保留岗位材料",value:proposal.catalogue_sample?.title||proposal.title}]:data.kind==="actions"?data.actions.map(item=>({name:"下一步",value:item.title})):[{name:"岗位对照",value:data.summary}];
+  const editPrompt=[
+    "我想修改职业工作台里这份待确认建议。",
+    "标题：「"+proposal.title+"」",
+    "建议 ID："+proposal.id,
+    "类型："+data.kind,
+    "请先读取最新职业工作台，查看这份建议的完整原始内容。",
+    "如果我还没有说明具体改动，只问我一个最关键的问题，并根据原草稿给出 2 至 3 个可修改部分；不要先确认，也不要把旧草稿整段复述成已完成结果。",
+    "等我说明后，保留未要求修改的内容，基于最新资料整理完整替代草稿，替换旧版本；不要替我确认。",
+  ].join("\n");
+  return <section className="suinai-component profile-update-strip" data-editing={editing||undefined} aria-label="待确认的职业资料更新"><header><ComponentIcon name="recommendation" size={20}/><h3>{data.kind === "profile" ? "穗奈整理了一版待确认画像" : "穗奈想记下这些"}</h3>{data.kind === "profile" && <span className="profile-update-strip__state">确认后写入</span>}</header><dl>{changes.map((item,index)=><div key={index}><dt>{item.name}</dt><dd>{item.value}</dd></div>)}</dl>
     {data.kind==="skills"&&<details><summary>查看实践依据</summary>{data.skills.map(skill=><div key={skill.name}><strong>{skill.name}</strong>{skill.evidence.map((evidence,index)=><blockquote key={index}>{evidence.quote}</blockquote>)}</div>)}</details>}
     {data.kind==="actions"&&<details><summary>查看行动内容</summary>{data.actions.map((action,index)=><div key={index}><h4>{action.title}</h4><dl><div><dt>产出</dt><dd>{action.deliverable}</dd></div>{action.learn&&<div><dt>学习内容</dt><dd>{action.learn}</dd></div>}{action.why&&<div><dt>为什么先做</dt><dd>{action.why}</dd></div>}</dl></div>)}</details>}
     {data.kind==="catalogue_job"&&proposal.catalogue_sample&&<details><summary>查看岗位材料</summary><p>{proposal.catalogue_sample.company} · {proposal.catalogue_sample.catalogue.city}</p><p className="component-muted">保存为参考材料，招聘状态需要另行核实。</p><div className="job-original-text">{proposal.catalogue_sample.description}</div></details>}
     {data.kind==="comparison"&&<details><summary>查看逐项对照</summary>{data.checks.map((check,index)=><div key={index}><h4>{check.requirement}</h4><p>{({supported:"有依据",partial:"部分有依据",unknown:"待了解",conflict:"存在冲突"})[check.assessment]} · {check.reason}</p>{check.evidence.map((evidence,i)=><blockquote key={i}>{evidence.quote}</blockquote>)}</div>)}</details>}
-    {stale&&<p className="component-caution">资料已更新，请让穗奈重新整理。</p>}<footer className="component-button-group"><button className="component-text-button" type="button" disabled={disabled||saving} onClick={()=>onPrompt("请"+(stale?"重新读取最新资料并":"")+"调整「"+proposal.title+"」这份待确认建议，先问我想修改哪一部分；不要替我确认。")}>改一下</button><button className="component-secondary" type="button" disabled={disabled||saving} onClick={()=>void onChange({type:"proposal.decide",id:proposal.id,approved:false},"已放下这份建议。")}>暂不记录</button><button className="component-primary" type="button" disabled={disabled||saving||stale} onClick={()=>void onChange({type:"proposal.decide",id:proposal.id,approved:true},"已按你确认的内容更新档案。请在成长档案查看。")}><ComponentIcon name="confirm-check" size={18}/>{saving?"正在保存…":"确认更新"}</button></footer>
+    {stale&&<p className="component-caution">{proposal.stale_reason || "资料已更新，请让穗奈重新整理。"}</p>}
+    {editing&&<p className="component-muted profile-update-strip__editing" role="status">已进入调整流程，在对话框里告诉穗奈你想改哪一部分。</p>}
+    <footer className="component-button-group"><button className="component-text-button" type="button" disabled={disabled||saving} onClick={()=>{setEditing(true);onPrompt(editPrompt);}}>{editing?"正在调整…":"改一下"}</button><button className="component-secondary" type="button" disabled={disabled||saving} onClick={()=>void onChange({type:"proposal.decide",id:proposal.id,approved:false},"已放下这份建议。")}>暂不记录</button><button className="component-primary" type="button" disabled={disabled||saving||stale} onClick={()=>void onChange({type:"proposal.decide",id:proposal.id,approved:true},"已按你确认的内容更新档案。请在成长档案查看。")}><ComponentIcon name="confirm-check" size={18}/>{saving?"正在保存…":"确认更新"}</button></footer>
   </section>;
 }
 export function NextActionRow({action,disabled,onPrompt}:{action:CareerAction;disabled:boolean;onPrompt:(text:string)=>void}) {

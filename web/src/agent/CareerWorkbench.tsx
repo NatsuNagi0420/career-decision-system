@@ -7,7 +7,7 @@ import { ResumeStudio, type ResumeStudioProps } from "./ResumeStudio";
 import { FileDirectory } from "./FileLinks";
 import { usePixelConfirm } from "../components/PixelConfirmDialog";
 import { ASSESSMENT_LABEL, ACTION_LABEL, CAREER_TABS, EMPTY_CAREER_PROFILE, PROFILE_FIELDS, careerPrompt, sourceLabel,
-  type CareerTab, type CareerProfileInput, type CareerState, type CareerChange, type CareerJob,
+  careerProposalStale, type CareerTab, type CareerProfileInput, type CareerState, type CareerChange, type CareerJob,
   type CareerAction, type CareerCheck, type CareerProposal } from "./career";
 import { ComponentIcon } from "./ComponentAssets";
 import { SKILL_STAGES } from "./CareerComponents";
@@ -146,10 +146,10 @@ function Action({ action, state, saving, change, onRemove, onPrompt }: { action:
 
 function Proposal({ proposal, state, saving, change, onPrompt }: { proposal: CareerProposal; state: CareerState; saving: boolean; change: Change; onPrompt: (value: string) => void }) {
   const data = proposal.data;
-  const stale = proposal.context_version !== state.context_version;
+  const stale = careerProposalStale(proposal, state);
   const kind = data.kind === "skills" ? "技能实践记录" : data.kind === "profile" ? "档案草稿" : data.kind === "actions" ? "行动建议" : data.kind === "catalogue_job" ? "保留岗位参考" : "岗位对照";
   return <details className="workbench-proposal"><summary><span>{proposal.title}</span><small>{kind}{stale ? " · 资料已更新" : " · 待你确认"}</small></summary><div className="workbench-proposal-body">
-    {stale && <p className="workbench-inline-warning">这份草稿基于旧资料，暂不能确认。请让穗奈重新整理。</p>}
+    {stale && <p className="workbench-inline-warning">{proposal.stale_reason || "这份草稿基于旧资料，暂不能确认。请让穗奈重新整理。"}</p>}
     {data.kind === "catalogue_job" && proposal.catalogue_sample && <><h4>{proposal.catalogue_sample.title}</h4><p>{proposal.catalogue_sample.company} · {proposal.catalogue_sample.catalogue.city}</p><p className="workbench-inline-warning">{catalogueReferenceNotice(proposal.catalogue_sample.catalogue)}确认后加入你的岗位材料。</p><details className="workbench-source"><summary>查看岗位原文</summary><p className="workbench-prewrap">{proposal.catalogue_sample.description}</p>{proposal.catalogue_sample.url && <a href={proposal.catalogue_sample.url} target="_blank" rel="noopener noreferrer">打开原始页面 ↗</a>}</details></>}
     {data.kind === "skills" && data.skills.map(skill => <div key={skill.name}><h4>{skill.name} · {SKILL_STAGES[skill.stage]}</h4>{skill.evidence.map((evidence, index) => <blockquote key={index}>{evidence.quote}</blockquote>)}</div>)}
     {data.kind === "profile" && <dl className="workbench-profile-review">{PROFILE_FIELDS.map(field => <div key={field.key}><dt>{field.label}</dt><dd>{state.profile[field.key] !== data.profile[field.key] && <span className="workbench-before">原内容：{state.profile[field.key] || "未填写"}</span>}<span>{data.profile[field.key] || "未填写"}</span></dd></div>)}</dl>}

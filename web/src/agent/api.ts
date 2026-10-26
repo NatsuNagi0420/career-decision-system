@@ -48,7 +48,7 @@ export const agentApi = {
   analyzeConversation: (id: string, profile_id: string, message_id: string, signal?: AbortSignal) => request<GuidanceView>(BASE + "/conversations/" + id + "/insights", { method: "POST", body: JSON.stringify({ profile_id, message_id }), signal }),
   resume: (signal?: AbortSignal) => request<ResumeState>(BASE + "/resume", { signal }),
   changeResume: (revision: number, change: ResumeChange, conversation_id?: string | null) => request<ResumeState>(BASE + "/resume/changes", { method: "POST", body: JSON.stringify({ revision, change, ...(conversation_id ? { conversation_id } : {}) }) }),
-  exportResume: (revision: number, conversation_id: string) => request<{ artifacts: AgentFile[] }>(BASE + "/resume/export", { method: "POST", body: JSON.stringify({ revision, conversation_id }) }),
+  exportResume: (revision: number, conversation_id: string, template_id: string = "one-page") => request<{ artifacts: AgentFile[] }>(BASE + "/resume/export", { method: "POST", body: JSON.stringify({ revision, conversation_id, template_id }) }),
   catalogueJob: (id: string, signal?: AbortSignal) => request<import("./job-cards").JobDetail>(BASE + "/career/catalogue/jobs/" + encodeURIComponent(id), { signal }),
   career: (signal?: AbortSignal) => request<CareerState>(BASE + "/career", { signal }),
   changeCareer: (revision: number, change: CareerChange) => request<CareerState>(BASE + "/career/changes", { method: "POST", body: JSON.stringify({ revision, change }) }),

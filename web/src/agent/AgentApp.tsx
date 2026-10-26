@@ -51,6 +51,9 @@ import { MessageActions, MessageEditor } from "./MessageActions";
 import { StreamingContent } from "./StreamingContent";
 import { FileActionProvider, FileDirectory, MessageFileLinks } from "./FileLinks";
 import { FilePreviewPanel } from "./FilePreviewPanel";
+import { loadTemplateId } from "../state/resumeTemplates";
+import { currentResumeDraft } from "./resume-preview";
+import { ResumePreviewPanel } from "./ResumePreviewPanel";
 import { latestFiles, unlinkedFiles } from "./artifactLinks";
 import { applyEvent, initialView, type ViewState } from "./state";
 import {
@@ -68,6 +71,7 @@ import {
 import "./agent.css";
 import "./career-theme.css";
 import "./file-workspace.css";
+import "./resume-live-preview.css";
 import "./execution.css";
 import "./ascii-interactions.css";
 import "./career-workbench.css";
@@ -190,6 +194,7 @@ function Workspace({
         [workbenchStatus, setWorkbenchStatus] = useState<"closed" | "open" | "minimized">("closed"),
         [careerTab, setCareerTab] = useState<CareerTab>("profile"),
         [resumeOpen, setResumeOpen] = useState(false),
+        [resumePreviewOpen, setResumePreviewOpen] = useState(false),
         [resumeDemo, setResumeDemo] = useState(false),
         [pendingCareerCount, setPendingCareerCount] = useState(0),
         [showArchived, setShowArchived] = useState(false),
@@ -237,7 +242,7 @@ function Workspace({
     const mounted = useRef(true);
     const currentConversation = useRef(conversationId);
     currentConversation.current = conversationId;
-    function chooseConversation(id: string | null) { if (id !== null && currentConversation.current === id) return; currentConversation.current = id; setEditingMessage(null); pendingRequest.current = null; setSentRunId(null); setView(null); setRenaming(null); setResumeBarDismissed(false); setResumeDemo(false); setPreview(null); setExecution(null); setJobDetailId(null); cancelConfirmation(); setPermission("default"); setConversationId(id); dispatchDraft({ type: "reset" }); setNotice(""); }
+    function chooseConversation(id: string | null) { if (id !== null && currentConversation.current === id) return; currentConversation.current = id; setEditingMessage(null); pendingRequest.current = null; setSentRunId(null); setView(null); setRenaming(null); setResumeBarDismissed(false); setResumeDemo(false); setResumePreviewOpen(false); setPreview(null); setExecution(null); setJobDetailId(null); cancelConfirmation(); setPermission("default"); setConversationId(id); dispatchDraft({ type: "reset" }); setNotice(""); }
     useEffect(() => {
         try {
             const key = "agent.conversation." + user.id;
@@ -367,7 +372,7 @@ function Workspace({
     const recommendedJobs = useMemo(() => jobsByRun(snapshot?.messages ?? []), [snapshot?.messages]);
     const careerState = careerWorkspace.state;
     const cardDisabled = busy || working || fileBusy || Boolean(snapshot?.conversation.archived);
-    function openJob(id: string) { setPreview(null); setExecution(null); setJobDetailId(id); setInspectorOpen(true); }
+    function openJob(id: string) { setResumePreviewOpen(false); setPreview(null); setExecution(null); setJobDetailId(id); setInspectorOpen(true); }
     function saveJob(id: string, saved: boolean) { void careerWorkspace.change({ type: "catalogue.save", catalogue_id: id, saved }, saved ? "已收藏岗位。" : "已取消收藏。"); }
     function renderJobCards(runId: string) {
         const items = recommendedJobs.get(runId);
@@ -379,14 +384,22 @@ function Workspace({
     const resumeActive = Boolean(task?.kind === "resume" || (!guidance?.tasks.length && (snapshot?.conversation.mode === "resume"
         || snapshot?.messages.some(message => message.tool_calls?.some(call => resumeTools.includes(call.name)))
         || view?.events.some(event => event.kind === "tool.started" && resumeTools.includes(String((event.data.call as { name?: string } | undefined)?.name))))));
-    const resumeWorkspace = useResumeWorkspace(user.id, careerPulse + ":" + conversationId + ":" + guidance?.revision, resumeActive || resumeOpen, conversationId);
+    const resumeWorkspace = useResumeWorkspace(user.id, careerPulse + ":" + conversationId + ":" + guidance?.revision, resumeActive || resumeOpen || resumePreviewOpen, conversationId);
+    const previousResumeActive = useRef(false);
+    useEffect(() => {
+        if (resumeActive && !previousResumeActive.current) {
+            setResumePreviewOpen(true);
+            setInspectorOpen(true);
+        }
+        previousResumeActive.current = resumeActive;
+    }, [resumeActive]);
     const insightReady = Boolean(user.external_ai_consent && profile?.has_key && profile.capabilities.chat);
     function updateGuidance(cid: string, value: GuidanceView) {
         if (currentConversation.current !== cid) return;
         setView(state => state && state.snapshot.conversation.id === cid ? { ...state, snapshot: { ...state.snapshot, guidance: acceptGuidance(state.snapshot.guidance, value) } } : state);
     }
     const insights = useConversationInsights({ conversationId, snapshot, profileId: selected, sentRunId, enabled: smartSuggestions && insightReady, blocked: busy || working || fileBusy || Boolean(snapshot?.conversation.archived) || settings, onUpdate: updateGuidance });
-    const companionHidden = Boolean(snapshot?.conversation.archived) || busy || working || fileBusy || settings || resumeDemo || Boolean(preview || executionRun) || workbenchStatus === "open";
+    const companionHidden = Boolean(snapshot?.conversation.archived) || busy || working || fileBusy || settings || resumeDemo || resumePreviewOpen || Boolean(preview || executionRun) || workbenchStatus === "open";
     const suggestion = smartSuggestions && guidance?.suggestion && !dismissedSuggestions.includes(guidance.suggestion.id) ? guidance.suggestion : null;
     const idle = useCompanionNudge({ userId: user.id, scope: conversationId ?? "draft", enabled: idleChat, blocked: companionHidden || Boolean(suggestion), hasDraft: Boolean(text.trim()), guidance });
     const bubble = companionHidden ? null : suggestion ? { message: suggestion.message, kind: "intent" as const, actionLabel: TASK_LABELS[suggestion.kind] } : idle.nudge ? { message: idle.nudge, kind: "idle" as const, actionLabel: "继续聊聊" } : null;
@@ -422,7 +435,7 @@ function Workspace({
         } catch (cause) { setNotice((cause as Error).message); }
         finally { setChangingTask(false); setWorking(false); }
     }
-    function openResumePreview() { setResumeOpen(true); setCareerTab("files"); setWorkbenchStatus("open"); }
+    function openResumePreview() { setResumePreviewOpen(true); setPreview(null); setExecution(null); setJobDetailId(null); setInspectorOpen(true); if (workbenchStatus === "open") setWorkbenchStatus("minimized"); }
     async function continueResumeConversation(input: string) {
         try { await runResumeTask(input); }
         catch (cause) { setNotice("确认已保存，但后续对话未能发送。你可以在输入框继续：" + (cause as Error).message); throw cause; }
@@ -550,7 +563,7 @@ function Workspace({
         setFileBusy(true);
         try {
             const cid = await ensureConversation();
-            return (await agentApi.exportResume(revision, cid)).artifacts;
+            return (await agentApi.exportResume(revision, cid, loadTemplateId())).artifacts;
         } finally { setFileBusy(false); }
     }
     async function archiveConversation(conversation: Conversation) {
@@ -656,16 +669,16 @@ function Workspace({
         }
     }
     function previewFile(file: AgentFile) {
-        setJobDetailId(null); setExecution(null); setPreview(file); setInspectorOpen(true);
+        setResumePreviewOpen(false); setJobDetailId(null); setExecution(null); setPreview(file); setInspectorOpen(true);
         if (workbenchStatus === "open") setWorkbenchStatus("minimized");
     }
     function showExecution(runId: string, recordKey?: string) {
-        setJobDetailId(null); setPreview(null); setExecution(previous => ({ runId, recordKey, selectionId: (previous?.selectionId ?? 0) + 1 }));
+        setResumePreviewOpen(false); setJobDetailId(null); setPreview(null); setExecution(previous => ({ runId, recordKey, selectionId: (previous?.selectionId ?? 0) + 1 }));
         setInspectorOpen(true);
         if (workbenchStatus === "open") setWorkbenchStatus("minimized");
     }
     function closeDetail() {
-        setPreview(null); setExecution(null); setJobDetailId(null);
+        setResumePreviewOpen(false); setPreview(null); setExecution(null); setJobDetailId(null);
         if (window.innerWidth <= 1180) setInspectorOpen(false);
         composer.current?.focus({ preventScroll: true });
     }
@@ -697,21 +710,21 @@ function Workspace({
                 : "A02";
     return (
         <FileActionProvider scope={conversationId} local={Boolean(info?.local_file_actions)} busy={fileBusy} preview={previewFile} download={file => void exportFile(file)} open={(file, action) => void openLocalFile(file, action)}>
-        <main className="agent-app career-workspace career-desktop-shell" data-ui-motion={uiMotion ? "on" : "off"} data-inspector-open={inspectorOpen} data-detail-open={Boolean(preview || executionRun || jobDetailId)}>
+        <main className="agent-app career-workspace career-desktop-shell" data-ui-motion={uiMotion ? "on" : "off"} data-inspector-open={inspectorOpen} data-detail-open={Boolean(resumePreviewOpen || preview || executionRun || jobDetailId)}>
             <header className="agent-top career-masthead">
                 <div className="career-masthead__identity"><CareerIcon name="history" size={34} /><div><div className="career-masthead__title"><h1>穗奈的陪伴桌面</h1><span className="career-presence" data-connected={Boolean(info && connected)}><i />{info && connected ? "服务已连接" : "正在连接"}</span></div><p>聊聊现在，一起找到下一步</p></div></div>
                 <div className="career-night-note" aria-hidden="true"><span>☾</span><p>慢一点也没关系，<br />我们一直在向前。</p></div>
                 <div className="career-masthead__actions">
                     <UiMotionToggle />
                     <button className="agent-icon-button" type="button" title="模型设置" aria-label="模型设置" onClick={() => setSettings(true)}><CareerIcon name="settings" size={23} /></button>
-                    <button className="agent-icon-button career-mobile-workbench" type="button" title="打开职业工作台" aria-label="打开职业工作台" aria-expanded={workbenchStatus === "open"} aria-controls="career-workbench-window" onClick={() => { setResumeOpen(false); setWorkbenchStatus("open"); }}><CareerIcon name="folder" size={23} /></button>
-                    <button className="agent-icon-button" type="button" title={inspectorOpen ? "收起穗奈小窗" : "打开穗奈小窗"} aria-label={inspectorOpen ? "收起穗奈小窗" : "打开穗奈小窗"} aria-expanded={inspectorOpen} aria-controls="career-context" onClick={() => { if (preview || execution || jobDetailId) { setPreview(null); setExecution(null); setJobDetailId(null); } setInspectorOpen(value => !value); }}><AgentIcon name="panel" size={20} /></button>
+                    <button className="agent-icon-button career-mobile-workbench" type="button" title="打开职业工作台" aria-label="打开职业工作台" aria-expanded={workbenchStatus === "open"} aria-controls="career-workbench-window" onClick={() => { setResumePreviewOpen(false); setResumeOpen(false); setWorkbenchStatus("open"); }}><CareerIcon name="folder" size={23} /></button>
+                    <button className="agent-icon-button" type="button" title={inspectorOpen ? "收起穗奈小窗" : "打开穗奈小窗"} aria-label={inspectorOpen ? "收起穗奈小窗" : "打开穗奈小窗"} aria-expanded={inspectorOpen} aria-controls="career-context" onClick={() => { if (resumePreviewOpen || preview || execution || jobDetailId) { setResumePreviewOpen(false); setPreview(null); setExecution(null); setJobDetailId(null); setInspectorOpen(false); } else setInspectorOpen(value => !value); }}><AgentIcon name="panel" size={20} /></button>
                 </div>
             </header>
             <div className="agent-layout">
                 <aside className="agent-sidebar">
                     <div className="career-brand"><CareerIcon name="sprout" size={48} /><div><strong>青穗集</strong><p>更清晰的你<br />更喜欢的生活</p></div><span className="career-brand__spark" aria-hidden="true">✧</span></div>
-                    <nav className="career-desktop-apps" aria-label="桌面应用"><button id="career-workbench-launcher" type="button" aria-label="打开职业工作台" aria-expanded={workbenchStatus === "open"} aria-controls="career-workbench-window" onClick={() => { setResumeOpen(false); setWorkbenchStatus("open"); }}><CareerIcon name="folder" size={29} /><span>职业工作台<small>档案 · 岗位 · 成长行动</small></span>{pendingCareerCount ? <span className="career-app-badge" aria-label={pendingCareerCount + "份待确认建议"}>{pendingCareerCount}</span> : <span aria-hidden="true">↗</span>}</button></nav>
+                    <nav className="career-desktop-apps" aria-label="桌面应用"><button id="career-workbench-launcher" type="button" aria-label="打开职业工作台" aria-expanded={workbenchStatus === "open"} aria-controls="career-workbench-window" onClick={() => { setResumePreviewOpen(false); setResumeOpen(false); setWorkbenchStatus("open"); }}><CareerIcon name="folder" size={29} /><span>职业工作台<small>档案 · 岗位 · 成长行动</small></span>{pendingCareerCount ? <span className="career-app-badge" aria-label={pendingCareerCount + "份待确认建议"}>{pendingCareerCount}</span> : <span aria-hidden="true">↗</span>}</button></nav>
                     <button className="btn btn--primary agent-new" disabled={working || fileBusy || historyBusy} type="button" onClick={newConversation}><CareerIcon name="newChat" size={23} /><span>新建对话</span><span className="career-new-plus" aria-hidden="true">＋</span></button>
                     <ConversationHistory conversations={conversations} selectedId={conversationId} disabled={working || fileBusy || historyBusy} activeId={busy ? conversationId : null} archived={showArchived} onArchived={setShowArchived} onChoose={chooseConversation} onRename={setRenaming} onArchive={conversation => void archiveConversation(conversation)} onDelete={conversation => void deleteConversation(conversation)} />
                     <div className="career-sidebar-bottom">
@@ -857,8 +870,8 @@ function Workspace({
 
                 </section>
 
-                {(preview || executionRun || jobDetailId) && <button className="workspace-detail-backdrop" type="button" aria-label={jobDetailId ? "收起岗位详情" : preview ? "收起文件预览" : "收起执行记录"} onClick={closeDetail} />}
-                {jobDetailId ? <JobDetailPanel id={jobDetailId} state={careerState} saving={careerWorkspace.saving} disabled={cardDisabled} onSave={saveJob} onClose={closeDetail} onPrompt={fillPrompt} /> : preview ? <FilePreviewPanel file={preview} files={files} local={Boolean(info?.local_file_actions)} busy={fileBusy} onSelect={previewFile} onClose={closeDetail} onDownload={file => void exportFile(file)} onOpen={(file, action) => void openLocalFile(file, action)} /> : executionRun ? <ExecutionPanel run={executionRun} runs={snapshot?.runs ?? []} messages={snapshot?.messages ?? []} records={records} events={view?.events ?? []} selectedKey={execution?.recordKey} selectionId={execution?.selectionId} files={files} onSelect={showExecution} onClose={closeDetail} onPreview={previewFile} /> : <aside className="agent-inspector" id="career-context" aria-label="穗奈陪伴与资料">
+                {(resumePreviewOpen || preview || executionRun || jobDetailId) && <button className="workspace-detail-backdrop" type="button" aria-label={resumePreviewOpen ? "收起简历预览" : jobDetailId ? "收起岗位详情" : preview ? "收起文件预览" : "收起执行记录"} onClick={closeDetail} />}
+                {resumePreviewOpen ? <ResumePreviewPanel state={resumeWorkspace.state} liveDraft={currentResumeDraft(view?.events ?? [], run, resumeWorkspace.state)} error={resumeWorkspace.error} busy={busy || working} saving={resumeWorkspace.saving} onClose={closeDetail} onOpenStudio={() => { setResumeOpen(true); setCareerTab("files"); setWorkbenchStatus("open"); }} /> : jobDetailId ? <JobDetailPanel id={jobDetailId} state={careerState} saving={careerWorkspace.saving} disabled={cardDisabled} onSave={saveJob} onClose={closeDetail} onPrompt={fillPrompt} /> : preview ? <FilePreviewPanel file={preview} files={files} local={Boolean(info?.local_file_actions)} busy={fileBusy} onSelect={previewFile} onClose={closeDetail} onDownload={file => void exportFile(file)} onOpen={(file, action) => void openLocalFile(file, action)} /> : executionRun ? <ExecutionPanel run={executionRun} runs={snapshot?.runs ?? []} messages={snapshot?.messages ?? []} records={records} events={view?.events ?? []} selectedKey={execution?.recordKey} selectionId={execution?.selectionId} files={files} onSelect={showExecution} onClose={closeDetail} onPreview={previewFile} /> : <aside className="agent-inspector" id="career-context" aria-label="穗奈陪伴与资料">
                     <section className="agent-companion-card">
                         <div className="career-companion-heading"><h2><CareerIcon name="heart" size={20} />穗奈的小窗</h2><span className="career-presence" data-connected="true"><i />{busy ? "陪你处理中" : "待机中"}</span><button className="agent-icon-button" type="button" title={motion ? "暂停动画" : "播放动画"} aria-label={motion ? "暂停动画" : "播放动画"} onClick={toggleMotion}><AgentIcon name={motion ? "pause" : "play"} size={15} /></button><ComposerMenu className="companion-settings" panelClassName="companion-settings-panel" label="陪伴互动设置" title="陪伴互动设置" trigger={<AgentIcon name="more" size={16} />} disabled={false} align="end">{() => <><strong>穗奈的陪伴方式</strong><label><input type="checkbox" checked={smartSuggestions} onChange={event => setCompanionPreference("smartSuggestions", event.target.checked)} />意图建议与会话小结</label><p>基于已发送消息，回复结束后最多额外调用一次所选模型，可能产生少量用量；猜测不自动启动任务，不发送输入框草稿。</p><label><input type="checkbox" checked={idleChat} onChange={event => setCompanionPreference("idleChat", event.target.checked)} />闲置时轻轻打个招呼</label><p>页面可见且约两分钟未操作时提醒；输入、执行中不打扰，十分钟内不重复，每次打开页面最多两次。不额外调用模型，不写入聊天记录。</p></>}</ComposerMenu></div>
                         <div className="agent-character">

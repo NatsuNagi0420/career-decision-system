@@ -56,7 +56,7 @@ const schemas = {
 };
 const descriptions: Record<keyof typeof schemas, string> = {
   read_resume_context: "读取简历对话已记录的原句、确认状态、可选目标 JD 和待处理请求。先读后记录，避免重复提问。",
-  capture_resume_material: "按当前 context_version 增量保留用户原句：experience 为经历，direction 为方向，target 为招聘要求。quote 必须来自本轮消息或指定 inputs/ 文本文件，title/company 必须是 quote 的子串。只收集不确认，不保存模型猜测。",
+  capture_resume_material: "按当前 context_version 增量保留可核对原句：experience 为经历，direction 为方向，target 只能是用户提供的招聘要求。quote 必须来自本轮用户消息、指定 inputs/ 文本文件，或用户明确要求复用的职业工作台来源；复用工作台时使用 source.kind=career_context 和 read_career_context 返回的 source_id。岗位样本、偏好约束和未确认草稿不能作为简历经历。title/company 必须是 quote 的子串。只收集不确认，不保存模型猜测。",
   prepare_resume_step: "资料足够或用户希望整理时发起 facts/selection/rewrite 请求，返回 pending.id。无需 JD 也可整理经历和方向版简历，但必须等用户亲自确认事实及取舍后再写正文。",
   propose_resume_update: "只提交 pending 对应步骤的简历草稿。先读取 request_id；事实必须引用原文，要求必须引用 JD。不会替用户确认或进入下一步，成功后等待用户核对。",
   list_career_directions: "从离线库读取职业方向、技能、成长路径及样本数量。旧库数量是标题线索，新批次数量是待审核分类；均不是市场统计或当前在招数量。可按 query 搜索，limit 最多 25。",
@@ -147,6 +147,18 @@ export async function executeTool(
         invariant(input && /\.(txt|md)$/i.test(input.path), 400, "仅从当前对话导入的 TXT / Markdown 收集原文；PDF / Word 请复制文字。");
         evidence = (await workspace.read(run.conversation_id, input.path, source.offset, 16000)).text;
         name = input.path.split("/").at(-1) || "导入的文本材料";
+      }
+      if (data.source.kind === "career_context") {
+        invariant(career, 503, "职业工作台尚未就绪。");
+        invariant(data.section !== "target", 400, "职业工作台内容不能当作岗位 JD，请粘贴目标岗位原文。");
+        const source = career.resumeSource(run.user_id, data.source.source_id);
+        const profileField = source.id.startsWith("profile.") ? source.id.slice("profile.".length) : null;
+        if (data.section === "direction") invariant(source.id === "profile.goal", 400, "只有职业画像中的已确认目标可以作为简历方向。");
+        if (data.section === "experience") invariant(!profileField || ["education", "experience", "skills"].includes(profileField) || source.id.startsWith("action."), 400, "这项职业画像内容不能作为简历经历。");
+        evidence = source.text;
+        const labels: Record<string, string> = { goal: "目标", education: "教育背景", experience: "经历", skills: "技能", action: "行动结果" };
+        const label = profileField ? labels[profileField] : source.id.startsWith("action.") ? labels.action : "已确认材料";
+        name = "职业工作台 · 已确认" + label;
       }
       return { value: resume.capture(run.user_id, run.conversation_id, data, evidence, name) };
     }

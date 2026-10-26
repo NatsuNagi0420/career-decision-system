@@ -48,6 +48,7 @@ export const resumeCaptureInput = z.object({
   source: z.discriminatedUnion("kind", [
     z.object({ kind: z.literal("message"), message_id: z.string().uuid().optional() }).strict(),
     z.object({ kind: z.literal("input_file"), path: text(300).min(1), offset: z.number().int().min(0).max(2000000).default(0) }).strict(),
+    z.object({ kind: z.literal("career_context"), source_id: text(120).min(1) }).strict(),
   ]),
 }).strict();
 export const resumePrepareInput = z.object({ context_version: z.number().int().nonnegative(), kind: z.enum(["facts", "selection", "rewrite"]) }).strict();

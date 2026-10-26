@@ -1,0 +1,429 @@
+{
+  "generatedAt": "2026-10-26T15:36:12.2418320+08:00",
+  "sourceArchive": "D:\\Project\\career-decision-system\\assets\\穗奈_小程序端原型与透明图标_全量包.zip",
+  "destination": "D:\\Project\\career-decision-system\\uni-app",
+  "runtimeAssets": [
+    "src/static/assets/icons",
+    "src/static/assets/characters",
+    "src/static/assets/index.ts"
+  ],
+  "designReferences": [
+    "assets/prototypes",
+    "assets/source/README-source.md"
+  ],
+  "files": [
+    {
+      "source": "README.md",
+      "category": "source-readme",
+      "target": "assets/source/README-source.md",
+      "bytes": 2517,
+      "sha256": "15b3308e8d064a1e6be82de53f656c05edd909e7467bf3fdf1f5b18b9c46239b"
+    },
+    {
+      "source": "页面PNG/01_首页_已有资料.png",
+      "category": "prototype",
+      "target": "assets/prototypes/01-home-existing-materials.png",
+      "bytes": 2839207,
+      "sha256": "21331b47d9d47d435bb9bb56dbfaba1fec1517f4425b97186eb042db0fb63971"
+    },
+    {
+      "source": "页面PNG/02_首次进入_空状态.png",
+      "category": "prototype",
+      "target": "assets/prototypes/02-first-entry-empty.png",
+      "bytes": 2587389,
+      "sha256": "cfe776453a2d049b581c764810cf7bbe8afe58603900bbbf59518bcbc8884af9"
+    },
+    {
+      "source": "页面PNG/03_对话页_自由聊聊.png",
+      "category": "prototype",
+      "target": "assets/prototypes/03-chat-free-talk.png",
+      "bytes": 2701508,
+      "sha256": "a88c5e66b2761596f95c331d7a74dc1354c5050f7998f4d7c560309f827d6416"
+    },
+    {
+      "source": "页面PNG/04_对话_意图建议.png",
+      "category": "prototype",
+      "target": "assets/prototypes/04-chat-intent-suggestion.png",
+      "bytes": 2647783,
+      "sha256": "22585deff781092f0284f38297fe89c074c5daf82f90c6bd4086da489437fb7b"
+    },
+    {
+      "source": "页面PNG/05_经历记录_待确认.png",
+      "category": "prototype",
+      "target": "assets/prototypes/05-experience-confirmation.png",
+      "bytes": 2715322,
+      "sha256": "594c697251f80a13acac08730ad060f9568eeb531797248e1f5107a8f5382d60"
+    },
+    {
+      "source": "页面PNG/06_我的画像.png",
+      "category": "prototype",
+      "target": "assets/prototypes/06-my-profile.png",
+      "bytes": 2980110,
+      "sha256": "a055f2aa565aaf027c1c2b9b84ebfbd83b5ceafdcdfe02bc7c6a01bdba2bb11d"
+    },
+    {
+      "source": "页面PNG/07_岗位推荐列表.png",
+      "category": "prototype",
+      "target": "assets/prototypes/07-job-recommendations.png",
+      "bytes": 2888160,
+      "sha256": "07f87a514961471caf13bd9b35ffb53c3741c16a926e960aacf4f211c475c06c"
+    },
+    {
+      "source": "页面PNG/08_岗位详情与能力对照.png",
+      "category": "prototype",
+      "target": "assets/prototypes/08-job-detail-and-skills.png",
+      "bytes": 2869240,
+      "sha256": "6ce2fc83649db8bd9e1073daf3758706003f4acc48fb2ad43875e3d3de5ffbaa"
+    },
+    {
+      "source": "页面PNG/09_成长路线.png",
+      "category": "prototype",
+      "target": "assets/prototypes/09-growth-route.png",
+      "bytes": 3017232,
+      "sha256": "2e9c61eae2577bb4f1f338b0cf6b6e3cff245576b2727951354f25178bd67570"
+    },
+    {
+      "source": "页面PNG/10_七天行动详情.png",
+      "category": "prototype",
+      "target": "assets/prototypes/10-seven-day-action-detail.png",
+      "bytes": 2954856,
+      "sha256": "57f09ffdec9e1badc353a40a5c79e345d7a3455fede9891b9b2f16bc093cb82f"
+    },
+    {
+      "source": "页面PNG/11_简历版本与预览.png",
+      "category": "prototype",
+      "target": "assets/prototypes/11-resume-version-preview.png",
+      "bytes": 3017946,
+      "sha256": "e37efee1ccfd1634f1004b27cca2e03234c223ce1a3efced208eeb245f41ff85"
+    },
+    {
+      "source": "页面PNG/12_文件导出成功.png",
+      "category": "prototype",
+      "target": "assets/prototypes/12-file-export-success.png",
+      "bytes": 2600119,
+      "sha256": "6c0ae64efef9a7068c690ac6a803d9ab531dec649c728dac75a40e1294334206"
+    },
+    {
+      "source": "页面PNG/13_网络错误_发送失败.png",
+      "category": "prototype",
+      "target": "assets/prototypes/13-network-error-send-failed.png",
+      "bytes": 2753043,
+      "sha256": "4da95162977056253f9c9b2342f8532998ec83d90887f29d9312c56bfb20f5e0"
+    },
+    {
+      "source": "页面PNG/14_空状态与加载状态.png",
+      "category": "prototype",
+      "target": "assets/prototypes/14-empty-loading-error-states.png",
+      "bytes": 2914251,
+      "sha256": "afc8dead13d3c5396475239981b17418fd2dafbddbcf1ceabf7f53d476d5787b"
+    },
+    {
+      "source": "透明图标/01_芽苗.png",
+      "category": "runtime-icon",
+      "target": "src/static/assets/icons/sprout.png",
+      "bytes": 71333,
+      "sha256": "143cfaa2d6c128a549cff3274c9e1cd4902bf025d7fcbbedfeb11a5e391d656e"
+    },
+    {
+      "source": "透明图标/02_首页.png",
+      "category": "runtime-icon",
+      "target": "src/static/assets/icons/home.png",
+      "bytes": 89665,
+      "sha256": "105803791f9e1aaef0bd252bc83c35eb226178ce7d387d41b33bd719e1f849d6"
+    },
+    {
+      "source": "透明图标/03_对话.png",
+      "category": "runtime-icon",
+      "target": "src/static/assets/icons/chat.png",
+      "bytes": 74307,
+      "sha256": "6970954fb007d5ccadfc3bda03d456996cc1457ef498e8bd15ddb1ce2bd8a865"
+    },
+    {
+      "source": "透明图标/04_岗位.png",
+      "category": "runtime-icon",
+      "target": "src/static/assets/icons/jobs.png",
+      "bytes": 81673,
+      "sha256": "a8e6f654ed103741e7db6dd690f95d0c6829853194c18ed79dbc8e437a83b210"
+    },
+    {
+      "source": "透明图标/05_成长图表.png",
+      "category": "runtime-icon",
+      "target": "src/static/assets/icons/growth.png",
+      "bytes": 82552,
+      "sha256": "62b0fee211d56b6b71df61e978329cb35c504a41d7c8bb2f2306e1d4fe5affdc"
+    },
+    {
+      "source": "透明图标/06_资料面板.png",
+      "category": "runtime-icon",
+      "target": "src/static/assets/icons/resources-panel.png",
+      "bytes": 78894,
+      "sha256": "2c9a4e237c57e2b5598830facea7dd292d732fc60a7bd807489bc0a2dc28aefe"
+    },
+    {
+      "source": "透明图标/07_导航箭头.png",
+      "category": "runtime-icon",
+      "target": "src/static/assets/icons/navigate.png",
+      "bytes": 58042,
+      "sha256": "56d601e43a2a46faabaea8b82157e1310fcb82289259f92e62c40383de297a18"
+    },
+    {
+      "source": "透明图标/08_更多.png",
+      "category": "runtime-icon",
+      "target": "src/static/assets/icons/more.png",
+      "bytes": 45133,
+      "sha256": "3d147682d0579aba87bf4e1d6325c7fb832350a14e88da746f6c106fe192e502"
+    },
+    {
+      "source": "透明图标/09_AI灵感.png",
+      "category": "runtime-icon",
+      "target": "src/static/assets/icons/ai-insight.png",
+      "bytes": 94326,
+      "sha256": "1dda9aca269818c0f8e4372e633b4e90e1d7e3573309d00feeae693642da5645"
+    },
+    {
+      "source": "透明图标/10_文件.png",
+      "category": "runtime-icon",
+      "target": "src/static/assets/icons/file.png",
+      "bytes": 70393,
+      "sha256": "ab7d30d6931e011bd213f3f7a1563bfccd047f363e53c13a58ce22c332d9448f"
+    },
+    {
+      "source": "透明图标/11_添加.png",
+      "category": "runtime-icon",
+      "target": "src/static/assets/icons/add-item.png",
+      "bytes": 81574,
+      "sha256": "505d6b6f304554f2fd35e65eaf0d9bad7686c769c209407aecd86e34d56bc0f0"
+    },
+    {
+      "source": "透明图标/12_语音.png",
+      "category": "runtime-icon",
+      "target": "src/static/assets/icons/voice.png",
+      "bytes": 86007,
+      "sha256": "0a3c442d6e49384a3fffec62d4e1eec0dd20401c71ea1e8129066494b7fe04b6"
+    },
+    {
+      "source": "透明图标/13_发送.png",
+      "category": "runtime-icon",
+      "target": "src/static/assets/icons/send.png",
+      "bytes": 84696,
+      "sha256": "b8723157e99211dffaad65857d9bde915734e7facbaf21d550ce679e116b85e8"
+    },
+    {
+      "source": "透明图标/14_搜索.png",
+      "category": "runtime-icon",
+      "target": "src/static/assets/icons/search.png",
+      "bytes": 89505,
+      "sha256": "e4f72811c2278c1f5ac9e24cfbab9a3180e2fd519e2710b865a29621cb18b85b"
+    },
+    {
+      "source": "透明图标/15_目标.png",
+      "category": "runtime-icon",
+      "target": "src/static/assets/icons/target.png",
+      "bytes": 90995,
+      "sha256": "9fa00cbf3ed22980e886e2cb1992f1e490ae0394ed488b4fac20bde9e688cd9d"
+    },
+    {
+      "source": "透明图标/16_项目.png",
+      "category": "runtime-icon",
+      "target": "src/static/assets/icons/project.png",
+      "bytes": 65909,
+      "sha256": "a8e3c238e62eb2702fee162d4fdba414b2928336a709b1561548f18990438dea"
+    },
+    {
+      "source": "透明图标/17_确认.png",
+      "category": "runtime-icon",
+      "target": "src/static/assets/icons/confirm.png",
+      "bytes": 87887,
+      "sha256": "ae6caf4e8f672c45c9482938f2ce6ac798ad069ea7ea2df2ce99f977a89c77a6"
+    },
+    {
+      "source": "透明图标/18_待确认警示.png",
+      "category": "runtime-icon",
+      "target": "src/static/assets/icons/pending-warning.png",
+      "bytes": 91009,
+      "sha256": "7f3ff2549c6205b1c6752780a97497fee19d8e7de8eba834f6800878c99472a3"
+    },
+    {
+      "source": "透明图标/19_定位准星.png",
+      "category": "runtime-icon",
+      "target": "src/static/assets/icons/crosshair.png",
+      "bytes": 93526,
+      "sha256": "7568fead8455f185c1218c0dbe727c72399f10b460760a1fd63efd9ac8cd2066"
+    },
+    {
+      "source": "透明图标/20_位置.png",
+      "category": "runtime-icon",
+      "target": "src/static/assets/icons/location.png",
+      "bytes": 82627,
+      "sha256": "7a942f6295189fb526c5d1125db3d814fdb45a747baa9f4d33ae8ef04d426f73"
+    },
+    {
+      "source": "透明图标/21_公司.png",
+      "category": "runtime-icon",
+      "target": "src/static/assets/icons/company.png",
+      "bytes": 95818,
+      "sha256": "4e8e711b725e768108136711c59ec8d4c26c3c8b4560169e130c254b019eb78d"
+    },
+    {
+      "source": "透明图标/22_新增项.png",
+      "category": "runtime-icon",
+      "target": "src/static/assets/icons/new-item.png",
+      "bytes": 88610,
+      "sha256": "376ab4864f909bf32e89ce7d634009cc239789c205fc90010ba9120a5e8f5094"
+    },
+    {
+      "source": "透明图标/23_状态标记.png",
+      "category": "runtime-icon",
+      "target": "src/static/assets/icons/status.png",
+      "bytes": 93732,
+      "sha256": "1f4fd693b75505fb11b479e53e3ba18cdc61ac8c0a807d162ee7da5a70083690"
+    },
+    {
+      "source": "透明图标/24_前进箭头.png",
+      "category": "runtime-icon",
+      "target": "src/static/assets/icons/forward.png",
+      "bytes": 59045,
+      "sha256": "7854cb9ae67ee4b08107f34d0d8cc346333ed81ab58771d6d1c4d16effeff3f2"
+    },
+    {
+      "source": "透明图标/25_清单.png",
+      "category": "runtime-icon",
+      "target": "src/static/assets/icons/checklist.png",
+      "bytes": 74753,
+      "sha256": "aef108b27dfa2903657aa1703c23f6daac4d45b78d82be6e501b51b231debc1f"
+    },
+    {
+      "source": "透明图标/26_行动开始.png",
+      "category": "runtime-icon",
+      "target": "src/static/assets/icons/start-action.png",
+      "bytes": 89570,
+      "sha256": "2129b1e9d0a0d8cc0fa98930298f0b38272a99a0edbd20d8ac5e3a4f960aa32a"
+    },
+    {
+      "source": "透明图标/27_同步.png",
+      "category": "runtime-icon",
+      "target": "src/static/assets/icons/sync.png",
+      "bytes": 94776,
+      "sha256": "fffad95f975fb2774a2685f264e95944d67c9dc92e5056095b0c3fbf18e03c89"
+    },
+    {
+      "source": "透明图标/28_连接状态.png",
+      "category": "runtime-icon",
+      "target": "src/static/assets/icons/connection.png",
+      "bytes": 101612,
+      "sha256": "acf1d5cfb46068d5a26ef88a4fd6ea9f5e1ba11f171bea35c9f85cc561e2f1fb"
+    },
+    {
+      "source": "透明图标/29_提醒.png",
+      "category": "runtime-icon",
+      "target": "src/static/assets/icons/notification.png",
+      "bytes": 111466,
+      "sha256": "a4aca8a841c0de5c402db59937d8cf77b27fb892bfcdbaf55ea042930cf82090"
+    },
+    {
+      "source": "透明图标/30_新增.png",
+      "category": "runtime-icon",
+      "target": "src/static/assets/icons/add.png",
+      "bytes": 88558,
+      "sha256": "0a135894090f3368183ea6f9b046b4d1ebb4235a85a31b525cc828d2516dbe3a"
+    },
+    {
+      "source": "透明图标/31_编辑.png",
+      "category": "runtime-icon",
+      "target": "src/static/assets/icons/edit.png",
+      "bytes": 99419,
+      "sha256": "bc0050247747f6d278de451e37361d9f983e98e0cc3c6028031475c51cfea7b4"
+    },
+    {
+      "source": "透明图标/32_关闭.png",
+      "category": "runtime-icon",
+      "target": "src/static/assets/icons/close.png",
+      "bytes": 95835,
+      "sha256": "8efb4a9ff42416bebf064fa718d24cdf91ce0b705acb829b3b4e72b2fc416f18"
+    },
+    {
+      "source": "角色与插画/01_穗奈_全身立绘.png",
+      "category": "runtime-character",
+      "target": "src/static/assets/characters/suinai-full-body.png",
+      "bytes": 2417443,
+      "sha256": "d6360ff9337d3116c5614bad8e52f3d4734a6ac57c00331727ffb76ce3956afc"
+    },
+    {
+      "source": "角色与插画/02_穗奈_打招呼半身.png",
+      "category": "runtime-character",
+      "target": "src/static/assets/characters/suinai-wave.png",
+      "bytes": 2909313,
+      "sha256": "d12035ccb43e199547f4365ef65d71734f010245c3a4e494af54e61223781fa9"
+    },
+    {
+      "source": "角色与插画/03_穗奈_思考半身.png",
+      "category": "runtime-character",
+      "target": "src/static/assets/characters/suinai-think.png",
+      "bytes": 2869259,
+      "sha256": "35bb344b643a6db092ad87f9cca1ffdf756ec138c8d837f0ba1be71cfdcfdb91"
+    },
+    {
+      "source": "角色与插画/04_像素猫咪伙伴.png",
+      "category": "runtime-character",
+      "target": "src/static/assets/characters/pixel-cat.png",
+      "bytes": 1893239,
+      "sha256": "0955eb96c29c5eeaba9cb348c194e0dfc30699d0f3e905af5b7573eb15fe7bba"
+    },
+    {
+      "source": "角色与插画/05_像素桌面电脑场景.png",
+      "category": "runtime-character",
+      "target": "src/static/assets/characters/desk-computer-scene.png",
+      "bytes": 1756591,
+      "sha256": "57781568e8e142a2b140383af57c7b26744e5de3ed4d7454a4fcbb88b4b45ad2"
+    },
+    {
+      "source": "角色与插画/06_像素盆栽与书本装饰.png",
+      "category": "runtime-character",
+      "target": "src/static/assets/characters/plant-books-decoration.png",
+      "bytes": 2067679,
+      "sha256": "319da1a1391426f856613c1e746140915518ed10c448a0dbba8df5cc3010e3b0"
+    },
+    {
+      "source": "角色与插画/07_成长路线旗帜插画.png",
+      "category": "runtime-character",
+      "target": "src/static/assets/characters/growth-route-illustration.png",
+      "bytes": 1730394,
+      "sha256": "c95b6483c01cd36ce73800e2a6e7721a60cf18182fafc3b4c058c156181a83f8"
+    },
+    {
+      "source": "角色与插画/08_经历资料道具组.png",
+      "category": "runtime-character",
+      "target": "src/static/assets/characters/experience-items.png",
+      "bytes": 2020340,
+      "sha256": "b5b62d9e777f74291daf46ee0bbef1f25b5263f7ac164c36821946ddff1c7d2c"
+    },
+    {
+      "source": "generated/optimized-tabbar/chat.png",
+      "category": "runtime-tabbar-icon",
+      "target": "src/static/assets/tabbar/chat.png",
+      "bytes": 6424,
+      "sha256": "6b1cdd35c3d1debb72a53704056fd185e891d438b564b250aed2499cee735901"
+    },
+    {
+      "source": "generated/optimized-tabbar/growth.png",
+      "category": "runtime-tabbar-icon",
+      "target": "src/static/assets/tabbar/growth.png",
+      "bytes": 6096,
+      "sha256": "34e81ae0227a538903025f47ede7191344643110eb4b9a870706174de86e0f1e"
+    },
+    {
+      "source": "generated/optimized-tabbar/home.png",
+      "category": "runtime-tabbar-icon",
+      "target": "src/static/assets/tabbar/home.png",
+      "bytes": 7645,
+      "sha256": "fa531da8ff57879d6054a6af3edd906e5e420b20e5503bae077c2c7c7f7024d3"
+    },
+    {
+      "source": "generated/optimized-tabbar/resources-panel.png",
+      "category": "runtime-tabbar-icon",
+      "target": "src/static/assets/tabbar/resources-panel.png",
+      "bytes": 6035,
+      "sha256": "4d4900930e08f60fded9837ed9da75a34f5f7ef10909573bf89163469098cecb"
+    }
+  ]
+}

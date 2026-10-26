@@ -73,3 +73,6 @@ docs/品牌形象/**/*.psd
 docs/品牌形象/**/*.kra
 docs/品牌形象/**/*.clip
 docs/岗位库扩充/**/待导入/*.zip
+
+# Large local handoff bundle; curated assets are tracked in uni-app/assets and src/static.
+assets/穗奈_小程序端原型与透明图标_全量包.zip

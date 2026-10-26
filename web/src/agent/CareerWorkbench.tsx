@@ -46,6 +46,7 @@ export function CareerWorkbench({ workspace, onJob, tab, onTab, files, hidden, o
       {state.proposals.length > 0 && <section className="workbench-proposals" aria-label="穗奈的待确认建议"><header><span><AgentIcon name="activity" size={17} />穗奈整理了 {state.proposals.length} 份建议</span><small>确认后才写入工作台</small></header>{state.proposals.map(proposal => <Proposal key={proposal.id} proposal={proposal} state={state} saving={saving} change={change} onPrompt={onPrompt} />)}</section>}
       <section id="career-panel-profile" role="tabpanel" aria-labelledby="career-tab-profile" hidden={tab !== "profile"}>
         <ProfileDossier state={state} onEdit={() => setProfileEditorOpen(true)} onPrompt={onPrompt} />
+        {state.profile.confirmed_at && <div className="workbench-profile-actions"><button className="workbench-primary" type="button" onClick={() => resume.onChat("我想根据当前职业工作台中已经确认的画像生成一份简历。请先读取职业工作台，复用其中已确认的教育背景、真实经历、技能和行动结果原句，不要让我重复粘贴；岗位样本只能作为目标参考，不能写成我的经历。先把可用材料带入简历整理流程，再按事实核对推进。")}><CareerIcon name="resume" size={18} />根据当前画像生成简历<AgentIcon name="chevron" size={15} /></button></div>}
         <details className="workbench-profile-edit" open={profileEditorOpen} onToggle={event => setProfileEditorOpen(event.currentTarget.open)}>
           <summary><span><ComponentIcon name="edit-record" size={17} />修正已确认材料</span><small>适合纠正一处事实</small></summary>
           <p>补充新经历时，优先继续和穗奈对话；直接编辑后保存的内容也会成为后续对照依据。</p>
@@ -66,7 +67,7 @@ export function CareerWorkbench({ workspace, onJob, tab, onTab, files, hidden, o
       </section>
       <section id="career-panel-files" role="tabpanel" aria-labelledby="career-tab-files" hidden={tab !== "files"}>
         <div className="workbench-intro"><div><h3>把经历整理成能带走的成果</h3><p>这里展示当前对话的真实文件。点击文件名预览，右键可以选择下载或本地打开。</p></div><button className="workbench-secondary" type="button" disabled={uploadDisabled} onClick={onImport}><AgentIcon name="attach" size={15} />导入资料</button></div>
-        <div className="workbench-file-start"><CareerIcon name="resume" size={48} /><div><h3>制作或打磨一份简历</h3><p>先和穗奈聊经历，一次只说一点。需要时再打开简历预览，不必先填一整张表。</p></div><button className="workbench-primary" type="button" onClick={() => resume.onChat()}>和穗奈一起写 <AgentIcon name="chevron" size={15} /></button></div>
+        <div className="workbench-file-start"><CareerIcon name="resume" size={48} /><div><h3>制作或打磨一份简历</h3><p>先和穗奈聊经历，一次只说一点。需要时再打开简历预览，不必先填一整张表。</p></div><button className="workbench-primary" type="button" onClick={() => resume.onChat("我想根据当前职业工作台中已经确认的画像生成一份简历。请先读取职业工作台，复用其中已确认的教育背景、真实经历、技能和行动结果原句，不要让我重复粘贴；岗位样本只能作为目标参考，不能写成我的经历。先把可用材料带入简历整理流程，再按事实核对推进。")}>根据当前画像开始 <AgentIcon name="chevron" size={15} /></button></div>
         <FileDirectory files={files} />
         <p className="workbench-footnote">目前可直接导入文本、Markdown、CSV、JSON、YAML。PDF / Word 请先转成文本；职业档案会跨对话保留，文件则跟随当前对话。</p>
       </section>

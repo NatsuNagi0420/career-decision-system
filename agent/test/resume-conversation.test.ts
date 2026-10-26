@@ -4,6 +4,8 @@ import assert from "node:assert/strict";
 import { fixture, ScriptedModel, reply, tool } from "./helpers.js";
 import { id } from "../src/store.js";
 import type { ResumeChange } from "../src/resume-contract.js";
+import type { Run } from "../src/types.js";
+import { guidedToolAllowed } from "../src/guidance.js";
 import { executeTool, toolDefinitionsFor } from "../src/tools.js";
 type Fixture = Awaited<ReturnType<typeof fixture>>;
 function change(f: Fixture, value: ResumeChange) { return f.runtime.resume.change(f.user.id, { revision: f.runtime.resume.get(f.user.id).revision, change: value }); }
@@ -14,6 +16,38 @@ function capture(f: Fixture, cid: string, text = quote) {
 }
 function prepare(f: Fixture, cid: string, kind: "facts" | "selection" | "rewrite") { return f.runtime.resume.prepare(f.user.id, cid, { context_version: f.runtime.resume.get(f.user.id).context_version, kind }); }
 function propose(f: Fixture, cid: string, data: unknown) { return f.runtime.resume.propose(f.user.id, cid, { request_id: f.runtime.resume.get(f.user.id).pending!.id, data }); }
+
+test("明确要求复用职业画像时可安全进入简历材料，岗位样本和未确认内容仍被拒绝", async t => {
+  const f = await fixture(t);
+  const profile = { goal: "寻找全栈实习", education: "软件工程专业，在校。", experience: "使用 React 与 SpringBoot 完成课程项目。", skills: "React、SpringBoot。", preferences: "优先南京。", weekly_hours: "每周实习 4 天。" };
+  f.runtime.career.change(f.user.id, { revision: 0, change: { type: "profile.save", profile } });
+  assert.equal(guidedToolAllowed("resume", "read_career_context"), true);
+  const run = { id: id(), user_id: f.user.id, conversation_id: f.conversation.id, input: "根据当前画像生成简历" } as Run;
+  const captureCall = tool("capture_resume_material", {
+    context_version: f.runtime.resume.get(f.user.id).context_version,
+    section: "experience",
+    quote: profile.experience,
+    source: { kind: "career_context", source_id: "profile.experience" },
+  });
+  const recorded = await executeTool(captureCall, run, f.workspace, f.runtime.sandbox, new AbortController().signal, f.runtime.career, f.runtime.resume);
+  assert.equal((recorded.value as { status: string }).status, "recorded_not_confirmed");
+  assert.ok(f.runtime.resume.get(f.user.id).source_text.includes(profile.experience));
+
+  const jobChange = f.runtime.career.change(f.user.id, { revision: f.runtime.career.get(f.user.id).revision, change: { type: "job.add", job: { title: "全栈实习", company: "样本公司", url: "", description: "熟悉 React。" } } });
+  const jobId = jobChange.jobs[0]!.id;
+  await assert.rejects(() => executeTool(tool("capture_resume_material", {
+    context_version: f.runtime.resume.get(f.user.id).context_version,
+    section: "experience",
+    quote: "熟悉 React。",
+    source: { kind: "career_context", source_id: "job." + jobId },
+  }), run, f.workspace, f.runtime.sandbox, new AbortController().signal, f.runtime.career, f.runtime.resume), /岗位样本只能/);
+  await assert.rejects(() => executeTool(tool("capture_resume_material", {
+    context_version: f.runtime.resume.get(f.user.id).context_version,
+    section: "experience",
+    quote: profile.preferences,
+    source: { kind: "career_context", source_id: "profile.preferences" },
+  }), run, f.workspace, f.runtime.sandbox, new AbortController().signal, f.runtime.career, f.runtime.resume), /偏好与时间约束/);
+});
 
 test("进入简历对话不要求模型或 JD，可恢复同一会话并隔离账号", async t => {
   const f = await fixture(t);

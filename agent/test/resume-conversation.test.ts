@@ -31,7 +31,9 @@ test("明确要求复用职业画像时可安全进入简历材料，岗位样�
   });
   const recorded = await executeTool(captureCall, run, f.workspace, f.runtime.sandbox, new AbortController().signal, f.runtime.career, f.runtime.resume);
   assert.equal((recorded.value as { status: string }).status, "recorded_not_confirmed");
-  assert.ok(f.runtime.resume.get(f.user.id).source_text.includes(profile.experience));
+  const resumeState = f.runtime.resume.get(f.user.id);
+  assert.ok(resumeState.source_text.includes(profile.experience));
+  assert.equal(guidedToolAllowed("resume", "prepare_resume_step", resumeState), true);
 
   const jobChange = f.runtime.career.change(f.user.id, { revision: f.runtime.career.get(f.user.id).revision, change: { type: "job.add", job: { title: "全栈实习", company: "样本公司", url: "", description: "熟悉 React。" } } });
   const jobId = jobChange.jobs[0]!.id;

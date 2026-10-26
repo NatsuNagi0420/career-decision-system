@@ -24,7 +24,7 @@ export function resumeProgress(state: ResumeState): TaskProgress {
 export function guidedToolAllowed(kind: TaskKind | undefined, name: string, state?: ResumeState) {
   if (!kind) return true;
   if (["list_files", "read_file", "search_files", "plan_tasks", "ask_user", "list_career_directions", "search_job_samples", "read_job_sample"].includes(name)) return true;
-  if (kind === "resume") return name === "read_resume_context" || name === "read_career_context" || name === "capture_resume_material" || (name === "propose_resume_update" && Boolean(state?.pending)) || (name === "prepare_resume_step" && Boolean(state?.body && state.facts_confirmed && state.selection_confirmed));
+  if (kind === "resume") return name === "read_resume_context" || name === "read_career_context" || name === "capture_resume_material" || (name === "propose_resume_update" && Boolean(state?.pending)) || (name === "prepare_resume_step" && Boolean(state?.source_text && !state.pending));
   return ["read_career_context", "propose_career_update", "write_file", "publish_file", "request_export"].includes(name);
 }
 export class ConversationGuidance {

@@ -29,6 +29,7 @@ export function resumeProgress(state: ResumeState): TaskProgress {
 export { guidedToolAllowed } from "./domain/career/policy.js";
 
 export class ConversationGuidance {
+  learningProgress?: (userId: number) => TaskProgress;
   private readonly analyses = new Map<string, { controller: AbortController; promise: Promise<GuidanceView> }>();
   constructor(
     readonly store: Store,
@@ -47,7 +48,7 @@ export class ConversationGuidance {
     const state = this.state(userId, cid), task = activeTask(state);
     const progress = !task ? null : task.kind === "resume" ? resumeProgress(this.resume.get(userId)) : task.kind === "career"
       ? { stage: "探索与比较", next_step: "从经历与偏好出发，比较可能方向；结论由你确认。", needs_confirmation: false }
-      : { stage: "拆出下一步", next_step: "明确目标、现有基础和可投入时间，再安排学习与实践。", needs_confirmation: false };
+      : this.learningProgress?.(userId) ?? { stage: "拆出下一步", next_step: "明确目标、现有基础和可投入时间，再安排学习与实践。", needs_confirmation: false };
     return { ...state, progress, shared_resume: task?.kind === "resume" };
   }
   private save(userId: number, cid: string, state: GuidanceState) {

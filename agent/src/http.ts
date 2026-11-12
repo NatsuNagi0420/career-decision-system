@@ -20,6 +20,7 @@ import { createSandbox } from "./sandbox.js";
 import { Runtime } from "./runtime.js";
 import { toolRegistry } from "./tools.js";
 import { careerChangeInput } from "./career.js";
+import { learningChangeInput, learningSearchInput } from "./learning-contract.js";
 import { resumeChangeInput, resumeEditInput } from "./resume.js";
 import { taskChangeInput } from "./guidance.js";
 import { memoryChangeInput, memorySettingsInput } from "./core/long-term-memory.js";
@@ -277,6 +278,19 @@ export function createApp(options: AppOptions) {
     (await authenticate(request.headers.authorization));
     const query = z.record(z.string(), z.string()).parse(request.query);
     return runtime.career.catalogue.listCareerDirections({ ...query, ...(query.limit !== undefined ? { limit: Number(query.limit) } : {}) });
+  });
+  app.get("/api/v1/agent/career/learning", async request => {
+    const user = await authenticate(request.headers.authorization);
+    return runtime.career.learning.view(user.id);
+  });
+  app.post("/api/v1/agent/career/learning/changes", async request => {
+    const user = await authenticate(request.headers.authorization);
+    return runtime.career.learning.change(user.id, learningChangeInput.parse(request.body));
+  });
+  app.get("/api/v1/agent/career/learning/videos", async request => {
+    const user = await authenticate(request.headers.authorization);
+    rate("learning-search:" + user.id, 20);
+    return runtime.career.learning.search(user.id, learningSearchInput.parse(request.query));
   });
   app.get("/api/v1/agent/career/catalogue/jobs", async request => {
     (await authenticate(request.headers.authorization));

@@ -9,7 +9,7 @@ describe("统一账号入口", () => {
     const html = renderToStaticMarkup(createElement(AgentEntry,{onLocalMode:async()=>{},onOfficialSuccess:()=>{}}));
     expect(html).toContain('aria-label="登录账号"');
     expect(html).toContain('role="tablist"');
-    expect(html).toContain('本机 API Key');
+    expect(html).toContain('API-KEY 登录');
     expect(html).not.toContain('先选择工作方式');
   });
   it("云端没有本机 API Key 按钮", () => {

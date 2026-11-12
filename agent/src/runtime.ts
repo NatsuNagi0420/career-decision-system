@@ -80,6 +80,7 @@ export class Runtime {
       this.decisions,
       this.memory,
     );
+    this.guidance.learningProgress = userId => this.career.learning.progress(userId);
     this.domain = domain ?? new CareerAgentDomain({ store, career: this.career, resume: this.resume, guidance: this.guidance, decisions: this.decisions, memory: this.memory, config, publishResumeState: (cid, runId, state) => { this.event(cid, runId, "resume.state", { state }); } });
     this.capabilityRegistry = new CapabilityRegistry(this.domain.capabilities?.() ?? [], {
       availableTools: toolRegistry.capabilities().map(item => item.name),

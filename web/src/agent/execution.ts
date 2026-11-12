@@ -19,6 +19,7 @@ export interface ExecutionRecord {
 }
 export interface PlanStep { title: string; status: "pending" | "working" | "done" }
 const LABELS: Record<string, string> = {
+  read_learning_context: "读取学习进度", search_learning_videos: "搜索B站教学", propose_learning_path: "整理学习路线",
   list_files: "查看文件", read_file: "读取文件", write_file: "写入文件", publish_file: "保存文件版本",
   search_files: "搜索文件", plan_tasks: "更新计划", ask_user: "补充信息", request_export: "申请下载", run_command: "执行命令",
   read_resume_context: "读取简历材料", propose_resume_update: "整理简历草稿", propose_resume_patch: "修改选中内容",

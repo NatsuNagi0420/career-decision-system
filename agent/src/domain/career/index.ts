@@ -21,6 +21,7 @@ const LEGACY_RESUME_TOOLS = ["read_resume_context", "propose_resume_update", "pl
 const FILE_BYPASS_TOOLS = ["write_file", "publish_file", "run_command", "request_export", "apply_project_patch", "undo_project_edit"];
 
 const CAREER_AGENT_RULES = [
+  "学习围绕用户选定的真实岗位推进。先 read_career_context 和 read_learning_context；目标岗位未保存时先协助加入工作台，不凭空创建岗位或课程。结合已有基础和可投入时间，用 propose_learning_path 创建或调整路线，用户确认后生效。需要教学资料时用 search_learning_videos 搜索B站；不要编造视频标题、链接或质量认证。每节有目标、岗位原文依据、先修节点、练习和产出；不堆课程清单。用户问知识时自然讲解，并结合当前节点；用户回来反馈时读取笔记与成果，不能把‘学完’当作已掌握技能。",
   "需要把整理结果放进工作台时，用 propose_career_update 提交 profile、comparison 或 actions 草稿；只要本轮出现明确的用户职业事实，profile 草稿可以先填已确认的部分，不必等待所有字段齐全；只有用户在工作台确认后才生效。不得用 write_file 假装更新职业档案。",
   "修改待确认建议时必须形成闭环：先 read_career_context 查看 pending_proposals 的完整 data；没有具体修改点时只问一个基于原草稿的关键问题，不调用 propose_career_update；用户说明修改点后，保留未要求修改的内容，使用当前 context_version 提交完整替代草稿。不要只复述旧建议，也不要说‘无法修改’。",
   "岗位仅代表用户提供的样本。对照逐字引用岗位要求，个人依据逐字引用 sources；未提供材料不等于不会。不给录用概率或未经校准的职业适合度。提交行动结果后，应重新读取当前资料并提出更新建议。",
@@ -102,7 +103,7 @@ const CAREER_CAPABILITIES: readonly CapabilitySpec[] = [
     name: "安排成长行动",
     description: "把差距拆成可执行的学习、练习和项目行动。",
     requiredContext: ["career_context", "job_comparison"],
-    tools: ["read_career_context", "propose_career_update"],
+    tools: ["read_career_context", "propose_career_update", "read_learning_context", "search_learning_videos", "propose_learning_path"],
     artifactType: "growth_actions",
     proposalTypes: ["actions", "skills"],
     riskTier: "R1",

@@ -14,9 +14,12 @@ import { SKILL_STAGES } from "./CareerComponents";
 import { ProfileDossier } from "./ProfileDossier";
 import type { AgentFile } from "./types";
 import { catalogueReferenceNotice } from "../../../agent/src/job-catalogue-contract";
+import { LearningWorkspace } from "./LearningWorkspace";
+import type { LearningWorkspaceController } from "./learning-workspace";
 
 type Change = (change: CareerChange, message: string) => Promise<boolean>;
-export function CareerWorkbench({ workspace, onJob, tab, onTab, files, hidden, onPrompt, onImport, onPending, uploadDisabled, resumeOpen, onResumeOpen, resume }: {
+export function CareerWorkbench({ workspace, learning, onJob, tab, onTab, files, hidden, onPrompt, onImport, onPending, uploadDisabled, resumeOpen, onResumeOpen, resume }: {
+  learning: LearningWorkspaceController;
   workspace: CareerWorkspaceController; onJob: (id: string) => void; tab: CareerTab; onTab: (tab: CareerTab) => void;
   files: AgentFile[]; hidden: boolean; onPrompt: (value: string) => void;
   onImport: () => void; onPending: (count: number) => void; uploadDisabled: boolean;
@@ -38,11 +41,11 @@ export function CareerWorkbench({ workspace, onJob, tab, onTab, files, hidden, o
       const current = CAREER_TABS.findIndex(item => item.id === tab);
       const index = event.key === "Home" ? 0 : event.key === "End" ? CAREER_TABS.length - 1 : (current + (event.key === "ArrowRight" ? 1 : -1) + CAREER_TABS.length) % CAREER_TABS.length;
       const next = CAREER_TABS[index].id; onTab(next); document.getElementById("career-tab-" + next)?.focus();
-    }}>{CAREER_TABS.map(item => <button key={item.id} id={"career-tab-" + item.id} role="tab" tabIndex={tab === item.id ? 0 : -1} aria-controls={"career-panel-" + item.id} aria-selected={tab === item.id} type="button" onClick={() => onTab(item.id)}><CareerIcon name={item.icon} size={22} />{item.label}</button>)}</div><button className="workbench-refresh" type="button" onClick={() => void refresh()} disabled={saving || loading} aria-label="刷新职业工作台" title="刷新职业工作台"><AgentIcon name="restore" size={15} /></button></div>
+    }}>{CAREER_TABS.map(item => <button key={item.id} id={"career-tab-" + item.id} role="tab" tabIndex={tab === item.id ? 0 : -1} aria-controls={"career-panel-" + item.id} aria-selected={tab === item.id} type="button" onClick={() => onTab(item.id)}><CareerIcon name={item.icon} size={22} />{item.label}</button>)}</div><button className="workbench-refresh" type="button" onClick={() => { void refresh(); if (tab === "learning") void learning.refresh(); }} disabled={saving || loading || learning.saving} aria-label="刷新职业工作台" title="刷新职业工作台"><AgentIcon name="restore" size={15} /></button></div>
     {error && <div className="workbench-feedback workbench-feedback--error" role="alert"><span>{error}</span><button type="button" disabled={saving} onClick={() => void refresh()}>刷新资料</button></div>}
     {notice && <div className="workbench-feedback" role="status"><AgentIcon name="check" size={16} /><span>{notice}</span><button type="button" aria-label="关闭工作台提示" onClick={dismissNotice}><AgentIcon name="close" size={14} /></button></div>}
     {!state ? <div className="workbench-loading" role="status"><CareerIcon name="sprout" size={46} /><p>{loading ? "正在打开你的职业空间…" : "暂时未能读取工作台，请重试。"}</p></div> : <div className="workbench-scroll">
-      {tab !== "profile" && <div className="workbench-page-heading"><div><span className="workbench-eyebrow">{state.profile.goal || "从一个小目标开始"}</span><h2>{title.label}</h2></div><span className="workbench-save-state"><i />{state.updated_at ? "已保存到当前账号" : "还没有保存材料"}</span></div>}
+      {tab !== "profile" && tab !== "learning" && <div className="workbench-page-heading"><div><span className="workbench-eyebrow">{state.profile.goal || "从一个小目标开始"}</span><h2>{title.label}</h2></div><span className="workbench-save-state"><i />{state.updated_at ? "已保存到当前账号" : "还没有保存材料"}</span></div>}
       {state.proposals.length > 0 && <section className="workbench-proposals" aria-label="穗奈的待确认建议"><header><span><AgentIcon name="activity" size={17} />穗奈整理了 {state.proposals.length} 份建议</span><small>确认后才写入工作台</small></header>{state.proposals.map(proposal => <Proposal key={proposal.id} proposal={proposal} state={state} saving={saving} change={change} onPrompt={onPrompt} />)}</section>}
       <section id="career-panel-profile" role="tabpanel" aria-labelledby="career-tab-profile" hidden={tab !== "profile"}>
         <ProfileDossier state={state} saving={saving} onResolve={workspace.resolveFact} onEdit={() => setProfileEditorOpen(true)} onPrompt={onPrompt} />
@@ -64,6 +67,9 @@ export function CareerWorkbench({ workspace, onJob, tab, onTab, files, hidden, o
         <ActionForm state={state} saving={saving} change={change} />
         {!state.actions.length && <div className="workbench-empty"><CareerIcon name="seedling" size={52} /><h3>先开始一件做得到的小事</h3><p>可以让穗奈根据岗位差距拟定行动，也可以自己添加。记录完成材料，下一次就不用从头介绍。</p></div>}
         <div className="workbench-actions">{state.actions.map(action => <Action key={action.id} action={action} state={state} saving={saving} change={change} onRemove={() => void remove("action.delete", action.id, action.title)} onPrompt={onPrompt} />)}</div>
+      </section>
+      <section id="career-panel-learning" role="tabpanel" aria-labelledby="career-tab-learning" hidden={tab !== "learning"}>
+        <LearningWorkspace workspace={learning} jobs={state.jobs} onPrompt={onPrompt} />
       </section>
       <section id="career-panel-files" role="tabpanel" aria-labelledby="career-tab-files" hidden={tab !== "files"}>
         <div className="workbench-intro"><div><h3>把经历整理成能带走的成果</h3><p>这里展示当前对话的真实文件。点击文件名预览，右键可以选择下载或本地打开。</p></div><button className="workbench-secondary" type="button" disabled={uploadDisabled} onClick={onImport}><AgentIcon name="attach" size={15} />导入资料</button></div>
@@ -118,7 +124,7 @@ function Job({ job, state, saving, onPrompt, onRemove }: { job: CareerJob; state
   const comparison = comparisons.at(-1);
   return <article className="workbench-job"><header className="workbench-item-heading"><div><span className="workbench-eyebrow">{job.company || "用户提供的岗位样本"}</span><h3>{job.title}</h3>{job.catalogue && <p className="workbench-footnote">{job.catalogue.city || "城市未注明"} · {catalogueReferenceNotice(job.catalogue)}</p>}</div><button type="button" className="agent-icon-button" aria-label={"移除岗位：" + job.title} disabled={saving} onClick={onRemove}><AgentIcon name="close" size={15} /></button></header><details className="workbench-source"><summary><AgentIcon name="file" size={15} />查看岗位原文</summary><p className="workbench-prewrap">{job.description}</p>{job.url && <a href={job.url} target="_blank" rel="noopener noreferrer">打开原始页面 ↗</a>}<small>保存于 {new Date(job.created_at).toLocaleDateString()}</small></details>
     {comparison ? <><div className="workbench-analysis-label">已确认的穗奈分析 · {new Date(comparison.confirmed_at).toLocaleDateString()}</div>{comparison.stale && <p className="workbench-inline-warning">档案或结果材料已变化，请更新对照；下方保留上次判断。</p>}<p>{comparison.summary}</p><Checks checks={comparison.checks} state={state} />{comparisons.length > 1 && <details className="workbench-history"><summary>查看历史对照（{comparisons.length - 1}）</summary>{comparisons.slice(0, -1).reverse().map(item => <div key={item.confirmed_at}><small>{new Date(item.confirmed_at).toLocaleString()}</small><p>{item.summary}</p><Checks checks={item.checks} state={state} /></div>)}</details>}</> : <div className="workbench-job-empty"><CareerIcon name="search" size={34} /><p>原文已经保留，还没有生成经历对照。</p><span>让穗奈读取档案与原文，整理一份待确认分析。</span></div>}
-    <button className="workbench-secondary" type="button" onClick={() => onPrompt(careerPrompt("jobs", job))}>{comparison ? "请穗奈更新对照" : "请穗奈对照这个岗位"}<AgentIcon name="chevron" size={15} /></button>
+    <div className="learning-coach"><button className="workbench-secondary" type="button" onClick={() => onPrompt(careerPrompt("jobs", job))}>{comparison ? "请穗奈更新对照" : "请穗奈对照这个岗位"}<AgentIcon name="chevron" size={15} /></button><button className="workbench-primary" type="button" onClick={() => onPrompt("我选择已保存的岗位「" + job.title + "」作为学习目标。请读取职业档案、岗位原文和学习进度，结合现有基础和时间安排学习路线，每节给出目标、练习和B站搜索词，提交到工作台的学习路线让我核对。已有路线请调整并保留进度。")}>为这个岗位规划学习<CareerIcon name="growth" size={18} /></button></div>
   </article>;
 }
 

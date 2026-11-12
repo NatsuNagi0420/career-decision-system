@@ -2,6 +2,7 @@
 import type { OfficialCredits } from "../../../agent/src/credits-contract";
 import { tokenStore } from "../api/client";
 import type { CareerChange, CareerState } from "./career";
+import type { LearningState, LearningChange, LearningSearchResult } from "../../../agent/src/learning-contract";
 import type { ResumeChange, ResumeState } from "../../../agent/src/resume-contract";
 import type { GuidanceView, TaskKind } from "../../../agent/src/guidance-contract";
 import type { MemoryChange, MemorySeaView } from "../../../agent/src/memory-contract";
@@ -74,6 +75,9 @@ export const agentApi = {
   catalogueJob: (id: string, signal?: AbortSignal) => request<import("./job-cards").JobDetail>(BASE + "/career/catalogue/jobs/" + encodeURIComponent(id), { signal }),
   resolveCareerFact: (id: string, action: "confirm" | "dismiss") => request<CareerState>(BASE + "/career/facts/" + encodeURIComponent(id), { method: "POST", body: JSON.stringify({ action }) }),
   career: (signal?: AbortSignal, conversationId?: string | null) => request<CareerState>(BASE + "/career" + (conversationId ? "?conversation_id=" + encodeURIComponent(conversationId) : ""), { signal }),
+  learning: (signal?: AbortSignal) => request<LearningState>(BASE + "/career/learning", { signal }),
+  changeLearning: (revision: number, change: LearningChange) => request<LearningState>(BASE + "/career/learning/changes", { method: "POST", body: JSON.stringify({ revision, change }) }),
+  learningVideos: (query: string, signal?: AbortSignal) => request<LearningSearchResult>(BASE + "/career/learning/videos?query=" + encodeURIComponent(query), { signal }),
   memory: (conversationId?: string | null, search = "", signal?: AbortSignal) => { const params = new URLSearchParams(); if (conversationId) params.set("conversation_id", conversationId); if (search) params.set("search", search); return request<MemorySeaView>(BASE + "/memory" + (params.size ? "?" + params.toString() : ""), { signal }); },
   changeMemory: (id: string, change: MemoryChange) => request<MemorySeaView>(BASE + "/memory/" + encodeURIComponent(id), { method: "POST", body: JSON.stringify(change) }),
   retryMemory: () => request(BASE + "/memory/retry", { method: "POST", body: "{}" }),

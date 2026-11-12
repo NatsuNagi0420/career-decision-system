@@ -57,7 +57,8 @@ function visibleText(file: string): string {
     .join("\n");
   const chunks: string[] = [];
   for (const m of raw.matchAll(/"([^"\n]*)"|'([^'\n]*)'|`([^`]*)`|>\s*([^<>{}\n]+?)\s*</g)) {
-    chunks.push(m[1] ?? m[2] ?? m[3] ?? m[4] ?? "");
+    // 模板表达式中的变量名不是用户文案，例如 ${entry.input_tokens}。
+    chunks.push((m[1] ?? m[2] ?? m[3] ?? m[4] ?? "").replace(/\$\{[^}]*\}/g, ""));
   }
   return chunks.join("\n");
 }

@@ -3,7 +3,7 @@ import { activeTask, type GuidanceView, type TaskKind } from "../../../agent/src
 export { activeTask, TASK_LABELS, TASK_KINDS } from "../../../agent/src/guidance-contract";
 export const TASK_PROMPTS: Record<TaskKind, string> = {
   career: "我想一起找找适合的职业方向。请接着我们已有的交流，从我的真实经历和偏好开始，一次只问一个关键问题。",
-  learning: "我想明确接下来学什么、怎么练习。请先了解我的目标、现有基础和可投入的时间，不要直接堆一长串课程。",
+  learning: "我想围绕目标岗位开始学习。请先读取我的职业资料与学习进度，结合现有基础和可用时间，安排有先后顺序的学习路线、练习和B站教学资源，提交到工作台让我核对。已有路线就接着推进；目标不清楚时先问我，不直接堆一长串课程。",
   resume: "我想在当前对话里写或优化简历。请接着已经提供的材料继续，只问当前缺少的关键信息；如果我只需要局部修改，就只处理该部分，不编造经历。",
 };
 export interface ComposerDraft { text: string; task: TaskKind | null }

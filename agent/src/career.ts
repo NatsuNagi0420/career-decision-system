@@ -5,6 +5,7 @@ import { Store, id, now } from "./store.js";
 import { AppError, invariant } from "./errors.js";
 import { JobCatalogue } from "./job-catalogue.js";
 import { careerSkillInput, type CareerSkill } from "./career-skills.js";
+import { LearningWorkspace } from "./learning.js";
 import type { CatalogueSelection, JobSampleOrigin } from "./job-catalogue-contract.js";
 
 const text = (max: number) => z.string().trim().max(max);
@@ -59,6 +60,7 @@ export type CareerComparison = Extract<z.infer<typeof careerProposalData>, { kin
 export interface CareerState {
   revision: number; context_version: number; updated_at: string | null;
   skills?: CareerSkill[];
+  learning_results?: { id: string; text: string }[];
   profile: CareerProfile; jobs: CareerJob[]; actions: CareerAction[];
   comparisons: CareerComparison[]; proposals: CareerProposal[];
 }
@@ -69,13 +71,14 @@ export function emptyCareerState(): CareerState {
     jobs: [], actions: [], comparisons: [], proposals: [] };
 }
 export function careerFingerprint(state: CareerState): string {
-  return createHash("sha256").update(JSON.stringify({ profile: state.profile, jobs: state.jobs, results: state.actions.filter(a => a.result).map(a => ({ id: a.id, result: a.result, status: a.status })) })).digest("hex");
+  return createHash("sha256").update(JSON.stringify({ profile: state.profile, jobs: state.jobs, results: state.actions.filter(a => a.result).map(a => ({ id: a.id, result: a.result, status: a.status })), learning_results: state.learning_results })).digest("hex");
 }
 export function careerSources(state: CareerState): CareerSource[] {
   return [
     ...Object.entries(state.profile).filter(([key, value]) => key !== "confirmed_at" && value && state.profile.confirmed_at).map(([key, value]) => ({ id: "profile." + key, kind: "user_confirmed", text: String(value) })),
     ...state.jobs.map(job => ({ id: "job." + job.id, kind: "job_sample", text: job.description })),
     ...state.actions.filter(a => a.result).map(a => ({ id: "action." + a.id, kind: "user_result", text: a.result })),
+    ...(state.learning_results ?? []).map(item => ({ ...item, kind: "user_result" })),
   ] as CareerSource[];
 }
 // 草稿只依赖实际使用的资料；岗位保留不依赖画像，时间戳不构成内容冲突。
@@ -104,17 +107,21 @@ function proposalFingerprint(state: CareerState, data: z.infer<typeof careerProp
   return createHash("sha256").update(JSON.stringify(basis)).digest("hex");
 }
 export class CareerWorkspace {
+  readonly learning: LearningWorkspace;
   decisionView?: (userId: number, conversationId?: string) => import("./career-decision-contract.js").CareerDecisionView;
   readonly catalogue: JobCatalogue;
   constructor(readonly store: Store) {
     this.catalogue = new JobCatalogue(store);
     store.db.exec("CREATE TABLE IF NOT EXISTS career_workspaces(user_id INTEGER PRIMARY KEY REFERENCES users(id),data TEXT NOT NULL);");
     store.db.exec("CREATE TABLE IF NOT EXISTS career_saved_jobs(user_id INTEGER NOT NULL REFERENCES users(id),catalogue_id TEXT NOT NULL,created_at TEXT NOT NULL,PRIMARY KEY(user_id,catalogue_id));");
+    this.learning = new LearningWorkspace(store, userId => this.get(userId));
   }
   get(userId: number): CareerState {
     this.store.getUser(userId);
     const row = this.store.db.prepare("SELECT data FROM career_workspaces WHERE user_id=?").get(userId);
-    return row ? JSON.parse(row.data as string) as CareerState : emptyCareerState();
+    const state = row ? JSON.parse(row.data as string) as CareerState : emptyCareerState();
+    const results = this.learning.get(userId).paths.flatMap(path => path.nodes.filter(node => node.status === "done" && node.result).map(node => ({ id: "learning." + path.id + "." + node.key, text: node.result })));
+    return results.length ? { ...state, learning_results: results } : state;
   }
   view(userId: number, conversationId?: string) {
     const saved = this.store.db.prepare("SELECT s.catalogue_id,s.created_at,j.data FROM career_saved_jobs s LEFT JOIN catalogue_jobs j ON j.id=s.catalogue_id WHERE s.user_id=? ORDER BY s.created_at DESC,s.catalogue_id").all(userId);
@@ -129,7 +136,8 @@ export class CareerWorkspace {
   private write(userId: number, state: CareerState) {
     state.revision++;
     state.updated_at = now();
-    this.store.db.prepare("INSERT INTO career_workspaces(user_id,data) VALUES(?,?) ON CONFLICT(user_id) DO UPDATE SET data=excluded.data").run(userId, JSON.stringify(state));
+    const { learning_results: _derivedLearning, ...saved } = state;
+    this.store.db.prepare("INSERT INTO career_workspaces(user_id,data) VALUES(?,?) ON CONFLICT(user_id) DO UPDATE SET data=excluded.data").run(userId, JSON.stringify(saved));
     return state;
   }
   private validateProposal(state: CareerState, data: z.infer<typeof careerProposalData>) {

@@ -45,6 +45,7 @@ import { CareerWelcome } from "./CareerWelcome";
 import { CareerWorkbench } from "./CareerWorkbench";
 import { WorkspacePicker } from "./WorkspacePicker";
 import { useCareerWorkspace } from "./career-workspace";
+import { useLearningWorkspace } from "./learning-workspace";
 import { jobsByRun } from "./job-cards";
 import { JobRecommendationCard, JobDetailPanel, GrowthSummary, ProfileUpdateStrip, NextActionRow } from "./CareerComponents";
 import { ComponentIcon } from "./ComponentAssets";
@@ -503,7 +504,8 @@ function Workspace({
     const runsById = new Map((snapshot?.runs ?? []).map(item => [item.id, item]));
     const executionRun = execution ? runsById.get(execution.runId) : undefined;
     const careerPulse = [run?.id, run?.status, ...(view?.events ?? []).filter(event => ["tool.finished","career.updated","career.decision","career.judged","resume.review"].includes(event.kind)).map(event => event.seq)].join(":");
-    const careerWorkspace = useCareerWorkspace(user.id, careerPulse, conversationId);
+    const learningWorkspace = useLearningWorkspace(user.id, careerPulse);
+    const careerWorkspace = useCareerWorkspace(user.id, careerPulse + ":learning:" + (learningWorkspace.state?.revision ?? 0), conversationId);
     const recommendedJobs = useMemo(() => jobsByRun(snapshot?.messages ?? []), [snapshot?.messages]);
     const careerState = careerWorkspace.state;
     const conversationInsights = conversationEvidence(careerState?.insights, conversationId, snapshot?.messages.filter(message => message.role === "user").at(-1)?.created_at);
@@ -1064,6 +1066,7 @@ function Workspace({
                             </Fragment>
                         ))}
                         <MessageFileLinks files={unassignedFiles} />
+                        {learningWorkspace.state?.proposal?.conversation_id === conversationId && <button className="learning-notice" type="button" onClick={() => { setResumeOpen(false); setCareerTab("learning"); setWorkbenchStatus("open"); }}><CareerIcon name="growth" size={24} /><span>学习路线已整理好，打开看看</span><AgentIcon name="chevron" size={16} /></button>}
                         {careerState?.proposals.filter(proposal => proposal.conversation_id === conversationId).map(proposal => <ProfileUpdateStrip key={proposal.id} proposal={proposal} state={careerState} saving={careerWorkspace.saving} disabled={cardDisabled} onChange={careerWorkspace.change} onPrompt={fillPrompt} />)}
                         {careerState && <CareerEvidencePanel state={{ ...careerState, insights: conversationInsights }} compact conversation showActivity={false} saving={careerWorkspace.saving || cardDisabled} onResolve={careerWorkspace.resolveFact} onPrompt={fillPrompt} />}
                         {careerWorkspace.notice && <div className="career-evidence-saved" role="status"><ComponentIcon name="confirm-check" size={16}/><span>{careerWorkspace.notice}</span><button type="button" className="component-icon-button" title="关闭提示" aria-label="关闭档案提示" onClick={careerWorkspace.dismissNotice}><ComponentIcon name="close" size={14}/></button></div>}
@@ -1181,7 +1184,7 @@ function Workspace({
                 <span className="career-taskbar-status">{busy ? "穗奈正在处理任务…" : "青穗集 · 你的成长桌面"}</span>
             </footer>
             <DesktopWindow open={workbenchStatus === "open"} onClose={closeWorkbench} onMinimize={minimizeWorkbench} title={resumeOpen ? "简历与经历" : "职业工作台"}>
-                <CareerWorkbench workspace={careerWorkspace} onJob={id => { minimizeWorkbench(); openJob(id); }} tab={careerTab} onTab={setCareerTab} files={files} hidden={workbenchStatus !== "open"} resumeOpen={resumeOpen} onResumeOpen={setResumeOpen} resume={{ workspace: resumeWorkspace, busy: busy || working || fileBusy || Boolean(snapshot?.conversation.archived), onChat: message => { void openResumeChat(message); }, onContinue: continueResumeConversation, onExport: exportResume }} onPrompt={fillPrompt} onImport={() => { minimizeWorkbench(); fileInput.current?.click(); }} onPending={setPendingCareerCount} uploadDisabled={busy || working || fileBusy || Boolean(snapshot?.conversation.archived)} />
+                <CareerWorkbench workspace={careerWorkspace} learning={learningWorkspace} onJob={id => { minimizeWorkbench(); openJob(id); }} tab={careerTab} onTab={setCareerTab} files={files} hidden={workbenchStatus !== "open"} resumeOpen={resumeOpen} onResumeOpen={setResumeOpen} resume={{ workspace: resumeWorkspace, busy: busy || working || fileBusy || Boolean(snapshot?.conversation.archived), onChat: message => { void openResumeChat(message); }, onContinue: continueResumeConversation, onExport: exportResume }} onPrompt={fillPrompt} onImport={() => { minimizeWorkbench(); fileInput.current?.click(); }} onPending={setPendingCareerCount} uploadDisabled={busy || working || fileBusy || Boolean(snapshot?.conversation.archived)} />
             </DesktopWindow>
             <DesktopWindow id="suinai-memory-window" open={memoryStatus === "open"} onClose={closeMemory} onMinimize={minimizeMemory} title="穗奈·忆迹场" status="记忆 · 证据 · 当前召回">
                 {memoryStatus !== "closed" && <Suspense fallback={<div className="memory-loading" role="status">正在打开忆迹场…</div>}><MemorySea active={memoryStatus === "open"} activity={insights.analyzing ? "consolidating" : busy ? "working" : "idle"} view={memoryView} loading={memoryLoading} error={memoryError} onRefresh={loadMemory} onChange={async (id, change) => { await agentApi.changeMemory(id, change); await loadMemory(); }} onRetry={async () => { await agentApi.retryMemory(); await loadMemory(); }} onSettings={async value => { await agentApi.memorySettings(value); await loadMemory(); }} onExport={agentApi.exportMemory} onConfirmDelete={node => confirm({ title: "让穗奈忘记这段记忆？", confirmLabel: "永久删除记忆", description: <><p>{node.text}</p><p>忆迹场中的记录、来源索引和旧召回引用会删除；原始对话、正式画像和简历仍会保留。之后不会自动从这段来源重新记起。</p></> })} /></Suspense>}

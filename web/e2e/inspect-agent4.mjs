@@ -1,0 +1,13 @@
+import { chromium } from 'playwright';
+const token = process.env.DEMO_TOKEN;
+const browser = await chromium.launch({ channel: 'chrome', headless: true });
+const page = await browser.newPage({ viewport: { width: 1600, height: 1000 } });
+await page.addInitScript(t => localStorage.setItem('career.session.token', t), token);
+await page.goto('http://127.0.0.1:5173/', { waitUntil: 'networkidle' });
+await page.waitForTimeout(3000);
+await page.getByRole('button', { name: 'API-KEY 登录', exact: true }).click();
+await page.waitForTimeout(2000);
+console.log('BUTTONS', await page.locator('button').allInnerTexts());
+console.log('TEXT', (await page.locator('body').innerText()).slice(0, 3000));
+await page.screenshot({ path: 'D:\\Project\\career-decision-system\\video\\raw\\agent-entry-apikey.png', fullPage: true });
+await browser.close();

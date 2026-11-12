@@ -38,6 +38,7 @@ export type CareerProposalData =
 export interface CareerProposal { id: string; title: string; context_version: number; data: CareerProposalData; created_at: string; conversation_id: string; catalogue_sample?: CatalogueSelection; stale?: boolean; stale_reason?: string }
 export interface CareerComparison { kind: "comparison"; job_id: string; summary: string; checks: CareerCheck[]; fingerprint: string; confirmed_at: string; stale: boolean }
 export interface CareerState {
+  insights?: import("../../../agent/src/career-decision-contract").CareerDecisionView;
   skills?: CareerSkill[]; saved_jobs?: SavedCareerJob[];
   revision: number; context_version: number; updated_at: string | null;
   profile: CareerProfileInput & { confirmed_at: string | null };

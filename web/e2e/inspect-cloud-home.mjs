@@ -1,0 +1,11 @@
+import { chromium } from 'playwright';
+const token = process.env.CLOUD_TOKEN;
+const browser = await chromium.launch({ channel: 'chrome', headless: true });
+const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
+await page.addInitScript(t => { localStorage.setItem('career.session.token', t); localStorage.setItem('suinai.onboarding.v1.server.7','completed'); }, token);
+await page.goto('https://agent.suinai.me/', { waitUntil: 'domcontentloaded', timeout: 45000 });
+await page.waitForTimeout(9000);
+console.log('URL', page.url());
+console.log('TEXT', (await page.locator('body').innerText()).slice(0, 5000));
+await page.screenshot({ path: 'D:\\Project\\career-decision-system\\video\\raw\\cloud-home.png', fullPage: false });
+await browser.close();

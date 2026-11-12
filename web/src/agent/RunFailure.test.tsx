@@ -18,6 +18,9 @@ describe("穗奈的中断提示", () => {
     expect(failureMessage({ ...run, error_code: "provider_401", error: "密钥无效，请检查配置。" })).toContain("密钥无效");
     expect(failureMessage({ ...run, error_code: "provider_quota", error: "服务余额不足。" })).toContain("余额不足");
     expect(failureMessage({ ...run, error_code: "provider_429" })).toContain("暂时繁忙");
+    expect(failureMessage({ ...run, error_code: "relay_daily_output_limit" })).toContain("本机中转");
+    expect(failureMessage({ ...run, error_code: "relay_daily_request_limit" })).toContain("请求次数");
+    expect(failureMessage({ ...run, error_code: "relay_busy" })).toContain("正在处理");
   });
   it("旧超时记录同样使用友好措辞", () => {
     expect(failureMessage({ ...run, error_code: undefined, error: "模型请求超时，请检查服务后重试。" })).toContain("这次还没答完");

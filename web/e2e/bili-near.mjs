@@ -1,0 +1,11 @@
+import { chromium } from 'playwright';
+const browser = await chromium.launch({channel:'chrome', headless:true});
+const ctx = await browser.newContext({viewport:{width:1440,height:1000}, userAgent:'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'});
+const page = await ctx.newPage();
+await page.goto('https://space.bilibili.com/67079745/video',{waitUntil:'domcontentloaded',timeout:60000});
+await page.waitForTimeout(6000);
+const html = await page.content();
+const i = html.indexOf('100年前的古人');
+console.log('idx', i);
+console.log(html.slice(Math.max(0,i-1500), i+1500));
+await browser.close();

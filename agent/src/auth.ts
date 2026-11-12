@@ -36,6 +36,7 @@ export class Auth {
         "INSERT INTO users(username,password_hash,consent) VALUES(?,?,?)",
       )
       .run(username, hash(password), consent ? 1 : 0);
+    this.store.beginOnboarding(Number(result.lastInsertRowid));
     return this.session(Number(result.lastInsertRowid));
   }
   login(username: string, password: string) {
@@ -46,7 +47,7 @@ export class Auth {
     invariant(row && ok, 401, "用户名或密码不正确。");
     return this.session(Number(row.id));
   }
-  private session(userId: number) {
+  session(userId: number) {
     const token = randomBytes(32).toString("base64url");
     this.store.db
       .prepare("INSERT INTO sessions VALUES(?,?,?)")

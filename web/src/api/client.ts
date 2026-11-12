@@ -38,10 +38,25 @@ export interface PersonalProfile {
 export type ProfileInput = Pick<PersonalProfile, "school" | "major" | "graduation_year" | "city_targets" | "summary"> & { expected_version: number };
 export type ProfileFactInput = Pick<ProfileFact, "dimension" | "statement"> & { expected_version: number };
 
+/** 记住我控制凭证保存位置，不保存密码，也不延长服务端令牌有效期。 */
 export const tokenStore = {
-  get: (): string | null => localStorage.getItem(TOKEN_KEY),
-  set: (token: string): void => localStorage.setItem(TOKEN_KEY, token),
-  clear: (): void => localStorage.removeItem(TOKEN_KEY),
+  get: (): string | null => {
+    try { const value = typeof sessionStorage === "undefined" ? null : sessionStorage.getItem(TOKEN_KEY); if (value) return value; } catch { /* 临时存储不可读时继续检查持久会话。 */ }
+    try { return localStorage.getItem(TOKEN_KEY); } catch { return null; }
+  },
+  set: (token: string, persistent = true): void => {
+    if (persistent) {
+      localStorage.setItem(TOKEN_KEY, token);
+      if (typeof sessionStorage !== "undefined") sessionStorage.removeItem(TOKEN_KEY);
+    } else {
+      sessionStorage.setItem(TOKEN_KEY, token);
+      localStorage.removeItem(TOKEN_KEY);
+    }
+  },
+  clear: (): void => {
+    try { localStorage.removeItem(TOKEN_KEY); } catch { /* 一个存储失败不能阻止另一处清除。 */ }
+    try { if (typeof sessionStorage !== "undefined") sessionStorage.removeItem(TOKEN_KEY); } catch { /* 浏览器存储可能被禁用。 */ }
+  },
 };
 
 /**

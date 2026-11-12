@@ -2,8 +2,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { agentApi, AgentApiError } from "./api";
 import type { CareerState, CareerChange } from "./career";
+export type CareerFactHandler = (id: string, action: "confirm" | "dismiss") => Promise<boolean>;
 export type CareerChangeHandler = (change: CareerChange, message: string) => Promise<boolean>;
-export function useCareerWorkspace(userId: number, pulse: string) {
+export function useCareerWorkspace(userId: number, pulse: string, conversationId?: string | null) {
   const [state, setState] = useState<CareerState | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -15,11 +16,11 @@ export function useCareerWorkspace(userId: number, pulse: string) {
     if (lock.current) { refreshAfterSave.current = true; return; }
     const seq = ++requestId.current;
     try {
-      const next = await agentApi.career(signal);
+      const next = await agentApi.career(signal, conversationId);
       if (!signal?.aborted && seq === requestId.current) { stateRef.current = next; setState(next); setError(""); }
     } catch (cause) { if (!signal?.aborted && seq === requestId.current) setError((cause as Error).message); }
     finally { if (!signal?.aborted && seq === requestId.current) setLoading(false); }
-  }, []);
+  }, [conversationId]);
   useEffect(() => {
     const controller = new AbortController();
     void refresh(controller.signal);
@@ -30,6 +31,7 @@ export function useCareerWorkspace(userId: number, pulse: string) {
     window.addEventListener("focus", focus);
     return () => window.removeEventListener("focus", focus);
   }, [refresh]);
+  useEffect(() => { setNotice(""); }, [conversationId]);
   const change: CareerChangeHandler = async (input, message) => {
     if (lock.current || !stateRef.current) return false;
     lock.current = true; setSaving(true); setError(""); setNotice("");
@@ -41,6 +43,16 @@ export function useCareerWorkspace(userId: number, pulse: string) {
     finally { lock.current = false; setSaving(false); if (refreshAfterSave.current) { refreshAfterSave.current = false; void refresh(); } }
   };
 
-  return { state, error, notice, saving, loading, refresh, change, dismissNotice: () => setNotice("") };
+  const resolveFact: CareerFactHandler = async (id, action) => {
+    if (lock.current) return false;
+    lock.current = true; setSaving(true); setError(""); setNotice(""); ++requestId.current;
+    try {
+      const next = await agentApi.resolveCareerFact(id, action);
+      ++requestId.current; stateRef.current = next; setState(next);
+      setNotice(action === "confirm" ? "已记入档案。" : "已放下这条线索。"); return true;
+    } catch (cause) { setError((cause as Error).message); refreshAfterSave.current = true; return false; }
+    finally { lock.current = false; setSaving(false); if (refreshAfterSave.current) { refreshAfterSave.current = false; void refresh(); } }
+  };
+  return { state, error, notice, saving, loading, refresh, change, resolveFact, dismissNotice: () => setNotice("") };
 }
 export type CareerWorkspaceController = ReturnType<typeof useCareerWorkspace>;

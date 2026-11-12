@@ -12,6 +12,8 @@
 | `catalogue/` | `job-catalogue-cleaning.py` | 岗位字段校验、去重和异常隔离 |
 | `catalogue/` | `test-merge-job-catalogue.py` | 岗位批次合并回归 |
 | `catalogue/` | `catalogue-db.mjs` | 岗位导入使用的 TypeScript 数据库桥 |
+| `release/` | `build-windows.mjs` | 构建 Windows 本机安装包与便携包，不复制用户库和开发配置 |
+| `release/` | `verify-windows.mjs` | 隔离验证安装版启动、单实例、完全退出与资料保留 |
 | `verify/` | `verify-agent.ps1` | Windows 下执行 Agent、Web、测试和构建验证 |
 
 常用命令：

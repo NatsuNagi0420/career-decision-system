@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { agentApi } from "./api";
 import type { ResumeChange, ResumeState } from "../../../agent/src/resume-contract";
 export type ApplyResumeChange = (change: ResumeChange) => Promise<ResumeState | null>;
-export function useResumeWorkspace(userId: number, pulse: string, active: boolean, conversationId?: string | null) {
+export function useResumeWorkspace(userId: number, pulse: string, active: boolean, conversationId?: string | null, streamedState?: ResumeState) {
   const [state, setState] = useState<ResumeState | null>(null), [saving, setSaving] = useState(false), [error, setError] = useState("");
   const current = useRef(state), lock = useRef(false), seq = useRef(0), alive = useRef(true), refreshLater = useRef(false);
   current.current = state;
@@ -15,6 +15,10 @@ export function useResumeWorkspace(userId: number, pulse: string, active: boolea
     catch (cause) { if (alive.current && !signal?.aborted && seq.current === request) setError((cause as Error).message); }
   }, []);
   useEffect(() => { if (!active) return; const controller = new AbortController(); void refresh(controller.signal); return () => controller.abort(); }, [userId, pulse, active, refresh]);
+  useEffect(() => {
+    if (!streamedState || lock.current || (current.current && current.current.revision > streamedState.revision)) return;
+    ++seq.current; current.current = streamedState; setState(streamedState); setError("");
+  }, [streamedState]);
   const apply: ApplyResumeChange = async change => {
     if (!current.current || lock.current) return null;
     lock.current = true; setSaving(true); setError(""); ++seq.current;
@@ -22,6 +26,7 @@ export function useResumeWorkspace(userId: number, pulse: string, active: boolea
     catch (cause) { if (alive.current) setError((cause as Error).message); return null; }
     finally { lock.current = false; if (alive.current) { setSaving(false); if (refreshLater.current) { refreshLater.current = false; void refresh(); } } }
   };
-  return { state, saving, error, apply, refresh };
+  const visibleState = streamedState && (!state || streamedState.revision > state.revision) ? streamedState : state;
+  return { state: visibleState, saving, error, apply, refresh };
 }
 export type ResumeWorkspaceView = ReturnType<typeof useResumeWorkspace>;

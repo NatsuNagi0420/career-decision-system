@@ -28,6 +28,7 @@ describe("对话工具栏", () => {
   it("导入只有图标且有悬浮说明，权限在左，模型与思考紧邻发送", () => {
     const html = renderToStaticMarkup(<ChatComposer text="你好" onText={noop} composer={createRef()} fileInput={createRef()} onSubmit={noop} onUpload={noop} onCancel={noop} busy={false} working={false} fileBusy={false} waiting={false} archived={false} profiles={[]} selected="" onSelect={noop} permission="default" onPermission={noop} effort="auto" onEffort={noop} />);
     expect(html).toContain('aria-label="导入文件"');
+    expect(html).toContain('aria-label="导入项目文件夹"');
     expect(html).toContain('data-tooltip="导入文件"');
     expect(html).not.toContain('>导入资料<');
     expect(html).toContain('aria-label="思考强度"');

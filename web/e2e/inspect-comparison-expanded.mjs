@@ -1,0 +1,14 @@
+import { chromium } from 'playwright';
+const token = process.env.DEMO_TOKEN;
+const browser = await chromium.launch({ channel: 'chrome', headless: true });
+const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
+await page.addInitScript(t => { localStorage.setItem('career.session.token', t); localStorage.setItem('suinai.onboarding.v1.local.3','completed'); }, token);
+await page.goto('http://127.0.0.1:5173/', { waitUntil: 'domcontentloaded' });
+await page.waitForTimeout(4500);
+await page.getByText('我是信息管理与信息系统专业', { exact: false }).first().click();
+await page.waitForTimeout(2500);
+await page.getByText('查看逐项对照').click();
+await page.waitForTimeout(1500);
+console.log('TEXT TAIL', (await page.locator('body').innerText()).slice(-3200));
+await page.screenshot({ path: 'D:\\Project\\career-decision-system\\video\\raw\\web-comparison-expanded.png', fullPage: false });
+await browser.close();

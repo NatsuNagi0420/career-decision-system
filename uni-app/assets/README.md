@@ -20,7 +20,17 @@ import { assetPaths } from "../../static/assets";
 const avatar = assetPaths.characters.suinaiWave;
 ```
 
-模板中可以绑定 `avatar`；静态资源路径统一以 `/static/assets/` 开头。原有 `src/static/suinai-avatar.png` 和像素字体保留，后续替换头像时再逐页切换到角色素材。
+模板中可以绑定 `avatar`；静态资源路径统一以 `/static/assets/` 开头。原有 `src/static/suinai-avatar.png` 保留，后续替换头像时再逐页切换到角色素材。
 
 
-微信小程序端不加载本地 @font-face 字体，使用系统中文字体回退；H5 端继续使用像素字体。
+## 界面字体
+
+- `assets/fonts/`：Fusion Pixel 原始字体与完整 OFL 许可，仅作为生成源，不进入运行时包。
+- `scripts/prepare-ui-font.py`：收集源码中的界面文字，生成名为 `Qingsui Pixel UI` 的字体子集，保留原始版权记录。
+- `src/styles/pixel-font.scss`：微信与 H5 共用的内嵌字体声明；原生底栏的独立样式使用同步生成的 `src/custom-tab-bar/pixel-font.wxss`。
+
+标题、导航和短按钮使用像素字体；长对话、用户经历、岗位描述和简历使用系统中文字体。字体随包提供，不依赖远程字体请求，也不阻塞首屏显示。新增中文界面文案后，可运行 `python scripts/prepare-ui-font.py` 更新子集（需安装 `fonttools[woff]`）；生成结果已保存到源码，正常构建不依赖 Python。字体中没有的动态字符由系统字体回退。
+
+## 角色形象
+
+小程序统一使用原有穗奈：棕发、圆眼镜、发夹和浅紫外套。小头像统一引用 `assetPaths.characters.suinaiAvatar`；欢迎区引用原有 `suinaiWave` 立绘。头像从已有全身图直接裁切，使用 `scripts/prepare-suinai-avatar.py` 可重复生成，不重新绘制人物。后续原型只借鉴布局与通用图标，角色使用同一套穗奈素材。

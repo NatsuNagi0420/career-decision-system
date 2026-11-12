@@ -50,3 +50,12 @@ describe("简历纸面投影", () => {
     expect(currentResumeDraft(events, { ...run, id: "another" }, state)).toBeNull();
   });
 });
+
+
+it("完整重写流只展示真实已生成内容，不用旧经历填满尚未生成的部分", () => {
+  const state = ready(), streamed = { ...draft(state), mode: "replace" as const };
+  const paper = resumePreviewDocument(state, streamed);
+  expect(paper.body).toEqual(streamed.body);
+  expect(paper.body.sections.flatMap(section => section.entries)).toHaveLength(1);
+  expect(state.body).toBeNull();
+});

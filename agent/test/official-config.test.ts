@@ -91,3 +91,41 @@ test("连接测试仍向本机假接口发送真实模型 ID，返回界面展�
   assert.ok(bodies.every(body => body.model === "fixture-upstream-model-id"));
   assert.ok(!result.body.includes(ctx.config.officialToken));
 });
+
+test("本机账号可以连接官方账号，官方凭证不回到浏览器且可单独退出", async t => {
+  const server = createServer(async (req, res) => {
+    if (req.url === "/v1/auth/login" || req.url === "/v1/auth/register") {
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(JSON.stringify({ token: "relay-account-token", account: { id: 7, username: "cloud_user" } }));
+      return;
+    }
+    if (req.url === "/v1/auth/me") {
+      res.writeHead(req.headers.authorization === "Bearer relay-account-token" ? 200 : 401, { "content-type": "application/json" });
+      res.end(JSON.stringify({ account: { id: 7, username: "cloud_user" } }));
+      return;
+    }
+    if (req.url === "/v1/auth/logout") {
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(JSON.stringify({ ok: true }));
+      return;
+    }
+    res.writeHead(200, { "content-type": "text/event-stream" });
+    res.end("data: [DONE]\n\n");
+  });
+  await new Promise<void>(resolve => server.listen(0, "127.0.0.1", resolve));
+  t.after(() => new Promise<void>((resolve, reject) => {
+    server.close(error => error ? reject(error) : resolve());
+    server.closeAllConnections();
+  }));
+  const port = (server.address() as AddressInfo).port;
+  const ctx = await context(t, { OFFICIAL_GATEWAY_URL: `http://127.0.0.1:${port}/v1`, OFFICIAL_ACCESS_TOKEN: "" });
+  const login = await ctx.app.inject({ method: "POST", url: "/api/v1/agent/official/login", headers: ctx.headers, payload: { username: "cloud_user", password: "long-official-password" } });
+  assert.equal(login.statusCode, 200, login.body);
+  assert.equal(login.json().account.username, "cloud_user");
+  assert.ok(!login.body.includes("relay-account-token"));
+  const session = await ctx.app.inject({ method: "GET", url: "/api/v1/agent/official/session", headers: ctx.headers });
+  assert.deepEqual(session.json(), { connected: true, account: { id: 7, username: "cloud_user" } });
+  const logout = await ctx.app.inject({ method: "POST", url: "/api/v1/agent/official/logout", headers: ctx.headers });
+  assert.equal(logout.statusCode, 200);
+  assert.equal((await ctx.app.inject({ method: "GET", url: "/api/v1/agent/official/session", headers: ctx.headers })).json().connected, false);
+});

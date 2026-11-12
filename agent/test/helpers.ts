@@ -8,6 +8,7 @@ import { catalogueFixture } from "./catalogue-fixture.js";
 import { Store, id, now } from "../src/store.js";
 import { createApp } from "../src/http.js";
 import { AppError } from "../src/errors.js";
+import type { LocalWorkspacePicker } from "../src/local-workspace-picker.js";
 import type { Model, ModelReply, ModelRequest, Sandbox } from "../src/types.js";
 export const TEST_KEY = "fixture-only-key-not-a-real-credential";
 export const reply = (
@@ -68,13 +69,18 @@ export async function fixture(
     sandbox?: Sandbox;
     catalogue?: boolean;
     maxSteps?: number;
+    maxTotalSteps?: number;
     timeout?: number;
+    localWorkspacePicker?: LocalWorkspacePicker;
+    memoryBackground?: boolean;
   } = {},
 ) {
   const dir = await temporary("case");
   const config = loadConfig({
     AGENT_DATA_DIR: dir,
+    AGENT_MEMORY_BACKGROUND: String(options.memoryBackground ?? false),
     AGENT_MAX_STEPS: String(options.maxSteps ?? 12),
+    AGENT_MAX_TOTAL_STEPS: String(options.maxTotalSteps ?? 120),
     AGENT_RUN_TIMEOUT_MS: String(options.timeout ?? 180000),
   });
   const model = options.model ?? new ScriptedModel();
@@ -85,6 +91,7 @@ export async function fixture(
     store,
     modelFactory: () => model,
     sandbox: options.sandbox ?? noSandbox,
+    localWorkspacePicker: options.localWorkspacePicker,
   });
   const session = ctx.auth.register(
     "test_user",

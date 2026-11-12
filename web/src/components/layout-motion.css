@@ -1,0 +1,5 @@
+/* 青穗集 · 共用尺寸动效：容器高度跟随实际内容，减少动态时直接呈现最终布局。 */
+.auto-height { min-width:0; overflow:clip; transition:height 360ms cubic-bezier(.22,1,.36,1); }
+.auto-height__content { display:flow-root; min-width:0; width:100%; flex:none; }
+.auto-height[data-motion="off"], [data-ui-motion="off"] .auto-height { transition:none; }
+@media(prefers-reduced-motion:reduce) { .auto-height { transition:none; } }

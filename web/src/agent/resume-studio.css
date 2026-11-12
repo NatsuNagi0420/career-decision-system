@@ -1,9 +1,9 @@
 /** 青穗集 · 对话式简历：轻量引导条、按需事实核对及可选纸面窗口，保留像素桌面而不把工作流铺成问卷。 */
 .resume-studio[hidden],.career-workbench[hidden] { display:none; }
 .resume-studio { display:flex;flex:1;flex-direction:column;width:100%;height:100%;min-width:0;min-height:0;overflow:hidden;color:#655071;background:#fdfbff;font:13px/1.8 var(--desktop-font); }
-.resume-studio button,.resume-studio input,.resume-studio textarea,.resume-conversation-bar button,.resume-conversation-starters button,.resume-checkpoint button,.resume-demo-conversation button { font:inherit;cursor:pointer; }
+.resume-studio button,.resume-studio input,.resume-studio textarea,.resume-conversation-bar button,.resume-conversation-starters button,.resume-checkpoint button { font:inherit;cursor:pointer; }
 .resume-studio button:disabled,.resume-checkpoint button:disabled,.resume-conversation-bar button:disabled { opacity:.5;cursor:not-allowed; }
-.resume-studio :focus-visible,.resume-checkpoint :focus-visible,.resume-conversation-bar :focus-visible,.resume-demo-conversation :focus-visible { outline:2px solid #9a7bbd;outline-offset:3px; }
+.resume-studio :focus-visible,.resume-checkpoint :focus-visible,.resume-conversation-bar :focus-visible { outline:2px solid #9a7bbd;outline-offset:3px; }
 .resume-studio-bar { display:flex;flex:none;align-items:center;justify-content:space-between;gap:12px;padding:12px 20px;border-bottom:1px solid #eadff2;background:#fbf8ff; }
 .resume-studio-bar > div { display:flex;align-items:center;gap:9px; }
 .resume-studio-bar strong { font-size:14px;font-weight:400; }
@@ -66,18 +66,6 @@
 .resume-recovery { display:flex;flex-wrap:wrap;gap:10px 16px;margin:0 0 20px 51px;padding:12px 16px;border:1px dashed #e0d0ec;border-radius:6px;color:#9b819e;font-size:11px; }.resume-recovery > span { flex-basis:100%; }
 .resume-checkpoint-note { color:#a087b0;font-size:10px; }
 .resume-studio .resume-checkpoint { max-width:none;margin-left:0; }
-.resume-demo-conversation { min-width:0; }
-.resume-demo-notice { display:flex;justify-content:space-between;gap:15px;padding:12px 16px;margin-bottom:25px;border:1px dashed #d9cae6;border-radius:6px;background:#fcf9ff;color:#a18bad;font-size:10px; }
-.resume-demo-notice > span { min-width:0; }
-.resume-demo-notice strong { display:block;color:#89699e;font-size:12px;font-weight:400;margin-bottom:4px; }
-.resume-demo-notice button { flex:none;align-self:start; }
-.resume-demo-next { margin:0 0 22px 51px; }
-.resume-demo-next > small { display:block;margin-bottom:8px;color:#b29ac1;font-size:10px; }
-.resume-demo-next > button { display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;min-width:0;padding:14px 18px;border:1px dashed #c9bcda;border-radius:8px;background:#f8f4fc;color:#8b709f;font-size:12px;line-height:1.9;text-align:left; }
-.resume-demo-next > button:hover { border-style:solid;background:#f1eaf9; }
-.resume-demo-next svg { flex:none;color:#ad94bf; }
-.resume-demo-finish { display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin:10px 0 25px 51px; }
-.resume-demo-paper { margin:20px 0 0;min-width:0; }
 .resume-editor-header { display:grid;grid-template-columns:1fr 1fr;gap:0 18px;padding:18px 20px 4px;border:1px solid #e5d8ef;border-radius:7px;background:#fff; }
 .resume-contact-field { grid-column:1/-1; }
 .resume-summary { margin-top:20px; }
@@ -123,7 +111,6 @@
  .resume-conversation-starters > span,.resume-conversation-starters > button { font-size:12px; }
  .resume-checkpoint { font-size:15px;padding:20px 23px; }.resume-checkpoint-heading strong,.resume-checkpoint-items h4 { font-size:15px; }.resume-checkpoint-items p { font-size:14px; }
  .resume-studio { font-size:15px; }.resume-review-intro p,.resume-step-heading p { font-size:14px; }
- .resume-demo-next > button { font-size:15px; }.resume-demo-notice { font-size:12px; }.resume-demo-notice strong { font-size:14px; }
  .resume-preview-layout { grid-template-columns:265px minmax(0,1fr);gap:28px; }
 }
 @media (max-width:1000px) { .resume-preview-layout { grid-template-columns:190px minmax(0,1fr);gap:14px; } }
@@ -134,8 +121,6 @@
  .resume-recovery { margin-left:0; }
  .resume-checkpoint { margin-left:0;padding:13px; }.resume-checkpoint-heading > span { margin-left:0; }.resume-checkpoint-items { max-height:350px; }
  .resume-checkpoint-actions { flex-direction:column;align-items:stretch;gap:10px; }
- .resume-demo-notice { flex-direction:column;gap:6px;padding:11px; }.resume-demo-notice button { align-self:flex-end; }
- .resume-demo-next,.resume-demo-finish { margin-left:0; }.resume-demo-next > button { padding:12px;font-size:11px; }
  .resume-studio-bar { padding:9px 12px;gap:7px; }.resume-studio-bar strong { font-size:12px; }.resume-studio-bar .career-pixel-icon { display:none; }
  .resume-studio-bar .resume-link,.resume-back { font-size:9px!important; }.resume-review-scroll { padding:18px 12px; }
  .resume-local-identity form,.resume-editor-header,.resume-editor-title { grid-template-columns:minmax(0,1fr); }.resume-contact-field { grid-column:1; }

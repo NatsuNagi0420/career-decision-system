@@ -5,10 +5,11 @@ const ICONS = {
   folder: "project_folder", target: "goal_target", strengths: "strengths_star", compass: "career_compass",
   plan: "action_plan", search: "source_search", settings: "settings", complete: "complete",
   sprout: "brand-sprout", notes: "step-notes", growth: "step-sprout", direction: "step-compass",
-  heart: "card-heart", star: "card-star", seedling: "card-sprout",
+  heart: "card-heart", star: "card-star", seedling: "card-sprout", memory: "memory-nebula.svg",
 } as const;
 export function CareerIcon({ name, size = 24, className = "" }: { name: keyof typeof ICONS; size?: number; className?: string }) {
-  return <img className={"career-pixel-icon " + className} src={assetUrl("brand/career-pixel/" + ICONS[name] + ".png")} alt="" width={size} height={size} aria-hidden="true" draggable={false} />;
+  const file = ICONS[name];
+  return <img className={"career-pixel-icon " + className} src={assetUrl("brand/career-pixel/" + file + (file.includes(".") ? "" : ".png"))} alt="" width={size} height={size} aria-hidden="true" draggable={false} />;
 }
 export const CAREER_STARTERS = [
   { id: "experience", number: "01", icon: "notes" as const, title: "梳理经历", description: "回顾做过的事\n找到值得被看见的经验", prompt: "我想先梳理自己的经历。请从我的教育背景、做过的项目或工作开始，一次只问一两个问题，帮我整理真实经历和成果，不要替我编造。" },

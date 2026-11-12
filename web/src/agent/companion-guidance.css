@@ -57,6 +57,13 @@
 .conversation-memory__next { margin: 13px 0 8px; border-left: 2px solid #c5b3d7; padding: 1px 0 1px 9px; }
 .conversation-memory__next > span { font-size: 9px; color: #b19ac5; }
 .conversation-memory__next > p { margin: 4px 0; font-size: 11px; line-height: 1.8; color: #947ba8; }
+.conversation-memory__obligation { margin: 13px 0 8px; padding: 9px 10px; border: 1px solid #d7c5e4; background: rgba(249, 245, 252, .8); }
+.conversation-memory__obligation > span { font-size: 9px; color: #9a7caf; }
+.conversation-memory__obligation > p { margin: 4px 0 8px; font-size: 11px; line-height: 1.8; color: #816496; }
+.conversation-memory__obligation > div { display: flex; gap: 7px; }
+.conversation-memory__obligation button { border: 1px solid #b69acb; padding: 4px 8px; background: transparent; color: #806097; font: inherit; cursor: pointer; }
+.conversation-memory__obligation button + button { border-color: transparent; color: #a58bb4; }
+.conversation-memory__obligation button:disabled { opacity: .55; cursor: default; }
 .conversation-memory__shared { margin: 8px 0; color: #b19bc2; font-size: 9px; line-height: 1.7; }
 .conversation-memory__error { font-size: 10px; color: #b58a9d; line-height: 1.8; }
 .conversation-memory__error > button { border: 0; background: transparent; color: inherit; font: inherit; text-decoration: underline; }
@@ -73,3 +80,13 @@
 .guided-task-saving { color: #a38bb8; font-size: 11px; margin: 8px 0; text-align: center; }
 
 .suinai-bubble.suinai-bubble--compact { min-height: 0; left: auto; right: auto; bottom: auto; }
+
+/* 持久计划与会话小结同组；继续按钮只填写输入框，不会自动发送或提权。 */
+.conversation-memory__plan { padding: 14px 0; border-top: 1px solid var(--agent-line, #dcd4e7); }
+.conversation-memory__plan ol { list-style: none; display: grid; gap: 9px; margin: 0; padding: 0; }
+.conversation-memory__plan li { display: flex; align-items: baseline; gap: 8px; overflow-wrap: anywhere; }
+.conversation-memory__plan li span { flex: 0 0 14px; }
+.conversation-memory__plan li[data-status="done"] { opacity: .6; }
+.conversation-memory__plan li[data-status="working"] { font-weight: 700; }
+.conversation-memory__plan button { display: block; margin: 14px 0 0 auto; border: 1px solid currentColor; padding: 5px 10px; background: transparent; font: inherit; color: inherit; cursor: pointer; }
+.conversation-memory__plan button:disabled { opacity: .5; cursor: default; }

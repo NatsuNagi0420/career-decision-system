@@ -227,3 +227,64 @@ test("选择的简历模板同时用于真实交付 HTML，拒绝任意模板值
   const invalid = await f.app.inject({ method: "POST", url: "/api/v1/agent/resume/export", headers: f.headers, payload: { revision: confirmed.revision, conversation_id: f.conversation.id, template_id: "arbitrary" } });
   assert.equal(invalid.statusCode, 400);
 });
+
+
+test("请求 ID 在最后时，已到达的文本前缀仍会进入纸面，绝不补出控制字段", () => {
+  const input = '{"data":{"kind":"rewrite","body":{"summary":{"fact_ids":["fact"],"text":"使用 React 实现';
+  const value = readPartialResumeJson(input, true) as any;
+  assert.equal(value.data.body.summary.text, "使用 React 实现");
+  assert.equal(value.request_id, undefined);
+  assert.equal((readPartialResumeJson('{"request_id":"incomplete', true) as any).request_id, undefined);
+  assert.equal((readPartialResumeJson('{"fact_ids":["incomplete', true) as any).fact_ids.length, 0);
+  assert.equal((readPartialResumeJson('{"text":"React\\u4f', true) as any).text, "React");
+  assert.equal((readPartialResumeJson('{"text":"React\\', true) as any).text, "React");
+  assert.equal(readPartialResumeJson('{"text":"bad\\q', true), null);
+});
+
+test("真实参数流尚未闭合、request_id 尚未到达时，已核验来源的半条经历已可预览", async t => {
+  const f = await fixture(t), state = readySelection(f);
+  const pending = change(f, { type: "task.request", kind: "rewrite" });
+  const prefix = JSON.stringify({ data: { kind: "rewrite", body: { sections: [
+    { kind: "projects", entries: [{ fact_ids: [state.facts[1].id], title: "项目甲", subtitle: "", period: "", bullets: ["使用 React 实现报名"] }] },
+  ] } } }).replace(/报名[\s\S]*$/, "报名");
+  const live = f.runtime.resume.livePreview(f.user.id, f.conversation.id, prefix);
+  assert.equal(live?.request_id, pending.pending!.id);
+  assert.equal(live?.mode, "replace");
+  assert.deepEqual(live?.body.sections[0].entries[0].bullets, ["使用 React 实现报名"]);
+  assert.equal(f.runtime.resume.get(f.user.id).body, null);
+  assert.equal(f.runtime.resume.get(f.user.id).revision, pending.revision);
+});
+
+test("先发半段正文，再发剩余参数和末尾请求 ID；模型运行中可观察多次纸面更新", async t => {
+  let f: Awaited<ReturnType<typeof fixture>>, requestId = "", full: ResumeBody;
+  let release!: () => void, announce!: () => void;
+  const generated = new Promise<void>(resolve => { announce = resolve; });
+  const proceed = new Promise<void>(resolve => { release = resolve; });
+  t.after(() => release());
+  const model = new ScriptedModel(async (request, index) => {
+    if (index > 0) return reply("请核对纸面草稿。");
+    const call = tool("propose_resume_update", { data: { kind: "rewrite", body: full }, request_id: requestId });
+    const prefixEnd = call.arguments.indexOf("报名表单") + 2;
+    request.onToolDelta?.({ ...call, arguments: call.arguments.slice(0, prefixEnd) });
+    announce(); await proceed;
+    request.onToolDelta?.(call);
+    return reply("", [call]);
+  });
+  f = await fixture(t, { model });
+  const state = readySelection(f);
+  full = body(state);
+  full.sections[1].entries[0] = { fact_ids: [state.facts[1].id], title: "项目甲", subtitle: "", period: "", bullets: ["使用 React 和 TypeScript 实现报名表单，与同学用 Git 协作。"] };
+  requestId = change(f, { type: "task.request", kind: "rewrite" }).pending!.id;
+  const run = f.runtime.start(f.user, f.conversation.id, f.profile.id, "请起草简历", id());
+  await generated;
+  const first = f.store.events(f.conversation.id).find(event => event.kind === "resume.preview");
+  assert.ok(first);
+  assert.equal((first.data.draft as any).body.sections[1].entries[0].bullets[0], "使用 React 和 TypeScript 实现报名");
+  assert.equal(f.store.run(f.user.id, run.id).status, "running");
+  assert.equal(f.runtime.resume.get(f.user.id).body, null);
+  release(); await f.runtime.waitIdle();
+  assert.ok(f.store.events(f.conversation.id).filter(event => event.kind === "resume.preview").length >= 2);
+  const committed = f.store.events(f.conversation.id).find(event => event.kind === "resume.state" && (event.data.state as ResumeState).body);
+  assert.ok(committed);
+  assert.deepEqual((committed.data.state as ResumeState).body, full);
+});

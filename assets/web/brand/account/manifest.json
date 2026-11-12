@@ -1,0 +1,157 @@
+{
+  "source": "穗奈_登录注册原型与透明素材包.zip",
+  "assets": [
+    {
+      "file": "sprout.webp",
+      "source": "01_芽苗品牌.png",
+      "size": [
+        128,
+        128
+      ]
+    },
+    {
+      "file": "user.webp",
+      "source": "02_用户头像.png",
+      "size": [
+        128,
+        128
+      ]
+    },
+    {
+      "file": "mail.webp",
+      "source": "03_邮箱.png",
+      "size": [
+        128,
+        128
+      ]
+    },
+    {
+      "file": "lock.webp",
+      "source": "04_密码锁.png",
+      "size": [
+        128,
+        128
+      ]
+    },
+    {
+      "file": "eye.webp",
+      "source": "05_显示密码.png",
+      "size": [
+        128,
+        128
+      ]
+    },
+    {
+      "file": "eye-off.webp",
+      "source": "06_隐藏密码.png",
+      "size": [
+        128,
+        128
+      ]
+    },
+    {
+      "file": "checkbox.webp",
+      "source": "07_未勾选.png",
+      "size": [
+        128,
+        128
+      ]
+    },
+    {
+      "file": "checkbox-checked.webp",
+      "source": "08_勾选.png",
+      "size": [
+        128,
+        128
+      ]
+    },
+    {
+      "file": "arrow-right.webp",
+      "source": "09_前进.png",
+      "size": [
+        128,
+        128
+      ]
+    },
+    {
+      "file": "key.webp",
+      "source": "10_忘记密码钥匙.png",
+      "size": [
+        128,
+        128
+      ]
+    },
+    {
+      "file": "cloud-sync.webp",
+      "source": "11_云端同步.png",
+      "size": [
+        128,
+        128
+      ]
+    },
+    {
+      "file": "shield.webp",
+      "source": "12_隐私保护.png",
+      "size": [
+        128,
+        128
+      ]
+    },
+    {
+      "file": "sparkle.webp",
+      "source": "13_星光.png",
+      "size": [
+        128,
+        128
+      ]
+    },
+    {
+      "file": "more.webp",
+      "source": "14_更多.png",
+      "size": [
+        128,
+        128
+      ]
+    },
+    {
+      "file": "arrow-left.webp",
+      "source": "15_返回.png",
+      "size": [
+        128,
+        128
+      ]
+    },
+    {
+      "file": "external-link.webp",
+      "source": "16_外部链接.png",
+      "size": [
+        128,
+        128
+      ]
+    },
+    {
+      "file": "suinai-welcome.webp",
+      "source": "01_穗奈欢迎立绘.png",
+      "size": [
+        646,
+        1900
+      ]
+    },
+    {
+      "file": "sprout-decoration.webp",
+      "source": "02_芽苗星光装饰.png",
+      "size": [
+        511,
+        420
+      ]
+    },
+    {
+      "file": "welcome-bubble.webp",
+      "source": "03_空白欢迎气泡框.png",
+      "size": [
+        1000,
+        337
+      ]
+    }
+  ]
+}

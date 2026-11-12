@@ -1,0 +1,16 @@
+import { chromium } from 'playwright';
+const token = process.env.DEMO_TOKEN;
+const browser = await chromium.launch({ channel: 'chrome', headless: true });
+const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
+await page.addInitScript(t => { localStorage.setItem('career.session.token', t); localStorage.setItem('suinai.onboarding.v1.local.3','completed'); }, token);
+await page.goto('http://127.0.0.1:5173/', { waitUntil: 'domcontentloaded' });
+await page.waitForTimeout(8000);
+await page.getByText('职业工作台',{exact:false}).first().click();
+await page.waitForTimeout(1500);
+await page.getByRole('tab',{name:'方向与岗位'}).click();
+await page.waitForTimeout(1500);
+await page.getByText('查看岗位原文').first().click();
+await page.waitForTimeout(2500);
+console.log('TEXT TAIL', (await page.locator('body').innerText()).slice(-3000));
+await page.screenshot({ path: 'D:\\Project\\career-decision-system\\video\\raw\\web-job-detail.png', fullPage: false });
+await browser.close();

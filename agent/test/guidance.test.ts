@@ -83,7 +83,7 @@ test("只读模型分析只生成小结与建议，不新增聊天、不启动�
   const first = await f.runtime.guidance.analyze(f.user, f.conversation.id, f.profile.id, messageId);
   assert.equal(first.memory?.source, "model"); assert.equal(first.suggestion?.kind, "resume"); assert.equal(activeTask(first), null);
   assert.equal(f.store.messages(f.conversation.id).length, messages); assert.equal(model.requests.at(-1)!.tools.length, 0);
-  assert.ok(model.requests.at(-1)!.maxOutputTokens! <= 600);
+  assert.ok(model.requests.at(-1)!.maxOutputTokens! <= 1800);
   await f.runtime.guidance.analyze(f.user, f.conversation.id, f.profile.id, messageId); assert.equal(model.requests.length, 2);
 });
 

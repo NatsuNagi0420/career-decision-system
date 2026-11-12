@@ -13,6 +13,7 @@
     "dev": "node scripts/dev/dev-agent.mjs",
     "check": "npm --prefix agent run check && npm --prefix agent run check:tests && npm --prefix web run typecheck",
     "test": "npm --prefix agent test && npm --prefix web test -- --maxWorkers=1",
-    "catalogue:import": "npm --prefix agent run build && python scripts/catalogue/import-job-catalogue.py"
+    "catalogue:import": "npm --prefix agent run build && python scripts/catalogue/import-job-catalogue.py",
+    "release:windows": "node scripts/release/build-windows.mjs"
   }
 }

@@ -11,15 +11,16 @@ export interface ResumeEntry { title: string; subtitle: string; period: string; 
 export interface ResumeBody { summary: { text: string; fact_ids: string[] }; sections: { kind: ResumeFactKind; entries: ResumeEntry[] }[] }
 export interface ResumeHeader { name: string; headline: string; contact: string }
 export interface ResumeState {
+  evidence_review?: import("./career-decision-contract.js").ResumeEvidenceReview;
   revision: number; context_version: number; updated_at: string | null; step: ResumeStep;
   source_text: string; source_name: string; target: ResumeTarget;
   facts: ResumeFact[]; facts_confirmed: boolean; questions: string[];
   selection: ResumeSelection | null; selection_confirmed: boolean;
   header: ResumeHeader; body: ResumeBody | null; confirmed_at: string | null;
-  pending: { id: string; kind: ResumeTaskKind } | null;
+  pending: { id: string; kind: ResumeTaskKind; edit?: { run_id: string; field_ids: string[] } } | null;
 }
 /** 仅供生成中预览；须与当前 pending 和 context_version 匹配，不代表保存、确认或交付。 */
-export interface ResumeLiveDraft { request_id: string; context_version: number; body: ResumeBody }
+export interface ResumeLiveDraft { request_id: string; context_version: number; body: ResumeBody; header?: ResumeHeader; mode?: "replace" }
 export type ResumeChange =
   | { type: "materials.save"; source_text: string; source_name: string; target: ResumeTarget }
   | { type: "task.request"; kind: ResumeTaskKind }

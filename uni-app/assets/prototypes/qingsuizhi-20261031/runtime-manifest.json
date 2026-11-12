@@ -1,0 +1,118 @@
+{
+  "attachment.png": {
+    "size": 96,
+    "bytes": 2913
+  },
+  "books.png": {
+    "size": 240,
+    "bytes": 11313
+  },
+  "check-circle.png": {
+    "size": 96,
+    "bytes": 2553
+  },
+  "clock.png": {
+    "size": 96,
+    "bytes": 3145
+  },
+  "cloud.png": {
+    "size": 96,
+    "bytes": 1336
+  },
+  "computer.png": {
+    "size": 96,
+    "bytes": 1525
+  },
+  "device-status-panel.png": {
+    "size": 96,
+    "bytes": 1215
+  },
+  "device.png": {
+    "size": 96,
+    "bytes": 2098
+  },
+  "download.png": {
+    "size": 96,
+    "bytes": 1867
+  },
+  "file-document.png": {
+    "size": 96,
+    "bytes": 2359
+  },
+  "help.png": {
+    "size": 96,
+    "bytes": 2456
+  },
+  "hourglass.png": {
+    "size": 96,
+    "bytes": 2340
+  },
+  "more.png": {
+    "size": 96,
+    "bytes": 1472
+  },
+  "nav-chat.png": {
+    "size": 96,
+    "bytes": 1407
+  },
+  "nav-growth.png": {
+    "size": 96,
+    "bytes": 2512
+  },
+  "nav-profile.png": {
+    "size": 96,
+    "bytes": 2457
+  },
+  "nav-tasks.png": {
+    "size": 96,
+    "bytes": 2231
+  },
+  "plant.png": {
+    "size": 240,
+    "bytes": 10098
+  },
+  "plus.png": {
+    "size": 96,
+    "bytes": 1517
+  },
+  "resume.png": {
+    "size": 96,
+    "bytes": 1828
+  },
+  "running.png": {
+    "size": 96,
+    "bytes": 2532
+  },
+  "search.png": {
+    "size": 96,
+    "bytes": 2383
+  },
+  "send.png": {
+    "size": 96,
+    "bytes": 2280
+  },
+  "settings.png": {
+    "size": 96,
+    "bytes": 2483
+  },
+  "source-selection-panel.png": {
+    "size": 96,
+    "bytes": 1736
+  },
+  "sparkle.png": {
+    "size": 96,
+    "bytes": 2018
+  },
+  "star.png": {
+    "size": 96,
+    "bytes": 2204
+  },
+  "stop.png": {
+    "size": 96,
+    "bytes": 2858
+  },
+  "target.png": {
+    "size": 96,
+    "bytes": 2832
+  }
+}

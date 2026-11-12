@@ -30,4 +30,12 @@ describe("简历纸面侧栏", () => {
     expect(html).toContain("简历实时 A4 预览");
     expect(html).not.toContain("校园活动报名项目");
   });
+  it("待处理任务会说明框选锁定原因，并提供结束入口", () => {
+    const state = completedResumeExample();
+    state.pending = { id: "pending-edit", kind: "rewrite", edit: { run_id: "run-edit", field_ids: ["summary.text"] } };
+    const html = renderToStaticMarkup(<ResumePreviewPanel state={state} busy={false} saving={false} onClose={noop} onOpenStudio={noop} onEdit={async () => {}} onCancelPending={async () => {}} />);
+    expect(html).toContain('title="有一项简历整理尚未结束"');
+    expect(html).toContain('aria-label="结束未完成的简历整理"');
+    expect(html).toContain("等待继续");
+  });
 });

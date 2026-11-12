@@ -3,8 +3,8 @@ import { useEffect, useId, useRef, useState, type PointerEvent, type ReactNode }
 import { AgentIcon } from "./AgentIcon";
 import { CareerIcon } from "./CareerVisuals";
 
-export function DesktopWindow({ open, onClose, onMinimize, children, title = "职业工作台", status = "档案 · 岗位 · 成长行动 · 文件" }: {
-  open: boolean; onClose: () => void; onMinimize: () => void; children: ReactNode; title?: string; status?: string;
+export function DesktopWindow({ id = "career-workbench-window", open, onClose, onMinimize, children, title = "职业工作台", status = "档案 · 岗位 · 成长行动 · 文件" }: {
+  id?: string; open: boolean; onClose: () => void; onMinimize: () => void; children: ReactNode; title?: string; status?: string;
 }) {
   const titleId = useId();
   const windowRef = useRef<HTMLDivElement>(null);
@@ -59,7 +59,7 @@ export function DesktopWindow({ open, onClose, onMinimize, children, title = "�
     const current = drag.current;
     if (current?.pointerId === event.pointerId) setPosition(constrain(current.left + event.clientX - current.clientX, current.top + event.clientY - current.clientY));
   }
-  return <div className="career-desktop-window" id="career-workbench-window" ref={windowRef} role="dialog" aria-modal="false" aria-labelledby={titleId} tabIndex={-1} hidden={!open}
+  return <div className="career-desktop-window" id={id} ref={windowRef} role="dialog" aria-modal="false" aria-labelledby={titleId} tabIndex={-1} hidden={!open}
     data-maximized={maximized} data-compact={compact} data-positioned={!compact && Boolean(position)} style={!maximized && !compact && position ? position : undefined}
     onKeyDown={event => {
       if (event.key !== "Escape" || event.defaultPrevented || document.querySelector('dialog[open], [popover]:popover-open')) return;

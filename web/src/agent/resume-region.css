@@ -1,0 +1,24 @@
+/** 青穗集 · 简历选区样式：轻量字段高亮与就地修改框，让纸面继续承担主视觉。 */
+.resume-live-preview-panel { position: relative; }
+.resume-live-preview-heading .agent-icon-button[aria-pressed="true"] { color: #775795; background: #e9ddf5; box-shadow: inset 0 0 0 1px #cbb5df; }
+.resume-region-layer { position: absolute; z-index: 6; inset: 0; cursor: crosshair; touch-action: none; user-select: none; outline: none; }
+.resume-region-hit { position: absolute; margin: 0; padding: 0; border: 0; background: transparent; color: transparent; cursor: crosshair; }
+.resume-region-hit:focus-visible { outline: 2px solid #9671b9; outline-offset: 2px; background: #c4a5df25; }
+.resume-region-highlight { position: absolute; pointer-events: none; border-radius: 2px; background: #b99bd83b; box-shadow: 0 0 0 1px #a487c144; }
+.resume-region-rubber { position: absolute; pointer-events: none; border: 1px solid #a07ac1; background: #bda1dc18; box-shadow: 0 0 0 1px #ffffff88; }
+.resume-region-prompt { position: absolute; z-index: 12; width: min(320px, calc(100% - 24px)); margin: 0; padding: 11px; border: 1px solid #d2bfe2; border-radius: 10px; background: #fffcff; box-shadow: 0 6px 16px #6e508b1a, 0 20px 44px #6e508b21; animation: resume-region-in 140ms ease-out both; }
+.resume-region-quote { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 9px; }
+.resume-region-quote blockquote { flex: 1; min-width: 0; margin: 0; padding: 0 0 0 8px; border-left: 2px solid #b99bd4; color: #9684a6; font-size: 11px; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; white-space: pre-line; }
+.resume-region-quote .agent-icon-button { flex: none; width: 24px; height: 24px; padding: 4px; }
+.resume-region-prompt textarea { display: block; width: 100%; min-height: 68px; max-height: 160px; resize: vertical; border: 0; padding: 3px; outline: none; background: transparent; color: #665076; font: inherit; font-size: 12px; line-height: 1.8; }
+.resume-region-prompt textarea::placeholder { color: #af9cbe; }
+.resume-region-prompt:focus-within { border-color: #ac8ec6; }
+.resume-region-actions { display: flex; gap: 8px; align-items: center; justify-content: flex-end; }
+.resume-region-actions [role="alert"], .resume-region-error { color: #a06650; font-size: 11px; }
+.resume-region-send { flex: none; display: grid; place-items: center; border: 0; border-radius: 7px; width: 30px; height: 30px; color: #fff; background: #9977b9; cursor: pointer; }
+.resume-region-send:hover:not(:disabled) { background: #8762a9; }
+.resume-region-send:disabled { opacity: .35; cursor: default; }
+.resume-region-error { position: absolute; bottom: 16px; left: 16px; right: 16px; z-index: 8; }
+@keyframes resume-region-in { from { opacity: 0; translate: 0 5px; } to { opacity: 1; translate: 0 0; } }
+@media(prefers-reduced-motion:reduce) { .resume-region-prompt { animation: none; } }
+@media print { .resume-region-layer,.resume-region-prompt { display: none; } }

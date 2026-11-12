@@ -1,9 +1,9 @@
-/** 青穗集 · 简历参数流读取：只读取已经到达的 JSON 值，残缺字符串不补写，不执行模型代码。 */
+/** 青穗集 · 简历参数流读取：只读取已经到达的 JSON 值；纸面可展示已收到的文本前缀，标识字段必须完整，不执行模型代码。 */
 interface PartialValue { value?: unknown; end: number; complete: boolean }
-export function readPartialResumeJson(input: string): unknown {
+export function readPartialResumeJson(input: string, previewText = false): unknown {
   if (!input || input.length > 256_000) return null;
   const space = (index: number) => { while (/\s/.test(input[index] ?? "") && index < input.length) index++; return index; };
-  function read(index: number, depth: number): PartialValue {
+  function read(index: number, depth: number, path: Array<string | number> = []): PartialValue {
     if (depth > 24) throw new SyntaxError("JSON too deep");
     index = space(index);
     const char = input[index];
@@ -12,6 +12,19 @@ export function readPartialResumeJson(input: string): unknown {
       for (let end = index + 1; end < input.length; end++) {
         if (input[end] === "\\") { end++; continue; }
         if (input[end] === '"') return { value: JSON.parse(input.slice(index, end + 1)), end: end + 1, complete: true };
+      }
+      // 只允许可见文本的真实前缀。请求 ID、事实 ID、kind 等控制字段不补全。
+      const field = path.at(-1), parent = path.at(-2);
+      if (previewText && (["text", "title", "subtitle", "period"].includes(String(field)) || parent === "bullets")) {
+        let end = input.length;
+        const tail = input.slice(index + 1);
+        const dangling = /\\(?:u[0-9a-fA-F]{0,3})?$/.exec(tail);
+        if (dangling) end = index + 1 + dangling.index;
+        try {
+          let value: string = JSON.parse(input.slice(index, end) + '"');
+          if (/[\uD800-\uDBFF]$/.test(value)) value = value.slice(0, -1);
+          return { value, end: input.length, complete: false };
+        } catch { throw new SyntaxError("Invalid JSON string escape"); }
       }
       return { end: input.length, complete: false };
     }
@@ -34,7 +47,7 @@ export function readPartialResumeJson(input: string): unknown {
           if (input[index] !== ":") throw new SyntaxError("Expected colon");
           index++;
         }
-        const child = read(index, depth + 1);
+        const child = read(index, depth + 1, [...path, char === "{" ? key : array.length]);
         if (child.value !== undefined) { if (char === "{") object[key] = child.value; else array.push(child.value); }
         if (!child.complete) return { value, end: child.end, complete: false };
         index = space(child.end);

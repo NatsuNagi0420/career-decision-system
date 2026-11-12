@@ -51,6 +51,62 @@ test("明确要求复用职业画像时可安全进入简历材料，岗位样�
   }), run, f.workspace, f.runtime.sandbox, new AbortController().signal, f.runtime.career, f.runtime.resume), /偏好与时间约束/);
 });
 
+test("复用职业工作台的多项材料不会因同轮版本递增而反复失败", async t => {
+  let f: Fixture;
+  const profile = {
+    goal: "寻找 AI 应用实习",
+    education: "软件工程专业，在校。",
+    experience: "使用 React 与 SpringBoot 完成课程项目，独立负责前后端联调。",
+    skills: "React、SpringBoot、TypeScript。",
+    preferences: "优先南京。",
+    weekly_hours: "每周实习 4 天。",
+  };
+  const model = new ScriptedModel((request, index) => {
+    if (index === 0) return reply("", [tool("read_career_context", {}), tool("read_resume_context", {})]);
+    if (index === 1) {
+      // 模拟真实模型一次性提交多条职业画像来源，并故意使用同一个初始版本号。
+      const version = f.runtime.resume.get(f.user.id).context_version;
+      return reply("", [
+        tool("capture_resume_material", { context_version: version, section: "education", quote: profile.education, source: { kind: "career_context", source_id: "profile.education" } }),
+        tool("capture_resume_material", { context_version: version, section: "experience", quote: profile.experience, source: { kind: "career_context", source_id: "profile.experience" } }),
+        tool("capture_resume_material", { context_version: version, section: "skills", quote: profile.skills, source: { kind: "career_context", source_id: "profile.skills" } }),
+        tool("capture_resume_material", { context_version: version, section: "direction", quote: profile.goal, source: { kind: "career_context", source_id: "profile.goal" } }),
+      ]);
+    }
+    if (index === 2) {
+      const state = f.runtime.resume.get(f.user.id);
+      assert.equal(state.pending?.kind, "facts");
+      assert.ok(!request.tools.some(item => item.name === "capture_resume_material"));
+      return reply("", [tool("propose_resume_update", { request_id: state.pending!.id, data: {
+        kind: "facts",
+        facts: [
+          { kind: "education", title: "软件工程专业", detail: "在校学习软件工程。", quote: profile.education },
+          { kind: "projects", title: "React + SpringBoot 课程项目", detail: "独立负责前后端联调。", quote: profile.experience },
+          { kind: "skills", title: "React、SpringBoot、TypeScript", detail: "掌握 React、SpringBoot、TypeScript。", quote: profile.skills },
+        ],
+        questions: [],
+      } })]);
+    }
+    return reply("材料已经整理好，请先核对事实小结。");
+  });
+  f = await fixture(t, { model });
+  f.runtime.career.change(f.user.id, { revision: 0, change: { type: "profile.save", profile } });
+  const conversation = f.runtime.openResumeConversation(f.user, f.profile.id);
+  const view = f.runtime.guidance.view(f.user.id, conversation.id);
+  f.runtime.guidance.change(f.user, conversation.id, { revision: view.revision, kind: "resume", reuse_shared_resume: true });
+  const run = f.runtime.start(f.user, conversation.id, f.profile.id, "根据当前职业工作台生成简历", id());
+  await f.runtime.waitIdle();
+  const state = f.runtime.resume.get(f.user.id);
+  assert.equal(f.store.run(f.user.id, run.id).status, "completed");
+  assert.equal(state.pending, null);
+  assert.equal(state.facts_confirmed, false);
+  assert.ok(state.source_text.includes(profile.education));
+  assert.ok(state.source_text.includes(profile.experience));
+  assert.ok(state.source_text.includes(profile.skills));
+  assert.equal(model.requests.length, 4);
+  assert.equal(f.store.events(conversation.id).filter(event => event.kind === "tool.finished" && event.data.ok === false).length, 0);
+});
+
 test("进入简历对话不要求模型或 JD，可恢复同一会话并隔离账号", async t => {
   const f = await fixture(t);
   const request = () => f.app.inject({ method: "POST", url: "/api/v1/agent/resume/conversation", headers: f.headers, payload: {} });

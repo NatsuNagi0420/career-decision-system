@@ -1,0 +1,18 @@
+import { chromium } from 'playwright';
+import fs from 'fs';
+
+const token = fs.readFileSync('D:/Project/career-decision-system/tmp/token.txt', 'utf8').trim();
+const browser = await chromium.launch({ channel: 'chrome', headless: true });
+const context = await browser.newContext({
+  viewport: { width: 1600, height: 1000 },
+  deviceScaleFactor: 2,
+});
+const page = await context.newPage();
+await page.addInitScript((t) => {
+  localStorage.setItem('career.session.token', t);
+}, token);
+await page.goto('http://127.0.0.1:5173', { waitUntil: 'networkidle', timeout: 60000 });
+await page.waitForTimeout(5000);
+await page.screenshot({ path: 'D:/Project/career-decision-system/tmp/app-in.png' });
+console.log((await page.locator('body').innerText()).slice(0, 3000));
+await browser.close();

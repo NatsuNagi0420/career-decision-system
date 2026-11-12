@@ -1,0 +1,34 @@
+# 青穗集 · Cloud Hub 服务，PC 主动连接，公网仅提供 HTTPS API。
+[Unit]
+Description=Qingsuiji Cloud Hub
+After=network-online.target qingsuiji-relay.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=qingsuiji-agent
+Group=qingsuiji-agent
+WorkingDirectory=/opt/qingsuiji/cloud-agent/agent
+Environment=NODE_ENV=production
+Environment=AGENT_ENV_FILE=/etc/qingsuiji/agent.env
+EnvironmentFile=/etc/qingsuiji/agent.env
+ExecStart=/usr/local/bin/node /opt/qingsuiji/cloud-agent/agent/dist/hub/hub.js
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+LimitNOFILE=32768
+UMask=0077
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+LockPersonality=yes
+RestrictSUIDSGID=yes
+CapabilityBoundingSet=
+ReadWritePaths=/var/lib/qingsuiji/agent
+
+[Install]
+WantedBy=multi-user.target

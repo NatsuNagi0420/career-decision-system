@@ -1,7 +1,7 @@
 /** 青穗集 · 职业对话起始页：所有卡片只填入真实需求，不虚构画像、岗位或已完成的规划。 */
 import { SUINAI_AVATAR_URL } from "../assets";
 import { CAREER_STARTERS, CareerIcon } from "./CareerVisuals";
-export function CareerWelcome({ onPrompt, connected, onConnect }: { onPrompt: (text: string) => void; connected: boolean; onConnect: () => void }) {
+export function CareerWelcome({ onPrompt, connected, onConnect, canConfigure = true }: { onPrompt: (text: string) => void; connected: boolean; onConnect: () => void; canConfigure?: boolean }) {
   return <section className="career-welcome" aria-label="从认识自己开始">
     <div className="career-welcome__eyebrow"><span aria-hidden="true">+--</span> YOUR NEXT CHAPTER <span aria-hidden="true">--+</span></div>
     <div className="career-welcome__intro">
@@ -16,6 +16,6 @@ export function CareerWelcome({ onPrompt, connected, onConnect }: { onPrompt: (t
       </button>)}
     </div>
     <p className="career-welcome__invitation"><CareerIcon name="star" size={20} />先说说：最近哪件事，让你最有成就感？</p>
-    {!connected && <button className="career-connect-button" type="button" onClick={onConnect}>连接模型，和穗奈聊聊 <span>↗</span></button>}
+    {!connected && canConfigure && <button className="career-connect-button" type="button" onClick={onConnect}>连接模型，和穗奈聊聊 <span>↗</span></button>}
   </section>;
 }

@@ -53,8 +53,7 @@
     "@dcloudio/uni-mp-weixin": "3.0.0-5020620260917001",
     "@dcloudio/uni-mp-xhs": "3.0.0-5020620260917001",
     "@dcloudio/uni-quickapp-webview": "3.0.0-5020620260917001",
-    "vue": "^3.4.21",
-    "vue-i18n": "^9.1.9"
+    "vue": "^3.4.21"
   },
   "devDependencies": {
     "@dcloudio/types": "^3.4.8",
@@ -64,6 +63,7 @@
     "@dcloudio/vite-plugin-uni": "3.0.0-5020620260917001",
     "@vue/runtime-core": "^3.4.21",
     "@vue/tsconfig": "^0.1.3",
+    "miniprogram-api-typings": "^5.2.3",
     "sass": "^1.106.1",
     "typescript": "^4.9.4",
     "vite": "5.2.8",

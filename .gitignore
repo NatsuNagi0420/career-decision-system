@@ -25,6 +25,7 @@ test-results/
 # Local secrets and local state. `.env.example` files are tracked; `.env` never is.
 .env
 .env.local
+.env.relay
 *.pem
 
 # Generated at runtime, never authored
@@ -76,3 +77,12 @@ docs/岗位库扩充/**/待导入/*.zip
 
 # Large local handoff bundle; curated assets are tracked in uni-app/assets and src/static.
 assets/穗奈_小程序端原型与透明图标_全量包.zip
+
+# Cloud Hub local credentials/configuration; example files remain tracked.
+.env.hub
+.env.cloud
+
+# Local reference checkouts, production recordings and original asset bundles.
+vendor/
+video/
+assets/*.zip

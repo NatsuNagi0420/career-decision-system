@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createElement } from "react";
-import { RESUME_DEMO_TURNS, completedResumeExample } from "./resume-conversation";
+import { RESUME_DEMO_TURNS, completedResumeExample } from "./test-fixtures/resume-conversation";
 import { ResumeCheckpoint } from "./ResumeCheckpoint";
 import { emptyResumeState } from "../../../agent/src/resume-contract";
 import { renderResumeHtml } from "../../../agent/src/resume-render";

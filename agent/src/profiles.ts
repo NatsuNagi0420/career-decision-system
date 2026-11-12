@@ -1,9 +1,13 @@
 /** 青穗集 · 官方与自带接口配置：密钥只写不回显，实际测试聊天、流式和工具往返。 */
+import { fetchOfficialCredits } from "./official-credits.js";
 import { z } from "zod";
 import { Store, id, now } from "./store.js";
 import { Secrets } from "./secrets.js";
 import { CompatibleModel } from "./model.js";
-import { discoverModels, normalizeBaseUrl, ProviderError } from "./provider.js";
+import { type DecisionResult, type DecisionTask } from "./career-decision-contract.js";
+import { validateCareerDecision } from "./career-decision-validation.js";
+import { fetchProvider, readLimited } from "./provider.js";
+import { discoverModels, normalizeBaseUrl, ProviderError, validateEndpoint } from "./provider.js";
 import type { Config } from "./config.js";
 import type {
   ConnectionCheck,
@@ -13,7 +17,7 @@ import type {
   User,
   WireApiKind,
 } from "./types.js";
-import { AppError, invariant, publicError } from "./errors.js";
+import { AppError, invariant, publicError, isRecord } from "./errors.js";
 export const profileInput = z
   .object({
     name: z.string().trim().min(1).max(60),
@@ -41,17 +45,94 @@ export class Profiles {
     readonly secrets: Secrets,
     readonly config: Config,
     readonly factory?: (profile: Profile, key: string) => Model,
+    readonly accountKey?: (user: User) => Promise<string | null | undefined>,
   ) {}
   officialConfigured() {
     return Boolean(
       this.config.officialUrl &&
-        this.config.officialToken &&
         this.config.officialModel,
     );
   }
+  private async officialKey(user: User, profile: Profile): Promise<string | null> {
+    const accountKey = await this.accountKey?.(user);
+    if (accountKey !== undefined) return accountKey;
+    const stored = await this.secrets.get(user.id, profile.id, this.store.secret(user.id, profile.id));
+    return stored || this.config.officialToken || null;
+  }
+  private async officialProfile(user: User): Promise<Profile> {
+    const current = this.store.profiles(user.id).find(profile => profile.mode === "official");
+    if (current) return current;
+    invariant(this.officialConfigured(), 409, "官方服务尚未配置。", "official_not_configured");
+    await this.save(user, { name: "官方服务", mode: "official" });
+    const created = this.store.profiles(user.id).find(profile => profile.mode === "official");
+    invariant(created, 500, "官方连接初始化失败。", "official_profile_missing");
+    return created;
+  }
+  private async officialRequest(path: "login" | "register" | "logout" | "me", init: RequestInit = {}) {
+    invariant(this.config.officialUrl, 503, "官方服务尚未配置。", "official_not_configured");
+    const base = normalizeBaseUrl(this.config.officialUrl, true);
+    await validateEndpoint(base, true);
+    const response = await fetch(base + "/auth/" + path, {
+      ...init,
+      headers: { Accept: "application/json", ...(init.body ? { "Content-Type": "application/json" } : {}), ...(init.headers ?? {}) },
+      redirect: "error",
+      signal: init.signal ?? AbortSignal.timeout(15000),
+    });
+    let value: unknown = null;
+    try { value = JSON.parse(await readLimited(response, 128 * 1024)); } catch { /* 仅使用状态码分类，不回显正文。 */ }
+    if (!response.ok) {
+      const message = response.status === 401 ? "官方账号或密码不正确。" : response.status === 409 ? "这个官方账号已被使用。" : response.status === 429 ? "官方账号请求过于频繁，请稍后再试。" : "官方账号服务暂时不可用。";
+      throw new AppError(response.status >= 500 ? 502 : response.status, message, "official_auth_failed");
+    }
+    return value;
+  }
+  async officialCredits(user: User, cursor?: string) {
+    const profile = await this.officialProfile(user);
+    return fetchOfficialCredits(this.config.officialUrl, await this.officialKey(user, profile), cursor);
+  }
+  async officialSession(user: User) {
+    if (!this.officialConfigured()) return { connected: false, account: null };
+    const profile = await this.officialProfile(user);
+    const key = await this.officialKey(user, profile);
+    if (!key) return { connected: false, account: null };
+    try {
+      const value = await this.officialRequest("me", { headers: { Authorization: "Bearer " + key } });
+      return { connected: true, account: isRecord(value) && isRecord(value.account) ? value.account : null, ...(isRecord(value) && isRecord(value.usage) ? { usage: value.usage } : {}) };
+    } catch {
+      // 安装实例凭证可能没有绑定可展示的账号；是否真的可用仍由连接测试决定。
+      return { connected: Boolean(this.config.officialToken), account: null };
+    }
+  }
+  async officialLogin(user: User, username: string, password: string, register = false) {
+    const profile = await this.officialProfile(user);
+    const value = await this.officialRequest(register ? "register" : "login", { method: "POST", body: JSON.stringify({ username, password }) });
+    invariant(isRecord(value) && typeof value.token === "string" && isRecord(value.account), 502, "官方账号服务返回无效会话。", "official_auth_response");
+    const encrypted = await this.secrets.save(user.id, profile.id, value.token, true);
+    profile.has_key = true;
+    profile.capabilities = { chat: false, tools: false, stream: false, tested_at: null, note: "官方账号已连接，等待测试。" };
+    this.store.saveProfile(profile, encrypted);
+    return { connected: true, account: value.account, profile: this.withDisplayName(profile) };
+  }
+  async officialLogout(user: User) {
+    const profile = await this.officialProfile(user);
+    const stored = await this.secrets.get(user.id, profile.id, this.store.secret(user.id, profile.id));
+    if (stored) {
+      try { await this.officialRequest("logout", { method: "POST", headers: { Authorization: "Bearer " + stored } }); } catch { /* 本地清除优先于远端会话回收。 */ }
+      this.secrets.forget(profile.id);
+      profile.has_key = Boolean(this.config.officialToken);
+      this.store.saveProfile(profile, null);
+    }
+    return { connected: Boolean(this.config.officialToken), account: null };
+  }
   private withDisplayName(profile: Profile): Profile {
     return profile.mode === "official"
-      ? { ...profile, display_name: this.config.officialModelDisplayName }
+      ? {
+          ...profile,
+          model: this.config.officialModel,
+          base_url: normalizeBaseUrl(this.config.officialUrl, true),
+          api_kind: this.config.officialKind,
+          display_name: this.config.officialModelDisplayName,
+        }
       : profile;
   }
   async list(user: User) {
@@ -66,9 +147,9 @@ export class Profiles {
     for (const profile of this.store.profiles(user.id)) {
       let available = false;
       try {
-        available =
+          available =
           profile.mode === "official"
-            ? this.officialConfigured()
+            ? Boolean(await this.officialKey(user, profile))
             : Boolean(
                 await this.secrets.get(
                   user.id,
@@ -83,6 +164,7 @@ export class Profiles {
   }
   async save(user: User, raw: unknown, profileId?: string) {
     const input = profileInput.parse(raw);
+    invariant(this.config.deploymentMode !== "server" || input.mode === "official", 403, "云端工作区使用官方服务；自带 API Key 请在 PC 端配置。", "cloud_official_only");
     if (profileId) {
       this.store.profile(user.id, profileId);
       invariant(
@@ -208,7 +290,7 @@ export class Profiles {
   async model(user: User, profile: Profile): Promise<Model> {
     const key =
       profile.mode === "official"
-        ? this.config.officialToken
+        ? await this.officialKey(user, profile)
         : await this.secrets.get(
             user.id,
             profile.id,
@@ -236,8 +318,25 @@ export class Profiles {
         allow_local: profile.allow_local,
         timeout_ms: this.config.modelTimeoutMs,
         max_output_tokens: this.config.maxOutputTokens,
+        official: profile.mode === "official",
       })
     );
+  }
+  /** 仅官方模式使用官方判断服务；自配服务不静默外发。测试可注入协议替身。 */
+  decisionFactory?: (task: DecisionTask, signal: AbortSignal) => Promise<DecisionResult>;
+  async decide(user: User, profile: Profile, task: DecisionTask, signal: AbortSignal): Promise<DecisionResult | null> {
+    if (profile.mode !== "official") return null;
+    invariant(this.store.getUser(user.id).external_ai_consent, 403, "模型授权已撤回。");
+    invariant(this.officialConfigured(), 503, "官方职业判断尚未配置。", "decision_not_configured");
+    if (this.decisionFactory) return validateCareerDecision(task, await this.decisionFactory(task, signal));
+    const key = await this.officialKey(user, profile);
+    invariant(key, 409, "请先连接官方账号或配置官方访问凭证。", "official_auth_required");
+    const response = await fetchProvider({ base_url: normalizeBaseUrl(this.config.officialUrl, true), key,
+      allow_local: true, timeout_ms: 30000 }, "career/decisions", { method: "POST", body: task, signal: AbortSignal.any([signal, AbortSignal.timeout(35000)]) });
+    let raw: unknown;
+    try { raw = JSON.parse(await readLimited(response, 512 * 1024)); }
+    catch { throw new AppError(502, "职业判断返回无效响应。", "decision_invalid_response"); }
+    return validateCareerDecision(task, raw);
   }
   async test(user: User, profileId: string) {
     invariant(

@@ -625,16 +625,6 @@ function WorkbenchShell({ onSignedOut }: Props) {
       <div className="frame">
         <header className="topbar">
           <div className="desktop-message-title"><PixelIcon kind="messages" size={19} /><span>穗奈消息</span><small>MESSAGE.EXE</small></div>
-          <div className="search research-only">
-            <Ms g="search" size={20} />
-            <input
-              name="search"
-              id="global-search"
-              placeholder="搜索成果物、对话或岗位关键词..."
-              disabled
-              title="检索尚未实现"
-            />
-          </div>
           <div className="topbar__end">
             <button className="desktop-maximize" type="button" aria-label={expanded ? "还原消息窗口" : "展开消息窗口"} aria-pressed={expanded} onClick={() => setExpanded((open) => !open)}>□</button>
             <span
@@ -698,7 +688,6 @@ function WorkbenchShell({ onSignedOut }: Props) {
                     </span>
                   </button>
                   <div className="menu__head">界面</div>
-                  <a className="menu__row" href="?preview=suinai-motion"><PixelIcon kind="wheat" size={18} /><span>穗奈动作试映室</span></a>
                   <button
                     className="menu__row"
                     aria-pressed={research}
@@ -1252,7 +1241,7 @@ function CapabilityPicker({
             </button>
           </div>
           {GROUPS.map((group) => {
-            const entries = capabilities.filter((capability) => group.domains.includes(capability.domain));
+            const entries = capabilities.filter((capability) => group.domains.includes(capability.domain) && capability.status === "implemented");
             if (!entries.length) {
               return null;
             }
@@ -1277,11 +1266,7 @@ function CapabilityPicker({
                       <span className="picker__name">{capability.name}</span>
                       <span className="picker__desc">{capability.description}</span>
                     </span>
-                    {capability.status === "planned" ? (
-                      <span className="picker__soon">未实现</span>
-                    ) : (
-                      <Ms className="picker__tick" g="check_circle" size={20} />
-                    )}
+                    <Ms className="picker__tick" g="check_circle" size={20} />
                   </button>
                 ))}
               </div>

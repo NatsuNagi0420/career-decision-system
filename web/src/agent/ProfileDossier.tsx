@@ -1,4 +1,6 @@
 /** 青穗集 · 用户画像档案页：按原型分组展示事实、方向、经历、技能、偏好与待追问内容。 */
+import { CareerEvidencePanel } from "./CareerEvidence";
+import type { CareerFactHandler } from "./career-workspace";
 import { assetUrl } from "../assets";
 import { ComponentIcon } from "./ComponentAssets";
 import { displaySkills, SKILL_STAGES } from "./CareerComponents";
@@ -111,7 +113,7 @@ function ModuleHeader({ index, title, hint, asset }: { index: string; title: str
   return <header className="profile-dossier-module-head"><span className="profile-dossier-module-number">{index}</span><span className="profile-dossier-module-icon"><ProfileAssetIcon name={asset} size={23} /></span><h3>{title}</h3><span className="profile-dossier-module-hint">{hint}</span></header>;
 }
 
-export function ProfileDossier({ state, onEdit, onPrompt }: { state: CareerState; onEdit: () => void; onPrompt: (text: string) => void }) {
+export function ProfileDossier({ state, onEdit, onPrompt, saving, onResolve }: { state: CareerState; onEdit: () => void; onPrompt: (text: string) => void; saving?:boolean; onResolve?:CareerFactHandler }) {
   const confirmed = Boolean(state.profile.confirmed_at);
   const confirmedFields = PROFILE_FIELDS.filter(field => state.profile[field.key].trim());
   const missingFields = PROFILE_FIELDS.filter(field => !state.profile[field.key].trim());
@@ -126,6 +128,8 @@ export function ProfileDossier({ state, onEdit, onPrompt }: { state: CareerState
       <div className="profile-dossier-page-title"><div className="profile-dossier-brand-mark"><ProfileAssetIcon name="sprout" size={34} /></div><div><span className="profile-dossier-kicker">SUINAI · CAREER PROFILE</span><h3>你的职业画像</h3><p>不是评分结果，而是穗奈基于真实经历持续更新的理解。</p></div></div>
       <div className="profile-dossier-page-meta"><StatusPill status={profileStatus} label={profileStatusLabel} /><span><ProfileAssetIcon name="updated" size={15} />最近更新：{formatUpdated(state.updated_at ?? state.profile.confirmed_at)}</span></div>
     </header>
+
+    <CareerEvidencePanel state={state} saving={saving} onResolve={onResolve} onPrompt={onPrompt} />
 
     <div className="profile-dossier-understanding"><strong>穗奈目前怎样理解你</strong><span>每条记录都区分确认状态，并保留来源。新的证据出现后，暂时判断会调整，待确认项会回到对话继续补充。</span><div className="profile-dossier-legend"><StatusPill status="confirmed" /><StatusPill status="judgement" /><StatusPill status="pending" /></div></div>
 

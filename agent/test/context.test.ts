@@ -48,6 +48,7 @@ test("通用上下文会压缩旧工具结果，保留最近对话和当前工�
     memorySummary: "用户正在比较职业方向。",
   });
   assert.equal(packed.compacted, true);
+  assert.equal(packed.sourceMessageCount, messages.length);
   assert.ok(packed.estimatedTokens <= 5000);
   assert.ok(packed.omittedMessages >= 2);
   assert.ok(packed.messages.some((item) => item.id === "message-9"));

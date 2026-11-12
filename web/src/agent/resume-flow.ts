@@ -1,4 +1,4 @@
-/** 青穗集 · 简历内部阶段与固定示例：阶段留在后台，对话负责引导；示例不冒充模型分析。 */
+/** 青穗集 · 简历内部阶段与测试夹具：阶段留在后台，对话负责引导；固定数据只供回归测试。 */
 import { emptyResumeState, type ResumeState, type ResumeStep, type ResumeChange, type ResumeFact, type ResumeSelection, type ResumeBody } from "../../../agent/src/resume-contract";
 export const FACT_KIND_LABEL = { education: "教育背景", experience: "工作与实践", projects: "项目经历", skills: "专业技能" } as const;
 export const CHOICE_LABEL = { primary: "重点展示", secondary: "精简展示", omit: "本次不展示" } as const;
@@ -51,7 +51,7 @@ function exampleBody(state: ResumeState): ResumeBody {
   };
   return { summary: { text: "", fact_ids: [] }, sections: kinds.filter(kind => included.some(f => f.kind === kind)).map(kind => ({ kind, entries: included.filter(f => f.kind === kind).map(f => ({ title: f.title, subtitle: "", period: "", fact_ids: [f.id], bullets: [f.detail], ...(!f.user_edited ? wording[f.id] : {}) })) })) };
 }
-/** 示例只演示交互；材料固定，步骤结果预设，绝不把示例分析当作真实模型调用。 */
+/** 测试夹具只验证状态变化；固定材料不进入真实模型调用。 */
 export function changeResumeExample(previous: ResumeState, change: ResumeChange): ResumeState {
   const state = structuredClone(previous);
   if (change.type === "materials.save") { state.step = "facts"; }

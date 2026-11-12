@@ -1,4 +1,5 @@
 /** 青穗集 · OpenAI 兼容模型适配：Chat / Responses、流式工具参数、超时和无凭据错误。 */
+import { setTimeout as delay } from "node:timers/promises";
 import { fetchProvider, ProviderError, readLimited } from "./provider.js";
 export { normalizeBaseUrl, validateEndpoint, readLimited } from "./provider.js";
 import { AppError, invariant, isRecord } from "./errors.js";
@@ -17,6 +18,8 @@ export interface Connection {
   allow_local: boolean;
   timeout_ms: number;
   max_output_tokens: number;
+  /** 只有官方入口发送内部能力路由头；自定义接口不接收该标识。 */
+  official?: boolean;
 }
 function textContent(value: unknown): string {
   if (typeof value === "string") return value;
@@ -133,8 +136,14 @@ export class CompatibleModel implements Model {
     if (c.api_kind === "chat-completions") {
       return {
         model: c.model,
-        messages: request.messages.map((message) => ({
+        messages: request.messages.map(({ images, ...message }) => ({
           ...message,
+          ...(images?.length ? {
+            content: [
+              { type: "text", text: message.content },
+              ...images.map(image => ({ type: "image_url", image_url: { url: image.url } })),
+            ],
+          } : {}),
           tool_calls: message.tool_calls?.map((tool) => ({
             id: tool.id,
             type: "function",
@@ -159,6 +168,10 @@ export class CompatibleModel implements Model {
       };
     }
     const input: unknown[] = [];
+    const responsesContent = (content: string, images?: Array<{ url: string }>): string | Record<string, unknown>[] =>
+      images?.length
+        ? [{ type: "input_text", text: content }, ...images.map(image => ({ type: "input_image", image_url: image.url }))]
+        : content;
     for (const message of request.messages) {
       if (message.role === "assistant" && message.response_items?.length) {
         input.push(...message.response_items);
@@ -173,7 +186,7 @@ export class CompatibleModel implements Model {
         continue;
       }
       if (message.content)
-        input.push({ role: message.role, content: message.content });
+        input.push({ role: message.role, content: responsesContent(message.content, message.images) });
       for (const tool of message.tool_calls ?? [])
         input.push({
           type: "function_call",
@@ -204,7 +217,8 @@ export class CompatibleModel implements Model {
     const signal = request.signal;
     try {
       let response: Response | undefined;
-      // 仅对明确的“不支持参数”做有界协商；401、额度、503、网络等错误不重试，不换服务商。
+      let busyRetries = 0;
+      // 参数协商有界；官方 busy 表示请求尚未受理，可取消地排队。额度、网络和已受理请求不重试。
       for (let attempt = 0; attempt < 8; attempt++) {
         try {
           response = await fetchProvider(
@@ -213,6 +227,9 @@ export class CompatibleModel implements Model {
             {
               method: "POST",
               body: this.payload(request),
+              ...(c.official && request.routingCapability
+                ? { headers: { "X-Suinai-Capability": request.routingCapability } }
+                : {}),
               signal,
             },
             this.fetcher,
@@ -221,6 +238,12 @@ export class CompatibleModel implements Model {
           break;
         } catch (error) {
           if (!(error instanceof ProviderError)) throw error;
+          if (c.official && error.code === "relay_busy" && busyRetries < 6) {
+            if (busyRetries === 0) request.onNotice?.("穗奈正在完成上一项整理，这项请求已排队。");
+            await delay(Math.min(8000, 500 * 2 ** busyRetries++), undefined, { signal });
+            attempt--; // 排队与协议参数协商分别计数，总等待不超过 24 秒。
+            continue;
+          }
           const param = error.rejectedParameter;
           if (
             param === "max_tokens" &&
@@ -410,9 +433,12 @@ export class CompatibleModel implements Model {
               name: "",
               arguments: "",
             };
-            if (typeof item.id === "string") slot.id += item.id;
+            // Some OpenAI-compatible gateways repeat the call id in every
+            // argument delta. The id is metadata, not a fragmented string;
+            // appending it can exceed the validation limit on long tool calls.
+            if (typeof item.id === "string" && item.id) slot.id = item.id;
             const fn = isRecord(item.function) ? item.function : {};
-            if (typeof fn.name === "string") slot.name += fn.name;
+            if (typeof fn.name === "string" && fn.name) slot.name = fn.name;
             if (typeof fn.arguments === "string")
               slot.arguments += fn.arguments;
             slots.set(index, slot);

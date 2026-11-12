@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist/cloud"
+  },
+  "files": [
+    "src/cloud.ts"
+  ],
+  "include": []
+}

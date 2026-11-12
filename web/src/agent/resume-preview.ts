@@ -15,6 +15,7 @@ export function resumePreviewDocument(state: ResumeState | null, draft?: ResumeL
   };
   if (!draft || draft.context_version !== state.context_version || draft.request_id !== state.pending?.id || state.pending?.kind !== "rewrite")
     return { header, body: base, sourceText: state.body || state.facts.length ? "" : state.source_text };
+  if (draft.mode === "replace") return { header: draft.header ?? header, body: draft.body, sourceText: "" };
   const replaced = new Set(draft.body.sections.flatMap(section => section.entries.flatMap(entry => entry.fact_ids)));
   const sections = base.sections.map(section => ({ ...section, entries: section.entries.filter(entry => !entry.fact_ids.some(id => replaced.has(id))) }));
   for (const incoming of draft.body.sections) {
@@ -32,7 +33,7 @@ export function currentResumeDraft(events: AgentEvent[], run: AgentRun | undefin
     const event = events[index];
     if (event.run_id !== run.id) continue;
     if (["model.started", "model.failed", "run.retry"].includes(event.kind)) return null;
-    if (event.kind === "tool.finished" && event.data.name === "propose_resume_update" && event.data.ok === false) return null;
+    if (event.kind === "tool.finished" && ["propose_resume_update", "propose_resume_patch"].includes(String(event.data.name)) && event.data.ok === false) return null;
     if (event.kind === "resume.preview") {
       const draft = event.data.draft as ResumeLiveDraft | undefined;
       return draft?.request_id === state.pending.id && draft.context_version === state.context_version ? draft : null;

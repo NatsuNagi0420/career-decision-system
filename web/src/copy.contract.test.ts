@@ -26,11 +26,12 @@ const RESEARCHER_SURFACES = new Set([
 
 const SRC = fileURLToPath(new URL("./", import.meta.url));
 
-// 2026-10：用户明确要求归档对话，这是正常产品操作，与旧业务内部的归档术语不同。
+// 用户明确要求归档对话及记忆，这是正常产品操作，与旧业务内部的归档术语不同。
 const CONVERSATION_SURFACES = new Set([
   "src/agent/AgentApp.tsx:归档",
   "src/agent/ChatComposer.tsx:归档",
   "src/agent/ConversationHistory.tsx:归档",
+  "src/agent/MemorySea.tsx:归档",
 ]);
 
 function sources(dir: string, acc: string[] = []): string[] {

@@ -1,8 +1,10 @@
 /** 青穗集 · 新 Agent API：统一鉴权、可恢复 SSE 与经确认的文件下载，不保存模型 Key。 */
+import type { OfficialCredits } from "../../../agent/src/credits-contract";
 import { tokenStore } from "../api/client";
 import type { CareerChange, CareerState } from "./career";
 import type { ResumeChange, ResumeState } from "../../../agent/src/resume-contract";
 import type { GuidanceView, TaskKind } from "../../../agent/src/guidance-contract";
+import type { MemoryChange, MemorySeaView } from "../../../agent/src/memory-contract";
 import type {
   AgentApproval,
   AgentFile,
@@ -14,10 +16,14 @@ import type {
   ModelDiscoveryInput,
   ModelInput,
   ModelProfile,
+  OfficialSession,
   Snapshot,
   AgentEvent,
   RunOptions,
   FilePreview,
+  AgentObligation,
+  LocalWorkspace,
+  WorkspaceAccess,
 } from "./types";
 const BASE = "/api/v1/agent";
 export class AgentApiError extends Error {
@@ -30,7 +36,7 @@ async function request<T>(url: string, init: RequestInit = {}): Promise<T> {
   if (token) headers.set("Authorization", "Bearer " + token);
   const response = await fetch(url, { ...init, headers });
   if (!response.ok) {
-    if (response.status === 401) {
+    if (response.status === 401 && !url.endsWith("/official/login") && !url.endsWith("/auth/login") && !url.endsWith("/auth/register")) {
       tokenStore.clear();
       window.dispatchEvent(new Event("agent:unauthorized"));
     }
@@ -44,13 +50,41 @@ async function request<T>(url: string, init: RequestInit = {}): Promise<T> {
   return response.json() as Promise<T>;
 }
 export const agentApi = {
+  remote: async (cloud = false): Promise<import("./RemoteConnections").RemoteState> => {
+    if (!cloud) return request(BASE + "/remote");
+    const [devices, sessions] = await Promise.all([
+      request<import("./RemoteConnections").RemoteState["devices"]>("/api/v1/hub/devices"),
+      request<import("./RemoteConnections").RemoteState["sessions"]>("/api/v1/hub/sessions"),
+    ]);
+    return { configured: true, logged_in: true, device: null, devices, sessions, pairing: null, limits: { workspace_ids: [], allow_project_write: false }, error: null };
+  },
+  connectRemote: (name: string) => request(BASE + "/remote/connect", { method: "POST", body: JSON.stringify({ name }) }),
+  refreshRemotePairing: () => request(BASE + "/remote/pairing", { method: "POST", body: "{}" }),
+  disconnectRemote: () => request(BASE + "/remote/disconnect", { method: "POST", body: "{}" }),
+  remoteSnapshot: <T,>(id: string, cloud = false) => request<T>((cloud ? "/api/v1/hub/sessions/" : BASE + "/remote/sessions/") + id),
+  cancelRemoteTask: (id: string, cloud = false) => request((cloud ? "/api/v1/hub/tasks/" : BASE + "/remote/tasks/") + id + "/cancel", { method: "POST", body: "{}" }),
+  remoteDownload: async (id: string, cloud = false) => { const response = await fetch(cloud ? "/api/v1/hub/files/" + id + "/content" : BASE + "/remote/files/" + id, { headers: { Authorization: "Bearer " + tokenStore.get() } }); if (!response.ok) throw new Error("文件暂时无法下载。"); return response.blob(); },
+  authConfig: () => request<{ mode: "local" | "server"; identity: string; device_session: boolean }>("/api/v1/auth/config"),
+  bootstrap: async () => { const session = await request<{ token: string; user: AgentUser }>("/api/v1/auth/bootstrap", { method: "POST" }); tokenStore.set(session.token); return session.user; },
   changeTask: (id: string, revision: number, kind: TaskKind | null, reuse_shared_resume = false) => request<GuidanceView>(BASE + "/conversations/" + id + "/task", { method: "POST", body: JSON.stringify({ revision, kind, reuse_shared_resume }) }),
-  analyzeConversation: (id: string, profile_id: string, message_id: string, signal?: AbortSignal) => request<GuidanceView>(BASE + "/conversations/" + id + "/insights", { method: "POST", body: JSON.stringify({ profile_id, message_id }), signal }),
+  analyzeConversation: (id: string, profile_id: string, message_id: string, signal?: AbortSignal, force = false) => request<GuidanceView>(BASE + "/conversations/" + id + "/insights", { method: "POST", body: JSON.stringify({ profile_id, message_id, ...(force ? { force } : {}) }), signal }),
   resume: (signal?: AbortSignal) => request<ResumeState>(BASE + "/resume", { signal }),
   changeResume: (revision: number, change: ResumeChange, conversation_id?: string | null) => request<ResumeState>(BASE + "/resume/changes", { method: "POST", body: JSON.stringify({ revision, change, ...(conversation_id ? { conversation_id } : {}) }) }),
   exportResume: (revision: number, conversation_id: string, template_id: string = "one-page") => request<{ artifacts: AgentFile[] }>(BASE + "/resume/export", { method: "POST", body: JSON.stringify({ revision, conversation_id, template_id }) }),
   catalogueJob: (id: string, signal?: AbortSignal) => request<import("./job-cards").JobDetail>(BASE + "/career/catalogue/jobs/" + encodeURIComponent(id), { signal }),
-  career: (signal?: AbortSignal) => request<CareerState>(BASE + "/career", { signal }),
+  resolveCareerFact: (id: string, action: "confirm" | "dismiss") => request<CareerState>(BASE + "/career/facts/" + encodeURIComponent(id), { method: "POST", body: JSON.stringify({ action }) }),
+  career: (signal?: AbortSignal, conversationId?: string | null) => request<CareerState>(BASE + "/career" + (conversationId ? "?conversation_id=" + encodeURIComponent(conversationId) : ""), { signal }),
+  memory: (conversationId?: string | null, search = "", signal?: AbortSignal) => { const params = new URLSearchParams(); if (conversationId) params.set("conversation_id", conversationId); if (search) params.set("search", search); return request<MemorySeaView>(BASE + "/memory" + (params.size ? "?" + params.toString() : ""), { signal }); },
+  changeMemory: (id: string, change: MemoryChange) => request<MemorySeaView>(BASE + "/memory/" + encodeURIComponent(id), { method: "POST", body: JSON.stringify(change) }),
+  retryMemory: () => request(BASE + "/memory/retry", { method: "POST", body: "{}" }),
+  memorySettings: (value: { enabled?: boolean; recall_enabled?: boolean; sync_enabled?: boolean }) => request<{ enabled: boolean; recall_enabled: boolean }>(BASE + "/memory/settings", { method: "POST", body: JSON.stringify(value) }),
+  exportMemory: async () => {
+    const response = await fetch(BASE + "/memory/export", { headers: { Authorization: "Bearer " + tokenStore.get() } });
+    if (!response.ok) throw new Error("记忆文档暂时无法导出，请稍后再试。");
+    const url = URL.createObjectURL(await response.blob()), link = document.createElement("a");
+    link.href = url; link.download = "穗奈·忆迹场.md"; document.body.append(link); link.click(); link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 30000);
+  },
   changeCareer: (revision: number, change: CareerChange) => request<CareerState>(BASE + "/career/changes", { method: "POST", body: JSON.stringify({ revision, change }) }),
   me: () => request<AgentUser>("/api/v1/auth/me"),
   logout: () =>
@@ -61,6 +95,17 @@ export const agentApi = {
       body: JSON.stringify({ granted }),
     }),
   info: () => request<AgentInfo>(BASE + "/info"),
+  onboarding: (signal?: AbortSignal) => request<import("../../../agent/src/onboarding-contract").OnboardingState>(BASE + "/onboarding", { signal }),
+  updateOnboarding: (input: import("../../../agent/src/onboarding-contract").OnboardingUpdate, signal?: AbortSignal) => request<import("../../../agent/src/onboarding-contract").OnboardingState>(BASE + "/onboarding", { method: "PATCH", body: JSON.stringify(input), signal }),
+  officialCredits: (cursor?: string) => request<OfficialCredits>(BASE + "/official/credits" + (cursor ? "?cursor=" + encodeURIComponent(cursor) : "")),
+  officialSession: () => request<OfficialSession>(BASE + "/official/session"),
+  officialLogin: (username: string, password: string, register = false) => request<OfficialSession & { profile: ModelProfile; token?: string; user?: AgentUser }>(BASE + "/official/login", { method: "POST", body: JSON.stringify({ username, password, register }) }),
+  officialLogout: () => request<OfficialSession & { user?: AgentUser }>(BASE + "/official/logout", { method: "POST" }),
+  workspaces: () => request<LocalWorkspace[]>(BASE + "/workspaces"),
+  pickWorkspace: () => request<{ cancelled: boolean; workspace: LocalWorkspace | null }>(BASE + "/workspaces/pick", { method: "POST", body: JSON.stringify({}) }),
+  registerWorkspace: (root_path: string, name?: string) => request<LocalWorkspace>(BASE + "/workspaces", { method: "POST", body: JSON.stringify({ root_path, ...(name ? { name } : {}) }) }),
+  deleteWorkspace: (id: string) => request<{ ok: boolean }>(BASE + "/workspaces/" + id, { method: "DELETE" }),
+  bindWorkspace: (conversationId: string, workspace_id: string | null, access: WorkspaceAccess = "read-only") => request<Conversation>(BASE + "/conversations/" + conversationId + "/workspace", { method: "PATCH", body: JSON.stringify({ workspace_id, access }) }),
   discoverModels: (input: ModelDiscoveryInput) =>
     request<ModelDiscovery>(BASE + "/models/discover", {
       method: "POST",
@@ -88,6 +133,9 @@ export const agentApi = {
     request<Conversation>(BASE + "/conversations/" + id, { method: "PATCH", body: JSON.stringify({ title }) }),
   deleteConversation: (id: string) =>
     request<{ ok: boolean; id: string }>(BASE + "/conversations/" + id, { method: "DELETE" }),
+  obligations: (conversationId?: string) => request<AgentObligation[]>(BASE + "/obligations" + (conversationId ? "?conversation_id=" + encodeURIComponent(conversationId) : "")),
+  claimObligation: (id: string) => request<AgentObligation>(BASE + "/obligations/" + id + "/claim", { method: "POST" }),
+  abandonObligation: (id: string) => request<AgentObligation>(BASE + "/obligations/" + id + "/abandon", { method: "POST" }),
   snapshot: (id: string) => request<Snapshot>(BASE + "/conversations/" + id),
   send: (id: string, profile_id: string, input: string, request_id: string, options?: RunOptions) =>
     request<AgentRun>(BASE + "/conversations/" + id + "/runs", {

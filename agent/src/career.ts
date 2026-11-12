@@ -104,6 +104,7 @@ function proposalFingerprint(state: CareerState, data: z.infer<typeof careerProp
   return createHash("sha256").update(JSON.stringify(basis)).digest("hex");
 }
 export class CareerWorkspace {
+  decisionView?: (userId: number, conversationId?: string) => import("./career-decision-contract.js").CareerDecisionView;
   readonly catalogue: JobCatalogue;
   constructor(readonly store: Store) {
     this.catalogue = new JobCatalogue(store);
@@ -115,9 +116,9 @@ export class CareerWorkspace {
     const row = this.store.db.prepare("SELECT data FROM career_workspaces WHERE user_id=?").get(userId);
     return row ? JSON.parse(row.data as string) as CareerState : emptyCareerState();
   }
-  view(userId: number) {
+  view(userId: number, conversationId?: string) {
     const saved = this.store.db.prepare("SELECT s.catalogue_id,s.created_at,j.data FROM career_saved_jobs s LEFT JOIN catalogue_jobs j ON j.id=s.catalogue_id WHERE s.user_id=? ORDER BY s.created_at DESC,s.catalogue_id").all(userId);
-    return { ...this.present(this.get(userId)), saved_jobs: saved.map(row => {
+    return { ...this.present(this.get(userId)), ...(this.decisionView ? { insights: this.decisionView(userId, conversationId) } : {}), saved_jobs: saved.map(row => {
       const job = row.data ? JSON.parse(row.data as string) as { title: string; company: string; city: string } : null;
       return { catalogue_id: row.catalogue_id as string, created_at: row.created_at as string, title: job?.title ?? "岗位资料已移除", company: job?.company ?? "", city: job?.city ?? "", available: Boolean(job) };
     }) };
@@ -290,11 +291,12 @@ export class CareerWorkspace {
       return this.write(userId, state);
     });
   }
-  context(userId: number) {
+  context(userId: number, conversationId?: string) {
     const state = this.get(userId);
     const presented = this.present(state);
     return { context_version: presented.context_version, profile: presented.profile, skills: presented.skills ?? [], jobs: presented.jobs, actions: presented.actions,
       comparisons: presented.comparisons,
+      ...(this.decisionView ? { evidence_insights: this.decisionView(userId, conversationId) } : {}),
       sources: presented.sources,
       // 修改待确认建议需要看到原始草稿，否则模型只能复述标题，无法基于原内容生成替代版本。
       pending_proposals: presented.proposals.map(proposal => ({

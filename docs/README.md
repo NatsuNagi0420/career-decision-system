@@ -15,3 +15,5 @@
 | `v1-历史/` | 历史设计文档，仅供追溯 |
 
 原始 PDF、PSD、KRA、ZIP 和网页抓取物只在本机或制品存储保留，不作为应用运行时输入。新增产品结论请优先更新 `v2/` 或 `agent-foundation/` 中对应文档，并同步架构索引。
+
+Jev 的职业判断能力、官方服务分工及落地顺序见 [Jev 职业判断方案](agent-foundation/JEV_DECISION_DESIGN.md)；其中明确区分已接通接口和待开发业务。

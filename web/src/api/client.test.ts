@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api, onUnauthorized, readRunStream, tokenStore } from "./client";
 
 const store = new Map<string, string>();
+const session = new Map<string, string>();
 const fakeStorage = {
   getItem: (k: string) => store.get(k) ?? null,
   setItem: (k: string, v: string) => void store.set(k, v),
@@ -14,8 +15,9 @@ function reply(status: number, body: unknown = {}) {
 }
 
 beforeEach(() => {
-  store.clear();
+  store.clear(); session.clear();
   vi.stubGlobal("localStorage", fakeStorage);
+  vi.stubGlobal("sessionStorage", { getItem: (key: string) => session.get(key) ?? null, setItem: (key: string, value: string) => void session.set(key, value), removeItem: (key: string) => void session.delete(key) });
 });
 
 afterEach(() => {
@@ -84,5 +86,26 @@ describe("progress transport", () => {
     const controller = new AbortController(); controller.abort();
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("aborted")));
     expect(await collect(0, controller.signal)).toEqual([]);
+  });
+});
+
+
+describe("login credential lifetime", () => {
+  it("keeps an unchecked remember-me session out of persistent storage", () => {
+    tokenStore.set("old-persistent");
+    tokenStore.set("temporary-token", false);
+    expect(localStorage.getItem("career.session.token")).toBeNull();
+    expect(sessionStorage.getItem("career.session.token")).toBe("temporary-token");
+    expect(tokenStore.get()).toBe("temporary-token");
+  });
+  it("can switch back to a persistent session and clears both on logout", () => {
+    tokenStore.set("temporary-token", false);
+    tokenStore.set("remembered-token", true);
+    expect(sessionStorage.getItem("career.session.token")).toBeNull();
+    expect(localStorage.getItem("career.session.token")).toBe("remembered-token");
+    tokenStore.clear();
+    expect(tokenStore.get()).toBeNull();
+    expect(session.size).toBe(0);
+    expect(store.size).toBe(0);
   });
 });

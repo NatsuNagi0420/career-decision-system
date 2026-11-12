@@ -1,0 +1,12 @@
+import { chromium } from 'playwright';
+const token = process.env.DEMO_TOKEN;
+const browser = await chromium.launch({ channel: 'chrome', headless: true });
+const page = await browser.newPage({ viewport: { width: 1600, height: 1000 }, deviceScaleFactor: 1 });
+page.on('response', async r => { const u = new URL(r.url()); if (u.pathname.startsWith('/api/')) console.log('RESP', r.status(), u.pathname); });
+page.on('console', m => console.log('CONSOLE', m.type(), m.text()));
+await page.addInitScript(t => { localStorage.setItem('career.session.token', t); }, token);
+await page.goto('http://127.0.0.1:5173/', { waitUntil: 'domcontentloaded', timeout: 30000 });
+await page.waitForTimeout(7000);
+console.log('LS', await page.evaluate(() => ({ local: localStorage.getItem('career.session.token'), session: sessionStorage.getItem('career.session.token') })));
+console.log('TEXT', (await page.locator('body').innerText()).slice(0, 2500));
+await browser.close();

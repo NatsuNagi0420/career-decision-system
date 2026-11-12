@@ -20,34 +20,23 @@ export interface AgentMessage {
   run_id?: string | null;
 }
 
-export interface ModelProfile {
-  id: string;
-  name: string;
-  mode: "official" | "custom";
-  api_kind: "auto" | "chat-completions" | "responses";
-  display_name?: string;
-  model: string;
-  base_url: string;
-  has_key: boolean;
-  capabilities: {
-    chat: boolean;
-    tools: boolean;
-    stream: boolean;
-    tested_at: string | null;
-    note: string;
-  };
-}
-
 export interface Conversation {
   id: string;
   title: string;
   profile_id: string | null;
+  target?: "pc" | "cloud";
+  device_id?: string | null;
+  workspace_id?: string | null;
+  workspace_name?: string | null;
+  workspace_access?: "read-only" | "workspace-write";
   archived?: boolean;
   created_at: string;
   updated_at: string;
 }
 
 export type RunStatus =
+  | "waiting_pc"
+  | "paused"
   | "queued"
   | "running"
   | "awaiting_approval"
@@ -62,6 +51,7 @@ export interface AgentRun {
   status: RunStatus;
   error: string | null;
   steps: number;
+  local_run_id?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -73,12 +63,23 @@ export interface AgentSnapshot {
   drafts?: Record<string, string>;
   artifacts?: Artifact[];
   last_seq: number;
+  approvals?: Array<{
+    id: string;
+    run_id: string;
+    status: string;
+    reason?: string;
+  }>;
+  tasks?: HubTask[];
+  events?: AgentEvent[];
+  resume?: ResumeDocument;
+  files?: Artifact[];
 }
 
 export interface Artifact {
   id: string;
   conversation_id: string;
-  run_id: string | null;
+  run_id?: string | null;
+  session_id?: string;
   name: string;
   path: string;
   bytes: number;
@@ -134,12 +135,19 @@ export interface CareerProposal {
   conversation_id: string;
   status?: "pending_confirmation" | "applied" | "rejected";
   data?: Record<string, unknown>;
+  stale?: boolean;
+  stale_reason?: string;
+  catalogue_sample?: { title?: string };
 }
 
 export interface CareerComparison {
   job_id: string;
   summary: string;
-  checks: Array<{ requirement: string; assessment: "supported" | "partial" | "unknown" | "conflict"; reason: string }>;
+  checks: Array<{
+    requirement: string;
+    assessment: "supported" | "partial" | "unknown" | "conflict";
+    reason: string;
+  }>;
   confirmed_at: string;
   stale?: boolean;
 }
@@ -149,13 +157,24 @@ export interface CareerView {
   context_version: number;
   updated_at: string | null;
   profile: CareerProfile;
-  skills?: Array<{ name: string; stage: string; evidence: Array<{ source_id: string; quote: string }> }>;
+  skills?: Array<{
+    name: string;
+    stage: string;
+    evidence: Array<{ source_id: string; quote: string }>;
+  }>;
   jobs: CareerJob[];
   actions: CareerAction[];
   comparisons: CareerComparison[];
   proposals: CareerProposal[];
   sources?: Array<{ id: string; kind: string; text: string }>;
-  saved_jobs: Array<{ catalogue_id: string; created_at: string; title: string; company: string; city: string; available: boolean }>;
+  saved_jobs: Array<{
+    catalogue_id: string;
+    created_at: string;
+    title: string;
+    company: string;
+    city: string;
+    available: boolean;
+  }>;
 }
 
 export interface CareerDirection {
@@ -202,21 +221,51 @@ export interface RunResult extends AgentRun {
   request_id?: string;
 }
 
-export class AgentApiError extends Error {
-  constructor(
-    message: string,
-    readonly status: number,
-    readonly code?: string,
-  ) {
-    super(message);
-    this.name = "AgentApiError";
-  }
+export interface AgentApiError extends Error {
+  status: number;
+  code?: string;
 }
 
-const API_ORIGIN =
+// 使用原生 Error 附带请求信息，避免小程序转译 Error 子类时构造失败。
+function apiError(
+  message: string,
+  status: number,
+  code?: string,
+): AgentApiError {
+  const error = new Error(message) as AgentApiError;
+  error.name = "AgentApiError";
+  error.status = status;
+  error.code = code;
+  return error;
+}
+
+export function isAgentApiError(error: unknown): error is AgentApiError {
+  return (
+    error instanceof Error &&
+    error.name === "AgentApiError" &&
+    typeof (error as AgentApiError).status === "number"
+  );
+}
+
+export const CAREER_CATALOGUE_LIMITS = { directions: 25, jobs: 5 } as const;
+
+function catalogueLimit(value: number | undefined, maximum: number) {
+  if (value === undefined || !Number.isFinite(value)) return undefined;
+  return Math.min(maximum, Math.max(1, Math.trunc(value)));
+}
+
+export const API_ORIGIN =
   (import.meta.env.VITE_AGENT_API_ORIGIN as string | undefined) ??
-  "http://127.0.0.1:8110";
-const TOKEN_KEY = "qingsui.agent.session.token";
+  "https://agent.suinai.me";
+export function apiOriginLabel(): string {
+  try {
+    const url = new URL(API_ORIGIN);
+    return `${url.hostname}${url.port ? `:${url.port}` : ""}`;
+  } catch {
+    return API_ORIGIN;
+  }
+}
+const TOKEN_KEY = "qingsui.agent.session.token:" + API_ORIGIN;
 
 export function apiUrl(path: string): string {
   return `${API_ORIGIN.replace(/\/$/, "")}${path.startsWith("/") ? path : `/${path}`}`;
@@ -240,8 +289,15 @@ export function hasToken(): boolean {
 }
 
 export function newRequestId(): string {
-  const cryptoApi = (globalThis as { crypto?: { randomUUID?: () => string } }).crypto;
-  return cryptoApi?.randomUUID?.() ?? `req-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+  const cryptoApi = (globalThis as { crypto?: { randomUUID?: () => string } })
+    .crypto;
+  return (
+    cryptoApi?.randomUUID?.() ??
+    "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (char) => {
+      const value = Math.floor(Math.random() * 16);
+      return (char === "x" ? value : (value & 3) | 8).toString(16);
+    })
+  );
 }
 
 function detailFromResponse(data: unknown, statusCode: number): string {
@@ -263,14 +319,16 @@ export async function request<T>(
       ...(options.header as Record<string, string> | undefined),
     };
     const method = String(options.method ?? "GET").toUpperCase();
-    if (options.data !== undefined && method !== "GET") header["Content-Type"] = "application/json";
+    if (options.data !== undefined && method !== "GET")
+      header["Content-Type"] = "application/json";
     if (token) header.Authorization = `Bearer ${token}`;
 
     uni.request({
+      timeout: 20000,
       ...options,
       url: apiUrl(path),
       header,
-      success: response => {
+      success: (response) => {
         if (response.statusCode >= 200 && response.statusCode < 300) {
           resolve(response.data as T);
           return;
@@ -280,12 +338,20 @@ export async function request<T>(
           clearToken();
           const pages = getCurrentPages();
           const current = pages.length ? pages[pages.length - 1].route : "";
-          if (current !== "pages/auth/index") uni.reLaunch({ url: "/pages/auth/index" });
+          if (current !== "pages/auth/index")
+            uni.reLaunch({ url: "/pages/auth/index" });
         }
-        reject(new AgentApiError(message, response.statusCode));
+        const code = (response.data as { code?: unknown } | null)?.code;
+        reject(
+          apiError(
+            message,
+            response.statusCode,
+            typeof code === "string" ? code : undefined,
+          ),
+        );
       },
-      fail: error => {
-        reject(new AgentApiError(error.errMsg || "无法连接到 8110 Agent 服务", 0));
+      fail: (error) => {
+        reject(apiError(error.errMsg || "无法连接 Agent 服务", 0));
       },
     });
   });
@@ -308,108 +374,321 @@ export const authApi = {
     return request<SessionUser>("/api/v1/auth/me");
   },
   consent(granted: boolean) {
-    return request<{ external_ai_consent: boolean }>("/api/v1/auth/ai-consent", {
-      method: "POST",
-      data: { granted },
-    });
+    return request<{ external_ai_consent: boolean }>(
+      "/api/v1/auth/ai-consent",
+      {
+        method: "POST",
+        data: { granted },
+      },
+    );
   },
   logout() {
     return request<{ ok: boolean }>("/api/v1/auth/logout", { method: "POST" });
   },
 };
 
-export const agentApi = {
-  models() {
-    return request<ModelProfile[]>("/api/v1/agent/models");
-  },
-  testModel(profileId: string) {
-    return request<ModelProfile>(`/api/v1/agent/models/${profileId}/test`, { method: "POST", data: {} });
-  },
-  conversations() {
-    return request<Conversation[]>("/api/v1/agent/conversations");
-  },
-  createConversation(profileId: string | null) {
-    return request<Conversation>("/api/v1/agent/conversations", {
+export interface HubDevice {
+  id: string;
+  name: string;
+  status: "pending" | "active" | "revoked";
+  online: boolean;
+  last_seen_at?: string | null;
+  revision: number;
+  settings: {
+    allow_remote: boolean;
+    workspace_id: string | null;
+    workspace_access: "read-only" | "workspace-write";
+    model_source: "official" | "local";
+    profile_id: string | null;
+    reasoning_effort: "auto" | "low" | "medium" | "high";
+    sync_chats: boolean;
+  };
+  limits: { workspace_ids: string[]; allow_project_write: boolean };
+  catalogue: {
+    workspaces: Array<{ id: string; name: string }>;
+    profiles: Array<{ id: string; name: string; mode: string; ready: boolean }>;
+  };
+}
+let execution: {
+  target: "pc" | "cloud";
+  device_id: string | null;
+  workspace_id: string | null;
+} = { target: "cloud", device_id: null, workspace_id: null };
+export const hubApi = {
+  config: () => request<{ cloud_enabled: boolean }>("/api/v1/hub/config"),
+  devices: () => request<HubDevice[]>("/api/v1/hub/devices"),
+  confirm: (pairingToken: string) =>
+    request<HubDevice>("/api/v1/hub/devices/confirm", {
       method: "POST",
-      data: { profile_id: profileId },
+      data: { pairing_token: pairingToken },
+    }),
+  settings: (device: HubDevice, settings: HubDevice["settings"]) =>
+    request<HubDevice>(`/api/v1/hub/devices/${device.id}/settings`, {
+      method: "POST",
+      data: { settings, revision: device.revision },
+    }),
+  revoke: (id: string) =>
+    request(`/api/v1/hub/devices/${id}`, { method: "DELETE" }),
+  cancel: (id: string) =>
+    request(`/api/v1/hub/tasks/${id}/cancel`, { method: "POST", data: {} }),
+  approve: (id: string, approvalId: string, approved: boolean) =>
+    request(`/api/v1/hub/tasks/${id}/approve`, {
+      method: "POST",
+      data: { approval_id: approvalId, approved },
+    }),
+  setExecution: (
+    target: "pc" | "cloud",
+    deviceId: string | null,
+    workspaceId: string | null = null,
+  ) => {
+    execution = { target, device_id: deviceId, workspace_id: workspaceId };
+  },
+};
+
+export const agentApi = {
+  conversations() {
+    return request<Conversation[]>("/api/v1/hub/sessions");
+  },
+  createConversation(_profileId: string | null, selection = execution) {
+    return request<Conversation>("/api/v1/hub/sessions", {
+      method: "POST",
+      data: selection,
     });
   },
-  snapshot(conversationId: string) {
-    return request<AgentSnapshot>(`/api/v1/agent/conversations/${conversationId}`);
+  async snapshot(conversationId: string): Promise<AgentSnapshot> {
+    const result = await request<AgentSnapshot>(
+      `/api/v1/hub/sessions/${conversationId}`,
+    );
+    const tasks = result.tasks ?? [];
+    const messages = [...result.messages];
+    for (const task of tasks) {
+      const represented = messages.some(
+        (message) =>
+          message.role === "user" &&
+          (message.id === "task-" + task.id ||
+            Boolean(task.local_run_id && message.run_id === task.local_run_id)),
+      );
+      if (!represented)
+        messages.push({
+          id: "task-" + task.id,
+          role: "user",
+          content: task.input,
+          run_id: task.local_run_id,
+          created_at: task.created_at,
+        });
+    }
+    messages.sort((a, b) =>
+      (a.created_at || "").localeCompare(b.created_at || ""),
+    );
+    return {
+      ...result,
+      messages,
+      tasks,
+      artifacts: result.files ?? [],
+      runs: result.runs ?? [],
+    };
   },
   importFile(conversationId: string, name: string, base64: string) {
-    return request<Artifact>(`/api/v1/agent/conversations/${conversationId}/files`, {
+    return request<Artifact>(`/api/v1/hub/sessions/${conversationId}/files`, {
       method: "POST",
       data: { name, base64 },
     });
   },
-  updateConversation(conversationId: string, patch: { title?: string; archived?: boolean }) {
-    return request<Conversation>(`/api/v1/agent/conversations/${conversationId}`, {
-      method: "PATCH" as unknown as UniApp.RequestOptions["method"],
+  updateConversation(
+    conversationId: string,
+    patch: { title?: string; archived?: boolean },
+  ) {
+    return request<Conversation>(`/api/v1/hub/sessions/${conversationId}`, {
+      method: "POST",
       data: patch,
     });
   },
   deleteConversation(conversationId: string) {
-    return request<{ ok: boolean; id: string }>(`/api/v1/agent/conversations/${conversationId}`, {
-      method: "DELETE",
-    });
+    return request<{ ok: boolean; id: string }>(
+      `/api/v1/hub/sessions/${conversationId}`,
+      { method: "DELETE" },
+    );
   },
   run(
     conversationId: string,
     input: string,
-    profileId: string,
+    _profileId: string,
     requestId: string,
   ) {
-    return request<RunResult>(`/api/v1/agent/conversations/${conversationId}/runs`, {
+    return request<RunResult>(`/api/v1/hub/sessions/${conversationId}/tasks`, {
       method: "POST",
-      data: {
-        profile_id: profileId,
-        input,
-        request_id: requestId,
-        permission_mode: "default",
-        reasoning_effort: "auto",
-        full_access_confirmed: false,
-      },
+      data: { input, request_id: requestId },
     });
   },
 };
 
-function querySuffix(entries: Array<[string, string | number | undefined]>): string {
+function querySuffix(
+  entries: Array<[string, string | number | undefined]>,
+): string {
   const values = entries
-    .filter((entry): entry is [string, string | number] => entry[1] !== undefined && entry[1] !== "")
-    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`);
+    .filter(
+      (entry): entry is [string, string | number] =>
+        entry[1] !== undefined && entry[1] !== "",
+    )
+    .map(
+      ([key, value]) =>
+        `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`,
+    );
   return values.length ? `?${values.join("&")}` : "";
 }
 
 export const careerApi = {
-  view() {
-    return request<CareerView>("/api/v1/agent/career");
+  sources: () => request<{ sources: CareerSource[] }>("/api/v1/hub/career"),
+  async view(source?: string) {
+    const selected = source || execution.device_id || "cloud";
+    if (selected === "cloud")
+      return request<CareerView>("/api/v1/agent/career");
+    const result = await careerApi.sources();
+    return (
+      result.sources.find((item) => item.source === selected)?.data ??
+      emptyCareerView()
+    );
   },
+  change: (revision: number, change: Record<string, unknown>) =>
+    request<CareerView>("/api/v1/agent/career/changes", {
+      method: "POST",
+      data: { revision, change },
+    }),
   directions(query: { query?: string; limit?: number } = {}) {
-    const suffix = querySuffix([["query", query.query], ["limit", query.limit]]);
-    return request<CareerDirectionResponse>(`/api/v1/agent/career/catalogue/directions${suffix}`);
+    const suffix = querySuffix([
+      ["query", query.query],
+      [
+        "limit",
+        catalogueLimit(query.limit, CAREER_CATALOGUE_LIMITS.directions),
+      ],
+    ]);
+    return request<CareerDirectionResponse>(
+      `/api/v1/agent/career/catalogue/directions${suffix}`,
+    );
   },
-  jobs(query: { query?: string; directionCode?: string; city?: string; limit?: number } = {}) {
-    const suffix = querySuffix([["query", query.query], ["direction_code", query.directionCode], ["city", query.city], ["limit", query.limit]]);
-    return request<CatalogueJobsResponse>(`/api/v1/agent/career/catalogue/jobs${suffix}`);
+  jobs(
+    query: {
+      query?: string;
+      directionCode?: string;
+      city?: string;
+      limit?: number;
+    } = {},
+  ) {
+    const suffix = querySuffix([
+      ["query", query.query],
+      ["direction_code", query.directionCode],
+      ["city", query.city],
+      ["limit", catalogueLimit(query.limit, CAREER_CATALOGUE_LIMITS.jobs)],
+    ]);
+    return request<CatalogueJobsResponse>(
+      `/api/v1/agent/career/catalogue/jobs${suffix}`,
+    );
   },
 };
 
-export function isActiveRun(run: AgentRun | undefined): boolean {
-  return Boolean(run && ["queued", "running", "awaiting_approval"].includes(run.status));
-}
-
-export function modelIsReady(model: ModelProfile | undefined): boolean {
-  return Boolean(model?.capabilities.chat && model.capabilities.tested_at);
+export function isActiveRun(
+  run: Pick<AgentRun, "status"> | undefined,
+): boolean {
+  return Boolean(
+    run &&
+      ["queued", "waiting_pc", "running", "awaiting_approval"].includes(
+        run.status,
+      ),
+  );
 }
 
 export function goToAuth(): void {
   uni.reLaunch({ url: "/pages/auth/index" });
 }
 
-/** 保留给旧页面的本地预览备用，不再用于真实对话发送。 */
-export function demoReply(input: string): string {
-  if (/简历|经历/.test(input)) return "我们先把你真实做过的事整理出来，再决定哪些内容适合写进简历。你最近做过一个什么项目？";
-  if (/岗位|工作|实习/.test(input)) return "可以。穗奈会把你的经历和岗位要求放在一起比较，告诉你已经具备什么、下一步补什么。";
-  return "我在这里。你可以说说最近想找什么机会，或者哪件事让你最迷茫，我们从那里开始。";
+/** 同步资料保留来源；手机不将电脑画像静默写进云端画像。 */
+export interface CareerSource {
+  source: string;
+  data: CareerView;
+  updated_at: string;
+}
+export interface HubTask extends Omit<AgentRun, "steps"> {
+  steps?: number;
+  session_id: string;
+  input: string;
+  target: "pc" | "cloud";
+  device_id: string | null;
+  local_run_id: string | null;
+  cancel_requested?: boolean;
+}
+export interface AgentEvent {
+  id?: string;
+  seq?: number;
+  run_id?: string;
+  type: string;
+  data: Record<string, unknown>;
+  created_at?: string;
+}
+export interface ResumeDocument {
+  revision: number;
+  updated_at: string | null;
+  header: { name: string; headline: string; contact: string };
+  target?: { title: string; company: string; description: string };
+  body: {
+    summary: { text: string };
+    sections: Array<{
+      kind: string;
+      entries: Array<{
+        title: string;
+        subtitle: string;
+        period: string;
+        bullets: string[];
+      }>;
+    }>;
+  } | null;
+  questions?: string[];
+}
+export interface OfficialCredits {
+  enabled: boolean;
+  summary: {
+    daily_points: number;
+    remaining_points: number;
+    used_points: number;
+    reserved_points: number;
+    resets_at: string;
+  };
+  entries: Array<{
+    id: string;
+    created_at: string;
+    capability: string;
+    state: string;
+    points: number;
+    reserved_points: number;
+  }>;
+  next_cursor: string | null;
+}
+export const accountApi = {
+  credits: (cursor?: string) =>
+    request<OfficialCredits>(
+      "/api/v1/agent/official/credits" +
+        (cursor ? "?cursor=" + encodeURIComponent(cursor) : ""),
+    ),
+};
+export function emptyCareerView(): CareerView {
+  return {
+    revision: 0,
+    context_version: 0,
+    updated_at: null,
+    profile: {
+      goal: "",
+      education: "",
+      experience: "",
+      skills: "",
+      preferences: "",
+      weekly_hours: "",
+      confirmed_at: null,
+    },
+    jobs: [],
+    actions: [],
+    comparisons: [],
+    proposals: [],
+    saved_jobs: [],
+    sources: [],
+    skills: [],
+  };
 }

@@ -131,6 +131,31 @@ test("模型发现接受标准与常见列表封装，去重且不把凭据当�
     assert.equal(sent?.redirect, "error");
   }
 });
+test("官方模型请求携带内部能力路由标识，自定义接口不携带", async () => {
+  let officialHeaders: Record<string, string> | undefined;
+  const official = new CompatibleModel(
+    { ...connection, official: true },
+    async (_url, init) => {
+      officialHeaders = init?.headers as Record<string, string>;
+      return json(chat());
+    },
+    false,
+  );
+  await official.complete({ ...request(), routingCapability: "compare_decide" });
+  assert.equal(officialHeaders?.["X-Suinai-Capability"], "compare_decide");
+
+  let customHeaders: Record<string, string> | undefined;
+  const custom = new CompatibleModel(
+    connection,
+    async (_url, init) => {
+      customHeaders = init?.headers as Record<string, string>;
+      return json(chat());
+    },
+    false,
+  );
+  await custom.complete({ ...request(), routingCapability: "compare_decide" });
+  assert.equal(customHeaders?.["X-Suinai-Capability"], undefined);
+});
 test("模型发现拒绝 HTML、空列表与无效格式，提供手动入口说明", async () => {
   for (const value of [
     json({ data: [] }),
@@ -532,4 +557,22 @@ test("只在工具阶段丢失流式时仍验证工具往返，并让后续任�
   assert.equal(tested.capabilities.tools, true);
   assert.equal(tested.capabilities.stream, false);
   assert.equal(f.model.requests[0].maxOutputTokens, 2048);
+});
+
+test("429 区分中转预算、并发和上游余额，保留分类且不回显原始错误", async () => {
+  for (const [code, expected, message] of [
+    ["relay_daily_output_limit", "relay_daily_output_limit", "RELAY_DAILY_OUTPUT_TOKEN_LIMIT"],
+    ["relay_daily_request_limit", "relay_daily_request_limit", "RELAY_DAILY_REQUEST_LIMIT"],
+    ["relay_busy", "relay_busy", "正在处理"],
+    ["provider_quota", "provider_quota", "余额"],
+    ["unknown_code", "provider_429", "HTTP 429 本身不能说明余额不足"],
+    ["constructor", "provider_429", "HTTP 429 本身不能说明余额不足"],
+  ]) {
+    let calls = 0;
+    const model = new CompatibleModel(connection, async () => {
+      calls++; return json({ error: { type: "relay_error", code, message: "private " + TEST_KEY } }, 429);
+    }, false);
+    await assert.rejects(model.complete(request()), error => error instanceof ProviderError && error.code === expected && error.message.includes(message) && !error.message.includes(TEST_KEY));
+    assert.equal(calls, 1);
+  }
 });

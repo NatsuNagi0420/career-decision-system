@@ -1,5 +1,7 @@
-/** 青穗集 · 模型设置：官方与自带接口并列，密钥仅提交、不回显，能力由真实测试决定。 */
+/** 青穗集 · 模型设置：统一 AI 连接管理：账号登录独立，密钥只提交不回显，API Key 入口测试后进入。 */
 import { useEffect, useRef, useState } from "react";
+import { AutoHeight } from "../components/AutoHeight";
+import { AnimatedDisclosure } from "./AnimatedDisclosure";
 import { agentApi } from "./api";
 import { usePixelConfirm } from "../components/PixelConfirmDialog";
 import type {
@@ -47,6 +49,8 @@ interface Props {
     onClose: () => void;
     onSaved: (id?: string) => Promise<void>;
     onConsent: (value: boolean) => Promise<void>;
+    presentation?: "dialog" | "entry";
+    onConnected?: (id: string) => void;
 }
 export function ModelSettings({
     profiles,
@@ -56,18 +60,19 @@ export function ModelSettings({
     onClose,
     onSaved,
     onConsent,
+    presentation = "dialog",
+    onConnected,
 }: Props) {
     const dialog = useRef<HTMLDialogElement>(null);
     const { confirm, dialog: confirmationDialog } = usePixelConfirm();
-    const [editing, setEditing] = useState<string | undefined>(
-        selected || undefined,
-    );
-    const [form, setForm] = useState<ModelInput>(() =>
-        toInput(profiles.find((item) => item.id === selected)),
-    );
-    const [result, setResult] = useState<ModelProfile | null>(
-        () => profiles.find((p) => p.id === selected) ?? null,
-    );
+    const entry = presentation === "entry";
+    const cloudOnly = info?.deployment_mode === "server";
+    const allowOfficial = !entry && (cloudOnly || user.identity === "official");
+    const availableProfiles = profiles.filter(profile => profile.mode === "custom" ? !cloudOnly : allowOfficial);
+    const initialProfile = availableProfiles.find(profile => profile.id === selected) ?? availableProfiles[0];
+    const [editing, setEditing] = useState<string | undefined>(initialProfile?.id);
+    const [form, setForm] = useState<ModelInput>(() => initialProfile ? toInput(initialProfile) : { ...blank, remember_key: Boolean(info?.persistent_secrets_supported) });
+    const [result, setResult] = useState<ModelProfile | null>(() => initialProfile ?? null);
     const [operation, setOperation] = useState<
         "" | "discover" | "save" | "test"
     >("");
@@ -84,19 +89,33 @@ export function ModelSettings({
         ) ?? [];
     const [error, setError] = useState("");
     useEffect(() => {
-        dialog.current?.showModal();
-        return () => dialog.current?.close();
-    }, []);
+        if (entry) return;
+        const current = dialog.current;
+        current?.showModal();
+        return () => current?.close();
+    }, [entry]);
     function choose(profile?: ModelProfile) {
         setEditing(profile?.id);
         setResult(profile ?? null);
         setError("");
-        setForm(toInput(profile));
+        setForm(profile ? toInput(profile) : { ...blank, remember_key: Boolean(info?.persistent_secrets_supported) });
         setCatalog(null);
         setCatalogError("");
         setQuery("");
         setManual(false);
     }
+    // 切换接入方式是切换连接，不把官方连接覆盖成第三方接口。
+    function chooseMode(mode: ModelInput["mode"]) {
+        if (mode === form.mode) return;
+        const existing = availableProfiles.find(profile => profile.mode === mode);
+        choose(existing);
+        if (!existing && mode === "official") setForm({ ...blank, mode, name: "官方服务" });
+    }
+    useEffect(() => {
+        if (!cloudOnly) return;
+        const official = profiles.find((profile) => profile.mode === "official");
+        if (official && (editing !== official.id || form.mode !== "official")) choose(official);
+    }, [cloudOnly, profiles.length]);
     const field = <K extends keyof ModelInput>(
         key: K,
         value: ModelInput[K],
@@ -160,6 +179,7 @@ export function ModelSettings({
                 const tested = await agentApi.testProfile(saved.id);
                 setResult(tested);
                 await onSaved(tested.id);
+                if (entry && tested.has_key && tested.capabilities.chat) onConnected?.(tested.id);
             }
         } catch (error) {
             setError((error as Error).message);
@@ -184,37 +204,22 @@ export function ModelSettings({
     }
     return (
         <>
-        <dialog
-            ref={dialog}
-            className="agent-dialog agent-settings"
-            aria-labelledby="model-settings-title"
-            onCancel={(event) => {
-                event.preventDefault();
-                if (!busy) onClose();
-            }}
-        >
-            <div className="desktop-titlebar">
-                <span id="model-settings-title">模型连接设置</span>
-                <button
-                    type="button"
-                    aria-label="关闭模型设置"
-                    disabled={busy}
-                    onClick={onClose}
-                >
-                    ×
-                </button>
-            </div>
+        <SettingsSurface entry={entry} dialogRef={dialog} busy={busy} onClose={onClose}>
+            {!entry && <div className="desktop-titlebar">
+                <span id="model-settings-title">AI 连接</span>
+                <button type="button" aria-label="关闭模型设置" disabled={busy} onClick={onClose}>×</button>
+            </div>}
             <div className="agent-settings__layout">
-                <nav aria-label="已保存的模型配置">
-                    <button
+                {(!entry || availableProfiles.length > 0) && <nav aria-label="已保存的模型配置">
+{!cloudOnly && <button
                         className="btn btn--outline"
                         type="button"
                         disabled={busy}
                         onClick={() => choose()}
                     >
                         ＋ 添加连接
-                    </button>
-                    {profiles.map((profile) => (
+                    </button>}
+                    {availableProfiles.map((profile) => (
                         <button
                             type="button"
                             key={profile.id}
@@ -241,17 +246,16 @@ export function ModelSettings({
                         </button>
                     ))}
                     <p>
-                        支持 New API 等兼容网关。填写地址和 Key
-                        后拉取模型，再选择与测试。
+                        {cloudOnly ? "云端工作区只使用 Suinai Flash；自带 API Key 请在 PC 端配置。" : <>支持 New API 等兼容网关。填写地址和 Key 后拉取模型，再选择与测试。</>}
                     </p>
-                </nav>
+                </nav>}
                 <form
                     onSubmit={(event) => {
                         event.preventDefault();
                         void save(true);
                     }}
                 >
-                    <h2>{editing ? "管理这个连接" : "接入你选择的模型"}</h2>
+                    <h2>{entry ? "连接你的 AI" : editing ? "管理连接" : "添加连接"}</h2>
                     <p className="agent-muted">
                         密钥不会放入对话、角色提示或命令沙箱。连接测试会向所选服务发起少量请求，可能产生费用。
                     </p>
@@ -268,32 +272,29 @@ export function ModelSettings({
                             }}
                         />
                         <span>
-                            我同意将请求、对话及选取资料发送给当前选择的模型服务。自定义网关的隐私由其服务方负责。
+{cloudOnly ? "当前请求与选取资料会通过青穗集官方服务处理。" : "我同意将请求、对话及选取资料发送给当前选择的模型服务。自定义网关的隐私由其服务方负责。"}
                         </span>
                     </label>
                     <fieldset disabled={busy}>
-                        <legend>接入方式</legend>
-                        <div className="agent-segment">
-                            <button
+                        <legend className="sr-only">接入方式</legend>
+                        {allowOfficial && <div className="agent-segment">
+{!cloudOnly && <button
                                 type="button"
                                 data-selected={form.mode === "custom"}
-                                onClick={() => field("mode", "custom")}
+                                onClick={() => chooseMode("custom")}
                             >
                                 自定义接口
-                            </button>
+                            </button>}
                             <button
                                 type="button"
                                 data-selected={form.mode === "official"}
                                 disabled={!info?.official_configured}
-                                onClick={() => {
-                                    field("mode", "official");
-                                    field("name", "官方服务");
-                                }}
+                                onClick={() => chooseMode("official")}
                             >
                                 官方服务
                             </button>
-                        </div>
-                        {!info?.official_configured ? (
+                        </div>}
+                        {allowOfficial && !info?.official_configured ? (
                             <p className="agent-muted">
                                 官方入口尚未部署。现在可使用自己的 API
                                 Key，不会自动切换或产生官方扣费。
@@ -350,7 +351,7 @@ export function ModelSettings({
                                         }
                                     />
                                 </label>
-                                <section
+                                <AutoHeight className="agent-model-list-motion"><section
                                     className="agent-model-discovery"
                                     aria-label="从接口选择模型"
                                 >
@@ -494,9 +495,8 @@ export function ModelSettings({
                                             接口不提供模型列表，改为手动填写
                                         </span>
                                     </label>
-                                </section>
-                                <details>
-                                    <summary>高级连接选项</summary>
+                                </section></AutoHeight>
+                                <AnimatedDisclosure summary="高级连接选项" className="agent-connection-options">
                                     <label>
                                         接口协议
                                         <select
@@ -558,14 +558,18 @@ export function ModelSettings({
                                     <p className="agent-muted">
                                         不勾选时只在本次服务运行期间保管；退出账号或重启服务后需重新填写。系统加密也不能防止同一系统账号下的恶意程序。
                                     </p>
-                                </details>
+                                </AnimatedDisclosure>
                             </>
                         ) : (
-                            <p className="agent-callout">
-                                官方上游密钥只留在运营方服务器。此应用使用独立、受限的官方访问凭证。
-                            </p>
+                            <>
+                                <p className="agent-callout">
+                                    {info?.official_configured ? "Suinai Flash" : "官方服务暂未开放"}
+                                </p>
+
+                            </>
                         )}
                     </fieldset>
+                    <AutoHeight className="agent-settings-feedback">
                     {result ? (
                         <section
                             className="agent-test-result"
@@ -613,14 +617,7 @@ export function ModelSettings({
                                 </p>
                             ) : null}
                             {result.capabilities.checks?.length ? (
-                                <details
-                                    className="agent-connection-checks"
-                                    open={
-                                        !result.capabilities.chat ||
-                                        !result.capabilities.tools
-                                    }
-                                >
-                                    <summary>查看分项测试详情</summary>
+                                <AnimatedDisclosure key={result.capabilities.tested_at ?? "untested"} summary="查看分项测试详情" className="agent-connection-options agent-connection-checks" defaultOpen={!result.capabilities.chat || !result.capabilities.tools}>
                                     <ul>
                                         {result.capabilities.checks.map(
                                             (check, index) => (
@@ -650,7 +647,7 @@ export function ModelSettings({
                                             ),
                                         )}
                                     </ul>
-                                </details>
+                                </AnimatedDisclosure>
                             ) : null}
                             {!result.has_key ? (
                                 <p>当前没有可用密钥，请重新填写。</p>
@@ -662,6 +659,7 @@ export function ModelSettings({
                             {error}
                         </p>
                     ) : null}
+                    </AutoHeight>
                     <footer className="agent-form-actions">
                         <button
                             className="btn btn--primary"
@@ -672,16 +670,10 @@ export function ModelSettings({
                                 ? "正在测试聊天和工具…"
                                 : operation === "save"
                                   ? "正在保存…"
-                                  : "保存并测试连接"}
+                                  : entry ? "连接并进入" : "保存并测试连接"}
                         </button>
-                        <button
-                            className="btn btn--outline"
-                            type="button"
-                            disabled={busy}
-                            onClick={() => void save(false)}
-                        >
-                            只保存
-                        </button>
+                        {!entry && <button className="btn btn--outline" type="button" disabled={busy} onClick={() => void save(false)}>只保存</button>}
+                        {entry && result?.mode === "custom" && result.has_key && result.capabilities.chat && <button className="btn btn--outline" type="button" disabled={busy || !user.external_ai_consent} onClick={() => onConnected?.(result.id)}>进入桌面</button>}
                         {editing ? (
                             <button
                                 className="agent-link agent-danger"
@@ -695,8 +687,19 @@ export function ModelSettings({
                     </footer>
                 </form>
             </div>
-        </dialog>
+        </SettingsSurface>
         {confirmationDialog}
         </>
     );
+}
+
+
+
+
+/** 连接表单复用同一实现；初次接入在登录页内显示，不先打开工作区再弹窗。 */
+function SettingsSurface({ entry, dialogRef, busy, onClose, children }: {
+    entry: boolean; dialogRef: React.RefObject<HTMLDialogElement | null>; busy: boolean; onClose: () => void; children: React.ReactNode;
+}) {
+    if (entry) return <section className="agent-settings agent-settings--entry" aria-label="API-KEY 登录">{children}</section>;
+    return <dialog ref={dialogRef} className="agent-dialog agent-settings" aria-labelledby="model-settings-title" onCancel={event => { event.preventDefault(); if (!busy) onClose(); }}>{children}</dialog>;
 }

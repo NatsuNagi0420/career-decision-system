@@ -1,0 +1,33 @@
+# 青穗集 · systemd 单实例官方中转；8120 只监听回环地址，由 Nginx 终止 HTTPS。
+[Unit]
+Description=Qingsuiji official model relay
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=qingsuiji
+Group=qingsuiji
+WorkingDirectory=/opt/qingsuiji/app/agent
+Environment=NODE_ENV=production
+EnvironmentFile=/opt/qingsuiji/app/agent/.env.relay
+ExecStart=/usr/local/bin/node /opt/qingsuiji/app/agent/dist/relay/relay.js
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+LimitNOFILE=65536
+UMask=0077
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+LockPersonality=yes
+RestrictSUIDSGID=yes
+CapabilityBoundingSet=
+ReadWritePaths=/var/lib/qingsuiji/relay
+
+[Install]
+WantedBy=multi-user.target

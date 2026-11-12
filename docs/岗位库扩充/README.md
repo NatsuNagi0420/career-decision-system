@@ -30,7 +30,7 @@
 - 2 条明确关闭或已过截止的资料保留历史用途，默认检索排除；其余并不代表当前在招。
 - 30 条 evidence 字段兼容差异已适配为补充证据，没有丢弃引文。
 - 61 条线索仍只作线索，不计入可检索岗位数。
-- 原始 ZIP、清洗报告、批次规则、隔离原文及 61 条线索已存入唯一主库 agent/var/agent.sqlite。
+- 原始 ZIP、清洗报告、批次规则、隔离原文及 61 条线索已存入用户状态目录中的唯一主库 `agent.sqlite`。Windows 默认路径为 `%LOCALAPPDATA%/Qingsuiji/agent/agent.sqlite`；如设置 `AGENT_DATA_DIR`，以该目录为准。
 
 运行时不再维护或读取 agent/data/job-catalogue.v1.json、job-catalogue.v2.json，也不再写旧 MySQL；这些副本与旧导入入口已退休。
 

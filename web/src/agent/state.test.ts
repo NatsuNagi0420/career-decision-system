@@ -126,3 +126,37 @@ it("同一轮续接前清空失败流残片，不污染新的回复", () => {
   expect(state.drafts).toEqual({ "recovered-draft": "重新生成的回复" });
   expect(state.snapshot.messages).toHaveLength(0);
 });
+
+
+it("检查点事件更新运行游标，断线重放不会重复", () => {
+  let state = initialView(running());
+  const checkpoint = { id: "cp", run_id: "r", conversation_id: "c", user_id: 1, step: 12, status: "active" as const, completed_tool_call_ids: [], pending_tool_call_ids: [], context_signature: null, created_at: "", updated_at: "" };
+  const change = event(1, "run.checkpoint", { checkpoint });
+  state = applyEvent(state, change);
+  expect(state.snapshot.checkpoints?.[0].step).toBe(12);
+  expect(state.snapshot.runs[0].checkpoint_step).toBe(12);
+  expect(applyEvent(state, change)).toBe(state);
+});
+
+it("计划实时更新并从快照恢复，重放不重复；编辑旧分支后清理计划", () => {
+  const plan = { steps: [{ title: "整理经历", status: "pending" as const }] };
+  const change = event(1, "plan.updated", { plan });
+  const state = applyEvent(initialView(running()), change);
+  expect(state.snapshot.plan?.steps).toEqual(plan.steps);
+  expect(applyEvent(state, change)).toBe(state);
+  expect(initialView(state.snapshot).snapshot.plan?.run_id).toBe("r");
+  const rewound = applyEvent(state, event(2, "conversation.rewound", { message_ids: [], run_ids: ["r"] }));
+  expect(rewound.snapshot.plan).toBeNull();
+});
+
+
+it("纸面状态随事件提交并拒绝旧版本覆盖，不等待另一条 HTTP 读取", () => {
+  let state = initialView(running());
+  const resume = { revision: 7, context_version: 7, pending: { id: "pending", kind: "rewrite" }, body: null };
+  state = applyEvent(state, event(1, "resume.state", { state: resume }));
+  expect(state.snapshot.resume).toEqual(resume);
+  const committed = { ...resume, revision: 8, pending: null, body: { summary: { text: "已完成", fact_ids: [] }, sections: [] } };
+  state = applyEvent(state, event(2, "resume.state", { state: committed }));
+  state = applyEvent(state, event(3, "resume.state", { state: resume }));
+  expect(state.snapshot.resume).toEqual(committed);
+});

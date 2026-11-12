@@ -46,7 +46,7 @@ export async function captureNative(
   args: string[],
   cwd: string,
   signal: AbortSignal,
-  options: { env?: NodeJS.ProcessEnv; limit?: number } = {},
+  options: { env?: NodeJS.ProcessEnv; limit?: number; onOutput?: (stream: "stdout" | "stderr", text: string) => void } = {},
 ): Promise<{ code: number; stdout: string; stderr: string }> {
   signal.throwIfAborted();
   return new Promise((resolve, reject) => {
@@ -67,6 +67,7 @@ export async function captureNative(
       const text = decoders[field].write(value);
       if (field === "stdout") stdout += text;
       else stderr += text;
+      if (text) options.onOutput?.(field, text);
     };
     child.stdout.on("data", (value: Buffer) => collect("stdout", value));
     child.stderr.on("data", (value: Buffer) => collect("stderr", value));
@@ -78,7 +79,13 @@ export async function captureNative(
       signal.removeEventListener("abort", stop);
       if (signal.aborted) reject(signal.reason ?? new DOMException("已停止", "AbortError"));
       else if (overflow) reject(new AppError(400, "命令输出超过上限，已停止并清理子进程。"));
-      else resolve({ code: code ?? -1, stdout: stdout + decoders.stdout.end(), stderr: stderr + decoders.stderr.end() });
+      else {
+        const stdoutTail = decoders.stdout.end();
+        const stderrTail = decoders.stderr.end();
+        if (stdoutTail) options.onOutput?.("stdout", stdoutTail);
+        if (stderrTail) options.onOutput?.("stderr", stderrTail);
+        resolve({ code: code ?? -1, stdout: stdout + stdoutTail, stderr: stderr + stderrTail });
+      }
     });
   });
 }

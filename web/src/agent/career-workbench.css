@@ -29,6 +29,7 @@
 .workbench-text-button { padding: 6px 0; background: none; border-color: transparent; color: #9c7aae; }
 .workbench-text-button:hover { color: #674583; }
 .career-workbench button:disabled { opacity: .52; cursor: not-allowed; transform: none; box-shadow: none; }
+.workbench-profile-actions { display: flex; justify-content: flex-end; margin: 18px 0 22px; }
 .workbench-profile-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 21px 22px; }
 .workbench-field { display: flex; flex-direction: column; gap: 8px; margin: 0; min-width: 0; font-size: 12px; }
 .workbench-field > span { color: #796288; }
@@ -195,4 +196,3 @@
   .workbench-file-start h3 { font-size: 14px; }
   .workbench-profile-review > div { grid-template-columns: 1fr; gap: 5px; }
 }
-

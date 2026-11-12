@@ -40,6 +40,8 @@ test("官方运行每个工具步骤都注入身份，旧自称保留但不能�
     assert.ok(!request.messages[0].content.includes("internal-upstream-model"));
     assert.ok(!request.messages[0].content.includes("fixture-official-token"));
     assert.ok(request.messages.some(message => message.role === "assistant" && message.content === oldReply));
+    if (request.routingCapability === "profile_diagnose")
+      return reply(JSON.stringify({ summary: "已完成一次身份对话。", next_step: "可以继续聊你的目标。", suggestion: null, facts: [], followups: [] }));
     return index === 0
       ? reply("", [tool("plan_tasks", { steps: [{ title: "核对用户任务", status: "done" }] })])
       : reply("我是穗奈，你正在使用 Suinai Flash 官方服务。");
@@ -57,12 +59,12 @@ test("官方运行每个工具步骤都注入身份，旧自称保留但不能�
   const run = f.runtime.start(f.user, f.conversation.id, official.id, "你是谁？", id());
   await f.runtime.waitIdle();
   assert.equal(f.store.run(f.user.id, run.id).status, "completed");
-  assert.equal(model.requests.length, 2);
+  assert.ok(model.requests.length >= 2);
   assert.equal(f.store.messages(f.conversation.id).find(message => message.id === oldMessage.id)!.content, oldReply);
   const next = f.runtime.start(f.user, f.conversation.id, official.id, "继续介绍", id());
   await f.runtime.waitIdle();
   assert.equal(f.store.run(f.user.id, next.id).status, "completed");
-  assert.equal(model.requests.length, 3);
+  assert.ok(model.requests.length >= 3);
 });
 
 test("切回第三方后按实际连接介绍，不替换正常技术讨论里的厂商名称", async t => {

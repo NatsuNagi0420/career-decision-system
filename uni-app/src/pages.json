@@ -1,0 +1,163 @@
+/** 青穗集 · 移动协作端页面配置：四个主入口与独立详情页面。 */
+{
+  "pages": [
+    {
+      "path": "pages/auth/index",
+      "style": {
+        "navigationBarTitleText": "连接青穗集"
+      }
+    },
+    {
+      "path": "pages/home/index",
+      "style": {
+        "navigationBarTitleText": "青穗集",
+        "navigationStyle": "custom",
+        "enablePullDownRefresh": true,
+        "backgroundTextStyle": "dark"
+      }
+    },
+    {
+      "path": "pages/tasks/index",
+      "style": {
+        "navigationBarTitleText": "我的任务",
+        "navigationStyle": "custom",
+        "enablePullDownRefresh": true,
+        "backgroundTextStyle": "dark"
+      }
+    },
+    {
+      "path": "pages/growth/index",
+      "style": {
+        "navigationBarTitleText": "我的成长",
+        "navigationStyle": "custom",
+        "enablePullDownRefresh": true,
+        "backgroundTextStyle": "dark"
+      }
+    },
+    {
+      "path": "pages/mine/index",
+      "style": {
+        "navigationBarTitleText": "我的",
+        "navigationStyle": "custom",
+        "enablePullDownRefresh": true,
+        "backgroundTextStyle": "dark"
+      }
+    },
+    {
+      "path": "pages/chat/index",
+      "style": {
+        "navigationBarTitleText": "和穗奈聊聊",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/task/index",
+      "style": {
+        "navigationBarTitleText": "任务详情"
+      }
+    },
+    {
+      "path": "pages/profile/index",
+      "style": {
+        "navigationBarTitleText": "我的画像",
+        "enablePullDownRefresh": true,
+        "backgroundTextStyle": "dark"
+      }
+    },
+    {
+      "path": "pages/directions/index",
+      "style": {
+        "navigationBarTitleText": "方向与岗位"
+      }
+    },
+    {
+      "path": "pages/direction/index",
+      "style": {
+        "navigationBarTitleText": "岗位方向"
+      }
+    },
+    {
+      "path": "pages/action/index",
+      "style": {
+        "navigationBarTitleText": "成长行动"
+      }
+    },
+    {
+      "path": "pages/resume/index",
+      "style": {
+        "navigationBarTitleText": "我的简历"
+      }
+    },
+    {
+      "path": "pages/file/index",
+      "style": {
+        "navigationBarTitleText": "文件预览"
+      }
+    },
+    {
+      "path": "pages/devices/index",
+      "style": {
+        "navigationBarTitleText": "设备与同步"
+      }
+    },
+    {
+      "path": "pages/credits/index",
+      "style": {
+        "navigationBarTitleText": "我的积分"
+      }
+    },
+    {
+      "path": "pages/settings/index",
+      "style": {
+        "navigationBarTitleText": "偏好设置"
+      }
+    },
+    {
+      "path": "pages/help/index",
+      "style": {
+        "navigationBarTitleText": "帮助与反馈"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "@navTxtStyle",
+    "navigationBarTitleText": "青穗集",
+    "navigationBarBackgroundColor": "@navBgColor",
+    "backgroundColor": "#faf9f6",
+    "backgroundColorTop": "#faf9f6",
+    "backgroundColorBottom": "#faf9f6"
+  },
+  "tabBar": {
+    "custom": true,
+    "color": "@tabColor",
+    "selectedColor": "@tabSelectedColor",
+    "backgroundColor": "@tabBgColor",
+    "borderStyle": "@tabBorderStyle",
+    "list": [
+      {
+        "pagePath": "pages/home/index",
+        "text": "首页",
+        "iconPath": "static/assets/tabbar/home.png",
+        "selectedIconPath": "static/assets/tabbar/home.png"
+      },
+      {
+        "pagePath": "pages/tasks/index",
+        "text": "任务",
+        "iconPath": "static/assets/prototype/nav-tasks.png",
+        "selectedIconPath": "static/assets/prototype/nav-tasks.png"
+      },
+      {
+        "pagePath": "pages/growth/index",
+        "text": "成长",
+        "iconPath": "static/assets/prototype/nav-growth.png",
+        "selectedIconPath": "static/assets/prototype/nav-growth.png"
+      },
+      {
+        "pagePath": "pages/mine/index",
+        "text": "我的",
+        "iconPath": "static/assets/prototype/nav-profile.png",
+        "selectedIconPath": "static/assets/prototype/nav-profile.png"
+      }
+    ]
+  }
+}

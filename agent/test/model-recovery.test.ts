@@ -54,3 +54,19 @@ test("账号隔离、完全访问重新确认和原有预算仍生效", async t 
   const denied = await f.app.inject({ method: "POST", url: "/api/v1/agent/runs/" + run.id + "/retry", headers: { authorization: "Bearer " + other.token }, payload: { request_id: id() } }); assert.equal(denied.statusCode, 404);
   assert.throws(() => f.runtime.retry(f.user, run.id, id()), /重新确认/); const exhausted = f.store.run(f.user.id, run.id); exhausted.elapsed_ms = f.config.runTimeoutMs; f.store.saveRun(exhausted); assert.throws(() => f.runtime.retry(f.user, run.id, id(), true), /不能直接续接/);
 });
+
+test("中转限额调整后可手动续接，保留原消息且不自动反复请求", async t => {
+  const model = new ScriptedModel(), f = await fixture(t, { model });
+  for (const code of ["relay_busy", "relay_daily_request_limit", "relay_daily_output_limit"]) {
+    model.respond = () => { throw new AppError(502, "中转限制", code); };
+    const run = f.runtime.start(f.user, f.conversation.id, f.profile.id, "恢复中转测试", id());
+    await f.runtime.waitIdle();
+    const calls = model.requests.length, messages = f.store.messages(f.conversation.id).filter(message => message.role === "user").length;
+    assert.equal(f.runtime.snapshot(f.user, f.conversation.id).runs.at(-1)!.can_retry, true);
+    model.respond = () => reply("已恢复");
+    f.runtime.retry(f.user, run.id, id()); await f.runtime.waitIdle();
+    assert.equal(model.requests.length, calls + 1);
+    assert.equal(f.store.run(f.user.id, run.id).status, "completed");
+    assert.equal(f.store.messages(f.conversation.id).filter(message => message.role === "user").length, messages);
+  }
+});

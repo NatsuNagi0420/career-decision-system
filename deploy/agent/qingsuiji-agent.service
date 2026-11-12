@@ -1,0 +1,34 @@
+# 青穗集 · 云端 Agent systemd 服务；API 只监听回环地址，由 Nginx 暴露 HTTPS。
+[Unit]
+Description=Qingsuiji cloud agent
+After=network-online.target qingsuiji-relay.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=qingsuiji-agent
+Group=qingsuiji-agent
+WorkingDirectory=/opt/qingsuiji/cloud-agent/agent
+Environment=NODE_ENV=production
+Environment=AGENT_ENV_FILE=/etc/qingsuiji/agent.env
+EnvironmentFile=/etc/qingsuiji/agent.env
+ExecStart=/usr/local/bin/node /opt/qingsuiji/cloud-agent/agent/dist/cloud/cloud.js
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+LimitNOFILE=32768
+UMask=0077
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+LockPersonality=yes
+RestrictSUIDSGID=yes
+CapabilityBoundingSet=
+ReadWritePaths=/var/lib/qingsuiji/agent
+
+[Install]
+WantedBy=multi-user.target

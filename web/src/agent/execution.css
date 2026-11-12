@@ -104,6 +104,8 @@
 .execution-log[data-error="true"] pre { color: #a56d55; }
 .execution-log > p { font-size: 9px; color: #b3846b; padding: 0 10px; }
 .execution-entry__waiting { font-size: 10px; color: #a689b9; margin: 0 0 10px; }
+.execution-entry__output-note { margin: -2px 0 10px; color: #a293af; font-size: 9px; }
+.execution-project-changes__heading { margin: 2px 0 7px; color: #9c87ac; font-size: 10px; }
 .execution-entry__arguments { margin-top: 8px; }
 .execution-entry__arguments > summary { display: inline-flex; align-items: center; gap: 8px; list-style: none; cursor: pointer; font-size: 10px; color: #b098c0; padding: 5px 0; }
 .execution-entry__arguments .execution-log { margin-top: 4px; }

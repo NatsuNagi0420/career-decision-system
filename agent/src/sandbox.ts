@@ -2,10 +2,11 @@
 import { WindowsNativeSandbox } from "./native-sandbox.js";
 import type { Config } from "./config.js";
 import { spawn } from "node:child_process";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { randomUUID } from "node:crypto";
+import { StringDecoder } from "node:string_decoder";
 import { AppError, invariant } from "./errors.js";
-import type { Sandbox, SandboxHealth, SandboxResult } from "./types.js";
+import type { Sandbox, SandboxExecutionOptions, SandboxHealth, SandboxResult } from "./types.js";
 export function dockerEnvironment() {
   const env: NodeJS.ProcessEnv = {};
   for (const key of [
@@ -29,6 +30,7 @@ async function capture(
   args: string[],
   signal: AbortSignal,
   limit = 128000,
+  onOutput?: (stream: "stdout" | "stderr", text: string) => void,
 ): Promise<{ code: number; stdout: string; stderr: string }> {
   return new Promise((resolve, reject) => {
     if (signal.aborted) {
@@ -45,6 +47,7 @@ async function capture(
       stderr = "",
       bytes = 0,
       overflow = false;
+    const decoders = { stdout: new StringDecoder("utf8"), stderr: new StringDecoder("utf8") };
     const stop = () => child.kill();
     signal.addEventListener("abort", stop, { once: true });
     const collect = (field: "stdout" | "stderr", value: Buffer) => {
@@ -54,8 +57,10 @@ async function capture(
         child.kill();
         return;
       }
-      if (field === "stdout") stdout += value.toString("utf8");
-      else stderr += value.toString("utf8");
+      const text = decoders[field].write(value);
+      if (field === "stdout") stdout += text;
+      else stderr += text;
+      if (text) onOutput?.(field, text);
     };
     child.stdout.on("data", (value) => collect("stdout", value));
     child.stderr.on("data", (value) => collect("stderr", value));
@@ -68,7 +73,13 @@ async function capture(
       if (signal.aborted) reject(new DOMException("已停止", "AbortError"));
       else if (overflow)
         reject(new AppError(400, "命令输出超过安全上限，已停止。"));
-      else resolve({ code: code ?? -1, stdout, stderr });
+      else {
+        const stdoutTail = decoders.stdout.end();
+        const stderrTail = decoders.stderr.end();
+        if (stdoutTail) onOutput?.("stdout", stdoutTail);
+        if (stderrTail) onOutput?.("stderr", stderrTail);
+        resolve({ code: code ?? -1, stdout: stdout + stdoutTail, stderr: stderr + stderrTail });
+      }
     });
   });
 }
@@ -84,9 +95,12 @@ export function dockerRunArguments(
   image: string,
   workspace: string,
   command: string,
+  options: SandboxExecutionOptions = {},
 ) {
   invariant(!workspace.includes(","), 400, "资料目录含逗号，无法安全挂载。");
-  return [
+  const project = options.projectRoot ? resolve(options.projectRoot) : null;
+  if (project) invariant(!project.includes(","), 400, "项目目录含逗号，无法安全挂载。", "workspace_path");
+  const args = [
     "run",
     "--name",
     name,
@@ -117,26 +131,36 @@ export function dockerRunArguments(
     "--mount",
     "type=bind,src=" + join(workspace, "outputs") + ",dst=/workspace/outputs",
     "--workdir",
-    "/workspace/outputs",
+    project ? "/workspace/project" : "/workspace/outputs",
     "--env",
     "PYTHONDONTWRITEBYTECODE=1",
     "--env",
     "PYTHONUNBUFFERED=1",
     "--env",
     "HOME=/tmp",
+    "--env",
+    "QSG_OUTPUTS=/workspace/outputs",
+    "--env",
+    "QSG_PROJECT_ROOT=" + (project ? "/workspace/project" : "/workspace/outputs"),
     image,
     "sh",
     "-lc",
     command,
   ];
+  if (project) {
+    const mountIndex = args.indexOf("--workdir");
+    const projectMount = ["--mount", "type=bind,src=" + project + ",dst=/workspace/project," + (options.workspaceAccess === "workspace-write" ? "rw" : "readonly")];
+    args.splice(mountIndex, 0, ...projectMount);
+  }
+  return args;
 }
 export class DockerSandbox implements Sandbox {
   constructor(
     private executable: string,
     private image: string,
   ) {}
-  commandContext(_workspace: string) {
-    return "仅在本机 Docker Linux 容器运行 sh 命令，Python 可用，禁网、只读根目录和资源限制已启用。当前目录 /workspace/outputs，输入 /workspace/inputs 只读。使用当前目录文件名生成成果，不要重复添加 outputs/；生成后用 publish_file 的 outputs/相对路径登记。不可用时不能降级为普通宿主终端。";
+  commandContext(_workspace: string, options?: SandboxExecutionOptions) {
+    return "仅在本机 Docker Linux 容器运行 sh 命令，Python 可用，禁网、只读根目录和资源限制已启用。" + (options?.projectRoot ? "当前目录 /workspace/project，项目权限为 " + (options.workspaceAccess === "workspace-write" ? "可写" : "只读") + "；成果写入 /workspace/outputs。" : "当前目录 /workspace/outputs。") + "输入 /workspace/inputs 只读。生成后用 publish_file 的 outputs/相对路径登记。不可用时不能降级为普通宿主终端。";
   }
   async health(): Promise<SandboxHealth> {
     const base = {
@@ -208,6 +232,7 @@ export class DockerSandbox implements Sandbox {
     command: string,
     workspace: string,
     signal: AbortSignal,
+    options: SandboxExecutionOptions = {},
   ): Promise<SandboxResult> {
     invariant(
       command.length > 0 && command.length <= 16000,
@@ -221,8 +246,10 @@ export class DockerSandbox implements Sandbox {
     try {
       const result = await capture(
         this.executable,
-        dockerRunArguments(name, this.image, workspace, command),
+        dockerRunArguments(name, this.image, workspace, command, options),
         AbortSignal.any([signal, AbortSignal.timeout(60000)]),
+        128000,
+        options.onOutput,
       );
       return {
         exit_code: result.code,
@@ -243,6 +270,11 @@ export class DockerSandbox implements Sandbox {
 
 /** auto 在 Windows 选原生后端，其他平台选 Docker；选定后端失败时不切换到无限制执行。 */
 export function createSandbox(config: Config): Sandbox {
+  if (config.deploymentMode === "server" && !config.serverCommands) return {
+    async health() { return { available: false, provider: "docker", image: "disabled", isolation_tested: false, message: "云端尚未启用命令沙箱；对话、文件和职业工具仍可使用。" }; },
+    async execute() { throw new AppError(403, "云端命令执行尚未启用。", "cloud_commands_disabled"); },
+  };
+  invariant(config.deploymentMode !== "server" || config.sandboxProvider !== "windows-native", 500, "云端命令必须使用 Docker 隔离。");
   const provider = config.sandboxProvider === "auto"
     ? (process.platform === "win32" ? "windows-native" : "docker") : config.sandboxProvider;
   return provider === "windows-native" ? new WindowsNativeSandbox(config.dataDir)

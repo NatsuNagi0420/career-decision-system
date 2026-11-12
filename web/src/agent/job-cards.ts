@@ -3,6 +3,7 @@ import type { ChatMessage } from "./types";
 import type { JobCatalogue } from "../../../agent/src/job-catalogue";
 export type JobDetail = ReturnType<JobCatalogue["readJobSample"]>;
 export interface JobCardData {
+  assessment?: import("../../../agent/src/career-decision-contract").JobAssessment;
   id: string; title: string; company: string; city: string; excerpt: string;
   reference_notice: string; matched_terms: string[]; work_type: string;
 }
@@ -11,7 +12,7 @@ function card(value: unknown): JobCardData | null {
   const data = object(value);
   if (typeof data.id !== "string" || !data.id || typeof data.title !== "string" || !data.title) return null;
   const text = (key: string) => typeof data[key] === "string" ? data[key] as string : "";
-  return { id: text("id"), title: text("title"), company: text("company"), city: text("city"),
+  return { ...(typeof object(data.assessment).id === "string" ? { assessment: data.assessment as JobCardData["assessment"] } : {}), id: text("id"), title: text("title"), company: text("company"), city: text("city"),
     excerpt: text("excerpt") || text("description").slice(0, 420), reference_notice: text("reference_notice") || "岗位参考 · 当前招聘状态待核实",
     work_type: text("work_type"), matched_terms: Array.isArray(data.matched_terms) ? data.matched_terms.filter((item): item is string => typeof item === "string").slice(0, 5) : [] };
 }

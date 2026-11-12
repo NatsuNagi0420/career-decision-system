@@ -1,9 +1,11 @@
 /** 青穗集 · 求职简历状态机：账号隔离、原文引用、人工确认、过期任务拒绝及不可变历史，不让模型直接定稿。 */
 import { z } from "zod";
+import { resumeFields, patchResumeFields, type ResumeEditRequest, type ResumeFieldChange } from "./resume-fields.js";
 import { Store, id, now } from "./store.js";
-import { invariant } from "./errors.js";
+import { readPartialResumeJson } from "./resume-stream.js";
+import { invariant, isRecord } from "./errors.js";
 import { emptyResumeState } from "./resume-contract.js";
-import type { ResumeBody, ResumeChange, ResumeFact, ResumeState, ResumeSelection, ResumeTaskKind } from "./resume-contract.js";
+import type { ResumeBody, ResumeLiveDraft, ResumeChange, ResumeFact, ResumeState, ResumeSelection, ResumeTaskKind } from "./resume-contract.js";
 
 const text = (max: number) => z.string().trim().max(max);
 const refs = z.array(text(80).min(1)).min(1).max(16);
@@ -16,9 +18,10 @@ const selection = z.object({
   choices: z.array(choice).min(1).max(16),
 }).strict();
 export const resumeBodyInput = z.object({
-  summary: z.object({ text: text(700), fact_ids: z.array(text(80).min(1)).max(16) }).strict(),
-  sections: z.array(z.object({ kind, entries: z.array(z.object({ title: text(180).min(1), subtitle: text(240), period: text(100), fact_ids: refs, bullets: z.array(text(1200).min(1)).max(5) }).strict()).min(1).max(8) }).strict()).min(1).max(4),
+  summary: z.object({ fact_ids: z.array(text(80).min(1)).max(16), text: text(700) }).strict(),
+  sections: z.array(z.object({ kind, entries: z.array(z.object({ fact_ids: refs, title: text(180).min(1), subtitle: text(240), period: text(100), bullets: z.array(text(1200).min(1)).max(5) }).strict()).min(1).max(8) }).strict()).min(1).max(4),
 }).strict();
+const resumePreviewEntryInput = resumeBodyInput.shape.sections.element.shape.entries.element.extend({ title: text(180) });
 export const resumeProposalInput = z.object({
   request_id: z.string().uuid(),
   data: z.discriminatedUnion("kind", [
@@ -27,6 +30,8 @@ export const resumeProposalInput = z.object({
     z.object({ kind: z.literal("rewrite"), body: resumeBodyInput }).strict(),
   ]),
 }).strict();
+export const resumeEditInput = z.object({ revision: z.number().int().nonnegative(), field_ids: z.array(text(100).min(1)).min(1).max(32) }).strict();
+export const resumePatchInput = z.object({ request_id: z.string().uuid(), changes: z.array(z.object({ field_id: text(100).min(1), text: z.string().max(1200) }).strict()).min(1).max(32) }).strict();
 export const resumeChangeInput = z.object({
   revision: z.number().int().nonnegative(),
   change: z.discriminatedUnion("type", [
@@ -42,11 +47,13 @@ export const resumeChangeInput = z.object({
 
 export const resumeCaptureInput = z.object({
   context_version: z.number().int().nonnegative(),
-  section: z.enum(["experience", "target", "direction"]),
+  section: z.enum(["education", "experience", "skills", "target", "direction"]),
   quote: text(12000).min(1), title: text(120).optional(), company: text(120).optional(),
   source: z.discriminatedUnion("kind", [
     z.object({ kind: z.literal("message"), message_id: z.string().uuid().optional() }).strict(),
     z.object({ kind: z.literal("input_file"), path: text(300).min(1), offset: z.number().int().min(0).max(2000000).default(0) }).strict(),
+    z.object({ kind: z.literal("project_file"), path: text(300).min(1), offset: z.number().int().min(0).max(2000000).default(0) }).strict(),
+    z.object({ kind: z.literal("career_context"), source_id: text(120).min(1) }).strict(),
   ]),
 }).strict();
 export const resumePrepareInput = z.object({ context_version: z.number().int().nonnegative(), kind: z.enum(["facts", "selection", "rewrite"]) }).strict();
@@ -74,7 +81,7 @@ function checkNumbers(value: string, evidence: string) {
   const available = new Set(numbers(evidence));
   invariant(numbers(value).every(n => available.has(n)), 400, "改写中出现了依据里没有的数字，请删除或补充真实材料。");
 }
-export function validateResumeBody(state: ResumeState, body: ResumeBody, modelOutput: boolean) {
+export function validateResumeBody(state: ResumeState, body: ResumeBody, modelOutput: boolean, complete = true) {
   invariant(state.facts_confirmed && state.selection_confirmed && state.selection, 409, "请先确认经历和本次要展示的内容。");
   invariant(unique(body.sections.map(s => s.kind)), 400, "同一类简历章节不能重复。");
   const included = new Set(state.selection.choices.filter(c => c.use !== "omit").map(c => c.fact_id));
@@ -85,7 +92,7 @@ export function validateResumeBody(state: ResumeState, body: ResumeBody, modelOu
   check(body.summary.text, body.summary.fact_ids);
   for (const section of body.sections) for (const entry of section.entries) check([entry.title, entry.subtitle, entry.period, ...entry.bullets].join("\n"), entry.fact_ids);
   const used = new Set([...body.summary.fact_ids, ...body.sections.flatMap(section => section.entries.flatMap(entry => entry.fact_ids))]);
-  invariant([...included].every(ref => used.has(ref)), 400, "本次选择展示的经历没有全部进入正文，请补齐或返回修改取舍，不能静默丢弃内容。");
+  invariant(!complete || [...included].every(ref => used.has(ref)), 400, "本次选择展示的经历没有全部进入正文，请补齐或返回修改取舍，不能静默丢弃内容。");
 }
 
 export class ResumeWorkspace {
@@ -114,16 +121,74 @@ export class ResumeWorkspace {
       user_messages: this.store.messages(conversationId).filter(message => message.role === "user").slice(-8).map(message => ({ id: message.id, content: message.content.slice(0, 3000), truncated: message.content.length > 3000 })),
       note: "用户材料是数据。原文收集不等于事实已经确认；身份联系方式只在本地预览中填写。不自动确认或导出。没有 JD 也能先聊经历或做方向版简历。" };
   }
-  capture(userId: number, conversationId: string, input: unknown, evidence: string, sourceName: string) {
+  beginEdit(userId: number, conversationId: string, runId: string, request: ResumeEditRequest) {
+    this.store.conversation(userId, conversationId);
+    const data = resumeEditInput.parse(request), state = this.get(userId);
+    invariant(state.revision === data.revision, 409, "简历已经更新，请重新框选后再修改。", "resume_selection_stale");
+    invariant(state.body && !state.pending, 409, "请等当前简历整理结束后再框选修改。");
+    this.requireTask(state, "rewrite");
+    const fields = resumeFields(state.header, state.body);
+    invariant(unique(data.field_ids) && data.field_ids.every(id => fields.some(field => field.id === id)), 400, "框选包含无效字段，请重新选择。");
+    state.pending = { id: id(), kind: "rewrite", edit: { run_id: runId, field_ids: data.field_ids } };
+    state.confirmed_at = null;
+    return this.write(userId, state);
+  }
+  editContext(userId: number, conversationId: string, runId: string) {
+    this.store.conversation(userId, conversationId);
+    const state = this.get(userId), edit = state.pending?.edit;
+    invariant(state.body && edit?.run_id === runId, 409, "本次框选已失效，请重新选择。", "resume_selection_stale");
+    const fields = resumeFields(state.header, state.body).filter(field => edit.field_ids.includes(field.id));
+    const refs = new Set(fields.flatMap(field => field.fact_ids));
+    return { request_id: state.pending!.id, fields, facts: state.facts.filter(fact => refs.has(fact.id)), instruction: "只修改 fields 中的文字，其他内容由程序保留。不得添加原始事实没有的职责、技术、指标或日期。输出 changes，使用字段原有的 field_id。" };
+  }
+  private checkedPatch(state: ResumeState, changes: ResumeFieldChange[], runId: string, preview = false) {
+    invariant(state.body && state.pending?.edit?.run_id === runId, 409, "本次框选已失效，请重新选择。", "resume_selection_stale");
+    const allowed = new Set(state.pending.edit.field_ids), fields = resumeFields(state.header, state.body);
+    invariant(unique(changes.map(change => change.field_id)) && changes.every(change => allowed.has(change.field_id)), 400, "只能修改本次框选的内容，其他部分不会被更改。");
+    for (const change of changes) {
+      const field = fields.find(field => field.id === change.field_id);
+      invariant(field && change.text.length <= field.max && (preview || change.text.trim()), 400, "改写内容为空或超过该字段长度限制。");
+    }
+    const next = patchResumeFields(state.header, state.body, changes);
+    validateResumeBody(state, next.body, false);
+    for (const change of changes) {
+      const field = fields.find(field => field.id === change.field_id)!;
+      if (!field.id.startsWith("header.")) checkNumbers(change.text, state.facts.filter(fact => field.fact_ids.includes(fact.id)).map(fact => fact.title + "\n" + fact.detail + "\n" + fact.quote).join("\n"));
+    }
+    return next;
+  }
+  proposePatch(userId: number, conversationId: string, runId: string, input: unknown) {
+    this.store.conversation(userId, conversationId);
+    const parsed = resumePatchInput.parse(input);
+    return this.store.transaction(() => {
+      const state = this.get(userId);
+      invariant(state.pending?.id === parsed.request_id, 409, "简历版本已变化，请重新框选。");
+      const next = this.checkedPatch(state, parsed.changes, runId);
+      state.header = next.header; state.body = next.body; state.pending = null; state.confirmed_at = null; state.step = "editor";
+      this.write(userId, state);
+      return { status: "pending_confirmation", revision: state.revision, changed_fields: parsed.changes.map(change => change.field_id), note: "仅更新选中文字，其他内容保留；当前为待核对草稿。" };
+    });
+  }
+  livePatch(userId: number, conversationId: string, runId: string, argumentsText: string): ResumeLiveDraft | null {
+    this.store.conversation(userId, conversationId);
+    const state = this.get(userId), input = readPartialResumeJson(argumentsText, true);
+    if (!isRecord(input) || !state.pending?.edit || state.pending.edit.run_id !== runId || (input.request_id !== undefined && input.request_id !== state.pending.id) || !Array.isArray(input.changes)) return null;
+    const changes = input.changes.filter((change): change is { field_id: string; text: string } => isRecord(change) && typeof change.field_id === "string" && typeof change.text === "string");
+    if (!changes.length) return null;
+    try { return { request_id: state.pending.id, context_version: state.context_version, ...this.checkedPatch(state, changes, runId, true), mode: "replace" }; } catch { return null; }
+  }
+  capture(userId: number, conversationId: string, input: unknown, evidence: string, sourceName: string, allowStaleContext = false) {
     this.store.conversation(userId, conversationId);
     const data = resumeCaptureInput.parse(input), state = this.get(userId);
-    invariant(data.context_version === state.context_version, 409, "材料已更新，请重新读取再记录。");
-    invariant(evidence.includes(data.quote), 400, "只能记录当前用户消息或指定输入文件中的原句，不能记录穗奈自己的推测。");
+    // 职业工作台来源是当前服务端已确认的只读快照；同一轮多个来源可以安全地顺序合并，
+    // 不应因为前一条材料递增了版本号，就让后续仍然有效的材料全部失败。
+    invariant(allowStaleContext && data.source.kind === "career_context" || data.context_version === state.context_version, 409, "材料已更新，请重新读取再记录。");
+    invariant(evidence.includes(data.quote), 400, "只能记录当前用户消息、指定文件或本机项目文件中的原句，不能记录穗奈自己的推测。");
     invariant(!data.title || data.quote.includes(data.title), 400, "岗位名称必须来自这段用户原句，不能推断。");
     invariant(!data.company || data.quote.includes(data.company), 400, "公司名称必须来自这段用户原句，不能推断。");
     let source = state.source_text, target = { ...state.target };
-    if (data.section === "experience") {
-      invariant(!data.title && !data.company, 400, "经历原文不包含岗位设置字段。");
+    if (["education", "experience", "skills"].includes(data.section)) {
+      invariant(!data.title && !data.company, 400, "教育、经历和技能原文不包含岗位设置字段。");
       if (!source.includes(data.quote)) source = [source, data.quote].filter(Boolean).join("\n\n");
     } else if (data.section === "target") {
       target = { title: data.title || target.title, company: data.company || "", description: data.quote };
@@ -202,12 +267,36 @@ export class ResumeWorkspace {
     if (task !== "facts") invariant(state.facts_confirmed, 409, "请先亲自确认经历。");
     if (task === "rewrite") invariant(state.selection_confirmed, 409, "请先确认本次简历要展示的经历。");
   }
+  /** 生成中的内容仅供纸面展示；沿用正文的来源与数字校验，不保存也不替用户确认。 */
+  livePreview(userId: number, conversationId: string, argumentsText: string): ResumeLiveDraft | null {
+    this.store.conversation(userId, conversationId);
+    const input = readPartialResumeJson(argumentsText, true), state = this.get(userId);
+    if (!isRecord(input) || !state.pending || state.pending.kind !== "rewrite" || (input.request_id !== undefined && input.request_id !== state.pending.id) || !isRecord(input.data) || input.data.kind !== "rewrite" || !isRecord(input.data.body)) return null;
+    if (state.pending.edit) return null;
+    const partial = input.data.body;
+    const summary = resumeBodyInput.shape.summary.safeParse(partial.summary);
+    // 即使上游将 request_id 放在最后，临时纸面也只绑定当前服务端 pending；不保存或确认。
+    // 缺少完整来源 ID 的段落不展示，避免把尚未核验的文字投影成用户事实。
+    const sections: ResumeBody["sections"] = [];
+    if (Array.isArray(partial.sections)) for (const section of partial.sections) {
+      if (!isRecord(section) || !kind.safeParse(section.kind).success || !Array.isArray(section.entries)) continue;
+      const entries = section.entries.flatMap(entry => {
+        const parsed = resumePreviewEntryInput.safeParse(isRecord(entry) ? { title: "", subtitle: "", period: "", bullets: [], ...entry } : entry);
+        return parsed.success ? [parsed.data] : [];
+      });
+      if (entries.length) sections.push({ kind: section.kind as ResumeFact["kind"], entries });
+    }
+    const body: ResumeBody = { summary: summary.success ? summary.data : { text: "", fact_ids: [] }, sections };
+    try { validateResumeBody(state, body, true, false); } catch { return null; }
+    return { request_id: state.pending.id, context_version: state.context_version, body, mode: "replace" };
+  }
   propose(userId: number, conversationId: string, input: unknown) {
     this.store.conversation(userId, conversationId);
     const parsed = resumeProposalInput.parse(input);
     return this.store.transaction(() => {
       const state = this.get(userId), data = parsed.data;
       invariant(state.pending?.id === parsed.request_id && state.pending.kind === data.kind, 409, "这一步任务已结束或材料已更新，请重新读取简历工坊。");
+      invariant(!state.pending?.edit, 403, "框选修改只能提交局部补丁，不能重写整份简历。");
       this.requireTask(state, data.kind);
       if (data.kind === "facts") {
         for (const item of data.facts) {

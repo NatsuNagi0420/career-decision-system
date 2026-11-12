@@ -1,0 +1,25 @@
+/** 青穗集 · 本机项目工作区面板样式：保持工作区入口轻量，不重复堆叠说明。 */
+.workspace-picker-backdrop { position: fixed; inset: 0; z-index: 90; border: 0; background: rgba(29, 23, 38, .16); backdrop-filter: blur(2px); }
+.workspace-picker { position: fixed; z-index: 91; top: 50%; left: 50%; width: min(640px, calc(100vw - 28px)); max-height: min(760px, calc(100vh - 32px)); transform: translate(-50%, -50%); overflow: auto; padding: 22px; color: #312738; background: #fffdfb; border: 1px solid #e8dceb; border-radius: 18px; box-shadow: 0 22px 70px rgba(63, 43, 79, .24); }
+.workspace-picker__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.workspace-picker__eyebrow { color: #9b82a6; font: 700 10px/1.2 ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .14em; }
+.workspace-picker h2 { margin: 5px 0 0; font-size: 22px; }
+.workspace-picker__current { display: flex; align-items: center; gap: 12px; margin: 20px 0 14px; padding: 13px; border: 1px solid #eadfeb; border-radius: 14px; background: #faf5fc; }
+.workspace-picker__current-icon { display: grid; place-items: center; width: 38px; height: 38px; color: #8866a0; border-radius: 11px; background: #eee2f5; }
+.workspace-picker__current-copy { display: grid; min-width: 0; gap: 3px; flex: 1; }
+.workspace-picker__current-copy strong, .workspace-picker__item-main strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.workspace-picker__current-copy span, .workspace-picker__item-main span { overflow: hidden; color: #907e95; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.workspace-picker__plain { border: 0; color: #997c9f; background: transparent; cursor: pointer; font-size: 11px; }
+.workspace-picker__actions { display: flex; }
+.workspace-picker__pick { display: inline-flex; align-items: center; gap: 9px; padding: 11px 14px; color: #63447a; border: 1px solid #d9c5e5; border-radius: 11px; background: #f6eff9; cursor: pointer; font-weight: 700; }
+.workspace-picker__pick small { margin-left: 3px; color: #9c8ba2; font-size: 10px; font-weight: 500; }
+.workspace-picker__list { display: grid; gap: 9px; margin-top: 16px; }
+.workspace-picker__item { display: flex; align-items: center; gap: 12px; padding: 12px 10px 12px 13px; border: 1px solid #eee8ef; border-radius: 12px; background: #fff; }
+.workspace-picker__item.is-current { border-color: #ccb6d8; background: #fbf7fd; }
+.workspace-picker__item-main { display: grid; min-width: 0; flex: 1; gap: 4px; }
+.workspace-picker__item-actions { display: flex; align-items: center; gap: 5px; }
+.workspace-picker__bind { padding: 7px 8px; border: 1px solid #ded2e3; border-radius: 8px; color: #6f567b; background: #fff; cursor: pointer; font-size: 10px; white-space: nowrap; }
+.workspace-picker__bind--write { border-color: #edc8d1; color: #a15d6d; }
+.workspace-picker__empty { margin: 22px 0; color: #998d9e; text-align: center; font-size: 12px; }
+.workspace-picker__footer { display: flex; justify-content: space-between; gap: 12px; margin-top: 18px; color: #a396a7; font-size: 10px; }
+@media (max-width: 620px) { .workspace-picker { padding: 16px; } .workspace-picker__item { align-items: flex-start; flex-direction: column; } .workspace-picker__item-actions { width: 100%; } .workspace-picker__bind { flex: 1; } .workspace-picker__footer { flex-direction: column; } }

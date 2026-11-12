@@ -1,0 +1,71 @@
+/* 青穗集 · 职业证据的轻交互：安静呈现进度、原话和缺口，遵循像素桌面的既有色板。 */
+.career-evidence-panel{min-width:0}.career-evidence-heading{display:flex;align-items:center;gap:8px;margin:14px 0 5px}.career-evidence-heading h3{font-size:14px;margin:0}.career-evidence-heading>span{font-size:11px;opacity:.6}.career-fact-line{padding:12px 0;border-bottom:1px solid rgba(137,113,171,.17)}.career-fact-line__text{display:flex;gap:9px;align-items:baseline}.career-fact-line__text p{margin:0;line-height:1.65;overflow-wrap:anywhere;min-width:0}.career-fact-kind{flex-shrink:0;font-size:11px;color:#74618f}.career-fact-line[data-conflict] .career-fact-kind{color:#a26443}.career-fact-line__actions{display:flex;justify-content:flex-end;align-items:center;gap:5px;margin-top:5px}.career-fact-confirm{display:inline-flex;gap:4px;align-items:center;padding:4px 8px;border:1px solid #c9bbdf;border-radius:5px;background:#f0e9f8;color:#584073;font:inherit;font-size:12px;cursor:pointer}.career-fact-confirm:disabled{opacity:.5}.career-evidence-quotes{font-size:12px;line-height:1.65}.career-evidence-quotes summary{color:#83758f;cursor:pointer;width:fit-content}.career-evidence-quotes blockquote{margin:7px 0;padding:5px 10px;border-left:2px solid #c5b1de;background:rgba(206,188,227,.10);overflow-wrap:anywhere;white-space:pre-wrap}.career-evidence-quotes p{color:#8b6e54;font-size:12px}.career-evidence-more>summary{padding:12px 0;color:#786286;cursor:pointer;font-size:12px}.career-decision-activity{display:flex;align-items:center;gap:9px;padding:10px 0;color:#796987;font-size:12px;line-height:1.5}.career-decision-pixels{display:grid;grid-template-columns:repeat(2,3px);gap:2px;flex-shrink:0}.career-decision-pixels i{width:3px;height:3px;background:#a68bbf}.career-decision-activity[data-active=true] i{animation:career-evidence-pulse 1.4s steps(3,end) infinite}.career-decision-pixels i:nth-child(2){animation-delay:.15s}.career-decision-pixels i:nth-child(3){animation-delay:.45s}.career-decision-pixels i:nth-child(4){animation-delay:.3s}@keyframes career-evidence-pulse{0%,100%{opacity:.25}50%{opacity:1}}.career-followup{display:flex;align-items:center;gap:10px;text-align:left;width:100%;padding:14px;margin-top:12px;border:1px solid #dacee7;border-radius:8px;background:#f5f0fa;color:#60506d;font:inherit;line-height:1.7;cursor:pointer}.career-followup>span{flex:1;min-width:0}.career-followup span small{display:block;margin-bottom:3px;font-size:10px;color:#927fa1}.career-followup--conversation{max-width:620px;margin:8px auto 16px;background:rgba(249,245,252,.92);box-shadow:0 3px 0 rgba(138,111,158,.08)}.job-evidence{margin:10px 0;border:1px solid #e3d9ed;border-radius:7px;overflow:hidden}.job-evidence>summary{display:flex;align-items:center;gap:8px;padding:10px 12px;cursor:pointer;list-style:none;font-size:12px;color:#706079}.job-evidence>summary::-webkit-details-marker{display:none}.job-evidence>summary>span:nth-child(2){flex:1}.job-evidence__signal{width:6px;height:6px;background:#b69cce;box-shadow:2px 2px 0 #e6ddee}.job-evidence__signal[data-label=supported]{background:#85ac96}.job-evidence__signal[data-label=conflict]{background:#c89672}.job-evidence[data-stale=true]{border-style:dashed}.job-evidence[data-stale=true] .job-evidence__signal{background:#bbb0c0}.job-evidence__content{padding:0 12px 12px}.job-evidence-check{padding:12px 0;border-top:1px solid #e9e1ef}.job-evidence-check>p{font-size:13px;line-height:1.7;margin:5px 0;white-space:pre-wrap;overflow-wrap:anywhere}.job-evidence-check>small{font-size:11px;line-height:1.6;color:#8b7c96}.job-evidence-check__label{font-size:11px;color:#7b6c91}.job-evidence-check[data-assessment=supported] .job-evidence-check__label{color:#4c8265}.job-evidence-check[data-assessment=conflict] .job-evidence-check__label{color:#a86642}.job-evidence time{display:block;text-align:right;font-size:10px;color:#97899f;margin-top:10px}.profile-dossier>.career-evidence-panel{padding:12px 22px;background:#faf7fd;border:1px solid #e4d9ef;border-radius:10px}.career-evidence-panel[data-compact=true] .career-fact-line__text{font-size:12px}.career-evidence-panel[data-compact=true] .career-fact-line{padding:9px 0}
+@media(prefers-reduced-motion:reduce){.career-decision-activity[data-active=true] i{animation:none}}[data-ui-motion=off] .career-decision-activity i{animation:none}
+
+.career-evidence-panel[data-conversation=true] {
+  max-width: 620px;
+  margin: 10px auto 16px;
+  padding: 4px 18px;
+  border-left: 2px solid #c8b1df;
+  background: linear-gradient(90deg, rgba(242,233,251,.64), rgba(250,247,253,.12));
+  animation: career-evidence-arrive 280ms ease-out both;
+}
+.career-evidence-panel[data-conversation=true] .career-evidence-heading { margin-top: 10px; }
+.career-evidence-panel[data-conversation=true] .career-fact-line:last-child { border-bottom: 0; }
+.career-evidence-panel[data-conversation=true] .career-fact-line__text { font-size: 13px; }
+.career-evidence-saved {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 620px;
+  margin: 8px auto 12px;
+  color: #577861;
+  font-size: 12px;
+}
+.career-evidence-saved > span { flex: 1; }
+.career-evidence-count {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px 0 0;
+  border: 0;
+  border-top: 1px solid rgba(137,113,171,.17);
+  background: transparent;
+  color: #79618e;
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+.career-evidence-count > span { flex: 1; }
+.career-followup:disabled { opacity: .55; cursor: default; }
+.career-fact-confirm:not(:disabled):hover { background: #e8ddf4; border-color: #b99fd2; }
+.career-fact-confirm:focus-visible,
+.career-evidence-count:focus-visible,
+.career-followup:focus-visible { outline: 2px solid #a984c9; outline-offset: 3px; }
+@keyframes career-evidence-arrive {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .career-evidence-panel[data-conversation=true] { animation: none; }
+}
+[data-ui-motion=off] .career-evidence-panel[data-conversation=true] { animation: none; }
+@media (max-width: 620px) {
+  .career-evidence-panel[data-conversation=true] { margin: 8px 0 12px; padding: 4px 10px; }
+  .career-fact-line__text { flex-wrap: wrap; gap: 3px 8px; }
+}
+
+/* 简历核对收进工具栏，浮层不占用纸面高度，点击空白或 Esc 即可收起。 */
+.resume-evidence-menu > .agent-menu-trigger { width: 30px; height: 30px; min-height: 30px; padding: 0; justify-content: center; }
+.resume-evidence-trigger { position: relative; display: inline-flex; }
+.resume-evidence-trigger[data-warning=true] { color: #a17e4e; }
+.resume-evidence-trigger > i { position: absolute; top: -2px; right: -3px; width: 5px; height: 5px; border-radius: 50%; background: #c6995b; box-shadow: 0 0 0 2px #fffcff; }
+.agent-menu-panel.resume-evidence-popover { width: min(380px, calc(100vw - 24px)); padding: 16px; line-height: 1.7; font-size: 12px; }
+.resume-evidence-popover > strong { margin: 0; color: var(--md-on-surface); font-size: 13px; }
+.resume-evidence-popover > p { margin: 8px 0 0; }
+.resume-evidence-popover article { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--md-outline-variant); overflow-wrap: anywhere; }
+.resume-evidence-popover blockquote { margin: 0 0 8px; padding-left: 10px; border-left: 2px solid #c1a4d4; white-space: pre-wrap; }
+.resume-evidence-popover article p { margin: 4px 0 8px; color: var(--md-on-surface-faint); }

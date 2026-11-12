@@ -1,0 +1,10 @@
+import { chromium } from 'playwright';
+const browser = await chromium.launch({ channel: 'chrome', headless: true });
+const page = await browser.newPage({ viewport: { width: 1600, height: 1000 }, deviceScaleFactor: 1 });
+await page.goto('https://agent.suinai.me/', { waitUntil: 'networkidle', timeout: 60000 });
+await page.waitForTimeout(4000);
+console.log('TITLE', await page.title());
+console.log('URL', page.url());
+console.log('TEXT', (await page.locator('body').innerText()).slice(0, 4000));
+await page.screenshot({ path: 'D:\\Project\\career-decision-system\\video\\raw\\cloud-entry.png', fullPage: false });
+await browser.close();

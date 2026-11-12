@@ -1,0 +1,5 @@
+{
+  "extends": "./tsconfig.local.json",
+  "files": ["src/desktop.ts"],
+  "include": []
+}

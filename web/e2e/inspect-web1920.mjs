@@ -1,0 +1,10 @@
+import { chromium } from 'playwright';
+const token = process.env.DEMO_TOKEN;
+const browser = await chromium.launch({ channel: 'chrome', headless: true });
+const page = await browser.newPage({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 1 });
+await page.addInitScript(t => { localStorage.setItem('career.session.token', t); localStorage.setItem('suinai.onboarding.v1.local.3','completed'); }, token);
+await page.goto('http://127.0.0.1:5173/', { waitUntil: 'domcontentloaded', timeout: 30000 });
+await page.waitForTimeout(8000);
+console.log('TEXT', (await page.locator('body').innerText()).slice(0, 3500));
+await page.screenshot({ path: 'D:\\Project\\career-decision-system\\video\\raw\\web-home-1920.png', fullPage: false });
+await browser.close();

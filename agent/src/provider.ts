@@ -160,6 +160,16 @@ export async function responseError(response: Response): Promise<ProviderError> 
   const param =
     typeof record.param === "string" ? record.param.toLowerCase() : "";
   const status = response.status;
+  if (record.code === "relay_insufficient_points") return new ProviderError(402, "本次任务所需积分超出剩余积分，可缩短内容或等待每日刷新。", "relay_insufficient_points");
+  if (status === 429 && record.type === "relay_error") {
+    const messages: Record<string, string> = {
+      relay_busy: "官方中转还有请求正在处理，请稍后再试。",
+      relay_daily_request_limit: "官方中转的每日请求次数已达上限，请调整 RELAY_DAILY_REQUEST_LIMIT 或等待次日重置；这不代表上游余额不足。",
+      relay_daily_output_limit: "官方中转的每日输出预算不足，请调整 RELAY_DAILY_OUTPUT_TOKEN_LIMIT 或等待次日重置；这不代表上游余额不足。",
+    };
+    const code = typeof record.code === "string" ? record.code : "";
+    if (Object.hasOwn(messages, code)) return new ProviderError(status, messages[code], code);
+  }
   if (["provider_timeout", "provider_network"].includes(String(record.code)))
     return new ProviderError(status, record.code === "provider_timeout" ? "模型数据长时间未继续返回。" : "模型连接暂时中断。", String(record.code));
   if (
@@ -183,13 +193,16 @@ export async function responseError(response: Response): Promise<ProviderError> 
       "provider_model_unavailable",
     );
   if (
-    /insufficient[_ -]?quota|insufficient.*balance|余额不足|额度不足/.test(raw)
+    /insufficient[_ -]?quota|insufficient.*balance|余额不足|额度不足/.test(raw) ||
+    (record.type === "relay_error" && record.code === "provider_quota")
   )
     return new ProviderError(
       status,
       "服务余额或额度不足，请检查中转账户与 Key 的可用额度。",
       "provider_quota",
     );
+  if ([400, 413, 422].includes(status) && /context[_ -]?(?:length[_ -]?)?(?:exceeded|overflow|limit)|maximum context length|context window|prompt (?:is )?too (?:long|large)|too many (?:input )?tokens|上下文.{0,10}(?:超|长)|输入.{0,10}token.{0,10}超/.test(raw))
+    return new ProviderError(status, "当前请求超过模型上下文窗口。", "provider_context");
   let rejected: RejectedParameter | null = null;
   if (status === 400 || status === 422) {
     const unsupported =
@@ -220,7 +233,7 @@ export async function responseError(response: Response): Promise<ProviderError> 
     405: "服务不接受此请求方式，请检查协议和接口路径。",
     408: "上游处理超时，请稍后再试。",
     422: "接口参数校验未通过，请检查协议和模型参数。",
-    429: "服务限流或额度已用完，请稍后重试并检查额度。",
+    429: "模型服务限制了本次请求，请稍后重试；HTTP 429 本身不能说明余额不足。",
     502: "中转无法得到正常的上游响应，请检查中转通道。",
     503: "服务暂不可用，或当前模型没有可用通道；请重选模型或让中转方检查上游。",
     504: "中转等待上游超时，请稍后再试。",
@@ -236,10 +249,11 @@ export async function responseError(response: Response): Promise<ProviderError> 
 }
 export async function fetchProvider(
   connection: ProviderConnection,
-  path: "models" | "chat/completions" | "responses",
+  path: "models" | "chat/completions" | "responses" | "career/decisions",
   init: {
     method: "GET" | "POST";
     body?: Record<string, unknown>;
+    headers?: Record<string, string>;
     signal: AbortSignal;
   },
   fetcher: typeof fetch = fetch,
@@ -258,6 +272,7 @@ export async function fetchProvider(
             ? "application/json"
             : "application/json, text/event-stream",
         ...(init.body ? { "Content-Type": "application/json" } : {}),
+        ...(init.headers ?? {}),
       },
       ...(init.body ? { body: JSON.stringify(init.body) } : {}),
       signal,

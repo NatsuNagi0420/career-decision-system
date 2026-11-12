@@ -48,3 +48,16 @@ describe("闲置提醒不打扰", () => {
     expect(idleMessage({ ...base(), progress: { stage: "核对", next_step: "核对", needs_confirmation: true } })).toContain('不急着确认');
   });
 });
+
+
+it("未完成的持久计划展示在小结中，提供继续入口而非自动发送", () => {
+  const html = renderToStaticMarkup(<ConversationMemory guidance={undefined} analyzing={false} error="" enabled canRefresh onRefresh={() => {}}
+    plan={{ run_id: "run", updated_at: "", steps: [{ title: "读取经历", status: "done" }, { title: "整理文档", status: "pending" }] }} onContinue={() => {}} />);
+  expect(html).toContain("任务计划"); expect(html).toContain("整理文档"); expect(html).toContain("接着做");
+});
+
+it("跨运行待办承诺在小结中提供接续入口，并标出已经认领的状态", () => {
+  const obligation = { id: "obligation", user_id: 1, conversation_id: "conversation", source_run_id: null, capability_id: "action_plan", intent: "先核对一个真实项目", title: "核对一个真实项目", status: "open" as const, trigger: "guidance_next_step" as const, due_at: null, created_at: "", updated_at: "", claimed_at: null, resolved_at: null };
+  const html = renderToStaticMarkup(<ConversationMemory guidance={undefined} analyzing={false} error="" enabled canRefresh onRefresh={() => {}} obligations={[obligation]} onContinue={() => {}} onAbandon={() => {}} />);
+  expect(html).toContain("可以接着做"); expect(html).toContain("核对一个真实项目"); expect(html).toContain("接着做"); expect(html).toContain("不需要");
+});

@@ -1,7 +1,7 @@
 /** 青穗集 · 执行体验回归：真实命令、失败退出码、历史恢复、取消与审批状态以及安全的终端侧栏。 */
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { executionLabel, executionPlan, executionRecords, executionSummary, executionTarget, formatDuration } from "./execution";
+import { executionLabel, executionPlan, executionRecords, executionSummary, executionTarget, formatDuration, pretty } from "./execution";
 import { ExecutionPanel } from "./ExecutionPanel";
 import { RunActivity } from "./RunActivity";
 import type { AgentEvent, AgentRun, ChatMessage, ToolCall } from "./types";
@@ -32,6 +32,57 @@ describe("执行记录归一化", () => {
     const [running] = executionRecords([], [event("tool.started", { call })], [{ ...run, status: "running" }]);
     expect(running.status).toBe("running");
     expect(executionRecords([message()], [], [{ ...run, status: "running" }])[0].status).toBe("pending");
+  });
+  it("命令运行中的 stdout/stderr 事件会聚合为实时输出，并在结束前显示", () => {
+    const records = executionRecords([], [
+      event("tool.started", { call }),
+      event("tool.output", { call_id: "cmd", name: "run_command", stream: "stdout", text: "第一段" }, 2),
+      event("tool.output", { call_id: "cmd", name: "run_command", stream: "stderr", text: "提醒" }, 3),
+      event("tool.output", { call_id: "cmd", name: "run_command", stream: "stdout", text: "", truncated: true }, 4),
+    ], [{ ...run, status: "running" }]);
+    expect(records[0].liveOutput).toEqual({ stdout: "第一段", stderr: "提醒" });
+    expect(records[0].liveOutputTruncated).toBe(true);
+    const html = renderToStaticMarkup(<ExecutionPanel run={{ ...run, status: "running" }} runs={[run]} messages={[]} records={records} events={[]} files={[]} onSelect={noop} onClose={noop} onPreview={noop} />);
+    expect(html).toContain("实时输出 stdout"); expect(html).toContain("第一段"); expect(html).toContain("实时输出已展示前 16 KB");
+  });
+  it("结构化项目修改在执行侧栏显示变更预览", () => {
+    const patchCall = { ...call, name: "apply_project_patch", arguments: JSON.stringify({ reason: "修复", files: [{ path: "src/main.ts", operation: "update", content: "after" }] }) };
+    const patchResult = { ok: true, result: { applied: true, edit_id: "edit", changes: [{ path: "src/main.ts", operation: "update", diff: "-before\n+after" }] } };
+    const records = executionRecords([message(patchCall), resultMessage(patchResult)], [event("tool.started", { call: patchCall })], [run]);
+    const html = renderToStaticMarkup(<ExecutionPanel run={run} runs={[run]} messages={[]} records={records} events={[]} files={[]} onSelect={noop} onClose={noop} onPreview={noop} />);
+    expect(html).toContain("变更预览"); expect(html).toContain("-before"); expect(html).toContain("+after");
+  });
+  it("把压缩 start-summary-end 事件链归一化为一条可恢复的执行记录", () => {
+    const records = executionRecords([], [
+      event("context.compaction.start", {
+        compaction_id: "compact-1", trigger: "pressure", source_message_count: 12, pruned_message_count: 2,
+      }),
+      event("context.compaction.summary", {
+        compaction_id: "compact-1", summary: "系统自动压缩的历史上下文",
+      }, 2),
+      event("context.compaction.end", {
+        compaction_id: "compact-1", status: "completed",
+      }, 3),
+    ], [run]);
+    expect(records).toHaveLength(1);
+    expect(executionLabel(records[0])).toBe("整理上下文");
+    expect(records[0].status).toBe("completed");
+    expect(executionTarget(records[0])).toBe("历史 12 条 · 裁剪 2 条");
+    expect(executionSummary(records[0])).toBe("已整理 12 条历史消息");
+    expect(pretty(records[0].result)).toContain("系统自动压缩的历史上下文");
+  });
+  it("开始事件被滚动掉时，仍可从摘要和结束事件恢复压缩记录", () => {
+    const records = executionRecords([], [
+      event("context.compaction.summary", {
+        compaction_id: "compact-2", trigger: "pressure", source_message_count: 8, pruned_message_count: 1, summary: "保留用户目标",
+      }, 2),
+      event("context.compaction.end", {
+        compaction_id: "compact-2", status: "completed", source_message_count: 8, pruned_message_count: 1,
+      }, 3),
+    ], [run]);
+    expect(records).toHaveLength(1);
+    expect(records[0].status).toBe("completed");
+    expect(executionTarget(records[0])).toBe("历史 8 条 · 裁剪 1 条");
   });
   it("取消和服务重启不被显示成成功，也不把未执行调用算成完成", () => {
     const records = executionRecords([message(), resultMessage({ ok: false, error: "本轮已中断，尚未执行的工具不会自动重试。" })], [], [{ ...run, status: "failed" }]);

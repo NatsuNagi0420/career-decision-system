@@ -1,0 +1,25 @@
+<!-- 青穗集 · 原生底部导航：短平移与轻回弹，涟漪从手指位置扩散，不等待退场。 -->
+<view class="qs-tabbar">
+    <view class="tab-track">
+        <view
+            class="tab-indicator {{animate ? (motion ? 'tab-arrive-a' : 'tab-arrive-b') : ''}}"
+            style="--tab-from: {{previous * 100}}%; --tab-to: {{current * 100}}%; transform: translateX({{current * 100}}%);"
+        />
+        <button
+            wx:for="{{tabs}}"
+            wx:key="path"
+            class="tab-item {{current === index ? 'tab-item--active' : ''}} {{animate && current === index ? (motion ? 'tab-item--arrive-a' : 'tab-item--arrive-b') : ''}}"
+            data-index="{{index}}"
+            style="{{ripples[index]}}"
+            aria-label="{{item.text}}"
+            hover-class="tab-item--pressed"
+            hover-start-time="0"
+            hover-stay-time="100"
+            bindtouchstart="press"
+            bindtap="switchTo"
+        >
+            <image class="tab-icon" src="{{item.icon}}" mode="aspectFit" />
+            <text class="tab-text">{{item.text}}</text>
+        </button>
+    </view>
+</view>

@@ -1,0 +1,262 @@
+/** 青穗集 · 页面与局部微动效：主页卡片短距离错开入场，按钮回弹与触点反馈不阻塞导航。 */
+/* 使用显式 class，让共用反馈也能进入微信的自定义组件。 */
+.qs-tap-target,
+.qs-press {
+    --qs-press-scale: 0.96;
+    position: relative;
+    transform-origin: center;
+    transition:
+        transform 0.34s cubic-bezier(0.18, 0.9, 0.3, 1.45),
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        opacity 0.18s ease,
+        box-shadow 0.2s ease;
+}
+button[disabled] {
+    opacity: 0.48;
+}
+/* 按下迅速，松手弹回；只缩放触点所在控件，不移动整页与滚动容器。 */
+.qs-tap-target.button-hover,
+.qs-tap-target.motion-tab--pressed,
+.qs-pressed {
+    transform: translateY(2rpx) scale(var(--qs-press-scale, 0.96));
+    transition-duration: 0.09s;
+    transition-timing-function: ease-out;
+}
+.qs-press {
+    --qs-press-scale: 0.982;
+    overflow: hidden;
+}
+.qs-press::before {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(ellipse at center, rgba(142, 112, 184, 0.24), rgba(142, 112, 184, 0.07) 70%);
+    content: "";
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.55);
+    transition: opacity 0.24s ease, transform 0.28s ease-out;
+}
+.qs-pressed::before {
+    opacity: 1;
+    transform: scale(1);
+}
+/* #ifdef H5 */
+.qs-tap-target:not([disabled]):active,
+.qs-press:active {
+    transform: translateY(2rpx) scale(var(--qs-press-scale, 0.96));
+    transition-duration: 0.09s;
+    transition-timing-function: ease-out;
+}
+.qs-press:active::before {
+    opacity: 1;
+    transform: scale(1);
+}
+/* #endif */
+.qs-icon-button {
+    --qs-press-scale: 0.9;
+}
+.qs-action-icon {
+    transform-origin: center 65%;
+    transition: transform 0.34s cubic-bezier(0.18, 0.9, 0.3, 1.45);
+}
+.qs-tap-target .qs-action-icon,
+.qs-icon-button image:not(.qs-spin) {
+    animation: var(--qs-icon-pop, none) 0.48s ease-out both;
+}
+.qs-action-arrow,
+.qs-tap-target .qs-chevron,
+.qs-press .qs-chevron {
+    display: inline-block;
+    transition: transform 0.3s cubic-bezier(0.18, 0.9, 0.3, 1.45);
+}
+.qs-tap-target .qs-action-arrow,
+.qs-tap-target .qs-chevron {
+    animation: var(--qs-arrow-nudge, none) 0.48s ease-out both;
+}
+.qs-press.qs-pressed .qs-chevron {
+    transform: translateX(9rpx);
+}
+.qs-press.qs-pressed .qs-action-icon {
+    transform: translateY(-5rpx) rotate(-5deg) scale(1.06);
+}
+/* #ifdef H5 */
+.qs-press:active .qs-chevron { transform: translateX(9rpx); }
+.qs-press:active .qs-action-icon { transform: translateY(-5rpx) rotate(-5deg) scale(1.06); }
+/* #endif */
+.qs-reveal {
+    animation: qs-soft-in 0.16s ease-out;
+}
+/* 不对整页或滚动容器做 transform；首次入场也保持内容接近完全可见。 */
+.qs-page-arrive .qs-motion-block {
+    animation: qs-soft-in 0.16s ease-out;
+}
+/* 只动卡片本身；页面、首帧保护和固定栏不隐藏、不平移，也不等待动画再显示。 */
+.qs-tab-arrive-a .qs-motion-block {
+    animation: qs-tab-card-in-a 0.34s cubic-bezier(0.2, 0.8, 0.25, 1) var(--qs-enter-delay, 0ms) backwards;
+}
+.qs-tab-arrive-b .qs-motion-block {
+    animation: qs-tab-card-in-b 0.34s cubic-bezier(0.2, 0.8, 0.25, 1) var(--qs-enter-delay, 0ms) backwards;
+}
+.qs-motion-step-1 { --qs-enter-delay: 28ms; }
+.qs-motion-step-2,
+.qs-motion-later { --qs-enter-delay: 56ms; }
+.qs-motion-step-3 { --qs-enter-delay: 84ms; }
+@keyframes qs-tab-card-in-a {
+    from { opacity: 0.55; transform: translateY(14rpx); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes qs-tab-card-in-b {
+    from { opacity: 0.55; transform: translateY(14rpx); }
+    to { opacity: 1; transform: translateY(0); }
+}
+/* 入场过程中也立即响应点击，不让 transform 动画覆盖按压。 */
+.qs-tap-target.button-hover,
+.qs-tap-target.motion-tab--pressed,
+.qs-press.qs-pressed {
+    animation: none;
+}
+.qs-disclosure-chevron {
+    display: inline-block;
+    flex: none;
+    transition: transform 0.22s ease;
+}
+.qs-disclosure-chevron--open {
+    transform: rotate(180deg);
+}
+.qs-confirm-check {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 72rpx;
+    height: 72rpx;
+    border-radius: 50%;
+    margin: 0 auto 20rpx;
+    color: #638d74;
+    background: var(--qs-mint-soft);
+    font-size: 42rpx;
+    animation: qs-check-in 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+.qs-progress-fill {
+    transition: width 0.45s cubic-bezier(0.2, 0.75, 0.25, 1);
+}
+@keyframes qs-soft-in {
+    from {
+        opacity: 0.92;
+    }
+    to {
+        opacity: 1;
+    }
+}
+/* 伪元素始终留在原按钮内，不新增视图节点；名字交替保证连续点击可以重播。 */
+.qs-tap-target {
+    overflow: hidden;
+}
+.qs-tap-target::before {
+    position: absolute;
+    top: var(--qs-ripple-y, 50%);
+    left: var(--qs-ripple-x, 50%);
+    width: 220%;
+    height: 0;
+    padding-bottom: 220%;
+    border-radius: 50%;
+    background: var(--qs-ripple-color, rgba(139, 108, 178, 0.29));
+    content: "";
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, -50%) scale(0);
+    animation: var(--qs-ripple-wave, none) 0.62s cubic-bezier(0.2, 0.65, 0.3, 1) both;
+}
+.qs-button--primary,
+.growth-next-button,
+.approval-allow {
+    --qs-ripple-color: rgba(255, 255, 255, 0.4);
+}
+@keyframes qs-button-wave-a {
+    0% { opacity: 1; transform: translate(-50%, -50%) scale(0.015); }
+    60% { opacity: 0.75; }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+}
+@keyframes qs-button-wave-b {
+    0% { opacity: 1; transform: translate(-50%, -50%) scale(0.015); }
+    60% { opacity: 0.75; }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+}
+/* 同一触摸只更新一次 CSS 变量；图标与箭头在松手后继续完成反馈。 */
+@keyframes qs-icon-pop-a {
+    0%, 100% { transform: translateY(0) rotate(0) scale(1); }
+    32% { transform: translateY(-6rpx) rotate(-6deg) scale(1.12); }
+    68% { transform: translateY(1rpx) rotate(2deg) scale(0.98); }
+}
+@keyframes qs-icon-pop-b {
+    0%, 100% { transform: translateY(0) rotate(0) scale(1); }
+    32% { transform: translateY(-6rpx) rotate(-6deg) scale(1.12); }
+    68% { transform: translateY(1rpx) rotate(2deg) scale(0.98); }
+}
+@keyframes qs-arrow-nudge-a {
+    0%, 100% { transform: translateX(0); }
+    38% { transform: translateX(10rpx); }
+    72% { transform: translateX(-2rpx); }
+}
+@keyframes qs-arrow-nudge-b {
+    0%, 100% { transform: translateX(0); }
+    38% { transform: translateX(10rpx); }
+    72% { transform: translateX(-2rpx); }
+}
+@keyframes qs-check-in {
+    0% {
+        opacity: 0;
+        transform: scale(0.65) rotate(-10deg);
+    }
+    70% {
+        opacity: 1;
+        transform: scale(1.07);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .qs-tap-target,
+    .qs-tap-target::before,
+    .qs-press,
+    .qs-press::before,
+    .qs-icon-button,
+    .qs-icon-button image,
+    .qs-action-icon,
+    .qs-action-arrow,
+    .qs-chevron,
+    .qs-disclosure-chevron,
+    .qs-progress-fill {
+        transition: none !important;
+    }
+    .qs-reveal,
+    .qs-page-arrive .qs-motion-block,
+    .qs-tab-arrive-a .qs-motion-block,
+    .qs-tab-arrive-b .qs-motion-block,
+    .qs-tap-target::before,
+    .qs-confirm-check,
+    .qs-tap-target .qs-action-icon,
+    .qs-tap-target .qs-action-arrow,
+    .qs-tap-target .qs-chevron,
+    .qs-icon-button image,
+    .source-check {
+        animation: none !important;
+    }
+    .qs-tap-target.button-hover,
+    .qs-tap-target.motion-tab--pressed,
+    .qs-pressed,
+    .qs-press.qs-pressed .qs-chevron,
+    .qs-press.qs-pressed .qs-action-icon {
+        transform: none;
+    }
+    /* #ifdef H5 */
+    .qs-tap-target:not([disabled]):active,
+    .qs-press:active,
+    .qs-press:active .qs-chevron,
+    .qs-press:active .qs-action-icon {
+        transform: none;
+    }
+    /* #endif */
+}

@@ -1,0 +1,562 @@
+/** 青穗集 · 共用视觉样式：统一像素字形和纸面卡片，主页触点只扰动卡片下方的点阵背景。 */
+@import "./pixel-font.scss";
+/* 运行时色彩统一在应用入口注入，组件只引用变量。 */
+page {
+    --qs-danger-soft: #f9eaec;
+    --qs-mint-soft: #e9f2eb;
+    --qs-warn-soft: #fbf0df;
+    --qs-bg: #faf9f6;
+    --qs-paper: #fffefc;
+    --qs-paper-soft: #f5f2f8;
+    --qs-lilac: #e1d9e8;
+    --qs-primary-soft: #f0ebfa;
+    --qs-ink: #393249;
+    --qs-muted: #736d7e;
+    --qs-faint: #898092;
+    --qs-page-tint: #f7f3fb;
+    --qs-hero-wash: rgba(255, 250, 255, 0.99);
+    --qs-hero-wash-mid: rgba(255, 250, 255, 0.91);
+    --qs-shadow-color: rgba(109, 79, 139, 0.08);
+    --qs-bg-texture: radial-gradient(circle at 1rpx 1rpx, rgba(114, 93, 140, 0.13) 1rpx, transparent 1.5rpx);
+}
+
+view,
+text,
+button,
+input,
+textarea {
+    box-sizing: border-box;
+}
+image {
+    display: block;
+}
+button::after {
+    border: 0;
+}
+page {
+    background-color: $qingsui-bg;
+    background-image: var(--qs-bg-texture);
+    background-size: 24rpx 24rpx;
+}
+
+.qs-page {
+    font-family: $qingsui-font;
+    font-weight: 400;
+    font-synthesis: none;
+    min-height: 100vh;
+    max-width: 840rpx;
+    margin: 0 auto;
+    padding: 32rpx 34rpx 54rpx;
+    background-color: $qingsui-bg;
+    background-image: var(--qs-bg-texture);
+    background-size: 24rpx 24rpx;
+}
+/* 自定义 tabBar 是 fixed 定位，四个 tab 页统一留出底栏高度 + iPhone 安全区。 */
+.qs-page--tab {
+    position: relative;
+    z-index: 0;
+    background-image: none;
+    padding-top: 0;
+    min-height: calc(100vh - var(--window-bottom, 0px));
+    padding-bottom: calc(150rpx + env(safe-area-inset-bottom));
+}
+/* #ifdef MP-WEIXIN */
+/* 原生模板不依赖接口或 Vue 首次 setData；显示旧页时不会重新启用占位。 */
+.qs-page-frame {
+    position: fixed;
+    inset: 0;
+    z-index: 95;
+    padding: calc(env(safe-area-inset-top) + 100rpx) 34rpx 170rpx;
+    background-color: $qingsui-bg;
+    background-image: var(--qs-bg-texture);
+    background-size: 24rpx 24rpx;
+    pointer-events: none;
+}
+.qs-page-frame-title {
+    display: block;
+    margin-bottom: 38rpx;
+    @include qs-ui-type($qs-type-page);
+    color: $qingsui-ink;
+}
+.qs-page-frame-card {
+    height: 218rpx;
+    margin-bottom: 36rpx;
+    border: 1rpx solid $qingsui-lilac;
+    border-radius: $qs-radius-card;
+    background: $qingsui-paper-soft;
+}
+.qs-page-frame-line {
+    width: 88%;
+    height: 26rpx;
+    margin: 24rpx 0;
+    border-radius: 8rpx;
+    background: $qingsui-paper-soft;
+}
+.qs-page-frame-line--short {
+    width: 56%;
+}
+/* #endif */
+.qs-card {
+    background: $qingsui-paper;
+    border: 1rpx solid $qingsui-lilac;
+    border-radius: $qs-radius-card;
+    box-shadow: $qs-shadow-card;
+    transition:
+        border-color 0.22s ease,
+        box-shadow 0.22s ease,
+        transform 0.22s ease,
+        background-color 0.22s ease;
+}
+.qs-card.qs-pressed {
+    border-color: $qingsui-primary-strong;
+    box-shadow: $qs-shadow-control;
+}
+.qs-button {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 94rpx;
+    padding: 0 28rpx;
+    overflow: hidden;
+    border: 1rpx solid $qingsui-lilac;
+    border-radius: $qs-radius-control;
+    color: $qingsui-primary;
+    background: $qingsui-paper;
+    @include qs-ui-type(26rpx);
+    line-height: 1.3;
+    transition:
+        transform 0.16s ease,
+        opacity 0.16s ease,
+        box-shadow 0.22s ease,
+        border-color 0.22s ease;
+}
+.qs-button--primary {
+    color: #fff;
+    border-color: $qingsui-primary;
+    background: #8772a8;
+    border-color: #7e689f;
+    box-shadow: 2rpx 3rpx 0 rgba(98, 73, 132, 0.2);
+}
+.qs-button:active,
+.entry-card:active,
+.quick-button:active,
+.tool-button:active,
+.conversation-item:active {
+    transform: scale(0.985);
+}
+.qs-eyebrow {
+    display: block;
+    color: $qingsui-mint;
+    font-size: 22rpx;
+    letter-spacing: 2rpx;
+}
+.qs-title {
+    margin: 12rpx 0 0;
+    color: $qingsui-ink;
+    @include qs-ui-type(42rpx);
+    line-height: 1.35;
+}
+.qs-subtitle {
+    margin: 14rpx 0 0;
+    color: $qingsui-muted;
+    font-size: 26rpx;
+    line-height: 1.75;
+}
+/* 页面和长列表直接显示；动态反馈只加在用户刚操作的控件上。 */
+.qs-avatar-float {
+    animation: qs-avatar-float 3.8s ease-in-out infinite;
+}
+.qs-pulse {
+    animation: qs-pulse 2.2s ease-in-out infinite;
+}
+.qs-spin {
+    animation: qs-spin 1.25s linear infinite;
+}
+.qs-panel-enter {
+    animation: qs-panel-enter 0.28s cubic-bezier(0.2, 0.8, 0.25, 1) both;
+}
+.qs-focus {
+    border-color: $qingsui-primary-strong !important;
+    box-shadow:
+        0 0 0 6rpx rgba(118, 86, 165, 0.1),
+        0 14rpx 40rpx rgba(109, 79, 139, 0.1);
+}
+.qs-empty-orb {
+    animation: qs-empty-float 3.6s ease-in-out infinite;
+}
+
+@keyframes qs-panel-enter {
+    from {
+        opacity: 0;
+        transform: translateY(-18rpx) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+@keyframes qs-avatar-float {
+    0%,
+    100% {
+        transform: translateY(0) rotate(-0.5deg);
+    }
+    50% {
+        transform: translateY(-8rpx) rotate(0.5deg);
+    }
+}
+@keyframes qs-empty-float {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-7rpx);
+    }
+}
+@keyframes qs-pulse {
+    0%,
+    100% {
+        opacity: 0.66;
+        transform: scale(0.94);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+@keyframes qs-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* #ifdef H5 */
+@media (prefers-reduced-motion: reduce) {
+    .qs-page,
+    .qs-avatar-float,
+    .qs-pulse,
+    .qs-spin,
+    .qs-panel-enter,
+    .qs-empty-orb {
+        animation: none !important;
+    }
+    .qs-card,
+    .qs-button {
+        transition: none !important;
+    }
+}
+/* #endif */
+
+/* 移动协作端共用布局：主操作、列表、错误和空状态保持一致。 */
+.qs-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20rpx;
+    margin-bottom: 32rpx;
+}
+.qs-brand {
+    display: flex;
+    align-items: center;
+    gap: 14rpx;
+    min-width: 0;
+}
+.qs-brand image {
+    width: 54rpx;
+    height: 54rpx;
+}
+.qs-brand text {
+    @include qs-ui-type($qs-type-page);
+}
+.qs-page-title {
+    @include qs-ui-type($qs-type-page);
+}
+.qs-icon-button {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 76rpx;
+    height: 76rpx;
+    padding: 17rpx;
+    margin: 0;
+    background: transparent;
+    border: 0;
+    border-radius: $qs-radius-control;
+    line-height: 1;
+}
+.qs-icon-button image {
+    width: 100%;
+    height: 100%;
+}
+.qs-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 6rpx;
+}
+.qs-filters {
+    display: flex;
+    gap: 8rpx;
+    padding: 7rpx;
+    margin-bottom: 26rpx;
+    border-radius: $qs-radius-control;
+    background: #f0edf4;
+    white-space: nowrap;
+}
+.qs-chip {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+    min-height: 62rpx;
+    padding: 0 24rpx;
+    margin: 0;
+    border: 1rpx solid transparent;
+    border-radius: $qs-radius-inset;
+    background: transparent;
+    color: var(--qs-muted);
+    @include qs-ui-type($qs-type-label);
+    line-height: 1.2;
+}
+.qs-chip--active {
+    color: #705992;
+    border-color: rgba(142, 120, 178, 0.1);
+    background: #fffefc;
+    box-shadow: $qs-shadow-control;
+}
+.qs-section-title {
+    display: block;
+    @include qs-ui-type($qs-type-section);
+    line-height: 1.5;
+    margin: 32rpx 0 20rpx;
+}
+.qs-list-row {
+    display: flex;
+    align-items: center;
+    gap: 22rpx;
+    width: 100%;
+    min-height: 120rpx;
+    padding: 28rpx;
+    margin: 0;
+    color: var(--qs-ink);
+    background: var(--qs-paper);
+    border-bottom: 1rpx solid var(--qs-paper-soft);
+    text-align: left;
+    line-height: 1.45;
+}
+.qs-list-row:last-child {
+    border-bottom: 0;
+}
+.qs-list-icon {
+    flex: none;
+    width: 44rpx;
+    height: 44rpx;
+}
+.qs-row-copy {
+    flex: 1;
+    min-width: 0;
+    font-family: $qingsui-font;
+}
+.qs-row-title {
+    display: block;
+    font-size: 28rpx;
+    font-weight: 500;
+}
+.qs-row-note {
+    display: block;
+    color: var(--qs-muted);
+    font-size: $qs-type-label;
+    margin-top: 8rpx;
+    line-height: 1.5;
+}
+.qs-chevron {
+    flex: none;
+    color: var(--qs-faint);
+    font-size: 34rpx;
+}
+.qs-clamp {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+.qs-state {
+    padding: 48rpx 28rpx;
+    text-align: center;
+    color: var(--qs-muted);
+    font-size: 26rpx;
+    line-height: 1.8;
+}
+.qs-state image {
+    width: 150rpx;
+    height: 150rpx;
+    margin: 0 auto 24rpx;
+}
+.qs-state .qs-button {
+    margin-top: 28rpx;
+}
+.qs-error {
+    padding: 24rpx;
+    margin-bottom: 22rpx;
+    border: 1rpx solid #db9fa7;
+    border-radius: $qs-radius-control;
+    background: var(--qs-danger-soft);
+    color: var(--qs-ink);
+    font-size: 25rpx;
+    line-height: 1.65;
+}
+.qs-error button {
+    margin-top: 14rpx;
+    font-size: 24rpx;
+    background: transparent;
+    color: var(--qs-ink);
+}
+.qs-inline-note {
+    display: block;
+    color: var(--qs-muted);
+    font-size: 23rpx;
+    line-height: 1.7;
+    margin: 20rpx 0;
+}
+.qs-empty-art {
+    width: 140rpx;
+    height: 140rpx;
+    margin: 0 auto 25rpx;
+}
+.qs-bottom-action {
+    margin: 32rpx 0 12rpx;
+    width: 100%;
+    gap: 14rpx;
+}
+.qs-bottom-action image {
+    width: 40rpx;
+    height: 40rpx;
+}
+.qs-panel-mask {
+    position: fixed;
+    inset: 0;
+    z-index: 110;
+    display: flex;
+    align-items: flex-end;
+    background: rgba(35, 28, 52, 0.32);
+}
+.qs-sheet {
+    width: 100%;
+    max-height: 88vh;
+    padding: 30rpx 30rpx calc(30rpx + env(safe-area-inset-bottom));
+    border: 1rpx solid var(--qs-lilac);
+    border-radius: $qs-radius-sheet $qs-radius-sheet 0 0;
+    background: var(--qs-paper);
+    box-shadow: 0 -12rpx 60rpx rgba(52, 40, 75, 0.12);
+}
+.qs-sheet-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    @include qs-ui-type($qs-type-section);
+    margin-bottom: 20rpx;
+}
+.qs-sheet-title button {
+    font-size: 38rpx;
+    color: var(--qs-muted);
+}
+.qs-detail-title {
+    display: block;
+    font-size: 36rpx;
+    line-height: 1.5;
+    margin-bottom: 20rpx;
+}
+.qs-content {
+    padding: 28rpx;
+    font-family: $qingsui-font;
+    font-size: $qs-type-body;
+    line-height: 1.85;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.qs-source-select {
+    display: inline-flex;
+    align-items: center;
+    gap: 12rpx;
+    padding: 10rpx 0;
+    border: 0;
+    border-radius: 0;
+    color: var(--qs-muted);
+    font-size: 24rpx;
+    margin-bottom: 24rpx;
+}
+
+/* 主操作固定在底部安全区，列表内容可继续滚动。 */
+.qs-dock {
+    position: fixed;
+    z-index: 90;
+    left: 34rpx;
+    right: 34rpx;
+    bottom: calc(
+        var(--window-bottom, 0px) + 22rpx + env(safe-area-inset-bottom)
+    );
+    padding-top: 20rpx;
+    background: linear-gradient(0deg, #faf9f6 78%, rgba(250, 249, 246, 0));
+}
+/* #ifdef MP-WEIXIN */
+.qs-dock {
+    bottom: calc(142rpx + env(safe-area-inset-bottom));
+}
+/* #endif */
+.qs-dock .qs-bottom-action {
+    margin: 0;
+}
+/* #ifdef H5 */
+uni-tabbar .uni-tabbar {
+    border-top: 1px solid #e9e4ee;
+}
+uni-tabbar .uni-tabbar-border {
+    display: none;
+}
+uni-tabbar .uni-tabbar__label {
+    font-family: $qingsui-font-ui;
+    font-weight: 400;
+    font-synthesis: none;
+}
+/* #endif */
+
+.session-page,
+.task-page {
+    padding-bottom: calc(260rpx + env(safe-area-inset-bottom));
+}
+/* #ifdef H5 */
+uni-app uni-button::after {
+    border: 0;
+}
+uni-button.qs-button--primary[disabled] {
+    color: #fff;
+}
+/* #endif */
+
+/* 同步与完成反馈只伴随真实状态，减少装饰性常驻动画。 */
+.overview-sync {
+    display: flex;
+    align-items: center;
+    gap: 12rpx;
+    color: var(--qs-muted);
+    font-size: 24rpx;
+    padding: 8rpx 4rpx 22rpx;
+}
+.overview-sync-dot {
+    width: 12rpx;
+    height: 12rpx;
+    border-radius: 50%;
+    background: #9c87bc;
+    animation: qs-pulse 1s ease infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+    .qs-page,
+    .qs-spin,
+    .qs-pulse,
+    .overview-sync-dot,
+    .chat-message {
+        animation: none;
+        opacity: 1;
+    }
+}

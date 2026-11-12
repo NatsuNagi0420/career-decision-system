@@ -26,11 +26,12 @@ const RESEARCHER_SURFACES = new Set([
 
 const SRC = fileURLToPath(new URL("./", import.meta.url));
 
-// 2026-10：用户明确要求归档对话，这是正常产品操作，与旧业务内部的归档术语不同。
+// 用户明确要求归档对话及记忆，这是正常产品操作，与旧业务内部的归档术语不同。
 const CONVERSATION_SURFACES = new Set([
   "src/agent/AgentApp.tsx:归档",
   "src/agent/ChatComposer.tsx:归档",
   "src/agent/ConversationHistory.tsx:归档",
+  "src/agent/MemorySea.tsx:归档",
 ]);
 
 function sources(dir: string, acc: string[] = []): string[] {
@@ -56,7 +57,8 @@ function visibleText(file: string): string {
     .join("\n");
   const chunks: string[] = [];
   for (const m of raw.matchAll(/"([^"\n]*)"|'([^'\n]*)'|`([^`]*)`|>\s*([^<>{}\n]+?)\s*</g)) {
-    chunks.push(m[1] ?? m[2] ?? m[3] ?? m[4] ?? "");
+    // 模板表达式中的变量名不是用户文案，例如 ${entry.input_tokens}。
+    chunks.push((m[1] ?? m[2] ?? m[3] ?? m[4] ?? "").replace(/\$\{[^}]*\}/g, ""));
   }
   return chunks.join("\n");
 }

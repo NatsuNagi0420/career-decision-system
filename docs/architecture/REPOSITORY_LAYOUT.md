@@ -13,9 +13,13 @@ web/                         React 19 + Vite，穗奈桌面与用户交互
   └─ vendor/                 本地 Live2D 运行时依赖
 agent/                       TypeScript Agent、本机 API 与唯一 SQLite 主库
   ├─ src/                    配置、模型适配、执行循环、工具、审批与文件成果
+  │   └─ cloud-hub/          扫码绑定、任务队列、PC 连接器与可选云端执行器
   ├─ test/                   Agent 单元测试和接口契约测试
-  ├─ var/                    本机账号、会话、岗位库和成果运行数据（不入 Git）
-  └─ relay-var/              官方中转凭证与每日配额（不入 Git）
+本机状态（默认不在仓库；Windows 使用 `%LOCALAPPDATA%/Qingsuiji/`，可由 `AGENT_DATA_DIR`/`RELAY_DATA_DIR` 覆盖）
+  ├─ agent/                  账号、会话、岗位库和成果运行数据
+  └─ relay/                  官方中转凭证与每日配额
+uni-app/                     小程序：官方账号、执行位置、跨端任务和同步画像
+deploy/hub/                  Cloud Hub 服务、HTTPS 与备份部署说明
 assets/web/                  页面运行时读取的公共素材
 scripts/                     当前开发辅助脚本
   ├─ dev/                    开发启动、预检和交互预览
@@ -44,7 +48,7 @@ logs/                        本机操作与验证日志（不入 Git）
 
 进入版本库的内容包括当前源码、可复现脚本、网页运行时素材、契约测试和不含密钥/个人数据的文档。以下内容只保留在本机或单独制品存储：
 
-- `agent/var/`、`agent/relay-var/`、`logs/`、`backups/`、`tmp/`；
+- 用户状态目录中的 `Qingsuiji/agent/`、`Qingsuiji/relay/`、`logs/`、`backups/`、`tmp/`；仓库内遗留的 `agent/var/` 与 `agent/relay-var/` 仅是迁移历史副本，不进入当前运行链路；
 - `.env`、SQLite 数据库、个人会话、运行日志和官方中转凭证；
 - `docs/参考资料` 的原始 PDF/网页抓取物；
 - `docs/品牌形象` 的 PSD/KRA/CLIP/ZIP 原画交接包；
@@ -58,3 +62,7 @@ logs/                        本机操作与验证日志（不入 Git）
 2. 将可运行版本保存为明确的 Git 提交或标签。
 3. 后续大改使用独立分支，每次只改变一个边界，例如 Agent 执行内核、岗位匹配、简历工作流或 UI。
 4. 新功能只依赖 `agent/`、`web/` 和 `assets/web/` 的当前接口，不重新引入已经清理的旧运行时代码。
+
+## 多端架构（2026-10-29）
+
+官方模型中转：`api.suinai.me`。设备与任务同步：`agent.suinai.me` Cloud Hub。PC 主动连接 Hub 认领任务，云端执行是另一个可选位置，不会代替离线 PC。部署和具体能力边界见 [Cloud Hub](../../deploy/hub/README.md)。

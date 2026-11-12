@@ -1,11 +1,12 @@
 /** 青穗集 · 六组件交互实现：岗位、收藏、档案、技能依据、本人确认与真实成长行动。 */
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { ComponentIcon } from "./ComponentAssets";
+import { JobEvidenceDetails } from "./CareerEvidence";
 import { AgentIcon } from "./AgentIcon";
 import { ComposerMenu } from "./ComposerMenu";
 import { agentApi } from "./api";
 import { jobPrompt, WORK_TYPE_LABEL, type JobCardData, type JobDetail } from "./job-cards";
-import { PROFILE_FIELDS, type CareerAction, type CareerProposal, type CareerState } from "./career";
+import { careerProposalStale, PROFILE_FIELDS, type CareerAction, type CareerProposal, type CareerState } from "./career";
 import type { CareerChangeHandler } from "./career-workspace";
 import type { CareerSkill } from "../../../agent/src/career-skills";
 
@@ -22,10 +23,10 @@ export function JobRecommendationCard({ job, saved, saving, disabled, onOpen, on
     <div className="component-job-meta">{job.company && <span><ComponentIcon name="company" size={15} />{job.company}</span>}{job.city && <span><ComponentIcon name="location" size={15} />{job.city}</span>}{WORK_TYPE_LABEL[job.work_type] && <span><ComponentIcon name="employment" size={15} />{WORK_TYPE_LABEL[job.work_type]}</span>}</div>
     {job.matched_terms.length > 0 && <div className="component-tags" aria-label="检索关键词">{job.matched_terms.map(term => <span key={term}>{term}</span>)}</div>}
     {job.excerpt && <button type="button" className="job-reference-card__excerpt" onClick={onOpen}>{job.excerpt}</button>}
-    <footer><small>{job.reference_notice}</small><div className="component-button-group"><button type="button" className="component-primary" disabled={disabled} onClick={() => onPrompt(jobPrompt(job,"compare"))}><ComponentIcon name="compare" size={18} />和我对照</button>
+    <JobEvidenceDetails assessment={job.assessment} job={job} onPrompt={onPrompt}/><footer><small>{job.reference_notice}</small><div className="component-button-group job-reference-card__actions"><button type="button" className="component-primary" disabled={disabled} onClick={() => onPrompt(jobPrompt(job,"action"))}><ComponentIcon name="task-list" size={18} />加入下一步</button>
       <ComposerMenu label={"岗位操作：" + job.title} title="岗位操作" trigger={<ComponentIcon name="more" size={18} />} disabled={disabled} align="end">{close => <>
-        <button role="menuitem" type="button" onClick={() => { close(); onPrompt(jobPrompt(job,"action")); }}><ComponentIcon name="task-list" />加入下一步</button>
-        <button role="menuitem" type="button" onClick={() => { close(); onPrompt(jobPrompt(job,"direction")); }}><ComponentIcon name="career-compass" />考虑这个方向</button>
+        <button className="agent-menu-option job-menu-option" role="menuitem" type="button" onClick={() => { close(); onPrompt(jobPrompt(job,"compare")); }}><ComponentIcon name="compare" />和我对照</button>
+        <button className="agent-menu-option job-menu-option" role="menuitem" type="button" onClick={() => { close(); onPrompt(jobPrompt(job,"direction")); }}><ComponentIcon name="career-compass" />考虑这个方向</button>
       </>}</ComposerMenu></div></footer>
   </article>;
 }
@@ -46,7 +47,7 @@ export function JobDetailPanel({ id, state, saving, disabled, onSave, onClose, o
         <p className="job-reference-notice"><ComponentIcon name="source-document" size={17} />{sample.reference_notice}</p>
         <dl className="job-detail-facts">{[["学历",sample.education],["经验",sample.experience_level],["薪资",sample.salary_text],["毕业要求",sample.graduation_eligibility_text]].filter(([,value])=>value).map(([label,value])=><div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
         <section><h3>职责与任职要求</h3><div className="job-original-text">{sample.description}</div></section>
-        <section><h3>与我对照</h3>{comparison ? <><p>{comparison.summary}</p>{comparison.stale&&<p className="component-caution">档案或材料已更新，请重新对照。</p>}<ul className="job-comparison-list">{comparison.checks.map((check,index)=><li key={index}><span data-assessment={check.assessment}>{({supported:"有依据",partial:"部分有依据",unknown:"待了解",conflict:"存在冲突"})[check.assessment]}</span><strong>{check.requirement}</strong><p>{check.reason}</p>{check.evidence.map((evidence,i)=><blockquote key={i}>{evidence.quote}</blockquote>)}</li>)}</ul></> : <p>还没有保存这份岗位与你的经历对照，可以让穗奈结合已有材料一起看看。</p>}</section>
+        <section><h3>与我对照</h3>{state?.insights?.jobs.find(job=>job.id===id) ? <JobEvidenceDetails assessment={state.insights.jobs.find(job=>job.id===id)} job={{id,title:sample.title}} onPrompt={onPrompt} open/> : comparison ? <><p>{comparison.summary}</p>{comparison.stale&&<p className="component-caution">档案或材料已更新，请重新对照。</p>}<ul className="job-comparison-list">{comparison.checks.map((check,index)=><li key={index}><span data-assessment={check.assessment}>{({supported:"有依据",partial:"部分有依据",unknown:"待了解",conflict:"存在冲突"})[check.assessment]}</span><strong>{check.requirement}</strong><p>{check.reason}</p>{check.evidence.map((evidence,i)=><blockquote key={i}>{evidence.quote}</blockquote>)}</li>)}</ul></> : <p>还没有保存这份岗位与你的经历对照，可以让穗奈结合已有材料一起看看。</p>}</section>
         <details className="job-source-details"><summary>来源与时间</summary><dl><dt>发布时间</dt><dd>{sample.published_at||"原文未提供"}</dd><dt>采集时间</dt><dd>{sample.captured_at?.slice(0,10)||"未知"}</dd></dl>{sample.source_url&&<a href={sample.source_url} target="_blank" rel="noopener noreferrer">查看原始页面 <AgentIcon name="external" size={13}/></a>}{sample.review_flags.length>0&&<p>这份参考含待核实项目，判断时请核对原文。</p>}</details>
       </div><footer className="job-detail-panel__actions"><button type="button" className="component-secondary bookmark-button" data-saved={saved} aria-pressed={saved} disabled={saving||!state} onClick={()=>onSave(id,!saved)}><ComponentIcon name="bookmark-star" size={20}/>{saved?"已收藏":"收藏"}</button><button className="component-primary" type="button" disabled={disabled} onClick={()=>onPrompt(jobPrompt({id,title:sample.title},"compare"))}>和我对照<ComponentIcon name="compare" size={18}/></button></footer>
     </>}
@@ -69,6 +70,7 @@ export function GrowthSummary({ state, loading, error, onOpen, onPrompt, childre
       {state.profile.confirmed_at ? <><p className="growth-summary__intro">{state.profile.education||state.profile.experience||"你确认过的经历，会留在这里。"}</p>{state.profile.goal&&<p className="growth-summary__direction"><ComponentIcon name="career-compass" size={19}/><span>{state.profile.goal}</span></p>}</> : <div className="growth-summary__empty"><ComponentIcon name="career-compass" size={27}/><p>我们聊过的经历，确认后会留在这里。</p><button className="component-text-button" type="button" onClick={()=>onPrompt("请结合我们已经聊过的真实经历，帮我整理一份职业档案草稿，等我确认后再保存。")}>请穗奈整理 <span aria-hidden="true">→</span></button></div>}
       {skills.length>0&&<div className="growth-summary__skills">{skills.slice(0,3).map(item=><button type="button" key={item.name} className="skill-record" onClick={()=>setSkill(item)}><ComponentIcon name={skillIcon(item.name)} size={22}/><span>{item.name}<small>{item.stage?SKILL_STAGES[item.stage]:"已记录 · 未分级"}</small></span><span className="skill-stage-dots" aria-hidden="true">{["contact","project","independent"].map((stage,index)=><i key={stage} data-filled={item.stage!==null&&index<=["contact","project","independent"].indexOf(item.stage)}/>)}</span></button>)}</div>}
     </> : null}
+    {Boolean(state?.insights?.facts.some(fact => !fact.stale)) && <button type="button" className="career-evidence-count" onClick={onOpen}><ComponentIcon name="edit-record" size={16}/><span>{state!.insights!.facts.filter(fact => !fact.stale).length} 条线索待核对</span><ComponentIcon name="next-arrow" size={15}/></button>}
     {children}
     {skill&&<SkillDetailPopover key={skill.name} skill={skill} state={state} onClose={()=>setSkill(null)} onPrompt={onPrompt}/>}
   </section>;
@@ -86,14 +88,27 @@ export function SkillDetailPopover({skill,state,onClose,onPrompt}:{skill:SkillDi
   </div></dialog>;
 }
 export function ProfileUpdateStrip({proposal,state,saving,disabled,onChange,onPrompt}:{proposal:CareerProposal;state:CareerState;saving:boolean;disabled:boolean;onChange:CareerChangeHandler;onPrompt:(text:string)=>void}) {
-  const data=proposal.data, stale=proposal.context_version!==state.context_version;
-  const changes=data.kind==="profile"?PROFILE_FIELDS.filter(field=>state.profile[field.key]!==data.profile[field.key]).map(field=>({name:PROFILE_SUMMARY_LABELS[field.key],value:data.profile[field.key]||"清空这项内容"})):data.kind==="skills"?data.skills.map(item=>({name:item.name,value:SKILL_STAGES[item.stage]})):data.kind==="catalogue_job"?[{name:"保留岗位材料",value:proposal.catalogue_sample?.title||proposal.title}]:data.kind==="actions"?data.actions.map(item=>({name:"下一步",value:item.title})): [{name:"岗位对照",value:data.summary}];
-  return <section className="suinai-component profile-update-strip" aria-label="待确认的职业资料更新"><header><ComponentIcon name="recommendation" size={20}/><h3>穗奈想记下这些</h3></header><dl>{changes.map((item,index)=><div key={index}><dt>{item.name}</dt><dd>{item.value}</dd></div>)}</dl>
+  const data=proposal.data, stale=careerProposalStale(proposal,state);
+  const [editing,setEditing]=useState(false);
+  useEffect(()=>{setEditing(false);},[proposal.id,proposal.created_at]);
+  const changes=data.kind==="profile"?PROFILE_FIELDS.filter(field=>state.profile[field.key]!==data.profile[field.key]).map(field=>({name:PROFILE_SUMMARY_LABELS[field.key],value:data.profile[field.key]||"清空这项内容"})):data.kind==="skills"?data.skills.map(item=>({name:item.name,value:SKILL_STAGES[item.stage]})):data.kind==="catalogue_job"?[{name:"保留岗位材料",value:proposal.catalogue_sample?.title||proposal.title}]:data.kind==="actions"?data.actions.map(item=>({name:"下一步",value:item.title})):[{name:"岗位对照",value:data.summary}];
+  const editPrompt=[
+    "我想修改职业工作台里这份待确认建议。",
+    "标题：「"+proposal.title+"」",
+    "建议 ID："+proposal.id,
+    "类型："+data.kind,
+    "请先读取最新职业工作台，查看这份建议的完整原始内容。",
+    "如果我还没有说明具体改动，只问我一个最关键的问题，并根据原草稿给出 2 至 3 个可修改部分；不要先确认，也不要把旧草稿整段复述成已完成结果。",
+    "等我说明后，保留未要求修改的内容，基于最新资料整理完整替代草稿，替换旧版本；不要替我确认。",
+  ].join("\n");
+  return <section className="suinai-component profile-update-strip" data-editing={editing||undefined} aria-label="待确认的职业资料更新"><header><ComponentIcon name="recommendation" size={20}/><h3>{data.kind === "profile" ? "穗奈整理了一版待确认画像" : "穗奈想记下这些"}</h3>{data.kind === "profile" && <span className="profile-update-strip__state">确认后写入</span>}</header><dl>{changes.map((item,index)=><div key={index}><dt>{item.name}</dt><dd>{item.value}</dd></div>)}</dl>
     {data.kind==="skills"&&<details><summary>查看实践依据</summary>{data.skills.map(skill=><div key={skill.name}><strong>{skill.name}</strong>{skill.evidence.map((evidence,index)=><blockquote key={index}>{evidence.quote}</blockquote>)}</div>)}</details>}
     {data.kind==="actions"&&<details><summary>查看行动内容</summary>{data.actions.map((action,index)=><div key={index}><h4>{action.title}</h4><dl><div><dt>产出</dt><dd>{action.deliverable}</dd></div>{action.learn&&<div><dt>学习内容</dt><dd>{action.learn}</dd></div>}{action.why&&<div><dt>为什么先做</dt><dd>{action.why}</dd></div>}</dl></div>)}</details>}
     {data.kind==="catalogue_job"&&proposal.catalogue_sample&&<details><summary>查看岗位材料</summary><p>{proposal.catalogue_sample.company} · {proposal.catalogue_sample.catalogue.city}</p><p className="component-muted">保存为参考材料，招聘状态需要另行核实。</p><div className="job-original-text">{proposal.catalogue_sample.description}</div></details>}
     {data.kind==="comparison"&&<details><summary>查看逐项对照</summary>{data.checks.map((check,index)=><div key={index}><h4>{check.requirement}</h4><p>{({supported:"有依据",partial:"部分有依据",unknown:"待了解",conflict:"存在冲突"})[check.assessment]} · {check.reason}</p>{check.evidence.map((evidence,i)=><blockquote key={i}>{evidence.quote}</blockquote>)}</div>)}</details>}
-    {stale&&<p className="component-caution">资料已更新，请让穗奈重新整理。</p>}<footer className="component-button-group"><button className="component-text-button" type="button" disabled={disabled||saving} onClick={()=>onPrompt("请"+(stale?"重新读取最新资料并":"")+"调整「"+proposal.title+"」这份待确认建议，先问我想修改哪一部分；不要替我确认。")}>改一下</button><button className="component-secondary" type="button" disabled={disabled||saving} onClick={()=>void onChange({type:"proposal.decide",id:proposal.id,approved:false},"已放下这份建议。")}>暂不记录</button><button className="component-primary" type="button" disabled={disabled||saving||stale} onClick={()=>void onChange({type:"proposal.decide",id:proposal.id,approved:true},"已按你确认的内容更新档案。请在成长档案查看。")}><ComponentIcon name="confirm-check" size={18}/>{saving?"正在保存…":"确认更新"}</button></footer>
+    {stale&&<p className="component-caution">{proposal.stale_reason || "资料已更新，请让穗奈重新整理。"}</p>}
+    {editing&&<p className="component-muted profile-update-strip__editing" role="status">已进入调整流程，在对话框里告诉穗奈你想改哪一部分。</p>}
+    <footer className="component-button-group"><button className="component-text-button" type="button" disabled={disabled||saving} onClick={()=>{setEditing(true);onPrompt(editPrompt);}}>{editing?"正在调整…":"改一下"}</button><button className="component-secondary" type="button" disabled={disabled||saving} onClick={()=>void onChange({type:"proposal.decide",id:proposal.id,approved:false},"已放下这份建议。")}>暂不记录</button><button className="component-primary" type="button" disabled={disabled||saving||stale} onClick={()=>void onChange({type:"proposal.decide",id:proposal.id,approved:true},"已按你确认的内容更新档案。请在成长档案查看。")}><ComponentIcon name="confirm-check" size={18}/>{saving?"正在保存…":"确认更新"}</button></footer>
   </section>;
 }
 export function NextActionRow({action,disabled,onPrompt}:{action:CareerAction;disabled:boolean;onPrompt:(text:string)=>void}) {

@@ -34,7 +34,7 @@ describe("对话历史管理", () => {
     expect(html).not.toContain("简历工坊"); expect(html).not.toContain("新建简历");
   });
   it("已有简历的状态提示只允许收起，不再邀请新开或切换对话", () => {
-    const html = renderToStaticMarkup(createElement(ResumeConversationBar, { state: null, busy: false, onPreview: () => {}, onDemo: () => {}, onHide: () => {} }));
+    const html = renderToStaticMarkup(createElement(ResumeConversationBar, { state: null, busy: false, onPreview: () => {}, onHide: () => {} }));
     expect(html).toContain("这段对话里的简历资料"); expect(html).toContain("收起简历资料提示"); expect(html).not.toContain("回到普通新对话");
   });
 });

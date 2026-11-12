@@ -1,6 +1,11 @@
 /** 青穗集 · 对话工具栏图标：统一描边，按钮名称由使用处提供。 */
 import type { CSSProperties } from "react";
 const paths = {
+  coins: "M20 7c0 2-3.6 3-8 3S4 9 4 7s3.6-3 8-3 8 1 8 3Z M4 7v5c0 2 3.6 3 8 3s8-1 8-3V7 M4 12v5c0 2 3.6 3 8 3s8-1 8-3v-5",
+  help: "M9.5 9a2.5 2.5 0 1 1 4.1 1.9c-.9.7-1.6 1.1-1.6 2.6 M12 17h.01 M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0",
+  computer: "M3 3h18v13H3z M8 21h8 M12 16v5",
+  cloud: "M6 18a5 5 0 1 1 0-10 6 6 0 0 1 11-2 6 6 0 1 1 1 12H6",
+  select: "M8 3H3v5 M16 3h5v5 M21 16v5h-5 M8 21H3v-5 M8 8h8v8H8z",
   search: "M16 16l5 5 M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0",
   terminal: "M3 4h18v16H3z M7 9l3 3-3 3 M13 16h4",
   clock: "M12 8v4l3 2 M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0",
@@ -10,6 +15,8 @@ const paths = {
   panel: "M3 4h18v16H3z M15 4v16 M7 9l3 3-3 3",
   exit: "M10 4H4v16h6 M9 12h12 M16 7l5 5-5 5",
   pause: "M8 5v14 M16 5v14",
+  plus: "M5 12h14 M12 5v14",
+  minus: "M5 12h14",
   play: "m8 4 12 8-12 8V4Z",
   attach: "m21 11-8.5 8.5a6 6 0 0 1-8.5-8.5L13 2.5a4 4 0 0 1 5.7 5.7l-8.5 8.5a2 2 0 0 1-2.9-2.9L15.5 5.5",
   shield: "M12 3 4 6v6c0 4 8 9 8 9s8-5 8-9V6l-8-3Z M9 12l2 2 4-4",
@@ -29,6 +36,7 @@ const paths = {
   external: "M14 3h7v7 M21 3l-11 11 M10 4H4v16h16v-6",
   folder: "M3 6h7l2 3h9v12H3V6Z",
   file: "M5 3h9l5 5v13H5V3Z M14 3v6h5 M9 13h6 M9 17h6",
+  image: "M4 5h16v14H4z M4 16l4-4 3 3 3-4 6 6 M8 9h.01",
   eye: "M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z M9 12a3 3 0 1 0 6 0 3 3 0 0 0-6 0",
 };
 export function AgentIcon({ name, size = 18, style }: { name: keyof typeof paths; size?: number; style?: CSSProperties }) {

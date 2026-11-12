@@ -15,8 +15,8 @@ npm start
 
 访问 http://127.0.0.1:8110 。首次使用注册本地账号（密码至少 8 位），打开「模型设置」。开发时使用 npm run dev，同时启动 8110 服务和 5173 Vite；若已启动正式服务，请先在它的终端 Ctrl+C，避免占用同一端口。
 
-- 当前只维护 agent/var/agent.sqlite；岗位与账号、会话共库。旧版数据库不属于当前运行链路；主库中的历史归档已删除，不合并成当前账号。本机备份不会自动合并到当前账号，只有明确恢复时才会读取。新版没有内置公共账号或默认密码。
-- 新版状态默认在 agent/var/：agent.sqlite、workspaces/、artifacts/。备份时先停服务，并备份整个目录；密钥使用 DPAPI 时依赖原 Windows 用户，复制数据库到其他用户不会自动解密。
+- 当前只维护用户状态目录中的唯一 agent.sqlite；岗位与账号、会话共库。Windows 默认目录是 `%LOCALAPPDATA%/Qingsuiji/agent/`，Linux/macOS 默认是 `$XDG_STATE_HOME/Qingsuiji/agent/`（未设置时为 `~/.local/state/Qingsuiji/agent/`），也可以用 `AGENT_DATA_DIR` 显式覆盖。旧版数据库不属于当前运行链路；主库中的历史归档已删除，不合并成当前账号。本机备份不会自动合并到当前账号，只有明确恢复时才会读取。新版没有内置公共账号或默认密码。
+- 状态目录包含 `agent.sqlite`、`workspaces/`、`artifacts/`、`local-open/` 和临时运行文件。备份时先停服务，并备份整个状态目录；密钥使用 DPAPI 时依赖原 Windows 用户，复制数据库到其他用户不会自动解密。仓库内遗留的 `agent/var/` 与 `agent/relay-var/` 不属于当前运行链路。
 - 默认只监听本机回环地址，不应作为公网多租户服务发布。
 - Agent 核心要求 Node.js 22.17.0 以上；本轮 Windows 实测使用 22.17.0。原生组件的传递依赖 undici 8.11.2 声明要求 22.19.0 以上，推荐新安装使用 Node.js 22.19.0 以上。当前原生 ACL/runner 路径已通过实测，但本轮没有升级系统 Node，也没有验证未使用的 HTTP 代理模块。node:sqlite 仍可能提示实验性 API；发布前需固定运行环境。
 
@@ -35,8 +35,8 @@ npm start
 
 ## 3. 真正可以做什么
 
-1. 持久对话、连续修改同一成果、查看真实工具记录与简短任务步骤。
-2. 只读导入用户明确选取的 UTF-8 TXT/MD/CSV/JSON/YAML/YML/LOG，单文件 1 MB，每次前端最多 5 份。
+1. 持久对话、连续修改同一成果、查看真实工具记录与简短任务步骤；命令运行时可在执行侧栏实时看到 stdout/stderr，完成后仍保留完整结果。
+2. 只读导入用户明确选取的文字版 PDF、DOCX、UTF-8 文本／源码和 PNG/JPG/GIF/WebP。文本单文件 1 MB，PDF/DOCX/图片单文件 4 MB，每次前端最多 5 份；PDF 最多 40 页、文档正文最多 20 万字符。不支持旧版 DOC 或扫描件 OCR。
 3. list_files / read_file / search_files 检查本对话资料。
 4. write_file 在 outputs/ 写入真实文本，publish_file 登记命令生成的文件；自动维护 SHA-256 和不可变版本。同内容不重复生成版本。
 5. ask_user 追问关键资料；不是无限循环或把猜测当事实。
@@ -44,7 +44,9 @@ npm start
 7. 主动停止、提交去重、单对话串行、步骤/执行时长/输出预算、SSE 断线重放。
 8. 服务重启后，运行中任务标记为「中断」并保留记录，不自动重复有副作用的工具。等待审批的任务保留确认状态。若密钥已安全保存且仍可用，可继续；若选择仅内存并在等待时重启，需先停止旧轮次、重填并测试密钥后发起新轮次，已生成文件仍可单独确认下载。
 
-目前 **没有** 通用浏览器操作、任意桌面 GUI 操作、自动投递职位、专用联网搜索工具、PDF/DOCX 简历解析、专业排版模板导出，也没有把所有职业能力都迁进新底座。本阶段是可执行底座，不是已经上线的完整求职产品。
+绑定项目并明确开启可写权限后，可用结构化项目补丁创建或更新源码和文档；工具会校验旧文件哈希、返回 diff 和 edit_id，并支持在文件未被外部改动时撤销。项目删除仍需通过明确的用户确认流程，当前不由结构化补丁执行。
+
+目前 **没有** 通用浏览器操作、任意桌面 GUI 操作、自动投递职位、专用联网搜索工具、也没有把所有职业能力都迁进新底座。本阶段是可执行底座，不是已经上线的完整求职产品。
 
 ## 4. 命令沙箱
 
@@ -90,7 +92,7 @@ docker pull python:3.12-slim
 
 ## 5. 官方内置服务在哪里配置
 
-当前本机配置文件是 `D:\Project\career-decision-system\agent\.env`，模板是同目录的 `.env.example`。真实 `.env` 已被 Git 忽略。**不要把上游 API Key 放进前端、`VITE_*` 或发给用户的安装包。**
+本机 Agent 使用 `agent/.env`，客户端模板是同目录的 `.env.example`；8120 运营方使用 `.env.relay`，模板是 `.env.relay.example`。真实配置文件已被 Git 忽略。**不要把上游 API Key 或内部模型路由放进前端、`VITE_*` 或发给用户的安装包。**
 
 官方服务的界面名称默认是 **Suinai Flash**，由 `OFFICIAL_MODEL_DISPLAY_NAME` 控制。它只是穗奈提供的服务名称，不代表自研底层模型，也不会替代请求中的真实模型 ID。修改它会更新现有官方连接的展示名，不需要重建账号或对话。用户自带接口仍显示用户选中的模型。
 
@@ -102,10 +104,10 @@ docker pull python:3.12-slim
 RELAY_UPSTREAM_BASE_URL=https://你的供应商或NewAPI网关/v1
 RELAY_UPSTREAM_API_KEY=供应商给你的API密钥
 RELAY_UPSTREAM_MODEL=供应商实际支持的模型ID
-OFFICIAL_MODEL=与上面RELAY_UPSTREAM_MODEL完全相同的模型ID
+OFFICIAL_MODEL=Suinai Flash
 ~~~
 
-`RELAY_UPSTREAM_BASE_URL` 填 API 基础地址，不填管理后台或聊天网页地址，也不需要附加 `/chat/completions`。如果供应商有特殊路径，以其兼容接口说明为准。不要把 `Suinai Flash` 填到两个模型 ID 项中。
+`RELAY_UPSTREAM_BASE_URL` 填 API 基础地址，不填管理后台或聊天网页地址，也不需要附加 `/chat/completions`。真实上游模型 ID 只填写在 8120 服务器上的 `RELAY_UPSTREAM_MODEL` 和 `RELAY_MODEL_*`，客户端只保存 `Suinai Flash`。
 
 2. 下面几项本机测试可以保持默认：
 
@@ -119,6 +121,25 @@ OFFICIAL_MODEL_DISPLAY_NAME=Suinai Flash
 ~~~
 
 如果上游只支持 Responses，两处 `API_KIND` 都改为 `responses`。不要只改其中一处。
+
+### 本地能力路由
+
+当前 8120 可以使用同一个上游 Base URL 和 API Key 调用多个模型。`RELAY_UPSTREAM_MODEL` 是默认模型；下面这些配置按职业能力选择模型，未填写的能力自动回退到默认模型：
+
+~~~dotenv
+RELAY_MODEL_ACTION_PLAN=gpt-6.1-terra
+RELAY_MODEL_RESUME_BUILD=供应商实际支持的文案模型ID
+RELAY_MODEL_COMPARE_DECIDE=gpt-6.1-terra
+RELAY_DECISION_MODEL=Typesafe-jev
+RELAY_DECISION_PATH=/v1/systemone
+RELAY_IMAGE_MODEL=供应商实际支持的图片模型ID
+~~~
+
+聊天能力通过 8110 发送的内部标识选择模型；用户界面仍显示 Suinai Flash。模型列表用于辅助发现，实际可用性以对应接口的真实请求为准；图片模型可能不在聊天列表中。RELAY_PATH_* 只适用于接受相同 Chat/Responses 请求格式的接口。
+
+Jev 独立提供 POST /v1/systemone，沿用官方访问凭证、浏览器边界、并发限制与每日预算。职业资料更新、岗位对照和简历证据检查由 8110 自动构造结构化问题并调用 `/v1/career/decisions`；聊天模型不会把这个内部路由暴露给用户。直接 `/v1/systemone` 只允许 `model`、`state`、`questions` 和可选的 `stream:false`，不支持 messages、工具或 SSE。真实判断模型只存在 8120；客户端得到的是穗奈的判断结果。
+
+Jev 的文档上下文上限为 32000 Token，包含 state 与 questions；本中转做 JSON 契约和体积限制，不宣称精确计算上游 Token。AGENT_CONTEXT_MAX_TOKENS=32000 是本机聊天 Agent 独立的上下文预算。RELAY_IMAGE_MODEL 由 8120 负责异步提交、后台轮询、过期回收与账号隔离；客户端只看到 Suinai Image 和官方任务状态。异步创建成功仍不等于最终图片已生成。
 
 3. 在项目根目录签发当前安装实例的受限凭证：
 
@@ -138,11 +159,17 @@ npm --prefix agent run relay
 
 **仅修改 `.env` 不会让已运行的进程自动重载配置。** 修改 `RELAY_*` 后重启中转；修改 `OFFICIAL_*` 后重启 Agent。构建后使用 `npm start`；开发时使用 `npm run dev`。需要先在当前代码下执行一次 `npm run build`。
 
+### 账号、用量和生产存储
+
+8120 已有账号注册/登录、账号级令牌撤销与轮换、每日限额、用量事件、脱敏日志、账号停用、健康告警队列和异步图片任务回收。`RELAY_BILLING_ENABLED=false` 时只统计用量；打开后按服务端快照价格扣减积分，支付渠道与充值回调仍需另接。
+
+本机联调默认 SQLite；生产可以填写 `RELAY_DATABASE_URL=postgresql://...` 使用 PostgreSQL，并通过 `npm run relay:migrate -- <SQLite源库路径>` 做空库迁移和逐表校验。生产备份使用 `npm run relay:token -- backup <路径>`；PostgreSQL 需要安装 `pg_dump`。
+
 ### 对外发布时的分工
 
 - **你控制的运营方服务器：** 保存 `RELAY_UPSTREAM_*`，运行中转（默认 8120）。部署 HTTPS 反向代理和防火墙。真实上游密钥只留在这里。
 - **用户安装目录的 `agent/.env`：** 只放 `OFFICIAL_*`。把 `OFFICIAL_GATEWAY_URL` 改成你的 HTTPS 中转地址；每个安装实例使用独立、可撤销的 `OFFICIAL_ACCESS_TOKEN`。不得包含 `RELAY_UPSTREAM_API_KEY`。
-- 中转的 `relay.sqlite` 只用于凭证及额度记录，部署在运营方一侧；不是第二套用户、岗位或对话数据库。
+- 中转的 SQLite 或 PostgreSQL 只保存官方账号、令牌、用量事件、脱敏日志和任务状态，部署在运营方一侧；不是本机 Agent 的用户、岗位或对话数据库。
 
 在运营方管理凭证：
 
@@ -151,9 +178,11 @@ npm --prefix agent run relay:token -- list
 npm --prefix agent run relay:token -- revoke <凭证的hash>
 ~~~
 
-中转只接受固定模型、固定上游和文本/客户端函数请求，禁止启用上游内建的联网、远程代码、文件库工具或外部文件/图片引用；每凭证同时一个请求。默认每日 100 次请求、64000 输出 token 预留额度，可用 `RELAY_DAILY_REQUEST_LIMIT`、`RELAY_DAILY_OUTPUT_TOKEN_LIMIT` 调整。**额度按请求最大输出保守预留，不是实际账单，也不会自动退款；一次 Agent 任务可能发起多次模型请求。**
+中转只接受配置的默认模型和能力路由模型、固定上游以及文本/客户端函数请求，禁止启用上游内建的联网、远程代码、文件库工具或外部文件/图片引用；每账号每能力通道同时只处理一个请求。默认每日 100 次请求、64000 输出 token 预留额度，可用 `RELAY_DAILY_REQUEST_LIMIT`、`RELAY_DAILY_OUTPUT_TOKEN_LIMIT` 调整。请求完成后会按上游 usage 结算；无 usage 的请求不会被虚构计费，失败和中断会释放预留。打开 `RELAY_BILLING_ENABLED` 后才会扣减官方积分，默认只统计。一次 Agent 任务可能发起多次模型请求。
 
-目前实现了中转、限额和手工凭证签发；未包含自助注册购买、自动发放凭证、正式域名/TLS 或完整运营后台。填写配置之前不能视为真实模型已经接通。
+本机集中开发可在 `agent/.env` 中设置 `RELAY_DAILY_OUTPUT_TOKEN_LIMIT=1000000`、`RELAY_DAILY_REQUEST_LIMIT=1000`，再重启 8120 中转。它们只提高本机中转允许的每日总预算，不修改上游余额或单次输出上限，也不代表供应商同意更高的频率。计数按 UTC 日期重置（北京时间每日 08:00），修改限额不清空已有记录。达到限额时返回 `relay_daily_output_limit` 或 `relay_daily_request_limit`；同一凭证并发被阻止时返回 `relay_busy`，与上游余额不足分开显示。
+
+目前已经实现本地联调所需的账号、令牌、用量、日志脱敏、备份、账号级并发锁、上游健康告警、PostgreSQL 迁移和异步图片回收。阿里云 Linux ECS 的公网部署步骤见 [8120 官方中转部署](../deploy/relay/README.md)。仍需补充的是密码找回和邮箱验证、真实支付回调、外部监控系统；填写上游配置并完成连接测试后，才代表本机联调可用。
 
 ## 6. 验证与边界
 
@@ -164,7 +193,8 @@ npm --prefix agent run relay:token -- revoke <凭证的hash>
 顺序执行两端类型检查、Node/Vitest 测试、生产构建。日志写入项目 logs/agent-foundation-implementation-20261020/。用例使用独立目录，不改旧业务数据库。Windows 会自动包含原生受限命令实测，其他平台明确跳过；Docker 实测仍需 -WithDocker。Windows DPAPI 用假密钥做实际加解密。本轮单独日志在 logs/windows-native-sandbox-20261022/。
 
 - 模型协议测试和全链路 HTTP 测试使用明确标注的脚本夹具，不代表真实 LLM 质量或供应商兼容性通过。
-- 真实模型尚未配置/调用；请使用页面测试和脱敏资料验收，注意费用与第三方隐私。
+- 本轮自动验收使用模型替身；真实模型是否可用仍需你在本机填写上游配置后测试，注意费用与第三方隐私。
+- Windows 原生端已完成真实写入限制验收；Docker 仍未在本机实测。
 - Chrome 实测记录/截图另放 browser/；Chrome 扩展未授权本地文件 URL 时，自动选择文件受限，不应冒称整条 UI 上传已验证。
 - 旧测试有重型动画运算，本机并发太高曾超时；验证入口使用 --maxWorkers=2，未放宽既有断言或超时门槛。
 
@@ -201,3 +231,14 @@ Agent 执行循环、工具、审批和状态由本项目实现；Windows 原生
 ## 统一岗位数据（2026-10-24）
 
 岗位、方向、批次、原始交付及待审资料已迁入同一个 agent.sqlite，不再读取 agent/data 下的 JSON 副本。后续使用根目录 npm run catalogue:import 命令。旧版服务与迁移入口已从当前仓库清理，主库历史归档已清除；当前数据的备份位置和边界见 [数据库统一维护](../docs/agent-foundation/DATABASE_20261024.md)。
+
+## 本机与云端界面规则（2026-10-30）
+
+- `AGENT_DEPLOYMENT_MODE=local/server` 是服务端部署配置；不按域名猜测，也不让普通用户切换运行形态。
+- `GET /api/v1/agent/info` 的 `ui` 清单集中控制模型连接、模型选择、本机项目、宿主机权限、系统打开和桌面退出入口。云端不展示这些本机操作，实际限制仍由后端执行。
+- 云端账号注册不重复放模型授权勾选。账号尚未授权时，首次调用模型前明确说明并确认，不把隐藏 UI 当作已授权；已有授权继续沿用。官方连接未测试时在首次发送流程内初始化，不跳转模型配置页。
+- 云端设备窗口读取 Hub 设备／会话接口，不提供“连接此电脑”或 PC 绑定二维码。
+- PDF/DOCX 上传前在有限内存和超时的独立线程提取正文；不调用模型/OCR，不执行文档脚本。原件按原文件保存，`read_file` 直接返回提取正文并支持字符分页，`search_files` 可检索正文。DOCX 侧栏显示提取的正文，不承诺还原 Word 排版；PDF 沿用原件预览。
+- 云端当前为账号鉴权和会话文件工具的逻辑隔离，命令工具默认关闭；不是每用户独立容器。不因本次 UI 修改启用 Docker、宿主机命令或第三方 Key。
+
+官方每日积分、剩余额度、用量明细与账号权限命令见 [官方积分与账号权限](../docs/architecture/OFFICIAL_CREDITS.md)。

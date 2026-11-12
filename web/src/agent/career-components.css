@@ -29,9 +29,21 @@
 .component-tags { display:flex;gap:7px;flex-wrap:wrap;margin:12px 0; }
 .component-tags > span { display:inline-block;padding:1px 7px;border:1px solid #d5c9e8;background:#f1edf9;font-size:.82em; }
 .career-workspace .job-reference-card__excerpt { display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-wrap;width:100%;border:0;border-left:3px solid #c6b8df;background:#f8f5fc;color:#665771;padding:8px 11px;margin:12px 0;text-align:left;font-size:.9em;line-height:1.8;cursor:pointer; }
-.job-reference-card > footer { display:flex;justify-content:space-between;align-items:flex-end;gap:14px;padding-top:10px;margin-top:10px;border-top:1px solid #e9e2ef; }
-.job-reference-card > footer > small { max-width:62%;color:var(--component-muted);font-size:.76em;line-height:1.7; }
-.job-reference-card .agent-menu-trigger { min-width:30px;border:1px solid #ded3eb;border-radius:0;background:#f7f2fc; }
+.job-reference-card > footer { display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:16px;padding-top:12px;margin-top:12px;border-top:1px solid #e9e2ef; }
+.job-reference-card > footer > small { min-width:0;color:var(--component-muted);font-size:.76em;line-height:1.7; }
+.job-reference-card__actions { flex:none;flex-wrap:nowrap;justify-content:flex-end; }
+.job-reference-card__actions .component-primary { min-height:36px;padding-inline:14px; }
+.job-reference-card .agent-menu-trigger { min-width:36px;min-height:36px;border:1px solid #ded3eb;border-radius:0;background:#f7f2fc; }
+.job-reference-card .agent-menu-panel { width:min(224px,calc(100vw - 24px));padding:7px;border-color:#d8c9e9;border-radius:10px; }
+.job-reference-card .job-menu-option { display:flex;align-items:center;gap:9px;width:100%;min-height:38px;padding:9px 10px;border:0;border-radius:7px;background:transparent;color:var(--component-ink);font:inherit;text-align:left;cursor:pointer; }
+.job-reference-card .job-menu-option:hover,.job-reference-card .job-menu-option:focus-visible { background:#f1ebfb;color:#4d3c76; }
+.job-reference-card .job-menu-option > .component-pixel-icon { width:18px;height:18px;opacity:.78; }
+.job-reference-card .job-menu-option:focus-visible { outline:2px solid #9b81b9;outline-offset:-2px; }
+@media (max-width:520px) {
+  .job-reference-card > footer { grid-template-columns:minmax(0,1fr);align-items:stretch;gap:10px; }
+  .job-reference-card > footer > small { max-width:none; }
+  .job-reference-card__actions { justify-content:flex-end; }
+}
 .career-desktop-shell.career-workspace .agent-inspector.job-detail-panel { display:flex;flex-direction:column;padding:0;border:2px solid var(--component-line);border-radius:0;background:var(--component-paper);box-shadow:inset 0 0 0 2px var(--component-lavender);overflow:hidden; }
 .job-detail-panel:focus { outline:none; }
 .job-detail-panel__toolbar { display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 16px;border-bottom:1px solid #e8e0f0;background:#f4effa;flex:none; }
@@ -89,6 +101,9 @@
 .profile-update-strip { width:min(100%,var(--career-component-width));margin:16px 0;padding:13px 18px;border-left-color:#8fb39b; }
 .profile-update-strip > header { display:flex;align-items:center;gap:9px; }
 .profile-update-strip h3 { margin:0;font-size:.95em;font-weight:400; }
+.profile-update-strip__state { margin-left:auto;color:#6d9a7f;font-size:.78em;white-space:nowrap; }
+.profile-update-strip[data-editing="true"] { border-left-color:#9a83bf; }
+.profile-update-strip__editing { margin:10px 0 0; color:#806895; }
 .profile-update-strip dl { margin:12px 0; }
 .profile-update-strip dl > div { display:grid;grid-template-columns:110px minmax(0,1fr);gap:10px;margin:6px 0;font-size:.9em; }
 .profile-update-strip dt { color:var(--component-muted); }

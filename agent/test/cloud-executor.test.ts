@@ -1,0 +1,51 @@
+/** 青穗集 · 云端执行和中断回归：云端不认领 PC 任务，审批生效后继续，过期租约不重跑。 */
+import test from "node:test";
+import assert from "node:assert/strict";
+import { randomUUID } from "node:crypto";
+import { createServer } from "node:http";
+import { createApp } from "../src/http.js";
+import { loadConfig } from "../src/config.js";
+import { registerHub } from "../src/cloud-hub/http.js";
+import { startCloudExecutor } from "../src/cloud-hub/cloud-executor.js";
+import { limitsInput, catalogueInput } from "../src/cloud-hub/protocol.js";
+import { ScriptedModel, noSandbox, temporary, reply, tool } from "./helpers.js";
+test("云端执行独立会话并支持远程审批，不能替代离线 PC 执行", async t => {
+  const token = "fixture_cloud_only_token";
+  const relay = createServer((_req, res) => { res.setHeader("content-type", "application/json"); res.end(JSON.stringify({ token, account: { id: 1, username: "cloud_test" } })); });
+  await new Promise<void>(resolve => relay.listen(0, "127.0.0.1", resolve));
+  t.after(() => new Promise<void>(resolve => relay.close(() => resolve())));
+  const address = relay.address() as { port: number };
+  const model = new ScriptedModel((request, index) => {
+    if (index === 0) return reply("", [tool("write_file", { path: "outputs/云端总结.md", content: "在云端制作的文件" })]);
+    if (index === 1) { const artifact = JSON.parse(request.messages.at(-1)!.content).result.artifact; return reply("", [tool("request_export", { artifact_id: artifact.id })]); }
+    return reply("云端任务完成。");
+  });
+  const ctx = createApp({ config: loadConfig({ AGENT_DEPLOYMENT_MODE: "server", AGENT_DATA_DIR: await temporary("cloud-executor"), OFFICIAL_GATEWAY_URL: `http://127.0.0.1:${address.port}/v1`, OFFICIAL_MODEL: "Suinai Flash" }), unifiedIdentity: true, sandbox: noSandbox, modelFactory: () => model });
+  const repo = registerHub(ctx, { cloudEnabled: true }); t.after(() => ctx.app.close());
+  const login = await ctx.accounts!.login("cloud_test", "fixture", true);
+  const profile = (await ctx.profiles.list(login.user))[0];
+  profile.capabilities = { chat: true, tools: true, stream: false, tested_at: new Date().toISOString(), note: "测试替身" }; ctx.store.saveProfile(profile, null);
+  const pair = repo.pair(login.user.id, "离线电脑", limitsInput.parse({}), catalogueInput.parse({ profiles: [], workspaces: [] })); repo.confirm(login.user.id, pair.pairing_token);
+  const pc = repo.createSession(login.user.id, "pc", pair.device.id), cloud = repo.createSession(login.user.id, "cloud", null);
+  const waiting = repo.enqueue(login.user.id, pc.id, "必须由电脑执行", randomUUID());
+  const task = repo.enqueue(login.user.id, cloud.id, "写一份总结并申请导出", randomUUID());
+  startCloudExecutor(ctx, repo);
+  const until = Date.now() + 10000;
+  while (repo.task(login.user.id, task.id).status !== "awaiting_approval" && Date.now() < until) await new Promise(r => setTimeout(r, 60));
+  assert.equal(repo.task(login.user.id, task.id).status, "awaiting_approval");
+  assert.equal(repo.task(login.user.id, waiting.id).status, "waiting_pc");
+  const snapshot = repo.snapshot(login.user.id, cloud.id), approval = snapshot.approvals!.find(a => a.status === "pending")!;
+  assert.ok(approval);
+  const response = await ctx.app.inject({ method: "POST", url: `/api/v1/hub/tasks/${task.id}/approve`, headers: { host: "127.0.0.1", authorization: "Bearer " + token }, payload: { approval_id: approval.id, approved: true } });
+  assert.equal(response.statusCode, 200, response.body);
+  while (repo.task(login.user.id, task.id).status !== "completed" && Date.now() < until) await new Promise(r => setTimeout(r, 60));
+  assert.equal(repo.task(login.user.id, task.id).status, "completed");
+  assert.equal(repo.snapshot(login.user.id, cloud.id).messages.at(-1)?.content, "云端任务完成。");
+  assert.equal(repo.files(login.user.id, cloud.id).length, 1);
+  const again = repo.enqueue(login.user.id, cloud.id, "租约中断示例", randomUUID());
+  const lease = repo.claim(login.user.id, null)!; assert.equal(lease.id, again.id);
+  ctx.store.db.prepare("UPDATE hub_tasks SET expires=? WHERE id=?").run(Date.now() - 1, again.id);
+  repo.expire(); assert.equal(repo.task(login.user.id, again.id).status, "interrupted");
+  assert.equal(repo.claim(login.user.id, null), null);
+  assert.throws(() => repo.publish(login.user.id, null, again.id, { lease: lease.lease, status: "completed", error: null, local_run_id: null }));
+});

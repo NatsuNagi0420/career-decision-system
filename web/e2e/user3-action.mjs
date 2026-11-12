@@ -1,0 +1,10 @@
+import { chromium } from 'playwright';
+import fs from 'fs';
+const token=fs.readFileSync('D:/Project/career-decision-system/tmp/token3.txt','utf8').trim();
+const b=await chromium.launch({channel:'chrome',headless:true}); const c=await b.newContext({viewport:{width:1600,height:1000}}); const p=await c.newPage();
+await p.addInitScript(t=>{localStorage.setItem('career.session.token',t);localStorage.setItem('suinai.onboarding.v1.local.3','completed');},token);
+await p.goto('http://127.0.0.1:5173',{waitUntil:'domcontentloaded'}); await p.waitForTimeout(6000);
+await p.getByText('职业工作台',{exact:false}).first().click({timeout:3000}).catch(()=>{}); await p.waitForTimeout(1600);
+await p.getByRole('tab',{name:'成长行动'}).click({timeout:3000}).catch(()=>{}); await p.waitForTimeout(2000);
+await p.screenshot({path:'D:/Project/career-decision-system/tmp/user3-action.png'});
+console.log((await p.locator('body').innerText()).slice(0,2000)); await b.close();

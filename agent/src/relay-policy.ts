@@ -1,5 +1,19 @@
 /** 青穗集 · 官方中转请求策略：仅放行文本与客户端函数，禁止借官方凭证启用收费内建工具或文件资源引用。 */
 import { invariant, isRecord } from "./errors.js";
+const IMAGE_DATA_URL = /^data:image\/(?:png|jpeg|gif|webp);base64,[A-Za-z0-9+/]+={0,2}$/i;
+function validContent(value: unknown, kind: "chat-completions" | "responses", role: string): boolean {
+  if (typeof value === "string") return true;
+  if (!Array.isArray(value)) return value === null && role === "assistant";
+  return value.every((part) => {
+    if (!isRecord(part)) return false;
+    if (kind === "responses") {
+      if (part.type === "input_text" || part.type === "output_text") return typeof part.text === "string";
+      return role === "user" && part.type === "input_image" && typeof part.image_url === "string" && IMAGE_DATA_URL.test(part.image_url) && part.image_url.length <= 6_000_000;
+    }
+    if (part.type === "text") return typeof part.text === "string";
+    return role === "user" && part.type === "image_url" && isRecord(part.image_url) && typeof part.image_url.url === "string" && IMAGE_DATA_URL.test(part.image_url.url) && part.image_url.url.length <= 6_000_000;
+  });
+}
 export function validateRelayPayload(
   body: Record<string, unknown>,
   kind: "chat-completions" | "responses",
@@ -97,20 +111,7 @@ export function validateRelayPayload(
       400,
       "官方入口不接受文件或图片资源引用。",
     );
-    invariant(
-      typeof item.content === "string" ||
-        (item.content === null && item.role === "assistant") ||
-        (kind === "responses" &&
-          Array.isArray(item.content) &&
-          item.content.every(
-            (part) =>
-              isRecord(part) &&
-              ["input_text", "output_text"].includes(String(part.type)) &&
-              typeof part.text === "string",
-          )),
-      400,
-      "官方入口仅支持文本消息，不接受文件、图片或音视频资源。",
-    );
+    invariant(validContent(item.content, kind, String(item.role)), 400, "官方入口只接受文本和内联图片，不接受外部文件或网络地址。", "relay_content");
     if (item.tool_calls !== undefined)
       invariant(
         Array.isArray(item.tool_calls) &&

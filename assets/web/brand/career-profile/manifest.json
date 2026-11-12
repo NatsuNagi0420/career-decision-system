@@ -1,0 +1,27 @@
+{
+  "name": "穗奈用户画像页素材",
+  "source_archive": "assets/穗奈用户画像页原型素材.zip",
+  "prototype": "/docs/品牌形象/网页素材拓展/穗奈用户画像页原型素材/原型图/穗奈_用户画像页_完整原型.png",
+  "source": "/docs/品牌形象/网页素材拓展/穗奈用户画像页原型素材/源文件/用户画像页原型源文件.html",
+  "assets": {
+    "01_穗奈芽苗.png": "/api/assets/brand/career-profile/suinai-sprout.png",
+    "02_已确认事实.png": "/api/assets/brand/career-profile/status-confirmed.png",
+    "03_暂时判断.png": "/api/assets/brand/career-profile/status-judgement.png",
+    "04_待确认.png": "/api/assets/brand/career-profile/status-pending.png",
+    "05_基本背景.png": "/api/assets/brand/career-profile/profile-background.png",
+    "06_目标方向.png": "/api/assets/brand/career-profile/profile-target.png",
+    "07_项目经历.png": "/api/assets/brand/career-profile/profile-project.png",
+    "08_React实践.png": "/api/assets/brand/career-profile/skill-react-practice.png",
+    "09_接口开发.png": "/api/assets/brand/career-profile/skill-api-development.png",
+    "10_容器部署.png": "/api/assets/brand/career-profile/skill-container-deployment.png",
+    "11_来源文件.png": "/api/assets/brand/career-profile/source-file.png",
+    "12_对话来源.png": "/api/assets/brand/career-profile/source-conversation.png",
+    "13_更新时间.png": "/api/assets/brand/career-profile/updated-time.png",
+    "14_地点.png": "/api/assets/brand/career-profile/location.png",
+    "15_偏好限制.png": "/api/assets/brand/career-profile/preference-constraint.png",
+    "16_待追问.png": "/api/assets/brand/career-profile/follow-up.png",
+    "17_行业方向.png": "/api/assets/brand/career-profile/industry-direction.png",
+    "18_修正记录.png": "/api/assets/brand/career-components/edit-record.png",
+    "19_继续箭头.png": "/api/assets/brand/career-components/next-arrow.png"
+  }
+}

@@ -54,6 +54,17 @@ test("仅允许用户选择的 UTF-8 文本，输入原文不可覆盖，重复�
     /事实/,
   );
 });
+test("项目导入保留嵌套相对路径，图片可保存，常见密钥文件被拒绝", async (t) => {
+  const f = await fixture(t);
+  const source = Buffer.from("export const answer = 42;", "utf8").toString("base64");
+  const code = await f.workspace.import(f.conversation.id, "demo/src/main.ts", source);
+  assert.equal(code.path, "inputs/demo/src/main.ts");
+  assert.equal((await f.workspace.list(f.conversation.id)).some(file => file.path === code.path), true);
+  const image = await f.workspace.import(f.conversation.id, "demo/docs/screenshot.png", Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]).toString("base64"));
+  assert.equal(image.name, "screenshot.png");
+  assert.deepEqual(await f.workspace.artifactBytes(image), Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
+  await assert.rejects(f.workspace.import(f.conversation.id, "demo/.env", source), /密钥/);
+});
 test("目录联接不能越过工作空间边界", async (t) => {
   const f = await fixture(t);
   const outside = await temporary("outside");

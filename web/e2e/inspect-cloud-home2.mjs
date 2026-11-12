@@ -1,0 +1,15 @@
+import { chromium } from 'playwright';
+const token = process.env.CLOUD_TOKEN;
+const browser = await chromium.launch({ channel: 'chrome', headless: true });
+const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
+page.on('console', m => { if(m.type()==='error') console.log('CONSOLE', m.text().slice(0,200)); });
+page.on('response', r => { if(r.url().includes('/api/') && r.status()>=400) console.log('HTTP', r.status(), r.url()); });
+await page.addInitScript(t => { localStorage.setItem('career.session.token', t); localStorage.setItem('suinai.onboarding.v1.server.7','completed'); }, token);
+await page.goto('https://agent.suinai.me/', { waitUntil: 'domcontentloaded', timeout: 45000 });
+await page.waitForTimeout(4000);
+await page.getByText('跳过动画',{exact:false}).click().catch(()=>{});
+await page.waitForTimeout(12000);
+console.log('URL', page.url());
+console.log('TEXT', (await page.locator('body').innerText()).slice(0, 3500));
+await page.screenshot({ path: 'D:\\Project\\career-decision-system\\video\\raw\\cloud-home2.png', fullPage: false });
+await browser.close();

@@ -1,0 +1,13 @@
+# 青穗集 · 每日官方 SQLite 一致快照；数据库操作以 qingsuiji 身份执行。
+[Unit]
+Description=Back up Qingsuiji official relay
+After=qingsuiji-relay.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/qingsuiji-relay-backup
+UMask=0077
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/qingsuiji/relay /var/backups/qingsuiji/relay

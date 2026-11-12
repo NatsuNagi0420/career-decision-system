@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { COMPONENT_ICONS, ComponentIcon } from "./ComponentAssets";
 import { GrowthSummary, JobRecommendationCard, ProfileUpdateStrip, SkillDetailPopover } from "./CareerComponents";
+import { ProfileDossier } from "./ProfileDossier";
 import { EMPTY_CAREER_PROFILE, type CareerState } from "./career";
 import { jobsByRun } from "./job-cards";
 import type { ChatMessage } from "./types";
@@ -37,6 +38,7 @@ describe("工具结果的岗位卡片", () => {
     expect(html).toContain('aria-pressed="true"');
     expect(html).toContain("取消收藏");
     expect(html).toContain("和我对照");
+    expect(html).toContain("agent-menu-option job-menu-option");
     expect(html).toContain("当前状态待核实");
     expect(html).not.toMatch(/匹配度|适合度|90%/);
   });
@@ -74,4 +76,53 @@ it("所有新图标都来自后端统一资源路径并有实际文件", () => {
     expect(source).toMatch(/^\/api\/assets\/brand\/career-components\//);
     expect(existsSync(new URL("../../../assets/web/"+source.slice("/api/assets/".length),import.meta.url)),source).toBe(true);
   }
+});
+
+describe("证据型职业画像", () => {
+  it("把已确认事实、技能依据和待了解内容放在同一份画像里", () => {
+    const input = state();
+    input.profile = { ...input.profile, goal: "寻找前端实习", experience: "用 React 完成过一个课程项目", confirmed_at: "2026-10-24" };
+    input.skills = [{ name: "React", stage: "project", evidence: [{ source_id: "profile.experience", quote: "用 React 完成过一个课程项目" }], confirmed_at: "2026-10-24" }];
+    input.sources = [
+      { id: "profile.goal", kind: "user_confirmed", text: "寻找前端实习" },
+      { id: "profile.experience", kind: "user_confirmed", text: "用 React 完成过一个课程项目" },
+      { id: "job.sample", kind: "job_sample", text: "熟悉 React" },
+    ];
+    const html = renderToStaticMarkup(<ProfileDossier state={input} onEdit={noop} onPrompt={noop} />);
+    expect(html).toContain("寻找前端实习");
+    expect(html).toContain("Lv.2 · 项目实践");
+    expect(html).toContain("用 React 完成过一个课程项目");
+    expect(html).toContain("待继续了解");
+    expect(html).not.toContain("熟悉 React");
+    expect(html).not.toMatch(/匹配度|可信度|精通/);
+    const assets = [...html.matchAll(/class="profile-dossier-icon [^"]*" src="([^"]+)"/g)].map(match => match[1]!);
+    expect(assets.length).toBeGreaterThan(8);
+    for (const source of assets) expect(existsSync(new URL("../../../assets/web/" + source.slice("/api/assets/".length), import.meta.url)), source).toBe(true);
+  });
+
+  it("空画像引导回到对话，不伪造内容", () => {
+    const html = renderToStaticMarkup(<ProfileDossier state={state()} onEdit={noop} onPrompt={noop} />);
+    expect(html).toContain("职业画像正在形成");
+    expect(html).toContain("从一件小事开始");
+    expect(html).toContain("技能会在穗奈从经历中找到明确依据");
+    expect(html).not.toContain("未填写");
+  });
+});
+
+describe("独立草稿的确认状态", () => {
+  it("服务端确认无冲突时，跨全局版本的卡片仍可点击确认", () => {
+    const input = state(); input.context_version = 2;
+    const proposal = { id: "independent", title: "保留岗位参考", context_version: 1, conversation_id: "chat", created_at: "2026-10-25", stale: false, data: { kind: "catalogue_job" as const, catalogue_id: "sample" } };
+    const html = renderToStaticMarkup(<ProfileUpdateStrip proposal={proposal} state={input} saving={false} disabled={false} onChange={async()=>true} onPrompt={noop} />);
+    expect(html).not.toContain('disabled=""');
+    expect(html).not.toContain("资料已更新");
+    expect(html).toContain("确认更新");
+  });
+  it("即使全局版本未变，原始岗位变化也禁用确认并显示服务端原因", () => {
+    const input = state();
+    const proposal = { id: "conflict", title: "保留岗位参考", context_version: 0, conversation_id: "chat", created_at: "2026-10-25", stale: true, stale_reason: "岗位库原文已更新，请重新读取后提出建议。", data: { kind: "catalogue_job" as const, catalogue_id: "sample" } };
+    const html = renderToStaticMarkup(<ProfileUpdateStrip proposal={proposal} state={input} saving={false} disabled={false} onChange={async()=>true} onPrompt={noop} />);
+    expect(html).toContain("岗位库原文已更新");
+    expect(html).toMatch(/<button[^>]*disabled=""[^>]*>[\s\S]*?确认更新/);
+  });
 });

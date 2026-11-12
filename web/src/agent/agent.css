@@ -829,6 +829,28 @@
   background: var(--md-secondary-fixed);
   font-size: 12px;
 }
+.agent-official-account {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid var(--md-outline-variant);
+  background: var(--md-surface-container-low);
+}
+.agent-official-account__heading,
+.agent-official-account__connected {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.agent-official-account__heading small,
+.agent-official-account__connected small {
+  display: block;
+  color: var(--md-on-surface-variant);
+  font-size: 11px;
+}
+.agent-official-account .btn { justify-self: start; }
 @keyframes agent-blink {
   to {
     opacity: 0;
@@ -1165,3 +1187,20 @@
 .agent-full-access-note small { display: block; margin-top: 5px; font-size: 10px; line-height: 1.7; }
 
 @media (min-width: 2200px) { .agent-control-menu { font-size: 14px; }  .agent-composer-model { max-width: 300px; } .agent-composer__hint { font-size: 11px; } .agent-send { width: 39px; height: 39px; } }
+
+/* 青穗集 · 截图粘贴与项目导入：附件保持在输入栏，发送时随当前问题提交。 */
+.agent-composer__attachments { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 2px 8px; }
+.agent-composer__attachment { display: inline-flex; align-items: center; gap: 6px; max-width: min(360px, 100%); padding: 5px 8px; border: 1px solid var(--md-outline-variant); border-radius: 7px; background: var(--md-surface-low); color: var(--md-on-surface); font-size: 11px; }
+.agent-composer__attachment > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.agent-composer__attachment button { display: inline-flex; align-items: center; justify-content: center; border: 0; background: transparent; color: var(--md-on-surface-faint); cursor: pointer; padding: 1px; }
+.agent-composer__attachment button:hover { color: var(--md-primary); }
+.agent-message-attachments { display: flex; flex-wrap: wrap; gap: 7px; margin: 0 0 8px; }
+.agent-message-attachments .file-text-link, .agent-message-attachment-missing { display: inline-flex; align-items: center; gap: 5px; padding: 5px 8px; border: 1px solid var(--md-outline-variant); border-radius: 7px; background: var(--md-surface-low); font-size: 11px; }
+.agent-message-attachment-missing { color: var(--md-on-surface-faint); }
+.agent-composer__attachment img { width: 28px; height: 28px; object-fit: cover; border-radius: 4px; image-rendering: auto; flex: none; }
+
+
+/* 青穗集 · 完全退出反馈：收到明确退出请求后覆盖窗口，不冒充后台已结束。 */
+.desktop-exit-status { position: fixed; inset: 0; z-index: 20000; display: grid; place-content: center; gap: 12px; padding: 32px; text-align: center; color: var(--ink, #3c3050); background: rgba(248, 245, 253, .96); backdrop-filter: blur(12px); }
+.desktop-exit-status strong { font-size: clamp(20px, 2vw, 30px); }
+.desktop-exit-status p { margin: 0; }

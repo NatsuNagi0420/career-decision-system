@@ -1,0 +1,11 @@
+# 青穗集 · 每日备份调度；关机错过后补跑，最多错开 15 分钟。
+[Unit]
+Description=Daily Qingsuiji official relay backup
+
+[Timer]
+OnCalendar=*-*-* 03:15:00 UTC
+RandomizedDelaySec=15m
+Persistent=true
+
+[Install]
+WantedBy=timers.target

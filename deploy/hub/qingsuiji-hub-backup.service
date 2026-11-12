@@ -1,0 +1,13 @@
+# 青穗集 · Cloud Hub 每日备份服务。
+[Unit]
+Description=Qingsuiji Cloud Hub database backup
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/node /opt/qingsuiji/cloud-agent/backup.mjs
+UMask=0077
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadWritePaths=/var/backups/qingsuiji/agent /var/lib/qingsuiji/agent

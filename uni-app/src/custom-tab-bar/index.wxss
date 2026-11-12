@@ -1,0 +1,159 @@
+/* 青穗集 · 底部导航：底块顺滑移位、图标短弹跳和触点涟漪，内容与导航均不等待动画。 */
+@import "./pixel-font.wxss";
+.qs-tabbar {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 99;
+    display: flex;
+    align-items: stretch;
+    padding: 8rpx 16rpx calc(8rpx + env(safe-area-inset-bottom));
+    border-top: 1rpx solid #e1d9e8;
+    background: #fffefc;
+}
+.tab-track {
+    position: relative;
+    display: flex;
+    flex: 1;
+}
+.tab-indicator {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 25%;
+    border-radius: 12rpx;
+    background: #f5f0fa;
+    pointer-events: none;
+}
+.tab-item {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8rpx;
+    min-height: 104rpx;
+    margin: 0;
+    padding: 8rpx 0;
+    border: 0;
+    border-radius: 12rpx;
+    background: transparent;
+    line-height: 1;
+    transition: transform 0.34s cubic-bezier(0.18, 0.9, 0.3, 1.45);
+    overflow: hidden;
+}
+.tab-item--pressed,
+.tab-item:active {
+    transform: translateY(2rpx) scale(0.94);
+    transition-duration: 0.09s;
+}
+.tab-item::before {
+    position: absolute;
+    left: var(--ripple-x, 50%);
+    top: var(--ripple-y, 50%);
+    width: 220%;
+    height: 0;
+    padding-bottom: 220%;
+    border-radius: 50%;
+    background: rgba(139, 108, 178, 0.29);
+    content: "";
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0);
+    animation: var(--ripple-wave, none) 0.62s cubic-bezier(0.2, 0.65, 0.3, 1) both;
+    pointer-events: none;
+}
+.tab-item::after {
+    border: 0;
+}
+.tab-icon {
+    width: 43rpx;
+    height: 43rpx;
+    opacity: 0.48;
+    transition:
+        opacity 0.18s,
+        transform 0.2s;
+}
+.tab-text {
+    color: #7d7389;
+    font-size: 24rpx;
+    font-family: "Qingsui Pixel UI", "PingFang SC", sans-serif;
+    font-weight: 400;
+    font-synthesis: none;
+    transition: color 0.2s, transform 0.28s ease-out;
+}
+.tab-item--active {
+    background: transparent;
+}
+.tab-item--active .tab-icon {
+    opacity: 1;
+    transform: translateY(-3rpx);
+}
+.tab-item--active .tab-text {
+    color: #7b659d;
+    font-weight: 400;
+    transform: translateY(-2rpx);
+}
+.tab-arrive-a {
+    animation: tab-travel-a 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.15);
+}
+.tab-arrive-b {
+    animation: tab-travel-b 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.15);
+}
+.tab-item--arrive-a .tab-icon {
+    animation: tab-icon-a 0.44s ease-out;
+}
+.tab-item--arrive-b .tab-icon {
+    animation: tab-icon-b 0.44s ease-out;
+}
+@keyframes tab-travel-a {
+    from { transform: translateX(var(--tab-from)); }
+    to { transform: translateX(var(--tab-to)); }
+}
+@keyframes tab-travel-b {
+    from { transform: translateX(var(--tab-from)); }
+    to { transform: translateX(var(--tab-to)); }
+}
+@keyframes tab-icon-a {
+    0% { transform: translateY(0) scale(0.9); }
+    42% { transform: translateY(-9rpx) rotate(-7deg) scale(1.16); }
+    72% { transform: translateY(-1rpx) rotate(3deg) scale(0.98); }
+    100% { transform: translateY(-3rpx) rotate(0) scale(1); }
+}
+@keyframes tab-icon-b {
+    0% { transform: translateY(0) scale(0.9); }
+    42% { transform: translateY(-9rpx) rotate(-7deg) scale(1.16); }
+    72% { transform: translateY(-1rpx) rotate(3deg) scale(0.98); }
+    100% { transform: translateY(-3rpx) rotate(0) scale(1); }
+}
+
+@keyframes tab-wave-a {
+    0% { opacity: 1; transform: translate(-50%, -50%) scale(0.015); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+}
+@keyframes tab-wave-b {
+    0% { opacity: 1; transform: translate(-50%, -50%) scale(0.015); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .tab-indicator,
+    .tab-icon,
+    .tab-item,
+    .tab-item::before,
+    .tab-text {
+        transition: none;
+        animation: none !important;
+    }
+    .tab-item--pressed,
+    .tab-item:active {
+        transform: none;
+    }
+    .tab-item--active .tab-icon,
+    .tab-item--active .tab-text {
+        transform: none;
+    }
+}

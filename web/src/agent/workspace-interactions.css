@@ -1,0 +1,36 @@
+/* 青穗集 · 工作区微交互：保留折叠子树，平滑展开与轻反馈，尊重减少动态偏好。 */
+.animated-disclosure { min-width:0; }
+.animated-disclosure__trigger { display:flex; align-items:center; gap:7px; width:100%; padding:4px 0; border:0; background:none; color:inherit; font:inherit; text-align:left; cursor:pointer; }
+.animated-disclosure__trigger > svg { flex:none; color:#aa95bc; transition:transform 240ms cubic-bezier(.22,1,.36,1),color 180ms; }
+.animated-disclosure[data-open="true"] > .animated-disclosure__trigger > svg { transform:rotate(90deg); color:#81619f; }
+.animated-disclosure__trigger:hover { color:#72518f; }
+.animated-disclosure__trigger:focus-visible { outline:2px solid #bda0d8; outline-offset:3px; border-radius:3px; }
+.animated-disclosure__trigger > span { min-width:0; overflow-wrap:anywhere; }
+.animated-disclosure__body { display:grid; grid-template-rows:0fr; opacity:0; transition:grid-template-rows 280ms cubic-bezier(.22,1,.36,1),opacity 180ms ease; }
+.animated-disclosure[data-open="true"] > .animated-disclosure__body { grid-template-rows:1fr; opacity:1; }
+.animated-disclosure__body > div { overflow:hidden; min-height:0; }
+.animated-disclosure__content { padding-top:6px; }
+.career-workspace .growth-conversation-memory > .animated-disclosure__trigger { color:#8b7898; font-size:.84em; }
+.conversation-memory__detail > .animated-disclosure__trigger { font-size:12px; line-height:1.9; color:#7e6a91; align-items:flex-start; }
+.conversation-memory__detail > .animated-disclosure__trigger > svg { margin-top:5px; }
+.conversation-memory__detail > .animated-disclosure__trigger > span { display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+.career-workspace .agent-inspector { scrollbar-gutter:stable; overflow-anchor:none; }
+.career-workspace .agent-inspector > .agent-companion-card, .career-workspace .agent-inspector > .growth-summary, .career-workspace .agent-inspector > .file-directory { flex-shrink:0; }
+.career-workspace .agent-message > header { flex-wrap:wrap; row-gap:5px; }
+.career-workspace .agent-message > header .career-decision-activity--inline { display:inline-flex; padding:0; margin:0; gap:6px; font-size:10px; line-height:1.5; color:#ac99bc; border:0; background:none; box-shadow:none; animation:none; }
+.career-decision-activity--inline .career-decision-pixels { grid-template-columns:repeat(2,2px); gap:2px; }
+.career-decision-activity--inline .career-decision-pixels i { width:2px; height:2px; opacity:.65; }
+.career-account { transition:background-color 180ms ease,border-color 180ms ease; }
+.career-account:hover { background:#faf5ff; border-color:#d5c0e9; }
+.career-account .agent-icon-button:hover { transform:translateX(2px); }
+.agent-settings:not(.agent-settings--entry)[open] { animation:connection-open 200ms cubic-bezier(.22,1,.36,1) both; }
+@keyframes connection-open { from { opacity:0; transform:translateY(6px) scale(.99); } to { opacity:1; transform:none; } }
+@media(min-width:1800px) { .conversation-memory__detail > .animated-disclosure__trigger { font-size:14px; } .career-workspace .agent-message > header .career-decision-activity--inline { font-size:11px; } }
+[data-ui-motion="off"] .animated-disclosure__body, [data-ui-motion="off"] .animated-disclosure__trigger > svg, [data-ui-motion="off"] .career-account { transition:none; }
+[data-ui-motion="off"] .agent-settings[open] { animation:none; }
+@media(prefers-reduced-motion:reduce) { .animated-disclosure__body, .animated-disclosure__trigger > svg, .career-account { transition:none; } .agent-settings[open] { animation:none; } }
+
+/* 连接选项同样使用平滑折叠，新增模型与测试结果跟随共用尺寸容器。 */
+.agent-settings .agent-connection-options { margin-top:12px; font-size:12px; color:#9786a5; }
+.agent-settings .agent-connection-options > .animated-disclosure__trigger { padding:6px 0; }
+.agent-settings-feedback > .auto-height__content > .agent-test-result, .agent-settings-feedback > .auto-height__content > .agent-error { margin-top:16px; }

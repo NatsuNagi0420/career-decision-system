@@ -1,0 +1,39 @@
+/** 青穗集 · 设计变量：全站共用像素字体与文字层级，统一纸面卡片和操作控件。 */
+$qingsui-bg: var(--qs-bg);
+$qingsui-paper: var(--qs-paper);
+$qingsui-paper-soft: var(--qs-paper-soft);
+$qingsui-lilac: var(--qs-lilac);
+$qingsui-primary: #8772b2;
+$qingsui-primary-soft: var(--qs-primary-soft);
+$qingsui-mint: #74aa98;
+$qingsui-ink: var(--qs-ink);
+$qingsui-muted: var(--qs-muted);
+$qingsui-faint: var(--qs-faint);
+$qingsui-danger: #d98a92;
+$qingsui-danger-soft: var(--qs-danger-soft);
+$qingsui-primary-strong: #9d84c4;
+$qingsui-mint-soft: var(--qs-mint-soft);
+$qingsui-mint-paper: var(--qs-mint-soft);
+$qingsui-font: "Qingsui Pixel UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+$qingsui-font-ui: $qingsui-font;
+
+/* 字号和形状由所有页面共用，不在单页另建一套视觉层级。 */
+$qs-type-page: 36rpx;
+$qs-type-section: 30rpx;
+$qs-type-body: 27rpx;
+$qs-type-label: 24rpx;
+$qs-type-small: 22rpx;
+$qs-radius-card: 16rpx;
+$qs-radius-control: 12rpx;
+$qs-radius-inset: 8rpx;
+$qs-radius-sheet: 24rpx;
+$qs-shadow-card: 3rpx 3rpx 0 rgba(100, 77, 132, 0.07);
+$qs-shadow-control: 2rpx 3rpx 0 rgba(100, 77, 132, 0.1);
+
+@mixin qs-ui-type($size: $qs-type-label) {
+    font-family: $qingsui-font-ui;
+    font-size: $size;
+    font-weight: 400;
+    font-synthesis: none;
+    letter-spacing: 0;
+}

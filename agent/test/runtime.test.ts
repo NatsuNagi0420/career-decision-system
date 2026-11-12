@@ -13,7 +13,8 @@ import {
 } from "./helpers.js";
 import { id } from "../src/store.js";
 import { Runtime } from "../src/runtime.js";
-import type { Sandbox } from "../src/types.js";
+import type { ContextPack } from "../src/context.js";
+import type { Run, Sandbox } from "../src/types.js";
 
 test("导入→计划→读取→写文件→下一轮精简，产生真实不可变 v1/v2，事件能恢复", async (t) => {
   const model = new ScriptedModel((request, index) => {
@@ -268,6 +269,7 @@ test("导出审批绑定不可变版本；拒绝后续答，不伪称已经写�
   await f.runtime.waitIdle();
   assert.equal(f.store.run(f.user.id, run.id).status, "completed");
   assert.equal(f.store.approval(f.user.id, approval.id).status, "rejected");
+  assert.equal(f.store.toolExecutions(f.conversation.id)[0].status, "failed");
   const response = await f.app.inject({
     url:
       "/api/v1/agent/artifacts/" +
@@ -382,10 +384,13 @@ test("沙箱不可用返回真实错误，绝不运行宿主命令，工具参�
   assert.equal(f.store.artifacts(f.conversation.id).length, 0);
 });
 
-test("步骤预算使循环停止；追问终止后续工具", async (t) => {
+test("步骤间隔只生成检查点；达到安全上限后可从检查点续接", async (t) => {
   const f = await fixture(t, {
     maxSteps: 2,
-    model: new ScriptedModel(() => reply("", [tool("list_files", {})])),
+    maxTotalSteps: 2,
+    model: new ScriptedModel((_, index) => index < 2
+      ? reply("", [tool("list_files", {})])
+      : reply("续接完成")),
   });
   const run = f.runtime.start(
     f.user,
@@ -396,8 +401,21 @@ test("步骤预算使循环停止；追问终止后续工具", async (t) => {
   );
   await f.runtime.waitIdle();
   assert.equal(f.model.requests.length, 2);
-  assert.equal(f.store.run(f.user.id, run.id).status, "failed");
-  assert.match(f.store.run(f.user.id, run.id).error!, /步骤上限/);
+  const stopped = f.store.run(f.user.id, run.id);
+  assert.equal(stopped.status, "paused");
+  assert.equal(stopped.error_code, "agent_step_budget");
+  assert.equal(stopped.can_retry, true);
+  const checkpoint = f.store.checkpoint(f.user.id, run.id)!;
+  assert.equal(checkpoint.status, "paused");
+  assert.equal(checkpoint.pending_tool_call_ids.length, 0);
+  assert.ok(f.store.events(f.conversation.id).some(event => event.kind === "run.checkpoint"));
+  const continuation = f.runtime.retry(f.user, run.id, id());
+  await f.runtime.waitIdle();
+  assert.notEqual(continuation.id, run.id);
+  assert.equal(f.store.run(f.user.id, continuation.id).status, "completed");
+  assert.equal(f.store.run(f.user.id, continuation.id).total_steps, 3);
+  const repeated = f.runtime.retry(f.user, run.id, continuation.request_id);
+  assert.equal(repeated.id, continuation.id);
   const g = await fixture(t, {
     model: new ScriptedModel(() =>
       reply("", [
@@ -502,11 +520,57 @@ test("服务重启把运行中任务标为中断，未完成工具不自动重�
     f.config,
   );
   assert.equal(f.store.run(f.user.id, run.id).status, "interrupted");
+  assert.equal(f.store.run(f.user.id, run.id).error_code, "runtime_interrupted");
+  assert.equal(recovered.snapshot(f.user, f.conversation.id).runs.at(-1)?.can_retry, true);
   assert.equal(f.store.artifacts(f.conversation.id).length, 0);
   assert.equal(
     f.store.messages(f.conversation.id).filter((m) => m.role === "tool").length,
     1,
   );
+  const resumed = recovered.retry(f.user, run.id, id());
+  await recovered.waitIdle();
+  assert.equal(resumed.id, run.id);
+  assert.equal(f.store.run(f.user.id, run.id).status, "completed");
+  await recovered.shutdown();
+});
+
+test("工具收据已成功但消息尚未落库时，重启只回放收据而不重复执行", async (t) => {
+  const f = await fixture(t);
+  const call = tool("write_file", { path: "outputs/once.txt", content: "一次" });
+  const run = {
+    id: id(),
+    conversation_id: f.conversation.id,
+    user_id: f.user.id,
+    profile_id: f.profile.id,
+    request_id: id(),
+    input: "收据恢复",
+    status: "running" as const,
+    steps: 1,
+    input_tokens: 0,
+    output_tokens: 0,
+    error: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+  f.store.saveRun(run, true);
+  f.store.message(f.conversation.id, run.id, "assistant", "", { tool_calls: [call] });
+  f.store.saveToolExecution({
+    call_id: call.id,
+    run_id: run.id,
+    conversation_id: f.conversation.id,
+    user_id: f.user.id,
+    name: call.name,
+    arguments_hash: "fixture-receipt",
+    status: "succeeded",
+    result: { path: "outputs/once.txt", version: 1 },
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  });
+  const recovered = new Runtime(f.store, f.workspace, f.profiles, f.sandbox, f.config);
+  const toolMessages = f.store.messages(f.conversation.id).filter(message => message.role === "tool");
+  assert.equal(toolMessages.length, 1);
+  assert.match(toolMessages[0].content, /outputs\/once\.txt/);
+  assert.equal(f.store.events(f.conversation.id).filter(event => event.kind === "tool.finished").at(-1)?.data.replayed, true);
   await recovered.shutdown();
 });
 
@@ -525,15 +589,16 @@ test("成果快照被外部改写后阻止预览和授权", async (t) => {
   );
 });
 
-test("供应商不报告用量时保守计入最大输出，预算仍然能终止循环", async (t) => {
+test("供应商不报告用量时，超出预留输出仍能终止循环", async (t) => {
   const f = await fixture(t, {
     model: new ScriptedModel(() => ({
-      ...reply("", [tool("list_files", {})]),
+      ...reply("x".repeat(600), [tool("list_files", {})]),
       input_tokens: 0,
       output_tokens: 0,
     })),
   });
-  f.config.maxRunOutputTokens = f.config.maxOutputTokens;
+  f.config.maxOutputTokens = 128;
+  f.config.maxRunOutputTokens = 128;
   const run = f.runtime.start(
     f.user,
     f.conversation.id,
@@ -587,6 +652,7 @@ test("审批刚出现便立即确认时不会丢失续跑，也不重复工具�
   await decision;
   await f.runtime.waitIdle();
   assert.equal(f.store.run(f.user.id, run.id).status, "completed");
+  assert.equal(f.store.toolExecutions(f.conversation.id)[0].status, "succeeded");
   const messages = f.store.messages(f.conversation.id);
   const calls = messages.flatMap((m) => m.tool_calls ?? []);
   assert.equal(calls.length, 1);
@@ -594,4 +660,121 @@ test("审批刚出现便立即确认时不会丢失续跑，也不重复工具�
     messages.filter((m) => m.tool_call_id === calls[0].id).length,
     1,
   );
+});
+
+
+test("修改待确认建议时裁剪旧岗位工具历史，仍保留当前问题", async (t) => {
+  const editPrompt = [
+    "我想修改职业工作台里这份待确认建议。",
+    "标题：岗位对照",
+    "建议 ID：00000000-0000-0000-0000-000000000001",
+    "类型：comparison",
+    "请先读取最新职业工作台。",
+  ].join("\n");
+  const model = new ScriptedModel((request, index) => {
+    const visible = JSON.stringify(request.messages);
+    assert.doesNotMatch(visible, /旧岗位历史正文/);
+    assert.ok(visible.length < 20000);
+    if (index === 0) return reply("", [tool("read_career_context", {})]);
+    if (index === 1) return reply("想先改哪一部分？工作地点、在校与实习节奏，还是 Agent 基座？");
+    assert.match(visible, /工作地点、在校与实习节奏，还是 Agent 基座/);
+    assert.match(visible, /我都满足/);
+    return reply("新的待确认草稿已经整理好，请检查后再确认。");
+  });
+  const f = await fixture(t, { model });
+  f.store.message(f.conversation.id, null, "assistant", "更早的普通对话");
+  for (let index = 0; index < 24; index++)
+    f.store.message(
+      f.conversation.id,
+      null,
+      "tool",
+      "旧岗位历史正文 " + "x".repeat(6500),
+    );
+  const first = f.runtime.start(f.user, f.conversation.id, f.profile.id, editPrompt, id());
+  await f.runtime.waitIdle();
+  assert.equal(f.store.run(f.user.id, first.id).status, "completed");
+  const second = f.runtime.start(f.user, f.conversation.id, f.profile.id, "我都满足", id());
+  await f.runtime.waitIdle();
+  assert.equal(f.store.run(f.user.id, second.id).status, "completed");
+  assert.equal(model.requests.length, 3);
+});
+
+test("整轮超时且没有未完成工具时允许安全续接，并重新计算本轮时长", async (t) => {
+  const model = new ScriptedModel(() => reply("续接成功"));
+  const f = await fixture(t, { model, timeout: 1000 });
+  const run = {
+    id: id(),
+    conversation_id: f.conversation.id,
+    user_id: f.user.id,
+    profile_id: f.profile.id,
+    request_id: id(),
+    input: "超时测试",
+    status: "failed" as const,
+    steps: 1,
+    input_tokens: 0,
+    output_tokens: 0,
+    output_budget_used: 10,
+    elapsed_ms: 1000,
+    error: "任务达到时长上限或请求被中断，已停止。",
+    error_code: "run_timeout",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+  f.store.saveRun(run, true);
+  f.store.message(f.conversation.id, run.id, "user", run.input);
+  assert.equal(f.runtime.snapshot(f.user, f.conversation.id).runs.at(-1)?.can_retry, true);
+  f.runtime.retry(f.user, run.id, id());
+  await f.runtime.waitIdle();
+  const resumed = f.store.run(f.user.id, run.id);
+  assert.equal(resumed.status, "completed");
+  assert.equal(resumed.retry_count, 1);
+  assert.equal(model.requests.length, 1);
+});
+
+
+test("未闭合的压缩事件链会续写结束事件，不重复开始和摘要", async t => {
+  const f = await fixture(t);
+  const signature = "recoverable-compaction";
+  const compactionId = "compact-recover";
+  const common = { compaction_id: compactionId, trigger: "pressure", source_signature: signature, source_message_count: 8, omitted_message_ids: ["m1"], omitted_message_count: 6, pruned_message_count: 1, before_tokens: 9000, after_tokens: 3000, omitted_messages: 6 };
+  f.store.appendEvent(f.conversation.id, "old-run", "context.compaction.start", common);
+  f.store.appendEvent(f.conversation.id, "old-run", "context.compaction.summary", { ...common, summary: "保留用户目标", summary_tokens: 8 });
+  const run = { id: "recovery-run", conversation_id: f.conversation.id } as Run;
+  const pack = { ...common, messages: [], summary: "保留用户目标", estimatedTokens: 3000, originalTokens: 9000, sourceMessageCount: 8, omittedMessages: 6, omittedMessageIds: ["m1"], prunedMessageIds: ["m2"], compactionKey: signature, compacted: true } as unknown as ContextPack;
+  (f.runtime as unknown as { recordContextCompaction: (run: Run, pack: ContextPack) => void }).recordContextCompaction(run, pack);
+  const events = f.store.events(f.conversation.id).filter(event => event.data.source_signature === signature);
+  assert.deepEqual(events.map(event => event.kind), ["context.compaction.start", "context.compaction.summary", "context.compaction.end"]);
+  assert.equal(events.at(-1)?.data.recovered, true);
+});
+
+test("上下文压缩记录可回放的 start-summary-end 事件链，且不覆盖原消息", async t => {
+  const f = await fixture(t);
+  f.config.contextMaxTokens = 32000;
+  f.config.contextReserveTokens = 8000;
+  f.config.contextRecentTokens = 2000;
+  for (let index = 0; index < 100; index++)
+    f.store.message(f.conversation.id, "old-run-" + index, "user", "很早之前的对话内容：" + "历史".repeat(600));
+  const run = f.runtime.start(f.user, f.conversation.id, f.profile.id, "请继续", id());
+  await f.runtime.waitIdle();
+  assert.equal(f.store.run(f.user.id, run.id).status, "completed");
+  const first = f.store.events(f.conversation.id).filter(event => event.kind.startsWith("context.compaction."));
+  assert.deepEqual(first.map(event => event.kind), [
+    "context.compaction.start",
+    "context.compaction.summary",
+    "context.compaction.end",
+  ]);
+  const summary = first.find(event => event.kind === "context.compaction.summary")!;
+  const end = first.find(event => event.kind === "context.compaction.end")!;
+  assert.equal(end.data.status, "completed");
+  assert.equal(typeof summary.data.source_signature, "string");
+  assert.ok(Number(summary.data.source_message_count) > 100);
+  assert.ok(Number(summary.data.omitted_message_count) > 0);
+  assert.ok(String(summary.data.summary).includes("系统自动压缩"));
+  const messageCount = f.store.messages(f.conversation.id, true).length;
+
+  const next = f.runtime.start(f.user, f.conversation.id, f.profile.id, "再继续", id());
+  await f.runtime.waitIdle();
+  assert.equal(f.store.run(f.user.id, next.id).status, "completed");
+  assert.equal(f.store.events(f.conversation.id).filter(event => event.kind.startsWith("context.compaction.")).length, 3);
+  assert.ok(f.store.messages(f.conversation.id, true).length > messageCount);
 });

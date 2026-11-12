@@ -1,0 +1,11 @@
+# 青穗集 · 保留最近 7 份日常备份，迁移前备份单独保留。
+[Unit]
+Description=Qingsuiji Cloud Hub daily backup
+
+[Timer]
+OnCalendar=*-*-* 04:30:00
+Persistent=true
+RandomizedDelaySec=600
+
+[Install]
+WantedBy=timers.target

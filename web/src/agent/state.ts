@@ -38,11 +38,27 @@ export function applyEvent(state: ViewState, event: AgentEvent): ViewState {
     snapshot.runs = snapshot.runs.filter(run => !runIds.has(run.id));
     snapshot.approvals = snapshot.approvals.map(approval => approval.run_id && runIds.has(approval.run_id) && approval.status === "pending" ? { ...approval, status: "expired" as const } : approval);
     snapshot.guidance = event.data.guidance as Snapshot["guidance"];
+    snapshot.plan = null;
     return { snapshot, drafts: {}, events: [...state.events.filter(item => !item.run_id || !runIds.has(item.run_id)), event].slice(-300) };
+  }
+  if (event.kind === "resume.review" && snapshot.resume) {
+    snapshot.resume = { ...snapshot.resume, evidence_review: event.data.review as import("../../../agent/src/career-decision-contract").ResumeEvidenceReview };
+  }
+  if (event.kind === "resume.state") {
+    const value = event.data.state as NonNullable<Snapshot["resume"]>;
+    if (value && (!snapshot.resume || value.revision >= snapshot.resume.revision)) snapshot.resume = { ...value, evidence_review: value.evidence_review ?? snapshot.resume?.evidence_review };
+  }
+  if (event.kind === "plan.updated" && event.run_id) {
+    const plan = event.data.plan as { steps?: NonNullable<Snapshot["plan"]>["steps"] } | undefined;
+    if (Array.isArray(plan?.steps)) snapshot.plan = { run_id: event.run_id, steps: plan.steps, updated_at: event.created_at };
   }
   if (event.kind === "guidance.updated") {
     const value = event.data.guidance as NonNullable<Snapshot["guidance"]>;
     if (!snapshot.guidance || value.revision >= snapshot.guidance.revision) snapshot.guidance = value;
+  }
+  if (event.kind === "obligation.created" || event.kind === "obligation.updated") {
+    const obligation = event.data.obligation as NonNullable<Snapshot["obligations"]>[number];
+    snapshot.obligations = [...(snapshot.obligations ?? []).filter(item => item.id !== obligation.id), obligation];
   }
   if (event.kind === "message.added") {
     const message = event.data.message as ChatMessage;
@@ -57,6 +73,15 @@ export function applyEvent(state: ViewState, event: AgentEvent): ViewState {
   }
   if (event.kind === "run.retry") {
     for (const key of Object.keys(drafts)) delete drafts[key];
+  }
+  if (event.kind === "run.checkpoint") {
+    const checkpoint = event.data.checkpoint as import("./types").AgentCheckpoint | undefined;
+    if (checkpoint) snapshot.checkpoints = [...(snapshot.checkpoints ?? []).filter(item => item.run_id !== checkpoint.run_id), checkpoint];
+    const run = snapshot.runs.find(item => item.id === checkpoint?.run_id);
+    if (run && checkpoint) {
+      const updated = { ...run, checkpoint_id: checkpoint.id, checkpoint_step: checkpoint.step };
+      snapshot.runs = snapshot.runs.map(item => item.id === updated.id ? updated : item);
+    }
   }
   if (event.kind === "run.status") {
     const run = event.data.run as AgentRun;

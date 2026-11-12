@@ -39,7 +39,7 @@ export function ExecutionPanel({ run, runs, messages, records, events, selectedK
   return <aside ref={panel} tabIndex={-1} className="agent-inspector workspace-detail-panel execution-panel" id="career-context" aria-label="执行记录侧栏" onKeyDown={event => { if (event.key === "Escape" && !document.querySelector(":popover-open")) { event.stopPropagation(); onClose(); } }}>
     <header className="execution-panel__heading"><span><AgentIcon name="terminal" size={17} />执行记录</span><button className="agent-icon-button" type="button" aria-label="关闭执行记录" title="关闭记录 · Esc" onClick={onClose}><AgentIcon name="close" size={17} /></button></header>
     <div className="execution-panel__summary"><div className="execution-panel__run"><h2 title={input(run.id)}>{input(run.id)}</h2><ComposerMenu label="切换执行轮次" title="查看其他轮次" trigger={<><span>第 {runs.findIndex(item => item.id === run.id) + 1} 轮</span><AgentIcon name="down" size={12} /></>} disabled={runs.length < 2} role="menu" align="end" panelClassName="file-picker-menu execution-run-menu">{close => [...runs].reverse().map((item) => <button key={item.id} type="button" role="menuitemradio" aria-checked={item.id === run.id} onClick={() => { close(); setTab("operations"); onSelect(item.id); }}><span>第 {runs.findIndex(value => value.id === item.id) + 1} 轮 · {input(item.id).slice(0, 40)}<small>{STATUS_LABEL[item.status]} · {new Date(item.created_at).toLocaleString()}</small></span>{item.id === run.id && <AgentIcon name="check" size={14} />}</button>)}</ComposerMenu></div>
-      <div className="execution-panel__meta"><span data-active={active}><i />{STATUS_LABEL[run.status]}</span><span><AgentIcon name="clock" size={12} />{runDuration(run, now)}</span><span>{current.length} 次操作</span>{failed > 0 && <span className="execution-panel__failure">{failed} 次失败记录</span>}</div>
+      <div className="execution-panel__meta"><span data-active={active}><i />{STATUS_LABEL[run.status]}</span><span><AgentIcon name="clock" size={12} />{runDuration(run, now)}</span><span>{current.length} 次操作</span>{run.checkpoint_step != null && <span title="已保存的可恢复执行现场">检查点 {run.checkpoint_step}</span>}{run.total_steps != null && run.total_steps > run.steps && <span title="包含前序续接运行的累计模型步骤">累计 {run.total_steps} 步</span>}{failed > 0 && <span className="execution-panel__failure">{failed} 次失败记录</span>}</div>
     </div>
     <div className="execution-panel__tabs" role="tablist" aria-label="执行记录内容"><button type="button" id="execution-operations-tab" role="tab" aria-selected={tab === "operations"} aria-controls="execution-content" onClick={() => setTab("operations")}><AgentIcon name="terminal" size={14} />操作与输出<span>{current.length}</span></button><button type="button" id="execution-plan-tab" role="tab" aria-selected={tab === "plan"} aria-controls="execution-content" onClick={() => setTab("plan")}><AgentIcon name="check" size={14} />任务计划{plan.length > 0 && <span>{plan.filter(step => step.status === "done").length}/{plan.length}</span>}</button></div>
     <div className="execution-panel__body" id="execution-content" role="tabpanel" aria-labelledby={tab === "operations" ? "execution-operations-tab" : "execution-plan-tab"}>
@@ -57,6 +57,7 @@ function ExecutionEntry({ record, index, selected, selectionId, files, onPreview
   const [open, setOpen] = useState(selected || ["running", "waiting"].includes(record.status));
   useEffect(() => { if (selected) { setOpen(true); ref.current?.scrollIntoView({ block: "nearest", behavior: "instant" }); } }, [selected, selectionId]);
   const value = object(record.result), command = record.call.name === "run_command";
+  const liveOutput = record.result === undefined ? record.liveOutput : undefined;
   const artifactId = object(value.artifact).id ?? value.artifact_id ?? record.args.artifact_id;
   const file = typeof artifactId === "string" ? files.find(item => item.id === artifactId) : undefined;
   return <details ref={ref} className="execution-entry" data-status={record.status} data-selected={selected} open={open} onToggle={event => setOpen(event.currentTarget.open)}>
@@ -64,11 +65,17 @@ function ExecutionEntry({ record, index, selected, selectionId, files, onPreview
     {open && <div className="execution-entry__body">
       {command && <LogBlock title="实际命令" text={typeof record.args.command === "string" ? record.args.command : record.call.arguments} command />}
       {!command && <div className="execution-entry__tool"><span>工具</span><code>{record.call.name}</code></div>}
-      {record.status === "running" && <p className="execution-entry__waiting">正在执行，等待工具返回{command ? "；输出将在命令结束后展示。" : "。"}</p>}
+       {record.status === "running" && <p className="execution-entry__waiting">正在执行{command ? "；实时输出会在命令运行中逐段出现。" : "，等待工具返回。"}</p>}
       {record.status === "waiting" && <p className="execution-entry__waiting">等待你确认后才会继续，不会自动批准。</p>}
       {record.status === "pending" && <p className="execution-entry__waiting">模型已提出这项操作，尚未开始执行。</p>}
       {record.status === "unknown" && <p className="execution-entry__waiting">缺少可确认的完成记录，请核对文件或输出；不会自动重跑。</p>}
       {record.error && <LogBlock title={record.status === "failed" ? "错误" : "停止说明"} text={record.error} error />}
+       {record.call.name === "apply_project_patch" && <ProjectChanges value={value} />}
+       {command && liveOutput && (liveOutput.stdout || liveOutput.stderr) && <>
+         {liveOutput.stdout && <LogBlock title="实时输出 stdout" text={liveOutput.stdout} command />}
+         {liveOutput.stderr && <LogBlock title="实时输出 stderr" text={liveOutput.stderr} error />}
+         {record.liveOutputTruncated && <p className="execution-entry__output-note">实时输出已展示前 16 KB；命令结束后的完整结果仍以最终记录为准。</p>}
+       </>}
       {command && (record.result !== undefined) && <>
         {typeof value.stdout === "string" && <LogBlock title="标准输出 stdout" text={value.stdout} empty="（没有标准输出）" />}
         {typeof value.stderr === "string" && <LogBlock title="标准错误 stderr" text={value.stderr} empty="（没有标准错误）" error={record.status === "failed" && Boolean(value.stderr)} />}
@@ -80,6 +87,11 @@ function ExecutionEntry({ record, index, selected, selectionId, files, onPreview
       <p className="execution-entry__result" data-status={record.status}>{executionSummary(record)}</p>
     </div>}
   </details>;
+}
+function ProjectChanges({ value }: { value: Record<string, unknown> }) {
+  const changes = Array.isArray(value.changes) ? value.changes.map(object).filter(change => typeof change.path === "string") : [];
+  if (!changes.length) return null;
+  return <div className="execution-project-changes"><div className="execution-project-changes__heading">变更预览</div>{changes.map((change, index) => <LogBlock key={index} title={`${change.operation === "create" ? "新增" : "更新"} ${String(change.path)}`} text={typeof change.diff === "string" ? change.diff : "（没有可展示的行级 diff）"} />)}</div>;
 }
 function prettyJson(value: string) { try { return JSON.stringify(JSON.parse(value), null, 2); } catch { return value; } }
 function LogBlock({ title, text, empty = "（空）", command = false, error = false }: { title: string; text: string; empty?: string; command?: boolean; error?: boolean }) {

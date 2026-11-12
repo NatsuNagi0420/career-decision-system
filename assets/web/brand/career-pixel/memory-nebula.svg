@@ -1,0 +1,16 @@
+<!-- 青穗集 · 穗奈识海入口：像素星云、记忆星点与连线。 -->
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none" shape-rendering="crispEdges">
+  <path d="M6 1h20v2h3v3h2v20h-2v3h-3v2H6v-2H3v-3H1V6h2V3h3Z" fill="#87709f"/>
+  <path d="M6 3h20v2h3v21h-3v3H6v-3H3V6h3Z" fill="#e8dbf7"/>
+  <path d="M7 5h18v2h2v18h-2v2H7v-2H5V7h2Z" fill="#302448"/>
+  <path d="M7 7h11v2H9v6H7Z" fill="#5d477f"/>
+  <path d="M10 15h6v-4h7v6h-5v5H9v-4h1Z" fill="#59437c"/>
+  <path d="M10 20h5v-4h7v-5h2M15 20v4h8" stroke="#ae95d2" stroke-width="1"/>
+  <path d="M8 9h4v4H8Z" fill="#a4e1d9"/>
+  <path d="M24 8h3v3h-3ZM22 23h3v3h-3Z" fill="#b7baf1"/>
+  <path d="M7 22h4v4H7Z" fill="#c4a5ec"/>
+  <path d="M16 10h2v4h4v2h-4v4h-2v-4h-4v-2h4Z" fill="#f9e8b7"/>
+  <path d="M16 14h2v2h-2Z" fill="#fffdf4"/>
+  <path d="M23 15h2v2h-2ZM12 6h2v2h-2ZM6 17h1v1H6Z" fill="#8bbecb"/>
+  <path d="M6 3h20v2H6Z" fill="#fff8ff" opacity=".65"/>
+</svg>

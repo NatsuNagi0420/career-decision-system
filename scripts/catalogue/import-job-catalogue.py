@@ -22,6 +22,18 @@ assert spec and spec.loader
 spec.loader.exec_module(cleaning)
 
 
+def default_database() -> Path:
+    """与 TypeScript Agent 保持一致：默认把运行数据放在用户状态目录。"""
+    configured = os.environ.get("AGENT_DATA_DIR", "").strip()
+    if configured:
+        return Path(configured) / "agent.sqlite"
+    if os.name == "nt":
+        base = Path(os.environ.get("LOCALAPPDATA") or (Path.home() / "AppData" / "Local"))
+    else:
+        base = Path(os.environ.get("XDG_STATE_HOME") or (Path.home() / ".local" / "state"))
+    return base / "Qingsuiji" / "agent" / "agent.sqlite"
+
+
 def bridge(node: str, database: Path, action: str, bundle: Path | None = None):
     command = [node, str(ROOT / "scripts/catalogue/catalogue-db.mjs"), action, str(database)]
     if bundle: command.append(str(bundle))
@@ -47,7 +59,12 @@ def backup(database: Path, directory: Path):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--database", type=Path, default=ROOT / "agent/var/agent.sqlite")
+    parser.add_argument(
+        "--database",
+        type=Path,
+        default=default_database(),
+        help="唯一 SQLite 主库；默认使用本机用户状态目录，也可显式传入部署环境的路径。",
+    )
     parser.add_argument("--archive", type=Path, required=True)
     parser.add_argument("--review", type=Path, required=True)
     parser.add_argument("--as-of", type=date.fromisoformat, default=date.today())

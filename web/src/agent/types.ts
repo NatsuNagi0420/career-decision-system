@@ -1,5 +1,7 @@
 /** 青穗集 · TypeScript Agent 前端协议：只接收公开配置，永不包含模型密钥。 */
 export interface AgentUser {
+  identity?: "device" | "official" | "legacy";
+  official_account?: { id: number; username: string };
   id: number;
   username: string;
   external_ai_consent: boolean;
@@ -57,9 +59,25 @@ export interface ModelInput {
   allow_local: boolean;
   remember_key: boolean;
 }
+export interface OfficialSession {
+  connected: boolean;
+  account: { id: number; username: string } | null;
+  usage?: { day: string; billing_enabled: boolean; balance_micros: number; held_micros: number; requests: number; input_tokens: number; output_tokens: number; charged_micros: number; images: number } | null;
+}
 export type PermissionMode = "default" | "full-access";
+export type WorkspaceAccess = "read-only" | "workspace-write";
+export interface LocalWorkspace {
+  id: string;
+  user_id: number;
+  name: string;
+  root_path: string;
+  canonical_path: string;
+  created_at: string;
+  updated_at: string;
+  last_used_at: string | null;
+}
 export type ReasoningEffort = "auto" | "low" | "medium" | "high";
-export interface RunOptions { replaces_message_id?: string; permission_mode: PermissionMode; reasoning_effort: ReasoningEffort; full_access_confirmed: boolean; }
+export interface RunOptions { resume_edit?: import("../../../agent/src/resume-fields").ResumeEditRequest; replaces_message_id?: string; permission_mode: PermissionMode; reasoning_effort: ReasoningEffort; full_access_confirmed: boolean; obligation_id?: string; attachment_ids?: string[]; }
 export interface Conversation {
   guidance?: import("../../../agent/src/guidance-contract").GuidanceState;
   /** 仅用于兼容旧版专用对话；新对话在同一主线内使用职业与简历工具。 */
@@ -69,6 +87,8 @@ export interface Conversation {
   id: string;
   title: string;
   profile_id: string | null;
+  workspace_id?: string | null;
+  workspace_access?: WorkspaceAccess;
   created_at: string;
   updated_at: string;
 }
@@ -82,15 +102,22 @@ export interface ChatMessage {
   run_id: string | null;
   role: "user" | "assistant" | "tool";
   content: string;
+  attachments?: MessageAttachment[];
   tool_calls?: ToolCall[];
   tool_call_id?: string;
   created_at: string;
+}
+export interface MessageAttachment {
+  artifact_id: string;
+  name: string;
+  mime: string;
 }
 export type RunStatus =
   | "queued"
   | "running"
   | "awaiting_approval"
   | "waiting_input"
+  | "paused"
   | "completed"
   | "failed"
   | "cancelled"
@@ -99,8 +126,15 @@ export interface AgentRun {
   error_code?: string;
   can_retry?: boolean;
   retry_count?: number;
+  checkpoint_id?: string;
+  checkpoint_step?: number;
+  parent_run_id?: string;
+  continuation_count?: number;
+  total_steps?: number;
+  continuation_run_id?: string;
   permission_mode?: PermissionMode;
   reasoning_effort?: ReasoningEffort;
+  attachment_ids?: string[];
   id: string;
   status: RunStatus;
   steps: number;
@@ -136,6 +170,21 @@ export interface AgentApproval {
   status: "pending" | "approved" | "rejected" | "expired";
   expires_at: string;
 }
+export type AgentCheckpointStatus = "active" | "paused" | "completed" | "failed";
+export interface AgentCheckpoint {
+  id: string;
+  run_id: string;
+  conversation_id: string;
+  user_id: number;
+  step: number;
+  status: AgentCheckpointStatus;
+  completed_tool_call_ids: string[];
+  pending_tool_call_ids: string[];
+  context_signature: string | null;
+  parent_id?: string;
+  created_at: string;
+  updated_at: string;
+}
 export interface AgentEvent {
   seq: number;
   run_id: string | null;
@@ -143,28 +192,69 @@ export interface AgentEvent {
   data: Record<string, unknown>;
   created_at: string;
 }
+export type ObligationStatus = "open" | "claimed" | "fulfilled" | "abandoned";
+export interface AgentObligation {
+  id: string;
+  user_id: number;
+  conversation_id: string;
+  source_run_id: string | null;
+  capability_id: string;
+  intent: string;
+  title: string;
+  status: ObligationStatus;
+  trigger: "guidance_next_step" | "agent_commitment";
+  due_at: string | null;
+  created_at: string;
+  updated_at: string;
+  claimed_at: string | null;
+  resolved_at: string | null;
+}
 export interface Snapshot {
+  resume?: import("../../../agent/src/resume-contract").ResumeState;
+  plan?: import("../../../agent/src/core/task-memory").AgentTaskPlan | null;
   guidance?: import("../../../agent/src/guidance-contract").GuidanceView;
+  obligations?: AgentObligation[];
   conversation: Conversation;
   messages: ChatMessage[];
   runs: AgentRun[];
   artifacts: AgentFile[];
   approvals: AgentApproval[];
+  checkpoints?: AgentCheckpoint[];
   last_seq: number;
   events?: AgentEvent[];
   drafts?: Record<string, string>;
 }
 export interface AgentInfo {
+  ui?: import("../../../agent/src/ui-contract").DeploymentUi;
   deployment_mode?: "local" | "server";
   local_file_actions?: boolean;
   runtime: string;
   official_configured: boolean;
+  agent_capabilities?: Array<{
+    id: string;
+    domain: string;
+    name: string;
+    description: string;
+    riskTier: string;
+    requiresApproval: boolean;
+    evidenceRequired: boolean;
+    minDataCoverage: number;
+    thinking: "on" | "off";
+    maxTokens: number;
+    artifactType: string | null;
+    requiredContext: string[];
+    tools: string[];
+    proposalTypes: string[];
+    nextCapabilities: string[];
+  }>;
   persistent_secrets_supported: boolean;
   file_workspace: {
     available: boolean;
     message: string;
     supported_extensions: string[];
     max_file_bytes: number;
+    max_binary_file_bytes?: number;
+    project_workspaces?: boolean;
   };
   sandbox: {
     available: boolean;
@@ -182,6 +272,9 @@ export interface AgentInfo {
   };
   limits: {
     steps: number;
+    max_total_steps?: number;
+    max_task_steps?: number;
+    max_continuations?: number;
     run_timeout_ms: number;
     max_run_output_tokens: number;
   };
@@ -195,6 +288,7 @@ export const STATUS_LABEL: Record<RunStatus, string> = {
   running: "正在处理",
   awaiting_approval: "等待你确认",
   waiting_input: "等待你补充",
+  paused: "已保存进度",
   completed: "本轮回复结束",
   failed: "本轮未完成",
   cancelled: "已停止",

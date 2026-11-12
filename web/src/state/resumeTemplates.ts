@@ -1,4 +1,5 @@
-import type { CSSProperties } from "react";
+/** 青穗集 · 简历模板配置：编辑窗口选择样式，纸面预览与导出共享当前选项。 */
+import { useSyncExternalStore, type CSSProperties } from "react";
 
 /**
  * Resume templates: a *style* (which order, how headings look) times a *format* (the
@@ -115,6 +116,7 @@ export function loadOverrides(): Format {
 export function saveTemplateId(id: string): void {
   try {
     localStorage.setItem(TEMPLATE_KEY, id);
+    window.dispatchEvent(new Event("career:resume-template"));
   } catch {
     /* A private-mode write failure is not worth a toast: the choice just resets next load. */
   }
@@ -129,3 +131,12 @@ export function saveOverrides(format: Format): void {
 }
 
 export type { Format as ResumeFormat };
+
+function subscribeTemplate(onChange: () => void) {
+  window.addEventListener("career:resume-template", onChange);
+  window.addEventListener("storage", onChange);
+  return () => { window.removeEventListener("career:resume-template", onChange); window.removeEventListener("storage", onChange); };
+}
+export function useResumeTemplate() {
+  return [useSyncExternalStore(subscribeTemplate, loadTemplateId, () => DEFAULT_TEMPLATE), saveTemplateId] as const;
+}

@@ -1,0 +1,18 @@
+/** 青穗集 · 简历书写动效：等宽占位解码、轻墨粒子和抬笔，全部只用于屏幕预览。 */
+.resume-ink-token { position: relative; display: inline; white-space: pre-wrap; }
+.resume-ink-token[data-phase="hidden"] { visibility: hidden; }
+.resume-ink-letter { opacity: 0; }
+.resume-ink-code { position: absolute; inset: 0; pointer-events: none; user-select: none; color: #a38bb7; }
+.resume-ink-code::before { content: attr(data-glyph); position: absolute; inset: 0; display: grid; place-items: center; font-family: Consolas, monospace; font-size: .84em; text-shadow: 0 0 5px #a591c029; animation: stream-glyph-flicker 180ms steps(2, end) var(--glyph-phase) infinite; }
+.resume-ink-token[data-phase="decoding"] .resume-ink-letter { animation: stream-letter-arrive 320ms cubic-bezier(.16,.68,.24,1) both; }
+.resume-ink-token[data-phase="decoding"] .resume-ink-code { animation: stream-glyph-dissolve 320ms ease-out both; }
+.resume-ink-token[data-phase="decoding"][data-particles]::after { content: ""; position: absolute; left: 50%; top: 50%; width: 1.5px; height: 1.5px; pointer-events: none; background: #b9a1cf; box-shadow: 3px -2px 0 #cfbfdd, -2px 2px 0 #b7d0c1; animation: stream-pixel-scatter 580ms ease-out both; }
+.resume-writing-pen { position: absolute; z-index: 4; top: 0; left: 0; width: 36px; height: 44px; opacity: 0; pointer-events: none; user-select: none; transition: opacity 180ms ease; filter: drop-shadow(1px 3px 2px #76508a29); will-change: transform; }
+.resume-writing-pen[data-visible="true"] { opacity: 1; }
+.resume-writing-pen svg { display: block; width: 100%; height: 100%; overflow: visible; transform-origin: 3px 39px; animation: resume-pen-nib 380ms ease-in-out infinite alternate; }
+.resume-writing-pen[data-lifted="true"] svg { animation: none; transform: translateY(-5px) rotate(-10deg); opacity: .65; }
+.resume-writing-pen::after { content: ""; position: absolute; left: -10px; top: 38px; width: 15px; height: 2px; border-radius: 50%; background: linear-gradient(90deg,transparent,#b5a0ca80); box-shadow: 0 0 5px #b5a0ca40; }
+.resume-writing-pen[data-lifted="true"]::after { opacity: 0; }
+@keyframes resume-pen-nib { from { transform: rotate(-3deg) translateY(-.3px); } to { transform: rotate(3deg) translateY(.5px); } }
+@media print { .resume-writing-pen,.resume-ink-code,.resume-ink-token::after { display: none !important; } .resume-ink-token { visibility: visible !important; } .resume-ink-letter { opacity: 1 !important; animation: none !important; } }
+@media (prefers-reduced-motion:reduce) { .resume-writing-pen,.resume-ink-code,.resume-ink-token::after { display: none; } .resume-ink-token { visibility: visible; } .resume-ink-letter { opacity: 1; animation: none !important; } }

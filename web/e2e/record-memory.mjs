@@ -1,0 +1,11 @@
+import { chromium } from 'playwright'; import fs from 'fs';
+const token=process.env.DEMO_TOKEN; const dir='D:/Project/career-decision-system/video/raw/clips'; const browser=await chromium.launch({channel:'chrome',headless:true});
+const context=await browser.newContext({viewport:{width:1920,height:1080},recordVideo:{dir,size:{width:1920,height:1080}}}); const page=await context.newPage();
+await page.addInitScript(t=>{localStorage.setItem('career.session.token',t);localStorage.setItem('suinai.onboarding.v1.local.3','completed');},token);
+await page.goto('http://127.0.0.1:5173/',{waitUntil:'domcontentloaded'}); await page.waitForTimeout(8000);
+await page.evaluate(()=>{const c=document.createElement('div');c.id='__fake_cursor';c.style.cssText='position:fixed;left:960px;top:540px;width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,.92);border:2px solid rgba(40,35,60,.72);box-shadow:0 1px 6px rgba(0,0,0,.35);z-index:2147483647;pointer-events:none;transform:translate(-8px,-8px);transition:left .08s linear,top .08s linear,transform .08s linear;';document.body.appendChild(c);window.addEventListener('mousemove',e=>{c.style.left=e.clientX+'px';c.style.top=e.clientY+'px';});window.addEventListener('mousedown',()=>{c.style.background='rgba(120,90,200,.95)';c.style.transform='translate(-8px,-8px) scale(.72)';});window.addEventListener('mouseup',()=>{c.style.background='rgba(255,255,255,.92)';c.style.transform='translate(-8px,-8px) scale(1)';});});
+await page.getByRole('button',{name:'打开穗奈·忆迹场'}).first().click(); await page.waitForTimeout(4500);
+await page.mouse.move(760,500,{steps:25}); await page.waitForTimeout(1500);
+for(let i=0;i<3;i++){await page.mouse.wheel(0,50);await page.waitForTimeout(600);} await page.waitForTimeout(3000);
+await page.mouse.move(1200,650,{steps:20}); await page.waitForTimeout(2500);
+const v=page.video(); await context.close(); const src=await v.path(); const dest=`${dir}/web-07-memory.webm`; fs.renameSync(src,dest); console.log('SAVED',dest); await browser.close();

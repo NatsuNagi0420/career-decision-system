@@ -1,0 +1,22 @@
+/** 青穗集 · 简历纸面窗口：保留精简工具条，其余空间交给 A4 预览。 */
+.resume-live-preview-panel { display: flex; flex-direction: column; min-height: 0; }
+.resume-live-preview-heading { min-height: 46px; }
+.resume-live-preview-heading > div { display: flex; align-items: center; gap: 5px; }
+.resume-live-sync { display: inline-flex; align-items: center; gap: 6px; margin-right: 10px; color: #9b88ad; font-size: 10px; white-space: nowrap; }
+.resume-live-sync i { width: 5px; height: 5px; border-radius: 50%; background: #89b39f; }
+.resume-live-sync[data-active="true"] i { box-shadow: 0 0 0 3px #89b39f18; animation: resume-paper-sync 1.6s ease-in-out infinite; }
+.resume-live-sync[data-error="true"] { color: #af704b; }
+.resume-live-sync[data-error="true"] i { background: #af704b; animation: none; }
+.resume-live-preview-body { flex: 1; min-height: 0; overflow: auto; padding: clamp(10px, 2vw, 28px); background: #eeeaf3; scrollbar-width: thin; scrollbar-color: #d7cde3 transparent; }
+.resume-live-paper-viewport { width: 100%; display: flex; justify-content: center; min-height: 100%; }
+.resume-live-paper-bound { position: relative; flex: none; background: white; box-shadow: 0 2px 6px #3e304b0a, 0 10px 32px #3e304b12; }
+.resume-live-paper-bound iframe { display: block; border: 0; transform-origin: top left; background: #fff; }
+.resume-template-controls { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: 14px 0 18px; margin-bottom: 16px; border-bottom: 1px solid #e9e0f0; }
+.resume-template-controls > span { color: #927da5; font-size: 11px; }
+.resume-template-options { display: flex; gap: 6px; flex-wrap: wrap; }
+.resume-template-options > button { border: 1px solid #e6dbee; border-radius: 5px; padding: 7px 12px; color: #8e789f; background: #fcfaff; font: inherit; font-size: 11px; cursor: pointer; }
+.resume-template-options > button[aria-pressed="true"] { color: #71508c; border-color: #b79bd0; background: #f1e9fa; }
+.resume-template-options > button:focus-visible { outline: 2px solid #a184be; outline-offset: 2px; }
+@keyframes resume-paper-sync { 50% { opacity: .4; } }
+@media (prefers-reduced-motion: reduce) { .resume-live-sync[data-active="true"] i { animation: none; } }
+@media (max-width: 760px) { .resume-live-preview-body { padding: 10px 7px 18px; } .resume-live-sync { margin-right: 4px; font-size: 9px; } }

@@ -98,3 +98,30 @@ it("模型上游 401 作为 502 诊断展示，不清除本地登录", async () 
   ).rejects.toThrow("上游 HTTP 401");
   expect(dispatchEvent).not.toHaveBeenCalled();
 });
+
+it("云端设备窗口使用 Hub 接口而不是 PC 配对接口", async () => {
+  const urls: string[] = [];
+  vi.stubGlobal("fetch", vi.fn(async (url: string) => { urls.push(url); return new Response("[]"); }));
+  const state = await agentApi.remote(true);
+  expect(urls).toEqual(["/api/v1/hub/devices", "/api/v1/hub/sessions"]);
+  expect(state.device).toBe(null);
+  expect(state.configured).toBe(true);
+  urls.length = 0;
+  await agentApi.remoteSnapshot("session-id", true);
+  await agentApi.cancelRemoteTask("task-id", true);
+  await agentApi.remoteDownload("file-id", true);
+  expect(urls).toEqual(["/api/v1/hub/sessions/session-id", "/api/v1/hub/tasks/task-id/cancel", "/api/v1/hub/files/file-id/content"]);
+});
+
+
+it("教学进度写入当前账号，不携带模型、对话或其他用户信息", async () => {
+  const requests: { url: string; body?: string; method?: string }[] = [];
+  vi.stubGlobal("fetch", vi.fn(async (url: string, init: RequestInit) => {
+    requests.push({ url, body: init.body as string | undefined, method: init.method });
+    return new Response(JSON.stringify({ version: 1, status: "completed", step: 2, updated_at: "fixture" }));
+  }));
+  await agentApi.onboarding();
+  await agentApi.updateOnboarding({ status: "completed", step: 2 });
+  expect(requests[0].url).toBe("/api/v1/agent/onboarding");
+  expect(requests[1]).toEqual({ url: "/api/v1/agent/onboarding", method: "PATCH", body: JSON.stringify({ status: "completed", step: 2 }) });
+});

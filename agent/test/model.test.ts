@@ -105,6 +105,29 @@ test("Chat 普通请求与工具输出续答载荷正确，重定向禁止", asy
   assert.equal(JSON.parse(sent.body).model, "test-model");
   assert.equal(sent.headers.Authorization, "Bearer " + TEST_KEY);
 });
+test("Chat 与 Responses 都把当前图片转换为受限的内联多模态载荷", async () => {
+  const bodies: any[] = [];
+  const chatModel = new CompatibleModel(
+    connection,
+    async (_url, init) => { bodies.push(JSON.parse(String(init?.body))); return response(chat("看到了")); },
+    false,
+  );
+  await chatModel.complete({ ...request(), messages: [{ role: "user", content: "这是什么？", images: [{ url: "data:image/png;base64,AA==" }] }] });
+  assert.deepEqual(bodies[0].messages[0].content, [
+    { type: "text", text: "这是什么？" },
+    { type: "image_url", image_url: { url: "data:image/png;base64,AA==" } },
+  ]);
+  const responsesModel = new CompatibleModel(
+    { ...connection, api_kind: "responses" },
+    async (_url, init) => { bodies.push(JSON.parse(String(init?.body))); return response({ status: "completed", output: [{ type: "message", content: [{ type: "output_text", text: "看到了" }] }] }); },
+    false,
+  );
+  await responsesModel.complete({ ...request(), messages: [{ role: "user", content: "这是什么？", images: [{ url: "data:image/png;base64,AA==" }] }] });
+  assert.deepEqual(bodies[1].input[0].content, [
+    { type: "input_text", text: "这是什么？" },
+    { type: "input_image", image_url: "data:image/png;base64,AA==" },
+  ]);
+});
 test("Chat 流式 UTF-8/CRLF 任意分片合并正文和工具参数", async () => {
   let delta = "";
   const model = new CompatibleModel(
@@ -315,4 +338,54 @@ test("模型能力测试实际验证聊天、工具参数和工具续答；不�
   const chatOnly = await g.profiles.test(g.user, g.profile.id);
   assert.equal(chatOnly.capabilities.chat, true);
   assert.equal(chatOnly.capabilities.tools, false);
+});
+
+test("Chat 与 Responses 在工具尚未完成时持续提供参数快照，仍以完整响应决定执行", async () => {
+  const argumentsText = JSON.stringify({ request_id: "test", data: { kind: "rewrite", body: { summary: { text: "", fact_ids: [] }, sections: [] } } });
+  const halfway = Math.floor(argumentsText.length / 2);
+  for (const api_kind of ["chat-completions", "responses"] as const) {
+    const toolCall = { type: "function_call", call_id: "preview-call", name: "propose_resume_update", arguments: argumentsText };
+    const events = api_kind === "chat-completions" ? [
+      { choices: [{ delta: { tool_calls: [{ index: 0, id: "preview-call", function: { name: "propose_resume_update", arguments: argumentsText.slice(0, halfway) } }] } }] },
+      { choices: [{ delta: { tool_calls: [{ index: 0, function: { arguments: argumentsText.slice(halfway) } }] }, finish_reason: "tool_calls" }] },
+    ] : [
+      { type: "response.output_item.added", output_index: 0, item: { ...toolCall, arguments: "" } },
+      { type: "response.function_call_arguments.delta", output_index: 0, delta: argumentsText.slice(0, halfway) },
+      { type: "response.function_call_arguments.delta", output_index: 0, delta: argumentsText.slice(halfway) },
+      { type: "response.completed", response: { status: "completed", output: [toolCall] } },
+    ];
+    const snapshots: string[] = [];
+    const model = new CompatibleModel({ ...connection, api_kind }, async () => sse(events), false);
+    const result = await model.complete({ ...request(), stream: true, onToolDelta: call => snapshots.push(call.arguments) });
+    assert.equal(snapshots[0], argumentsText.slice(0, halfway));
+    assert.equal(snapshots.at(-1), argumentsText);
+    assert.equal(result.tool_calls[0].arguments, argumentsText);
+    assert.equal(result.tool_calls[0].name, "propose_resume_update");
+  }
+});
+
+test("Chat 流式工具调用重复发送 id 时只保留一个 id", async () => {
+  const argumentsText = JSON.stringify({ value: "x".repeat(320) });
+  const events = [
+    { choices: [{ delta: { tool_calls: [{ index: 0, id: "repeated-call", function: { name: "probe", arguments: "{" } }] } }] },
+    { choices: [{ delta: { tool_calls: [{ index: 0, id: "repeated-call", function: { name: "probe", arguments: argumentsText.slice(1) } }] }, finish_reason: "tool_calls" }] },
+  ];
+  const model = new CompatibleModel({ ...connection, api_kind: "chat-completions" }, async () => sse(events), false);
+  const result = await model.complete({ ...request(), stream: true });
+  assert.equal(result.tool_calls[0].id, "repeated-call");
+  assert.equal(result.tool_calls[0].name, "probe");
+  assert.deepEqual(JSON.parse(result.tool_calls[0].arguments), { value: "x".repeat(320) });
+});
+
+test("官方同账号后台任务繁忙会短暂排队，额度不足不自动重试", async () => {
+  let calls = 0; const notices: string[] = [];
+  const model = new CompatibleModel({ ...connection, official: true }, async () => {
+    calls++;
+    return calls === 1 ? new Response(JSON.stringify({ error: { type: "relay_error", code: "relay_busy" } }), { status: 429 }) : response(chat("排队后完成"));
+  }, false);
+  const result = await model.complete({ ...request(), onNotice: text => notices.push(text) });
+  assert.equal(result.text, "排队后完成"); assert.equal(calls, 2); assert.equal(notices.length, 1);
+  let quotaCalls = 0;
+  const quota = new CompatibleModel({ ...connection, official: true }, async () => { quotaCalls++; return new Response(JSON.stringify({ error: { type: "relay_error", code: "relay_daily_output_limit" } }), { status: 429 }); }, false);
+  await assert.rejects(quota.complete(request())); assert.equal(quotaCalls, 1);
 });

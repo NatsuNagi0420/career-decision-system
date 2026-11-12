@@ -1,8 +1,11 @@
 /** 青穗集 · TypeScript Agent 启动入口：独立本地服务，优雅停止与持久记录。 */
 import { loadConfig } from "./config.js";
 import { createApp } from "./http.js";
+import { installPcBridge } from "./cloud-hub/pc-bridge.js";
 const config = loadConfig();
-const { app } = createApp({ config });
+const ctx = createApp({ config, unifiedIdentity: true });
+const { app } = ctx;
+installPcBridge(ctx, config);
 try {
   await app.listen({ host: config.host, port: config.port });
   console.log(

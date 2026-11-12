@@ -7,15 +7,19 @@ import { ResumeStudio, type ResumeStudioProps } from "./ResumeStudio";
 import { FileDirectory } from "./FileLinks";
 import { usePixelConfirm } from "../components/PixelConfirmDialog";
 import { ASSESSMENT_LABEL, ACTION_LABEL, CAREER_TABS, EMPTY_CAREER_PROFILE, PROFILE_FIELDS, careerPrompt, sourceLabel,
-  type CareerTab, type CareerProfileInput, type CareerState, type CareerChange, type CareerJob,
+  careerProposalStale, type CareerTab, type CareerProfileInput, type CareerState, type CareerChange, type CareerJob,
   type CareerAction, type CareerCheck, type CareerProposal } from "./career";
 import { ComponentIcon } from "./ComponentAssets";
-import { GrowthSummary, SKILL_STAGES } from "./CareerComponents";
+import { SKILL_STAGES } from "./CareerComponents";
+import { ProfileDossier } from "./ProfileDossier";
 import type { AgentFile } from "./types";
 import { catalogueReferenceNotice } from "../../../agent/src/job-catalogue-contract";
+import { LearningWorkspace } from "./LearningWorkspace";
+import type { LearningWorkspaceController } from "./learning-workspace";
 
 type Change = (change: CareerChange, message: string) => Promise<boolean>;
-export function CareerWorkbench({ workspace, onJob, tab, onTab, files, hidden, onPrompt, onImport, onPending, uploadDisabled, resumeOpen, onResumeOpen, resume }: {
+export function CareerWorkbench({ workspace, learning, onJob, tab, onTab, files, hidden, onPrompt, onImport, onPending, uploadDisabled, resumeOpen, onResumeOpen, resume }: {
+  learning: LearningWorkspaceController;
   workspace: CareerWorkspaceController; onJob: (id: string) => void; tab: CareerTab; onTab: (tab: CareerTab) => void;
   files: AgentFile[]; hidden: boolean; onPrompt: (value: string) => void;
   onImport: () => void; onPending: (count: number) => void; uploadDisabled: boolean;
@@ -23,6 +27,7 @@ export function CareerWorkbench({ workspace, onJob, tab, onTab, files, hidden, o
 }) {
   const { state, error, notice, saving, loading, refresh, change, dismissNotice } = workspace;
   const { confirm, dialog } = usePixelConfirm();
+  const [profileEditorOpen, setProfileEditorOpen] = useState(false);
   useEffect(() => { onPending(state?.proposals.length ?? 0); }, [state?.proposals.length, onPending]);
   async function remove(type: "job.delete" | "action.delete", id: string, title: string) {
     if (await confirm({ title: "移除这项内容？", description: <p>将从职业工作台中移除「{title}」。相关的对话和原始文件仍可单独查看。</p>, confirmLabel: "确认移除" })) await change({ type, id }, "已移除。");
@@ -36,16 +41,20 @@ export function CareerWorkbench({ workspace, onJob, tab, onTab, files, hidden, o
       const current = CAREER_TABS.findIndex(item => item.id === tab);
       const index = event.key === "Home" ? 0 : event.key === "End" ? CAREER_TABS.length - 1 : (current + (event.key === "ArrowRight" ? 1 : -1) + CAREER_TABS.length) % CAREER_TABS.length;
       const next = CAREER_TABS[index].id; onTab(next); document.getElementById("career-tab-" + next)?.focus();
-    }}>{CAREER_TABS.map(item => <button key={item.id} id={"career-tab-" + item.id} role="tab" tabIndex={tab === item.id ? 0 : -1} aria-controls={"career-panel-" + item.id} aria-selected={tab === item.id} type="button" onClick={() => onTab(item.id)}><CareerIcon name={item.icon} size={22} />{item.label}</button>)}</div><button className="workbench-refresh" type="button" onClick={() => void refresh()} disabled={saving || loading} aria-label="刷新职业工作台" title="刷新职业工作台"><AgentIcon name="restore" size={15} /></button></div>
+    }}>{CAREER_TABS.map(item => <button key={item.id} id={"career-tab-" + item.id} role="tab" tabIndex={tab === item.id ? 0 : -1} aria-controls={"career-panel-" + item.id} aria-selected={tab === item.id} type="button" onClick={() => onTab(item.id)}><CareerIcon name={item.icon} size={22} />{item.label}</button>)}</div><button className="workbench-refresh" type="button" onClick={() => { void refresh(); if (tab === "learning") void learning.refresh(); }} disabled={saving || loading || learning.saving} aria-label="刷新职业工作台" title="刷新职业工作台"><AgentIcon name="restore" size={15} /></button></div>
     {error && <div className="workbench-feedback workbench-feedback--error" role="alert"><span>{error}</span><button type="button" disabled={saving} onClick={() => void refresh()}>刷新资料</button></div>}
     {notice && <div className="workbench-feedback" role="status"><AgentIcon name="check" size={16} /><span>{notice}</span><button type="button" aria-label="关闭工作台提示" onClick={dismissNotice}><AgentIcon name="close" size={14} /></button></div>}
     {!state ? <div className="workbench-loading" role="status"><CareerIcon name="sprout" size={46} /><p>{loading ? "正在打开你的职业空间…" : "暂时未能读取工作台，请重试。"}</p></div> : <div className="workbench-scroll">
-      <div className="workbench-page-heading"><div><span className="workbench-eyebrow">{state.profile.goal || "从一个小目标开始"}</span><h2>{title.label}</h2></div><span className="workbench-save-state"><i />{state.updated_at ? "已保存到当前账号" : "还没有保存材料"}</span></div>
+      {tab !== "profile" && tab !== "learning" && <div className="workbench-page-heading"><div><span className="workbench-eyebrow">{state.profile.goal || "从一个小目标开始"}</span><h2>{title.label}</h2></div><span className="workbench-save-state"><i />{state.updated_at ? "已保存到当前账号" : "还没有保存材料"}</span></div>}
       {state.proposals.length > 0 && <section className="workbench-proposals" aria-label="穗奈的待确认建议"><header><span><AgentIcon name="activity" size={17} />穗奈整理了 {state.proposals.length} 份建议</span><small>确认后才写入工作台</small></header>{state.proposals.map(proposal => <Proposal key={proposal.id} proposal={proposal} state={state} saving={saving} change={change} onPrompt={onPrompt} />)}</section>}
       <section id="career-panel-profile" role="tabpanel" aria-labelledby="career-tab-profile" hidden={tab !== "profile"}>
-        <GrowthSummary state={state} loading={false} error="" onOpen={() => document.querySelector<HTMLTextAreaElement>(".workbench-profile-form textarea")?.focus()} onPrompt={onPrompt} />
-        <div className="workbench-intro"><div><h3>{state.profile.confirmed_at ? "每一份经历，都可以继续补充" : "先从你做过的事开始"}</h3><p>把真实经历、期待和约束放在一起。穗奈会以此帮你比较方向，你随时可以修改。</p></div><button className="workbench-secondary" type="button" onClick={() => onPrompt(careerPrompt("profile"))}><AgentIcon name="activity" size={15} />和穗奈一起整理</button></div>
-        <ProfileEditor profile={state.profile} saving={saving} change={change} />
+        <ProfileDossier state={state} saving={saving} onResolve={workspace.resolveFact} onEdit={() => setProfileEditorOpen(true)} onPrompt={onPrompt} />
+        {state.profile.confirmed_at && <div className="workbench-profile-actions"><button className="workbench-primary" type="button" onClick={() => resume.onChat("我想根据当前职业工作台中已经确认的画像生成一份简历。请先读取职业工作台，复用其中已确认的教育背景、真实经历、技能和行动结果原句，不要让我重复粘贴；岗位样本只能作为目标参考，不能写成我的经历。先把可用材料带入简历整理流程，再按事实核对推进。")}><CareerIcon name="resume" size={18} />根据当前画像生成简历<AgentIcon name="chevron" size={15} /></button></div>}
+        <details className="workbench-profile-edit" open={profileEditorOpen} onToggle={event => setProfileEditorOpen(event.currentTarget.open)}>
+          <summary><span><ComponentIcon name="edit-record" size={17} />修正已确认材料</span><small>适合纠正一处事实</small></summary>
+          <p>补充新经历时，优先继续和穗奈对话；直接编辑后保存的内容也会成为后续对照依据。</p>
+          <ProfileEditor profile={state.profile} saving={saving} change={change} />
+        </details>
       </section>
       <section id="career-panel-jobs" role="tabpanel" aria-labelledby="career-tab-jobs" hidden={tab !== "jobs"}>
         {!!state.saved_jobs?.length && <section className="saved-job-list" aria-label="收藏的岗位"><h3>我的收藏 <small>{state.saved_jobs.length}</small></h3>{state.saved_jobs.map(job => <div className="saved-job-row" key={job.catalogue_id}><button type="button" disabled={!job.available} onClick={() => onJob(job.catalogue_id)}><ComponentIcon name="employment" size={22}/><span><strong>{job.title}</strong><small>{[job.company, job.city].filter(Boolean).join(" · ") || "岗位资料已移除"}</small></span><ComponentIcon name="open-arrow" size={17}/></button><button type="button" className="component-icon-button bookmark-button" data-saved="true" title="取消收藏" aria-label={"取消收藏：" + job.title} disabled={saving} onClick={() => void change({type:"catalogue.save",catalogue_id:job.catalogue_id,saved:false},"已取消收藏。其他资料保持原样。") }><ComponentIcon name="bookmark-star" size={22}/></button></div>)}</section>}
@@ -59,9 +68,12 @@ export function CareerWorkbench({ workspace, onJob, tab, onTab, files, hidden, o
         {!state.actions.length && <div className="workbench-empty"><CareerIcon name="seedling" size={52} /><h3>先开始一件做得到的小事</h3><p>可以让穗奈根据岗位差距拟定行动，也可以自己添加。记录完成材料，下一次就不用从头介绍。</p></div>}
         <div className="workbench-actions">{state.actions.map(action => <Action key={action.id} action={action} state={state} saving={saving} change={change} onRemove={() => void remove("action.delete", action.id, action.title)} onPrompt={onPrompt} />)}</div>
       </section>
+      <section id="career-panel-learning" role="tabpanel" aria-labelledby="career-tab-learning" hidden={tab !== "learning"}>
+        <LearningWorkspace workspace={learning} jobs={state.jobs} onPrompt={onPrompt} />
+      </section>
       <section id="career-panel-files" role="tabpanel" aria-labelledby="career-tab-files" hidden={tab !== "files"}>
         <div className="workbench-intro"><div><h3>把经历整理成能带走的成果</h3><p>这里展示当前对话的真实文件。点击文件名预览，右键可以选择下载或本地打开。</p></div><button className="workbench-secondary" type="button" disabled={uploadDisabled} onClick={onImport}><AgentIcon name="attach" size={15} />导入资料</button></div>
-        <div className="workbench-file-start"><CareerIcon name="resume" size={48} /><div><h3>制作或打磨一份简历</h3><p>先和穗奈聊经历，一次只说一点。需要时再打开简历预览，不必先填一整张表。</p></div><button className="workbench-primary" type="button" onClick={() => resume.onChat()}>和穗奈一起写 <AgentIcon name="chevron" size={15} /></button></div>
+        <div className="workbench-file-start"><CareerIcon name="resume" size={48} /><div><h3>制作或打磨一份简历</h3><p>先和穗奈聊经历，一次只说一点。需要时再打开简历预览，不必先填一整张表。</p></div><button className="workbench-primary" type="button" onClick={() => resume.onChat("我想根据当前职业工作台中已经确认的画像生成一份简历。请先读取职业工作台，复用其中已确认的教育背景、真实经历、技能和行动结果原句，不要让我重复粘贴；岗位样本只能作为目标参考，不能写成我的经历。先把可用材料带入简历整理流程，再按事实核对推进。")}>根据当前画像开始 <AgentIcon name="chevron" size={15} /></button></div>
         <FileDirectory files={files} />
         <p className="workbench-footnote">目前可直接导入文本、Markdown、CSV、JSON、YAML。PDF / Word 请先转成文本；职业档案会跨对话保留，文件则跟随当前对话。</p>
       </section>
@@ -112,7 +124,7 @@ function Job({ job, state, saving, onPrompt, onRemove }: { job: CareerJob; state
   const comparison = comparisons.at(-1);
   return <article className="workbench-job"><header className="workbench-item-heading"><div><span className="workbench-eyebrow">{job.company || "用户提供的岗位样本"}</span><h3>{job.title}</h3>{job.catalogue && <p className="workbench-footnote">{job.catalogue.city || "城市未注明"} · {catalogueReferenceNotice(job.catalogue)}</p>}</div><button type="button" className="agent-icon-button" aria-label={"移除岗位：" + job.title} disabled={saving} onClick={onRemove}><AgentIcon name="close" size={15} /></button></header><details className="workbench-source"><summary><AgentIcon name="file" size={15} />查看岗位原文</summary><p className="workbench-prewrap">{job.description}</p>{job.url && <a href={job.url} target="_blank" rel="noopener noreferrer">打开原始页面 ↗</a>}<small>保存于 {new Date(job.created_at).toLocaleDateString()}</small></details>
     {comparison ? <><div className="workbench-analysis-label">已确认的穗奈分析 · {new Date(comparison.confirmed_at).toLocaleDateString()}</div>{comparison.stale && <p className="workbench-inline-warning">档案或结果材料已变化，请更新对照；下方保留上次判断。</p>}<p>{comparison.summary}</p><Checks checks={comparison.checks} state={state} />{comparisons.length > 1 && <details className="workbench-history"><summary>查看历史对照（{comparisons.length - 1}）</summary>{comparisons.slice(0, -1).reverse().map(item => <div key={item.confirmed_at}><small>{new Date(item.confirmed_at).toLocaleString()}</small><p>{item.summary}</p><Checks checks={item.checks} state={state} /></div>)}</details>}</> : <div className="workbench-job-empty"><CareerIcon name="search" size={34} /><p>原文已经保留，还没有生成经历对照。</p><span>让穗奈读取档案与原文，整理一份待确认分析。</span></div>}
-    <button className="workbench-secondary" type="button" onClick={() => onPrompt(careerPrompt("jobs", job))}>{comparison ? "请穗奈更新对照" : "请穗奈对照这个岗位"}<AgentIcon name="chevron" size={15} /></button>
+    <div className="learning-coach"><button className="workbench-secondary" type="button" onClick={() => onPrompt(careerPrompt("jobs", job))}>{comparison ? "请穗奈更新对照" : "请穗奈对照这个岗位"}<AgentIcon name="chevron" size={15} /></button><button className="workbench-primary" type="button" onClick={() => onPrompt("我选择已保存的岗位「" + job.title + "」作为学习目标。请读取职业档案、岗位原文和学习进度，结合现有基础和时间安排学习路线，每节给出目标、练习和B站搜索词，提交到工作台的学习路线让我核对。已有路线请调整并保留进度。")}>为这个岗位规划学习<CareerIcon name="growth" size={18} /></button></div>
   </article>;
 }
 
@@ -141,10 +153,10 @@ function Action({ action, state, saving, change, onRemove, onPrompt }: { action:
 
 function Proposal({ proposal, state, saving, change, onPrompt }: { proposal: CareerProposal; state: CareerState; saving: boolean; change: Change; onPrompt: (value: string) => void }) {
   const data = proposal.data;
-  const stale = proposal.context_version !== state.context_version;
+  const stale = careerProposalStale(proposal, state);
   const kind = data.kind === "skills" ? "技能实践记录" : data.kind === "profile" ? "档案草稿" : data.kind === "actions" ? "行动建议" : data.kind === "catalogue_job" ? "保留岗位参考" : "岗位对照";
   return <details className="workbench-proposal"><summary><span>{proposal.title}</span><small>{kind}{stale ? " · 资料已更新" : " · 待你确认"}</small></summary><div className="workbench-proposal-body">
-    {stale && <p className="workbench-inline-warning">这份草稿基于旧资料，暂不能确认。请让穗奈重新整理。</p>}
+    {stale && <p className="workbench-inline-warning">{proposal.stale_reason || "这份草稿基于旧资料，暂不能确认。请让穗奈重新整理。"}</p>}
     {data.kind === "catalogue_job" && proposal.catalogue_sample && <><h4>{proposal.catalogue_sample.title}</h4><p>{proposal.catalogue_sample.company} · {proposal.catalogue_sample.catalogue.city}</p><p className="workbench-inline-warning">{catalogueReferenceNotice(proposal.catalogue_sample.catalogue)}确认后加入你的岗位材料。</p><details className="workbench-source"><summary>查看岗位原文</summary><p className="workbench-prewrap">{proposal.catalogue_sample.description}</p>{proposal.catalogue_sample.url && <a href={proposal.catalogue_sample.url} target="_blank" rel="noopener noreferrer">打开原始页面 ↗</a>}</details></>}
     {data.kind === "skills" && data.skills.map(skill => <div key={skill.name}><h4>{skill.name} · {SKILL_STAGES[skill.stage]}</h4>{skill.evidence.map((evidence, index) => <blockquote key={index}>{evidence.quote}</blockquote>)}</div>)}
     {data.kind === "profile" && <dl className="workbench-profile-review">{PROFILE_FIELDS.map(field => <div key={field.key}><dt>{field.label}</dt><dd>{state.profile[field.key] !== data.profile[field.key] && <span className="workbench-before">原内容：{state.profile[field.key] || "未填写"}</span>}<span>{data.profile[field.key] || "未填写"}</span></dd></div>)}</dl>}

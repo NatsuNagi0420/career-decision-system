@@ -1,0 +1,12 @@
+import { chromium } from 'playwright';
+const token = process.env.DEMO_TOKEN;
+const browser = await chromium.launch({ channel: 'chrome', headless: true });
+const page = await browser.newPage({ viewport: { width: 1600, height: 1000 }, deviceScaleFactor: 1 });
+await page.addInitScript(t => localStorage.setItem('career.session.token', t), token);
+await page.goto('http://127.0.0.1:5173/', { waitUntil: 'networkidle', timeout: 30000 });
+await page.waitForTimeout(4000);
+console.log('TITLE', await page.title());
+console.log('URL', page.url());
+console.log('TEXT', (await page.locator('body').innerText()).slice(0, 5000));
+await page.screenshot({ path: 'D:\\Project\\career-decision-system\\video\\raw\\agent-home.png', fullPage: false });
+await browser.close();

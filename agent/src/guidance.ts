@@ -30,6 +30,7 @@ export { guidedToolAllowed } from "./domain/career/policy.js";
 
 export class ConversationGuidance {
   learningProgress?: (userId: number) => TaskProgress;
+  excludeRun?: (runId: string | null | undefined) => boolean;
   private readonly analyses = new Map<string, { controller: AbortController; promise: Promise<GuidanceView> }>();
   constructor(
     readonly store: Store,
@@ -130,7 +131,9 @@ export class ConversationGuidance {
     invariant(!conversation.archived, 409, "归档对话不再生成建议。");
     this.store.assertIdle(cid);
     invariant(this.store.getUser(user.id).external_ai_consent, 403, "请先允许将已发送的对话交给所选模型服务。");
-    const history = this.store.messages(cid).filter(m => (m.role === "user" || m.role === "assistant") && m.content);
+    const source = this.store.messages(cid).find(message => message.id === messageId);
+    if (source && this.excludeRun?.(source.run_id)) return this.view(user.id, cid);
+    const history = this.store.messages(cid).filter(m => (m.role === "user" || m.role === "assistant") && m.content && !this.excludeRun?.(m.run_id));
     invariant(history.filter(m => m.role === "user").at(-1)?.id === messageId, 409, "已有更新的消息，不再分析旧内容。", "guidance_stale");
     const running = this.analyses.get(cid); if (running) return running.promise;
     if (state.analyzed_message_id === messageId && !force) return this.view(user.id, cid);

@@ -1,13 +1,15 @@
-/** 青穗集 · 学习窗口：岗位路线、B站资源、章节笔记和练习成果，主对话继续承担讲解与反馈。 */
+/** 青穗集 · 学习窗口：岗位路线与学习成果，视频、字幕及搜索结果的尺寸变化平滑承接。 */
+import { AnimatedTextarea } from "./AnimatedTextarea";
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
-import type { LearningNode, LearningPath, LearningResource, LearningSearchResult } from "../../../agent/src/learning-contract";
+import type { LearningNode, LearningPath, LearningResource, LearningSearchResult, LearningSubtitleResult } from "../../../agent/src/learning-contract";
 import type { CareerJob } from "./career";
 import type { LearningWorkspaceController } from "./learning-workspace";
 import { AgentIcon } from "./AgentIcon";
 import { CareerIcon } from "./CareerVisuals";
 import { agentApi } from "./api";
-import { LEARNING_STATUS, learningPlayerUrl, learningProgress, nextLearningNode, nodeReady } from "./learning";
+import { LEARNING_STATUS, learningCaptionTime, learningCoverUrl, learningPlayerUrl, learningProgress, nextLearningNode, nodeReady } from "./learning";
 import { usePixelConfirm } from "../components/PixelConfirmDialog";
+import { AutoHeight } from "../components/AutoHeight";
 import "./learning.css";
 
 export function LearningWorkspace({ workspace, jobs, onPrompt }: { workspace: LearningWorkspaceController; jobs: CareerJob[]; onPrompt: (text: string) => void }) {
@@ -49,10 +51,12 @@ export function LearningProgress({ path }: { path: LearningPath }) {
 function LearningLesson({ path, node, workspace, onDirty, onPrompt }: { path: LearningPath; node: LearningNode; workspace: LearningWorkspaceController; onDirty: (value: boolean) => void; onPrompt: (text: string) => void }) {
   const [notes, setNotes] = useState(node.notes), [result, setResult] = useState(node.result), [player, setPlayer] = useState<LearningResource | null>(null);
   const [query, setQuery] = useState(node.search_query), [search, setSearch] = useState<LearningSearchResult | null>(null), [searching, setSearching] = useState(false), [searchError, setSearchError] = useState("");
-  const request = useRef<AbortController | null>(null);
+  const [subtitles, setSubtitles] = useState<LearningSubtitleResult | null>(null), [showSubtitles, setShowSubtitles] = useState(false), [loadingSubtitles, setLoadingSubtitles] = useState(false);
+  const request = useRef<AbortController | null>(null), subtitleRequest = useRef<AbortController | null>(null);
   const dirty = notes !== node.notes || result !== node.result;
   useEffect(() => { onDirty(dirty); return () => onDirty(false); }, [dirty, onDirty]);
-  useEffect(() => () => request.current?.abort(), []);
+  useEffect(() => () => { request.current?.abort(); subtitleRequest.current?.abort(); }, []);
+  useEffect(() => { subtitleRequest.current?.abort(); setSubtitles(null); setShowSubtitles(false); setLoadingSubtitles(false); }, [player?.bvid]);
   useEffect(() => {
     if (!dirty) return;
     const prevent = (event: BeforeUnloadEvent) => { event.preventDefault(); };
@@ -66,6 +70,20 @@ function LearningLesson({ path, node, workspace, onDirty, onPrompt }: { path: Le
     catch (cause) { if (!controller.signal.aborted) setSearchError((cause as Error).message); }
     finally { if (!controller.signal.aborted) setSearching(false); }
   }
+  async function toggleSubtitles() {
+    if (showSubtitles) { setShowSubtitles(false); return; }
+    if (subtitles) { setShowSubtitles(true); return; }
+    if (!player) return;
+    subtitleRequest.current?.abort();
+    const controller = new AbortController(); subtitleRequest.current = controller;
+    setLoadingSubtitles(true); setShowSubtitles(true);
+    try {
+      const value = await agentApi.learningSubtitles(player.bvid, controller.signal);
+      if (!controller.signal.aborted) setSubtitles(value);
+    } catch (cause) {
+      if (!controller.signal.aborted) setSubtitles({ status: "unavailable", tracks: [], message: (cause as Error).message || "字幕暂时无法读取。" });
+    } finally { if (!controller.signal.aborted) setLoadingSubtitles(false); }
+  }
   async function save(status: LearningNode["status"]) {
     if (await workspace.change({ type: "node.update", path_id: path.id, key: node.key, status, notes, result })) onDirty(false);
   }
@@ -76,19 +94,27 @@ function LearningLesson({ path, node, workspace, onDirty, onPrompt }: { path: Le
     <details className="learning-requirement"><summary>对应哪项岗位要求</summary><blockquote>{node.requirement}</blockquote></details>
     {!ready && <p className="workbench-inline-warning">先完成或跳过：{node.prerequisites.filter(key => !path.nodes.some(item => item.key === key && ["done", "skipped"].includes(item.status))).map(key => path.nodes.find(item => item.key === key)?.title).join("、")}</p>}
     <div className="learning-coach"><button className="workbench-secondary" onClick={() => ask("请用简短讲解和例子带我理解本节内容，再给我一个小问题；不要直接堆课程。")}>让穗奈带我学<AgentIcon name="chevron" size={15} /></button>{node.status === "todo" && <button className="workbench-primary" disabled={workspace.saving || !ready} onClick={() => void save("doing")}><AgentIcon name="play" size={15} />开始本节</button>}</div>
-    <section className="learning-videos" aria-label="教学视频"><h4>教学视频</h4>
-      {playerUrl && <div className="learning-player"><div><strong>{player!.title}</strong><button className="agent-icon-button" title="收起播放器" aria-label="收起播放器" onClick={() => setPlayer(null)}><AgentIcon name="close" size={16} /></button></div><iframe src={playerUrl} title={player!.title} allow="fullscreen; encrypted-media; picture-in-picture" allowFullScreen sandbox="allow-scripts allow-same-origin allow-presentation" referrerPolicy="strict-origin-when-cross-origin" /><p>无法播放时可在B站打开；章节进度由你确认。</p><a href={player!.url} target="_blank" rel="noopener noreferrer">在B站打开<AgentIcon name="external" size={14} /></a></div>}
+    <AutoHeight><section className="learning-videos" aria-label="教学视频"><h4>教学视频</h4>
+      {playerUrl && <div className="learning-player"><div><strong>{player!.title}</strong><div className="learning-player-actions"><button type="button" className="workbench-secondary" disabled={loadingSubtitles} aria-expanded={showSubtitles} onClick={() => void toggleSubtitles()}>{loadingSubtitles ? "读取中…" : showSubtitles ? "收起字幕" : "字幕"}</button><button className="agent-icon-button" title="收起播放器" aria-label="收起播放器" onClick={() => setPlayer(null)}><AgentIcon name="close" size={16} /></button></div></div><iframe src={playerUrl} title={player!.title} allow="fullscreen; encrypted-media; picture-in-picture" allowFullScreen sandbox="allow-scripts allow-same-origin allow-presentation" referrerPolicy="strict-origin-when-cross-origin" /><p>无法播放时可在B站打开；章节进度由你确认。</p>{showSubtitles && <LearningSubtitlePanel subtitles={subtitles} loading={loadingSubtitles} /> }<a href={player!.url} target="_blank" rel="noopener noreferrer">在B站打开<AgentIcon name="external" size={14} /></a></div>}
       {node.resources.map(resource => <VideoRow key={resource.id} resource={resource} onPreview={() => setPlayer(resource)} action={<button className="agent-icon-button" title="从本节移除" aria-label={"移除视频：" + resource.title} disabled={workspace.saving} onClick={() => void workspace.change({ type: "resource.remove", path_id: path.id, key: node.key, resource_id: resource.id })}><AgentIcon name="close" size={15} /></button>} />)}
       <form className="learning-search" onSubmit={event => void find(event)}><input aria-label="B站教学搜索词" required maxLength={120} value={query} onChange={event => setQuery(event.target.value)} placeholder="搜索本节教学视频" /><button className="workbench-secondary" disabled={searching || !query.trim()}><AgentIcon name="search" size={16} />{searching ? "搜索中…" : "搜索B站"}</button></form>
       {searchError && <p className="agent-error" role="alert">{searchError}</p>}
       {search && <div className="learning-search-results" aria-live="polite">{search.message && <p>{search.message}</p>}{search.resources.map(resource => <VideoRow key={resource.id} resource={resource} onPreview={() => setPlayer(resource)} action={<button className="agent-icon-button" title={node.resources.some(item => item.id === resource.id) ? "已加入本节" : "加入本节"} aria-label={"加入本节：" + resource.title} disabled={workspace.saving || node.resources.some(item => item.id === resource.id)} onClick={() => void workspace.change({ type: "resource.attach", path_id: path.id, key: node.key, resource_id: resource.id })}><AgentIcon name={node.resources.some(item => item.id === resource.id) ? "check" : "plus"} size={17} /></button>} />)}<a className="learning-search-link" href={search.search_url} target="_blank" rel="noopener noreferrer">更多B站结果<AgentIcon name="external" size={14} /></a></div>}
-    </section>
+    </section></AutoHeight>
     <section className="learning-practice"><h4>动手练一练</h4><p>{node.exercise}</p><blockquote>{node.deliverable}</blockquote></section>
-    <form className="learning-notes" onSubmit={event => { event.preventDefault(); void save(node.status); }}><label className="workbench-field"><span>我的笔记</span><textarea rows={3} maxLength={6000} value={notes} onChange={event => setNotes(event.target.value)} placeholder="记下重点、疑问，或视频学到第几节。跳过本节时也请在这里留个原因。" /></label><label className="workbench-field"><span>练习与成果</span><textarea rows={3} maxLength={6000} value={result} onChange={event => setResult(event.target.value)} placeholder="写下理解、练习结果或作品链接，回来和穗奈一起核对。" /></label><footer><button className="workbench-secondary" disabled={workspace.saving || !dirty}>{dirty ? "保存笔记与成果" : "已保存"}</button><button type="button" className="workbench-primary" disabled={workspace.saving || !ready || !result.trim() || node.status === "done"} onClick={() => void save("done")}><AgentIcon name="check" size={16} />完成本节</button><button type="button" className="workbench-text-button" disabled={workspace.saving || !notes.trim() || node.status === "skipped"} onClick={() => void save("skipped")}>已有基础，跳过</button></footer></form>
+    <form className="learning-notes" onSubmit={event => { event.preventDefault(); void save(node.status); }}><label className="workbench-field"><span>我的笔记</span><AnimatedTextarea rows={3} maxLength={6000} value={notes} onChange={event => setNotes(event.target.value)} placeholder="记下重点、疑问，或视频学到第几节。跳过本节时也请在这里留个原因。" /></label><label className="workbench-field"><span>练习与成果</span><AnimatedTextarea rows={3} maxLength={6000} value={result} onChange={event => setResult(event.target.value)} placeholder="写下理解、练习结果或作品链接，回来和穗奈一起核对。" /></label><footer><button className="workbench-secondary" disabled={workspace.saving || !dirty}>{dirty ? "保存笔记与成果" : "已保存"}</button><button type="button" className="workbench-primary" disabled={workspace.saving || !ready || !result.trim() || node.status === "done"} onClick={() => void save("done")}><AgentIcon name="check" size={16} />完成本节</button><button type="button" className="workbench-text-button" disabled={workspace.saving || !notes.trim() || node.status === "skipped"} onClick={() => void save("skipped")}>已有基础，跳过</button></footer></form>
     {node.result && <button className="workbench-secondary" onClick={() => ask("我已保存本节练习结果。请给出反馈，区分已经有依据的表现与仍需练习的部分，再建议下一步。不要仅凭学习完成把技能写入画像。")}>请穗奈看看我的成果<AgentIcon name="chevron" size={15} /></button>}
   </article>;
 }
 
+function LearningSubtitlePanel({ subtitles, loading }: { subtitles: LearningSubtitleResult | null; loading: boolean }) {
+  if (loading) return <div className="learning-subtitles" role="status">正在读取字幕…</div>;
+  if (!subtitles || subtitles.status !== "available") return <div className="learning-subtitles" role="status">{subtitles?.message ?? "暂未读取字幕。"}</div>;
+  return <div className="learning-subtitles" aria-label="视频字幕">{subtitles.tracks.map(track => <section key={track.language}><h5>{track.label}</h5><ol>{track.captions.map((caption, index) => <li key={track.language + "-" + index}><time>{learningCaptionTime(caption.start)}</time><span>{caption.text}</span></li>)}</ol></section>)}</div>;
+}
+
 function VideoRow({ resource, onPreview, action }: { resource: LearningResource; onPreview: () => void; action: ReactNode }) {
-  return <div className="learning-video-row"><button type="button" className="learning-video-preview" title="在窗口播放" aria-label={"播放：" + resource.title} onClick={onPreview}><AgentIcon name="play" size={18} /></button><a href={resource.url} target="_blank" rel="noopener noreferrer"><strong>{resource.title}</strong><span>{resource.author || "B站视频"}{resource.duration ? " · " + resource.duration : ""}</span></a>{action}</div>;
+  const cover = learningCoverUrl(resource);
+  const views = typeof resource.views === "number" ? " · 播放 " + new Intl.NumberFormat("zh-CN", { notation: resource.views >= 10000 ? "compact" : "standard", maximumFractionDigits: 1 }).format(resource.views) : "";
+  return <article className="learning-video-row"><button type="button" className="learning-video-preview" title="在窗口播放" aria-label={"播放：" + resource.title} onClick={onPreview}>{cover && <img src={cover} alt="" loading="lazy" referrerPolicy="no-referrer" onError={event => { event.currentTarget.hidden = true; }} />}<span className="learning-video-play"><AgentIcon name="play" size={17} /></span>{resource.duration && <small>{resource.duration}</small>}</button><a href={resource.url} target="_blank" rel="noopener noreferrer"><strong>{resource.title}</strong><span>{resource.author || "B站视频"}{views}{!resource.views && resource.duration ? " · " + resource.duration : ""}</span>{resource.description && <small>{resource.description}</small>}</a>{action}</article>;
 }

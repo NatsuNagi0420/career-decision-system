@@ -3,7 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { CareerWorkspace, careerSources } from "../src/career.js";
 import { guidedToolAllowed } from "../src/domain/career/policy.js";
-import { parseBilibiliResults, searchBilibili } from "../src/learning-resources.js";
+import { parseBilibiliCaptions, parseBilibiliResults, readBilibiliSubtitles, searchBilibili } from "../src/learning-resources.js";
 import type { LearningChange, LearningPathInput } from "../src/learning-contract.js";
 import { id } from "../src/store.js";
 import { fixture, reply, tool, ScriptedModel } from "./helpers.js";
@@ -104,6 +104,86 @@ test("视频结果清理HTML、只生成合法B站视频地址，搜索风控降
   assert.match(fallback.search_url, /^https:\/\/search\.bilibili\.com\/all\?keyword=/);
   const controller = new AbortController(); controller.abort();
   await assert.rejects(searchBilibili("TypeScript", controller.signal, denied), /abort/i);
+});
+
+test("B站综合搜索响应中只呈现视频分组，并过滤非B站封面", async () => {
+  const data = { code: 0, data: { result: [
+    { result_type: "tips", data: [{ title: "提示词", bvid: "BV14Z4y1u7pi" }] },
+    { result_type: "video", data: [
+      { bvid: "BV14Z4y1u7pi", title: "React <em>表单</em>入门", author: "测试作者", duration: "16:26", pic: "//i2.hdslb.com/bfs/archive/cover.jpg", play: 20394, description: "讲解 <b>表单校验</b>。" },
+      { bvid: "BV15Z4y1u7pi", title: "外站封面不展示", author: "其他作者", duration: "8:00", pic: "https://evil.invalid/cover.jpg", play: "很多" },
+    ] },
+  ] } };
+  const resources = parseBilibiliResults(data, "React 表单");
+  assert.equal(resources.length, 2);
+  assert.equal(resources[0].title, "React 表单入门");
+  assert.equal(resources[0].cover, "https://i2.hdslb.com/bfs/archive/cover.jpg");
+  assert.equal(resources[0].views, 20394);
+  assert.equal(resources[0].description, "讲解 表单校验。");
+  assert.equal(resources[1].cover, undefined);
+  assert.equal(resources[1].views, undefined);
+});
+
+test("公开字幕会清理并按时间返回，B站登录限制会被区分为登录提示", async () => {
+  const responses: Record<string, unknown> = {
+    view: { code: 0, data: { aid: 123, cid: 456 } },
+    nav: { code: -101, data: { wbi_img: { img_url: "https://i0.hdslb.com/bfs/wbi/abcdefghijklmnopqrstuvwxyz012345.png", sub_url: "https://i0.hdslb.com/bfs/wbi/ABCDEFGHIJKLMNOPQRSTUVWXYZ012345.png" } } },
+    player: { code: 0, data: { need_login_subtitle: false, subtitle: { subtitles: [{ lan: "zh-CN", lan_doc: "简体中文", subtitle_url: "https://aisubtitle.hdslb.com/captions.json" }] } } },
+    captions: { body: [{ from: 0, to: 2.4, content: "React <b>组件</b>" }, { from: -1, to: 0, content: "无效" }, { from: 3, to: 3, content: "空时间" }] },
+  };
+  const requestedUrls: string[] = [];
+  const fetcher = (async (input: RequestInfo | URL) => {
+    const url = String(input);
+    requestedUrls.push(url);
+    const data = url.includes("/x/web-interface/view") ? responses.view : url.includes("/x/web-interface/nav") ? responses.nav : url.includes("/x/player/wbi/v2") ? responses.player : responses.captions;
+    return new Response(JSON.stringify(data));
+  }) as typeof fetch;
+  const result = await readBilibiliSubtitles("BV14Z4y1u7pi", undefined, fetcher);
+  assert.equal(result.status, "available");
+  assert.ok(requestedUrls.some(url => url.startsWith("https://api.bilibili.com/x/player/wbi/v2?") && /w_rid=[a-f0-9]{32}/.test(url)));
+  assert.deepEqual(result.tracks[0].captions, [{ start: 0, end: 2.4, text: "React 组件" }]);
+  const loginFetcher = (async (input: RequestInfo | URL) => {
+    const url = String(input);
+    const data = url.includes("/x/web-interface/view") ? responses.view : url.includes("/x/web-interface/nav") ? responses.nav : { code: 0, data: { need_login_subtitle: true, subtitle: { subtitles: [] } } };
+    return new Response(JSON.stringify(data));
+  }) as typeof fetch;
+  const login = await readBilibiliSubtitles("BV14Z4y1u7pi", undefined, loginFetcher);
+  assert.equal(login.status, "login_required");
+  assert.match(login.message, /不会读取或保存/);
+  let subtitleRequests = 0;
+  const externalUrlFetcher = (async (input: RequestInfo | URL) => {
+    const url = String(input);
+    if (url.includes("/x/web-interface/view")) return new Response(JSON.stringify(responses.view));
+    if (url.includes("/x/web-interface/nav")) return new Response(JSON.stringify(responses.nav));
+    if (url.includes("/x/player/wbi/v2")) return new Response(JSON.stringify({
+      code: 0, data: { need_login_subtitle: false, subtitle: { subtitles: [{ lan: "zh", subtitle_url: "https://127.0.0.1/private" }] } },
+    }));
+    subtitleRequests++; return new Response("unexpected");
+  }) as typeof fetch;
+  assert.equal((await readBilibiliSubtitles("BV14Z4y1u7pi", undefined, externalUrlFetcher)).status, "no_subtitles");
+  assert.equal(subtitleRequests, 0);
+  assert.deepEqual(parseBilibiliCaptions({ body: [{ from: 1, to: 2, content: "A &amp; B" }] }), [{ start: 1, end: 2, text: "A & B" }]);
+});
+
+test("字幕接口仅允许读取本人搜索过的视频，且不保存字幕内容", async t => {
+  const f = await fixture(t);
+  t.mock.method(globalThis, "fetch", async (input: RequestInfo | URL) => {
+    const url = String(input);
+    if (url.includes("/x/web-interface/search/all/v2")) return new Response(JSON.stringify({ code: 0, data: { result: [{ result_type: "video", data: [{ bvid: "BV14Z4y1u7pi", title: "TypeScript 入门" }] }] } }));
+    if (url.includes("/x/web-interface/view")) return new Response(JSON.stringify({ code: 0, data: { aid: 1, cid: 2 } }));
+    if (url.includes("/x/web-interface/nav")) return new Response(JSON.stringify({ code: -101, data: { wbi_img: { img_url: "https://i0.hdslb.com/bfs/wbi/abcdefghijklmnopqrstuvwxyz012345.png", sub_url: "https://i0.hdslb.com/bfs/wbi/ABCDEFGHIJKLMNOPQRSTUVWXYZ012345.png" } } }));
+    return new Response(JSON.stringify({ code: 0, data: { need_login_subtitle: true, subtitle: { subtitles: [] } } }));
+  });
+  assert.equal((await f.app.inject({ url: "/api/v1/agent/career/learning/videos/BV14Z4y1u7pi/subtitles", headers: f.headers })).statusCode, 404);
+  await f.app.inject({ url: "/api/v1/agent/career/learning/videos?query=TypeScript", headers: f.headers });
+  assert.equal((await f.app.inject({ url: "/api/v1/agent/career/learning/videos/BV14Z4y1u7pi/subtitles" })).statusCode, 401);
+  const other = f.auth.register("subtitle_other", "Only-a-test-password", false);
+  const otherResponse = await f.app.inject({ url: "/api/v1/agent/career/learning/videos/BV14Z4y1u7pi/subtitles", headers: { ...f.headers, authorization: "Bearer " + other.token } });
+  assert.equal(otherResponse.statusCode, 404);
+  const response = await f.app.inject({ url: "/api/v1/agent/career/learning/videos/BV14Z4y1u7pi/subtitles", headers: f.headers });
+  assert.equal(response.statusCode, 200, response.body);
+  assert.equal(response.json().status, "login_required");
+  assert.equal(f.store.db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='learning_subtitles'").get(), undefined);
 });
 
 test("只有本人搜索到的真实资源能加入章节，缓存不重复请求B站，打开链接不改变进度", async t => {

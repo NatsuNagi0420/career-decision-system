@@ -6,6 +6,7 @@ import { AppError, invariant } from "./errors.js";
 import { JobCatalogue } from "./job-catalogue.js";
 import { careerSkillInput, type CareerSkill } from "./career-skills.js";
 import { LearningWorkspace } from "./learning.js";
+import { CareerPreparation } from "./preparation.js";
 import type { CatalogueSelection, JobSampleOrigin } from "./job-catalogue-contract.js";
 
 const text = (max: number) => z.string().trim().max(max);
@@ -107,6 +108,7 @@ function proposalFingerprint(state: CareerState, data: z.infer<typeof careerProp
   return createHash("sha256").update(JSON.stringify(basis)).digest("hex");
 }
 export class CareerWorkspace {
+  readonly preparation: CareerPreparation;
   readonly learning: LearningWorkspace;
   decisionView?: (userId: number, conversationId?: string) => import("./career-decision-contract.js").CareerDecisionView;
   readonly catalogue: JobCatalogue;
@@ -115,6 +117,7 @@ export class CareerWorkspace {
     store.db.exec("CREATE TABLE IF NOT EXISTS career_workspaces(user_id INTEGER PRIMARY KEY REFERENCES users(id),data TEXT NOT NULL);");
     store.db.exec("CREATE TABLE IF NOT EXISTS career_saved_jobs(user_id INTEGER NOT NULL REFERENCES users(id),catalogue_id TEXT NOT NULL,created_at TEXT NOT NULL,PRIMARY KEY(user_id,catalogue_id));");
     this.learning = new LearningWorkspace(store, userId => this.get(userId));
+    this.preparation = new CareerPreparation(store, userId => this.get(userId));
   }
   get(userId: number): CareerState {
     this.store.getUser(userId);

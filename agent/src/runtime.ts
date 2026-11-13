@@ -81,6 +81,7 @@ export class Runtime {
       this.memory,
     );
     this.guidance.learningProgress = userId => this.career.learning.progress(userId);
+    this.guidance.excludeRun = runId => this.career.preparation.isTrainingRun(runId);
     this.domain = domain ?? new CareerAgentDomain({ store, career: this.career, resume: this.resume, guidance: this.guidance, decisions: this.decisions, memory: this.memory, config, publishResumeState: (cid, runId, state) => { this.event(cid, runId, "resume.state", { state }); } });
     this.capabilityRegistry = new CapabilityRegistry(this.domain.capabilities?.() ?? [], {
       availableTools: toolRegistry.capabilities().map(item => item.name),
@@ -208,6 +209,7 @@ export class Runtime {
     try {
       await this.workspace.removeConversation(conversationId, artifacts, edits);
       this.memory.purgeConversation(user.id, conversationId);
+      this.career.preparation.purgeConversation(user.id, conversationId);
       this.store.deleteConversation(user.id, conversationId);
       this.hub.emit("conversation.deleted", conversationId);
       return { ok: true as const, id: conversationId };
@@ -484,6 +486,7 @@ export class Runtime {
   }
   private launch(run: Run, user: User) {
     if (this.controllers.has(run.id)) return;
+    this.career.preparation.trackRun(run);
     const controller = new AbortController();
     this.controllers.set(run.id, controller);
     const job = new Promise<void>((resolve) => setImmediate(resolve))
@@ -498,7 +501,7 @@ export class Runtime {
         // 职业事实整理由服务端触发，不依赖页面是否仍开着。主回复完成后再运行，不延长任务忙碌状态。
         const current = this.store.run(user.id, run.id);
         const message = this.store.messages(run.conversation_id).filter(m => m.role === "user").at(-1);
-        if (!current.superseded_by && ["completed", "waiting_input"].includes(current.status) && message)
+        if (!current.superseded_by && ["completed", "waiting_input"].includes(current.status) && message && !this.career.preparation.isTrainingRun(run.id))
           this.memoryJobs.enqueue(user.id, run.conversation_id, run.profile_id, message.id);
       })
       .finally(() => {

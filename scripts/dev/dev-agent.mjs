@@ -31,18 +31,11 @@ function stop(code = 0) {
 }
 for (const signal of ["SIGINT", "SIGTERM"]) process.once(signal, () => stop());
 run(process.execPath, ["--import", "tsx", "src/main.ts"], "agent");
-    run(
-        process.execPath,
-        [
-            "node_modules/vite/bin/vite.js",
-            "--host",
-            "127.0.0.1",
-            "--port",
-            "5173",
-            "--strictPort",
-        ],
-        "web",
-    );
-    console.log(
-        "新版开发界面：http://127.0.0.1:5173；本机服务：http://127.0.0.1:8110",
-    );
+run(
+    process.execPath,
+    ["node_modules/vite/bin/vite.js", "--host", "127.0.0.1"],
+    "web",
+);
+console.log(
+    "新版开发界面：http://127.0.0.1:5188；本机服务：http://127.0.0.1:8110",
+);

@@ -97,7 +97,7 @@ export function loadConfig(env = process.env): Config {
     dataDir: configuredLocalStateDir(env.AGENT_DATA_DIR, "agent", env),
     origins: (
       env.AGENT_ALLOWED_ORIGINS ??
-      (deploymentMode === "server" && publicOrigin ? publicOrigin : "http://127.0.0.1:5173,http://localhost:5173,http://127.0.0.1:5174,http://localhost:5174")
+      (deploymentMode === "server" && publicOrigin ? publicOrigin : "http://127.0.0.1:5188,http://localhost:5188")
     )
       .split(",")
       .map((s) => s.trim())

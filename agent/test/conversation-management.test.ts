@@ -109,6 +109,21 @@ test("包含目录联接时整批停止，不遍历或删除链接外的文件",
   assert.equal((await f.app.inject({ method: "DELETE", url: url(cid), headers: f.headers })).statusCode, 200);
 });
 
+test("管理目录本身是目录联接时仍拒绝删除，不能因实际路径兼容绕过边界", async t => {
+  const f = await fixture(t), cid = f.conversation.id;
+  const outside = join(f.dir, "outside-managed-parent");
+  await mkdir(join(outside, cid), { recursive: true });
+  await writeFile(join(outside, cid, "保留.txt"), "不能删除链接目标");
+  const link = join(f.dir, "workspaces");
+  try { await symlink(outside, link, process.platform === "win32" ? "junction" : "dir"); }
+  catch (error) { if (["EPERM", "EACCES"].includes((error as NodeJS.ErrnoException).code ?? "")) { t.skip("当前环境不允许创建测试链接"); return; } throw error; }
+  t.after(() => unlink(link));
+  const result = await f.app.inject({ method: "DELETE", url: url(cid), headers: f.headers });
+  assert.equal(result.statusCode, 409); assert.match(result.json().detail, /链接|联接/);
+  assert.equal(await readFile(join(outside, cid, "保留.txt"), "utf8"), "不能删除链接目标");
+  assert.equal(f.store.conversation(f.user.id, cid).id, cid);
+});
+
 test("普通主对话原地收集简历，然后继续方向学习，不新增对话或丢上下文", async t => {
   const quote = "我用 TypeScript 做了课程项目，想学前端。";
   let f!: Awaited<ReturnType<typeof fixture>>;

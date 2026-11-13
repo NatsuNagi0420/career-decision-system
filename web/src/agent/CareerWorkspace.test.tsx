@@ -11,11 +11,11 @@ const noop = () => {};
 describe("职业对话起始页", () => {
   it("展示三个真实需求入口，不伪造用户画像和完成状态", () => {
     const html = renderToStaticMarkup(<CareerWelcome connected onPrompt={noop} onConnect={noop} />);
-    expect(html).toContain("你好，我是穗奈。");
+    expect(html).toContain("今天，想从哪里开始？");
     expect(html).toContain("梳理经历");
     expect(html).toContain("发现优势");
     expect(html).toContain("探索方向");
-    expect(html.match(/class="career-step-card /g)).toHaveLength(3);
+    expect(html.match(/<button /g)).toHaveLength(3);
     expect(html).not.toContain("连接模型，和穗奈聊聊");
     expect(html).not.toMatch(/匹配度|画像已完成|测评已完成/);
     expect(CAREER_STARTERS.every(item => item.prompt.length > 20)).toBe(true);

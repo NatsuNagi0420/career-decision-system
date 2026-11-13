@@ -5,6 +5,7 @@ import {
     Suspense,
     useCallback,
     useEffect,
+    useLayoutEffect,
     useMemo,
     useReducer,
     useRef,
@@ -12,8 +13,8 @@ import {
     type FormEvent,
 } from "react";
 import { Login } from "../components/Login";
+import { AutoHeight } from "../components/AutoHeight";
 import { accountDisplay, canResumeWorkspace } from "./entry-state";
-import { AnimatedDisclosure } from "./AnimatedDisclosure";
 import { AgentEntry } from "./AgentEntry";
 import { SuinaiMotionCharacter } from "../components/SuinaiMotionCharacter";
 import { useReducedMotion } from "../character/preferences";
@@ -25,10 +26,13 @@ import { OnboardingTour } from "./OnboardingTour";
 import { useOnboarding } from "./useOnboarding";
 import { AgentIcon } from "./AgentIcon";
 import { ConversationHistory, ConversationActions, RenameConversationDialog } from "./ConversationHistory";
+import { ConversationCache } from "./conversationCache";
 import { ChatComposer } from "./ChatComposer";
 import { ExecutionToggle, RunActivity } from "./RunActivity";
 import { RunFailure } from "./RunFailure";
-import { AsciiArt, UiMotionToggle } from "./AsciiArt";
+import { AsciiArt } from "./AsciiArt";
+import { DesktopSettings } from "./DesktopSettings";
+import { CompanionContext } from "./CompanionContext";
 import { useUiMotion } from "./uiMotion";
 import { ExecutionPanel } from "./ExecutionPanel";
 import { executionRecords, type ExecutionRecord } from "./execution";
@@ -46,8 +50,12 @@ import { CareerWorkbench } from "./CareerWorkbench";
 import { WorkspacePicker } from "./WorkspacePicker";
 import { useCareerWorkspace } from "./career-workspace";
 import { useLearningWorkspace } from "./learning-workspace";
+import { usePreparationWorkspace } from "./preparation-workspace";
+import { PreparationChatBar } from "./PreparationWorkspace";
+import { InterviewWindow } from "./InterviewWindow";
+import { failureMessage } from "./RunFailure";
 import { jobsByRun } from "./job-cards";
-import { JobRecommendationCard, JobDetailPanel, GrowthSummary, ProfileUpdateStrip, NextActionRow } from "./CareerComponents";
+import { JobRecommendationCard, JobDetailPanel, ProfileUpdateStrip } from "./CareerComponents";
 import { ComponentIcon } from "./ComponentAssets";
 import { CareerEvidencePanel, DecisionActivity, DecisionFollowUp } from "./CareerEvidence";
 import { conversationEvidence } from "./career-evidence";
@@ -101,6 +109,7 @@ import "./companion-guidance.css";
 import "./message-interactions.css";
 import "./career-components.css";
 import "./profile-dossier.css";
+import "./home-balance.css";
 
 function companionPreference(userId: number, key: string) { try { return localStorage.getItem("suinai." + key + "." + userId) !== "0"; } catch { return true; } }
 function remember(id: string) {
@@ -260,6 +269,8 @@ function Workspace({
         [inspectorOpen, setInspectorOpen] = useState(() => window.innerWidth > 1180),
         [workbenchStatus, setWorkbenchStatus] = useState<"closed" | "open" | "minimized">("closed"),
         [memoryStatus, setMemoryStatus] = useState<"closed" | "open" | "minimized">("closed"),
+        [interviewStatus, setInterviewStatus] = useState<"closed" | "open" | "minimized">("closed"),
+        [interviewLaunch, setInterviewLaunch] = useState<string | null>(null),
         [memoryView, setMemoryView] = useState<import("../../../agent/src/memory-contract").MemorySeaView | null>(null),
         [memoryLoading, setMemoryLoading] = useState(false),
         [memoryError, setMemoryError] = useState(""),
@@ -351,8 +362,36 @@ function Workspace({
     const mounted = useRef(true);
     const currentConversation = useRef(conversationId);
     currentConversation.current = conversationId;
+    const [conversationCache] = useState(() => new ConversationCache(agentApi.snapshot));
+    const activeView = useRef(view);
+    const lastLiveEventAt = useRef(Date.now());
+    const lastReconnect = useRef(reconnect);
+    useLayoutEffect(() => {
+        activeView.current = view;
+        if (view && !deletedConversations.current.has(view.snapshot.conversation.id)) conversationCache.remember(view);
+    }, [view, conversationCache]);
+    useEffect(() => () => conversationCache.clear(), [conversationCache]);
+    function prefetchConversation(id: string) {
+        if (!deletedConversations.current.has(id)) void conversationCache.load(id).catch(() => {});
+    }
     function clearAttachmentPreviews() { setAttachmentPreviews(values => { Object.values(values).forEach(url => URL.revokeObjectURL(url)); return {}; }); }
-    function chooseConversation(id: string | null) { if (id !== null && currentConversation.current === id) return; currentConversation.current = id; setWorkspacePickerOpen(false); setMemoryStatus("closed"); setEditingMessage(null); setPendingAttachments([]); clearAttachmentPreviews(); pendingRequest.current = null; setPendingObligationId(undefined); setView(null); setRenaming(null); setResumeBarDismissed(false); setResumePreviewOpen(false); setPreview(null); setExecution(null); setJobDetailId(null); cancelConfirmation(); setPermission("default"); setConversationId(id); dispatchDraft({ type: "reset" }); setNotice(""); }
+    function chooseConversation(id: string | null) {
+        if (id !== null && currentConversation.current === id) return;
+        const previous = activeView.current, viewport = messageFlow.current?.parentElement;
+        if (previous && previous.snapshot.conversation.id === currentConversation.current && !deletedConversations.current.has(previous.snapshot.conversation.id)) {
+            conversationCache.remember(previous);
+            if (viewport) conversationCache.saveScroll(previous.snapshot.conversation.id, { top: viewport.scrollTop, atBottom: followBottom.current });
+        }
+        currentConversation.current = id;
+        setView(id ? conversationCache.get(id) : null);
+        setInterviewStatus("closed"); setInterviewLaunch(null);
+        setWorkspacePickerOpen(false); setMemoryStatus("closed"); setEditingMessage(null);
+        setPendingAttachments([]); clearAttachmentPreviews(); pendingRequest.current = null;
+        setPendingObligationId(undefined); setRenaming(null); setResumeBarDismissed(false);
+        setResumePreviewOpen(false); setPreview(null); setExecution(null); setJobDetailId(null);
+        cancelConfirmation(); setPermission("default"); setConversationId(id);
+        dispatchDraft({ type: "reset" }); setNotice("");
+    }
     useEffect(() => {
         try {
             const key = "agent.conversation." + user.id;
@@ -420,28 +459,35 @@ function Workspace({
             return;
         }
         const controller = new AbortController();
-        setView(null);
+        const force = lastReconnect.current !== reconnect;
+        lastReconnect.current = reconnect;
         setConnected(true);
-        void agentApi
-            .snapshot(conversationId)
-            .then((snapshot) => {
-                if (controller.signal.aborted) return;
-                setView(initialView(snapshot));
-                if (snapshot.conversation.profile_id)
-                    setSelected(snapshot.conversation.profile_id);
+        void conversationCache
+            .load(conversationId, force)
+            .then((loaded) => {
+                if (controller.signal.aborted || currentConversation.current !== conversationId) return;
+                const latest = conversationCache.get(conversationId) ?? loaded;
+                setView(state => {
+                    if (currentConversation.current !== conversationId) return state;
+                    return state?.snapshot.conversation.id === conversationId && state.snapshot.last_seq > latest.snapshot.last_seq ? state : latest;
+                });
+                if (latest.snapshot.conversation.profile_id)
+                    setSelected(latest.snapshot.conversation.profile_id);
                 return streamEvents(
                     conversationId,
-                    snapshot.last_seq,
+                    latest.snapshot.last_seq,
                     controller.signal,
                     (event) => {
                         if (controller.signal.aborted || currentConversation.current !== conversationId) return;
+                        lastLiveEventAt.current = Date.now();
                         if (event.kind === "conversation.deleted") {
                             deletedConversations.current.add(conversationId);
+                            conversationCache.remove(conversationId);
                             setConversations(items => items.filter(item => item.id !== conversationId));
                             if (currentConversation.current === conversationId) { chooseConversation(null); setNotice(deletingConversation.current === conversationId ? "对话及其资料、成果已永久删除。" : "这段对话已在另一处被删除。"); }
                             controller.abort(); return;
                         }
-                        setView((state) => state ? applyEvent(state, event) : state);
+                        setView((state) => state?.snapshot.conversation.id === conversationId ? applyEvent(state, event) : state);
                         if (event.kind === "memory.recalled" || event.kind === "memory.updated") void loadMemory();
                         if (event.kind === "model.notice") setNotice(String(event.data.message ?? "模型参数提示"));
                         if (event.kind === "run.status")
@@ -454,9 +500,10 @@ function Workspace({
                 );
             })
             .catch((error) => {
-                if (!controller.signal.aborted) {
+                if (!controller.signal.aborted && currentConversation.current === conversationId && error.name !== "AbortError") {
                     if (error instanceof AgentApiError && error.status === 404) {
                         deletedConversations.current.add(conversationId);
+                        conversationCache.remove(conversationId);
                         setConversations(items => items.filter(item => item.id !== conversationId));
                         if (currentConversation.current === conversationId) { chooseConversation(null); setNotice("这段对话已不存在，已回到空白对话。"); }
                         return;
@@ -468,15 +515,37 @@ function Workspace({
         return () => controller.abort();
     }, [conversationId, reconnect]);
     const snapshot = view?.snapshot;
+    const historyReady = !conversationId || Boolean(snapshot);
     const run = snapshot?.runs.at(-1);
     const busy = isActive(run);
+    useEffect(() => {
+        if (!busy || !conversationId) return;
+        let cancelled = false, reading = false;
+        // 本机服务重启后代理可能留下半开的事件流；安静过久时向持久状态核对，避免一直显示处理中。
+        const timer = window.setInterval(async () => {
+            if (reading || document.visibilityState !== "visible" || Date.now() - lastLiveEventAt.current < 12000) return;
+            reading = true;
+            try {
+                const next = await agentApi.snapshot(conversationId);
+                if (cancelled || currentConversation.current !== conversationId) return;
+                const previous = activeView.current;
+                if (previous?.snapshot.conversation.id === conversationId && next.last_seq > previous.snapshot.last_seq) {
+                    lastLiveEventAt.current = Date.now();
+                    setView(value => value?.snapshot.conversation.id === conversationId && next.last_seq > value.snapshot.last_seq ? initialView(next) : value);
+                    setReconnect(value => value + 1);
+                }
+            } catch { /* 保留原对话，由事件流和下一次核对继续恢复。 */ }
+            finally { reading = false; }
+        }, 6000);
+        return () => { cancelled = true; window.clearInterval(timer); };
+    }, [conversationId, busy]);
     const profile = profiles.find((item) => item.id === selected);
     const messages =
         snapshot?.messages.filter(
-            (message) => message.role !== "tool" && message.content,
+            (message) => message.role !== "tool" && message.content.trim(),
         ) ?? [];
     const drafts = Object.entries(view?.drafts ?? {});
-    const displayMessages: (ChatMessage & { streaming?: boolean })[] = [...messages, ...drafts.filter(([key]) => !messages.some(message => message.id === key)).map(([key, content]) => ({ id: key, role: "assistant" as const, content, created_at: run?.created_at ?? "", run_id: run?.id ?? null, streaming: true }))];
+    const displayMessages: (ChatMessage & { streaming?: boolean })[] = [...messages, ...drafts.filter(([key, content]) => content.trim() && !messages.some(message => message.id === key)).map(([key, content]) => ({ id: key, role: "assistant" as const, content, created_at: run?.created_at ?? "", run_id: run?.id ?? null, streaming: true }))];
     const arrivingMessages = useMessageEntrance(conversationId, Boolean(snapshot), displayMessages.map(message => message.id), uiMotion);
     const latestAssistantId = displayMessages.filter(message => message.role === "assistant").at(-1)?.id;
     const files = useMemo(() => [...(snapshot?.artifacts ?? [])].sort((a, b) => b.created_at.localeCompare(a.created_at)), [snapshot?.artifacts]);
@@ -505,6 +574,22 @@ function Workspace({
     const executionRun = execution ? runsById.get(execution.runId) : undefined;
     const careerPulse = [run?.id, run?.status, ...(view?.events ?? []).filter(event => ["tool.finished","career.updated","career.decision","career.judged","resume.review"].includes(event.kind)).map(event => event.seq)].join(":");
     const learningWorkspace = useLearningWorkspace(user.id, careerPulse);
+    const preparationWorkspace = usePreparationWorkspace(user.id, careerPulse);
+    const preparationSession = preparationWorkspace.state?.sessions.find(session => session.conversation_id === conversationId);
+    const interviewSession = preparationSession?.mode === "interview" ? preparationSession : undefined;
+    const interviewSubmitting = useRef(false);
+    useEffect(() => { if (interviewSession) { setInterviewLaunch(null); if (interviewSession.status !== "completed") { setWorkbenchStatus(status => status === "open" ? "minimized" : status); setMemoryStatus(status => status === "open" ? "minimized" : status); setInterviewStatus("open"); } } }, [interviewSession?.id]);
+    const practicing = preparationSession?.status === "active";
+    const lastPreparationAnswer = preparationSession?.answers.at(-1);
+    const [preparationReaction, setPreparationReaction] = useState("");
+    useEffect(() => {
+        if (!lastPreparationAnswer?.verdict || Date.now() - Date.parse(lastPreparationAnswer.created_at) > 10000) { setPreparationReaction(""); return; }
+        setPreparationReaction(preparationSession?.status === "completed" ? "A28" : lastPreparationAnswer.verdict === "solid" ? "A23" : lastPreparationAnswer.verdict === "needs_practice" ? "A24" : "A14");
+        const timer = setTimeout(() => setPreparationReaction(""), 2800);
+        return () => clearTimeout(timer);
+    }, [conversationId, lastPreparationAnswer?.run_id, preparationSession?.status]);
+    const preparationRuns = new Set(preparationWorkspace.state?.sessions.filter(session => session.conversation_id === conversationId).flatMap(session => [session.start_run_id, ...session.answers.map(answer => answer.run_id)]) ?? []);
+    for (const message of snapshot?.messages ?? []) if (message.run_id && message.tool_calls?.some(call => ["start_career_preparation", "review_career_answer"].includes(call.name))) preparationRuns.add(message.run_id);
     const careerWorkspace = useCareerWorkspace(user.id, careerPulse + ":learning:" + (learningWorkspace.state?.revision ?? 0), conversationId);
     const recommendedJobs = useMemo(() => jobsByRun(snapshot?.messages ?? []), [snapshot?.messages]);
     const careerState = careerWorkspace.state;
@@ -536,7 +621,7 @@ function Workspace({
         }
         previousResumeActive.current = resumeActive;
     }, [resumeActive]);
-    const onboarding = useOnboarding({ userId: user.id, mode: deploymentMode, ready: Boolean(info), blocked: busy || working || fileBusy || settings || remoteOpen || workspacePickerOpen || Boolean(renaming) || workbenchStatus === "open" || memoryStatus === "open" || Boolean(preview || executionRun || jobDetailId || resumePreviewOpen), hasDraft: Boolean(text.trim()) });
+    const onboarding = useOnboarding({ userId: user.id, mode: deploymentMode, ready: Boolean(info), blocked: busy || working || fileBusy || settings || remoteOpen || workspacePickerOpen || Boolean(renaming) || workbenchStatus === "open" || memoryStatus === "open" || interviewStatus === "open" || Boolean(preview || executionRun || jobDetailId || resumePreviewOpen), hasDraft: Boolean(text.trim()) });
     useEffect(() => { if (onboarding.error) setNotice(onboarding.error); }, [onboarding.error]);
     const insightReady = Boolean(user.external_ai_consent && profile?.has_key && profile.capabilities.chat);
     function updateGuidance(cid: string, value: GuidanceView) {
@@ -544,7 +629,7 @@ function Workspace({
         setView(state => state && state.snapshot.conversation.id === cid ? { ...state, snapshot: { ...state.snapshot, guidance: acceptGuidance(state.snapshot.guidance, value) } } : state);
     }
     const insights = useConversationInsights({ conversationId, snapshot, profileId: selected, enabled: smartSuggestions && insightReady, blocked: busy || working || fileBusy || Boolean(snapshot?.conversation.archived) || settings || Boolean(onboarding.active), onUpdate: updateGuidance });
-    const companionHidden = Boolean(onboarding.active) || Boolean(snapshot?.conversation.archived) || busy || working || fileBusy || settings || resumePreviewOpen || Boolean(preview || executionRun) || workbenchStatus === "open" || memoryStatus === "open";
+    const companionHidden = practicing || interviewStatus === "open" || Boolean(onboarding.active) || Boolean(snapshot?.conversation.archived) || busy || working || fileBusy || settings || resumePreviewOpen || Boolean(preview || executionRun) || workbenchStatus === "open" || memoryStatus === "open";
     const suggestion = smartSuggestions && guidance?.suggestion && !dismissedSuggestions.includes(guidance.suggestion.id) ? guidance.suggestion : null;
     const idle = useCompanionNudge({ userId: user.id, scope: conversationId ?? "draft", enabled: idleChat, blocked: companionHidden || Boolean(suggestion), hasDraft: Boolean(text.trim()), guidance });
     const bubble = companionHidden ? null : suggestion ? { message: suggestion.message, kind: "intent" as const, actionLabel: TASK_LABELS[suggestion.kind] } : idle.nudge ? { message: idle.nudge, kind: "idle" as const, actionLabel: "继续聊聊" } : null;
@@ -601,17 +686,27 @@ function Workspace({
             launcher?.focus({ preventScroll: true });
         });
     }
+    useLayoutEffect(() => {
+        const viewport = messageFlow.current?.parentElement;
+        if (!viewport || !historyReady) return;
+        const saved = conversationId ? conversationCache.scroll(conversationId) : undefined;
+        followBottom.current = saved?.atBottom ?? true;
+        viewport.scrollTop = followBottom.current ? viewport.scrollHeight : saved?.top ?? 0;
+    }, [conversationId, historyReady, conversationCache]);
     useEffect(() => {
         const flow = messageFlow.current, viewport = flow?.parentElement;
-        if (!flow || !viewport) return;
-        followBottom.current = true;
+        if (!flow || !viewport || !historyReady) return;
         let frame = 0;
-        const scroll = () => { followBottom.current = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight < 100; };
-        const resize = () => { cancelAnimationFrame(frame); if (followBottom.current) frame = requestAnimationFrame(() => { viewport.scrollTop = viewport.scrollHeight; }); };
+        const scroll = () => {
+            if (currentConversation.current !== conversationId) return;
+            followBottom.current = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight < 100;
+            if (conversationId) conversationCache.saveScroll(conversationId, { top: viewport.scrollTop, atBottom: followBottom.current });
+        };
+        const resize = () => { cancelAnimationFrame(frame); if (followBottom.current) frame = requestAnimationFrame(() => { if (currentConversation.current === conversationId && followBottom.current) viewport.scrollTop = viewport.scrollHeight; }); };
         const observer = new ResizeObserver(resize); observer.observe(flow);
         viewport.addEventListener("scroll", scroll, { passive: true }); resize();
         return () => { cancelAnimationFrame(frame); observer.disconnect(); viewport.removeEventListener("scroll", scroll); };
-    }, [conversationId]);
+    }, [conversationId, historyReady, conversationCache]);
     async function ensureConversation() {
         if (conversationId) return conversationId;
         if (creation.current) return creation.current;
@@ -750,20 +845,22 @@ function Workspace({
             setWorking(false);
         }
     }
-    async function runResumeTask(input: string, resumeEdit?: ResumeEditRequest) {
+    async function runConversationTask(input: string, resumeEdit?: ResumeEditRequest) {
         if (working || busy || fileBusy) throw new Error("当前对话还有任务运行，请结束后重试。");
         if (snapshot?.conversation.archived) throw new Error("当前对话已归档，请先恢复或创建新的对话。");
         setWorking(true);
         try {
             const activeProfile = await readyModel(true);
-            if (!activeProfile) return;
+            if (!activeProfile) return false;
             const cid = await ensureConversation();
             await agentApi.send(cid, activeProfile.id, input, crypto.randomUUID(), { ...(resumeEdit ? { resume_edit: resumeEdit } : {}), permission_mode: "default", reasoning_effort: effort, full_access_confirmed: false });
             const next = await agentApi.snapshot(cid);
             if (currentConversation.current === cid) setView(previous => previous && previous.snapshot.last_seq > next.last_seq ? previous : initialView(next));
             await load();
+            return true;
         } finally { setWorking(false); }
     }
+    const runResumeTask = runConversationTask;
     async function exportResume(revision: number) {
         if (fileBusy) throw new Error("正在处理文件，请稍后再试。");
         if (snapshot?.conversation.archived) throw new Error("请先恢复当前对话或新建对话，再保存简历文件。");
@@ -778,6 +875,7 @@ function Workspace({
         setHistoryBusy(true);
         try {
             const value = await agentApi.archiveConversation(conversation.id, !conversation.archived);
+            conversationCache.updateConversation(value);
             setConversations(values => values.map(item => item.id === value.id ? value : item));
             if (conversation.id === currentConversation.current) {
                 if (value.archived) chooseConversation(null);
@@ -792,6 +890,7 @@ function Workspace({
         setHistoryBusy(true);
         try {
             const value = await agentApi.renameConversation(conversation.id, title);
+            conversationCache.updateConversation(value);
             setConversations(items => items.map(item => item.id === value.id ? value : item));
             if (currentConversation.current === value.id) setView(state => state ? { ...state, snapshot: { ...state.snapshot, conversation: value } } : state);
         } finally { setHistoryBusy(false); }
@@ -803,7 +902,9 @@ function Workspace({
         setHistoryBusy(true); deletingConversation.current = conversation.id;
         try {
             await agentApi.deleteConversation(conversation.id);
+            void preparationWorkspace.refresh();
             deletedConversations.current.add(conversation.id);
+            conversationCache.remove(conversation.id);
             setConversations(items => items.filter(item => item.id !== conversation.id));
             if (currentConversation.current === conversation.id) chooseConversation(null);
             setNotice("对话及其资料、成果已永久删除。独立保存的职业档案和简历草稿未删除。");
@@ -934,6 +1035,55 @@ function Workspace({
         } finally { if (mounted.current) setFileBusy(false); }
     }
     function fillPrompt(value: string) { editText(value); if (memoryStatus === "open") setMemoryStatus("minimized"); if (workbenchStatus === "open") setWorkbenchStatus("minimized"); requestAnimationFrame(() => composer.current?.focus({ preventScroll: true })); }
+    async function preparationPrompt(value: string) {
+        if (busy || working || fileBusy) return;
+        if (task?.kind === "resume" && !await selectTask("learning")) return;
+        if (/做一轮模拟面试/.test(value)) {
+            setInterviewLaunch(value); setWorkbenchStatus("minimized"); setMemoryStatus(status => status === "open" ? "minimized" : status); setInterviewStatus("open");
+            return;
+        }
+        fillPrompt(value);
+    }
+    function reviewPreparation() {
+        if (interviewSession) { setInterviewLaunch(null); setInterviewStatus("open"); setWorkbenchStatus(status => status === "open" ? "minimized" : status); }
+        else { setCareerTab("learning"); setResumeOpen(false); setWorkbenchStatus("open"); }
+    }
+    function restartInterview() {
+        if (!interviewSession || interviewSession.status !== "completed") return;
+        const prompt = `穗奈，我想针对「${interviewSession.job_title}」再做一轮模拟面试。围绕岗位要求和我的基础，现场出${interviewSession.total}题。请你担任考官，读取最新训练记录，开始全新的一轮。设定一个模拟工作场景，一次问一题，等我打字回答后再追问。`;
+        void preparationPrompt(prompt);
+    }
+    async function changeInterviewStatus(status: "paused" | "active" | "completed") {
+        if (conversationId && busy && run) {
+            await agentApi.cancel(run.id);
+            // 先等待运行清理完成，再修改训练状态，避免评分写回已结束的面试。
+            for (let attempt = 0; attempt < 40; attempt++) {
+                const next = await agentApi.snapshot(conversationId);
+                if (!next.runs.some(isActive)) { if (currentConversation.current === conversationId) setView(initialView(next)); break; }
+                await new Promise(resolve => setTimeout(resolve, 150));
+            }
+        }
+        // 运行完成和取消竞态时，重新读取本轮记录，避免对旧题目/旧版本写入状态。
+        const latestPreparation = await agentApi.preparation();
+        const latestSession = latestPreparation.sessions.find(session => session.conversation_id === currentConversation.current && session.mode === "interview");
+        if (latestSession && (!interviewLaunch || latestSession.id !== interviewSession?.id)) {
+            if (latestSession.status === "completed") return;
+            await agentApi.changePreparation(latestPreparation.revision, { type: "session.status", id: latestSession.id, status });
+            await preparationWorkspace.refresh();
+        } else if (status === "completed") { setInterviewLaunch(null); setInterviewStatus("closed"); }
+    }
+    async function sendInterviewMessage(value: string) {
+        if (interviewSubmitting.current) return false;
+        interviewSubmitting.current = true;
+        try { return await runConversationTask(value) ?? false; }
+        finally { interviewSubmitting.current = false; }
+    }
+    async function closeInterview() {
+        try {
+            if (interviewSession?.status === "active" || busy && interviewStatus === "open") { await changeInterviewStatus("paused"); setInterviewStatus("minimized"); }
+            else setInterviewStatus("closed");
+        } catch (error) { setNotice((error as Error).message); }
+    }
     async function continueObligation(value: string, obligationId?: string) {
         if (!obligationId) { fillPrompt(value); return; }
         try {
@@ -957,6 +1107,8 @@ function Workspace({
     const action =
         run?.status === "awaiting_approval"
             ? "A22"
+            : practicing || preparationReaction
+              ? busy ? "A14" : text ? "A03" : (preparationReaction as "A14" | "A23" | "A24" | "A28") || "A21"
             : busy
               ? "A22"
               : text
@@ -966,35 +1118,29 @@ function Workspace({
         <FileActionProvider scope={conversationId} local={ui.local_file_actions} busy={fileBusy} preview={previewFile} download={file => void exportFile(file)} open={(file, action) => void openLocalFile(file, action)}>
         <main className="agent-app career-workspace career-desktop-shell" data-ui-motion={uiMotion ? "on" : "off"} data-inspector-open={inspectorOpen} data-detail-open={Boolean(resumePreviewOpen || preview || executionRun || jobDetailId)}>
             <header className="agent-top career-masthead">
-                <div className="career-masthead__identity"><CareerIcon name="history" size={34} /><div><div className="career-masthead__title"><h1>穗奈的陪伴桌面</h1><span className="career-presence" data-connected={Boolean(info && connected)}><i />{info && connected ? "服务已连接" : "正在连接"}</span></div><p>聊聊现在，一起找到下一步</p></div></div>
-                <div className="career-night-note" aria-hidden="true"><span>☾</span><p>慢一点也没关系，<br />我们一直在向前。</p></div>
+                <div className="career-masthead__identity"><CareerIcon name="history" size={28} /><div className="career-masthead__title"><h1>穗奈的陪伴桌面</h1><span className="career-presence" data-connected={Boolean(info && connected)} title={info && connected ? "服务已连接" : "正在连接"}><i /><span className={info && connected ? "sr-only" : undefined}>{info && connected ? "服务已连接" : "正在连接"}</span></span></div></div>
                 <div className="career-masthead__actions">
-                    <button className="agent-icon-button onboarding-help" type="button" title="使用引导" aria-label="重新查看使用引导" disabled={!info || busy || working || fileBusy || settings || remoteOpen || workspacePickerOpen || Boolean(renaming)} onClick={() => { setWorkbenchStatus(status => status === "open" ? "minimized" : status); setMemoryStatus(status => status === "open" ? "minimized" : status); closeDetail(); onboarding.start(); }}><AgentIcon name="help" size={21} /></button>
-                    <UiMotionToggle />
-                    {ui.model_connections && <button className="agent-icon-button" type="button" title="模型设置" aria-label="模型设置" onClick={openModelSettings}><CareerIcon name="settings" size={23} /></button>}
+                    <DesktopSettings modelConnections={ui.model_connections} local={!cloud} guideDisabled={!info || busy || working || fileBusy || settings || remoteOpen || workspacePickerOpen || Boolean(renaming)} onGuide={() => { setWorkbenchStatus(status => status === "open" ? "minimized" : status); setMemoryStatus(status => status === "open" ? "minimized" : status); closeDetail(); onboarding.start(); }} onConnect={openModelSettings} onRemote={() => setRemoteOpen(true)} />
                     <button className="agent-icon-button career-mobile-workbench" data-onboarding="workbench" type="button" title="打开职业工作台" aria-label="打开职业工作台" aria-expanded={workbenchStatus === "open"} aria-controls="career-workbench-window" onClick={() => { setResumePreviewOpen(false); setResumeOpen(false); setWorkbenchStatus("open"); }}><CareerIcon name="folder" size={23} /></button>
                     <button className="agent-icon-button" type="button" title={inspectorOpen ? "收起穗奈小窗" : "打开穗奈小窗"} aria-label={inspectorOpen ? "收起穗奈小窗" : "打开穗奈小窗"} aria-expanded={inspectorOpen} aria-controls="career-context" onClick={() => { if (resumePreviewOpen || preview || execution || jobDetailId) { setResumePreviewOpen(false); setPreview(null); setExecution(null); setJobDetailId(null); setInspectorOpen(false); } else setInspectorOpen(value => !value); }}><AgentIcon name="panel" size={20} /></button>
                 </div>
             </header>
             <div className="agent-layout">
                 <aside className="agent-sidebar">
-                    <div className="career-brand"><CareerIcon name="sprout" size={48} /><div><strong>青穗集</strong><p>更清晰的你<br />更喜欢的生活</p></div><span className="career-brand__spark" aria-hidden="true">✧</span></div>
-                    <nav className="career-desktop-apps" aria-label="桌面应用"><button data-onboarding="workbench" id="career-workbench-launcher" type="button" aria-label="打开职业工作台" aria-expanded={workbenchStatus === "open"} aria-controls="career-workbench-window" onClick={() => { setResumePreviewOpen(false); setResumeOpen(false); setWorkbenchStatus("open"); }}><CareerIcon name="folder" size={29} /><span className="career-desktop-app__title">职业工作台<small>档案 · 岗位 · 成长行动</small></span>{pendingCareerCount ? <span className="career-app-badge" aria-label={pendingCareerCount + "份待确认建议"}>{pendingCareerCount}</span> : <span aria-hidden="true">↗</span>}</button><button data-onboarding="memory" type="button" className="career-memory-launcher" aria-label="打开穗奈·忆迹场" aria-expanded={memoryStatus === "open"} aria-controls="suinai-memory-window" onClick={openMemory}><CareerIcon name="memory" size={34} className="career-memory-launcher__icon" /><span className="career-desktop-app__title">穗奈·忆迹场</span><span className="career-desktop-app__open" aria-hidden="true">↗</span></button></nav>
+                    <div className="career-brand"><CareerIcon name="sprout" size={40} /><strong>青穗集</strong><span className="career-brand__spark" aria-hidden="true">✧</span></div>
+                    <nav className="career-desktop-apps" aria-label="桌面应用"><button data-onboarding="workbench" id="career-workbench-launcher" type="button" aria-label="打开职业工作台" aria-expanded={workbenchStatus === "open"} aria-controls="career-workbench-window" onClick={() => { setResumePreviewOpen(false); setResumeOpen(false); setWorkbenchStatus("open"); }}><CareerIcon name="folder" size={25} /><span className="career-desktop-app__title">职业工作台</span>{pendingCareerCount > 0 && <span className="career-app-badge" aria-label={pendingCareerCount + "份待确认建议"}>{pendingCareerCount}</span>}</button><button data-onboarding="memory" type="button" className="career-memory-launcher" aria-label="打开穗奈·忆迹场" aria-expanded={memoryStatus === "open"} aria-controls="suinai-memory-window" onClick={openMemory}><CareerIcon name="memory" size={25} className="career-memory-launcher__icon" /><span className="career-desktop-app__title">穗奈·忆迹场</span></button></nav>
                     <button className="btn btn--primary agent-new" disabled={working || fileBusy || historyBusy} type="button" onClick={newConversation}><CareerIcon name="newChat" size={23} /><span>新建对话</span><span className="career-new-plus" aria-hidden="true">＋</span></button>
-                    <ConversationHistory conversations={conversations} selectedId={conversationId} disabled={working || fileBusy || historyBusy} activeId={busy ? conversationId : null} archived={showArchived} onArchived={setShowArchived} onChoose={chooseConversation} onRename={setRenaming} onArchive={conversation => void archiveConversation(conversation)} onDelete={conversation => void deleteConversation(conversation)} />
+                    <ConversationHistory conversations={conversations} selectedId={conversationId} disabled={working || fileBusy || historyBusy} activeId={busy ? conversationId : null} archived={showArchived} onArchived={setShowArchived} onChoose={chooseConversation} onPrefetch={prefetchConversation} onRename={setRenaming} onArchive={conversation => void archiveConversation(conversation)} onDelete={conversation => void deleteConversation(conversation)} />
                     <div className="career-sidebar-bottom">
-                        <div className="career-sidebar-scene" aria-hidden="true"><span>在成长的路上，<br />你并不孤单。</span><AsciiArt variant="cat" className="ascii-sidebar-cat" /><i>✦</i></div>
+                        <div className="career-sidebar-scene" aria-hidden="true"><AsciiArt variant="cat" className="ascii-sidebar-cat" /></div>
                         <div className="career-account"><span className="career-account__mark"><CareerIcon name="seedling" size={25} /></span><div><strong>{account.name}</strong>{account.official && <small>官方账号</small>}</div><button className="agent-icon-button" type="button" aria-label="切换登录方式" title="切换登录方式" onClick={() => void logout()}><AgentIcon name="exit" size={17} /></button></div>
                         {account.official && <OfficialPoints key={user.id} refreshKey={(view?.snapshot.runs.at(-1)?.id ?? "") + ":" + (view?.snapshot.runs.at(-1)?.status ?? "")} />}
-                        <button className="career-sidebar-setting" type="button" onClick={() => setRemoteOpen(true)}><AgentIcon name="computer" size={21} />设备与同步<span>↗</span></button>
-                        {ui.model_connections && <button className="career-sidebar-setting" type="button" onClick={openModelSettings}><CareerIcon name="settings" size={21} />AI 连接<span>↗</span></button>}
                         {ui.desktop_exit && <DesktopExit />}
-                        {!cloud && <p className="career-privacy">资料保存在本机。调用外部模型时，相关内容仍会发送给所选服务。</p>}
                     </div>
                 </aside>
                 <section className="agent-chat" id="suinai-chat" aria-label="穗奈对话工作区">
                     <div className="desktop-titlebar career-chat-titlebar">
-                        <span className="career-chat-title"><CareerIcon name="history" size={21} /><span>{snapshot?.conversation.title ?? "穗奈消息"}</span></span>
+                        <span className="career-chat-title"><CareerIcon name="history" size={21} /><span>{snapshot?.conversation.title ?? conversations.find(item => item.id === conversationId)?.title ?? "穗奈消息"}</span></span>
                         <div className="career-chat-titlebar__actions">
                             {ui.model_connections ? <button className="career-chat-connection" type="button" data-ready={Boolean(profile?.capabilities.chat && profile.has_key)} aria-label={profile?.has_key ? profile.capabilities.chat ? "模型已连接" : "模型连接待测试" : "连接模型"} title={profile?.has_key ? profile.capabilities.chat ? "模型已连接" : "模型连接待测试" : "连接模型"} onClick={openModelSettings}><i /></button> : <span className="career-chat-connection" role="status" data-ready={Boolean(profile?.capabilities.chat && profile.has_key)} aria-label={profile?.capabilities.chat && profile.has_key ? "官方服务已连接" : "官方服务连接中"}><i /></span>}
                             {run && <ExecutionToggle open={Boolean(executionRun)} active={busy} onClick={() => executionRun ? closeDetail() : showExecution(run.id)} />}
@@ -1021,7 +1167,7 @@ function Workspace({
                             </button>
                         </div>
                     ) : null}
-                    <div className="agent-messages" aria-live="polite"><div className="agent-message-flow" ref={messageFlow}>
+                    <div className="agent-messages" aria-live="polite" aria-busy={!historyReady}><div key={conversationId ?? "new"} className="agent-message-flow" ref={messageFlow} data-ready={historyReady}>
                         {conversationId && !snapshot && <div className="conversation-loading" role="status" aria-label="加载对话"><i /><i /><i /></div>}
                         {(!conversationId || snapshot) && !snapshot?.messages.length && !drafts.length ? (
                             <CareerWelcome onPrompt={fillPrompt} connected={Boolean(profile?.capabilities.chat && profile.has_key)} onConnect={openModelSettings} canConfigure={ui.model_connections} />
@@ -1056,7 +1202,7 @@ function Workspace({
                                         return file ? <FileLink key={attachment.artifact_id} file={file}><AgentIcon name="image" size={14} />{attachment.name}</FileLink> : <span className="agent-message-attachment-missing" key={attachment.artifact_id}><AgentIcon name="image" size={14} />{attachment.name}</span>;
                                     })}
                                 </div> : null}
-                                {editingMessage?.id === message.id ? <MessageEditor key={message.id} content={message.content} disabled={working || busy || fileBusy} onCancel={() => setEditingMessage(null)} onSend={value => void submitMessage(value, message.id)} /> : message.role === "assistant" ? <StreamingContent content={message.content} streaming={Boolean(message.streaming)} files={files} runId={message.run_id} /> : <MessageContent content={message.content} />}
+                                {editingMessage?.id === message.id ? <MessageEditor key={message.id} content={message.content} disabled={working || busy || fileBusy} onCancel={() => setEditingMessage(null)} onSend={value => void submitMessage(value, message.id)} /> : message.role === "assistant" ? <StreamingContent content={message.content} streaming={Boolean(message.streaming)} animateEntrance={arrivingMessages.has(message.id) && Boolean(message.run_id && preparationRuns.has(message.run_id))} files={files} runId={message.run_id} /> : <MessageContent content={message.content} />}
                                 {!message.streaming && editingMessage?.id !== message.id && <MessageActions content={message.content} disabled={working || busy || fileBusy || Boolean(snapshot?.conversation.archived)} onEdit={message.role === "user" ? () => setEditingMessage(message) : undefined} onError={setNotice} />}
                                 {message.role === "assistant" && <MessageFileLinks files={deliveries.get(message.id) ?? []} />}
                             </article>
@@ -1130,7 +1276,10 @@ function Workspace({
                             </button>
                         </div>
                     ) : null}
-                    {!snapshot?.conversation.archived && <GuidedTaskBar guidance={guidance} disabled={busy || working || fileBusy || historyBusy} onChange={kind => void selectTask(kind)} />}
+                    <AutoHeight open={Boolean(preparationSession)} changeKey={preparationSession?.status}>
+                        <PreparationChatBar session={preparationSession} workspace={preparationWorkspace} busy={cardDisabled} onReview={reviewPreparation} />
+                    </AutoHeight>
+                    {!practicing && !snapshot?.conversation.archived && <GuidedTaskBar guidance={guidance} disabled={busy || working || fileBusy || historyBusy} onChange={kind => void selectTask(kind)} />}
                     {bubble && !inspectorOpen && <SuinaiBubble {...bubble} compact disabled={busy || working || fileBusy} onAccept={acceptBubble} onDismiss={dismissBubble} />}
                     {resumeActive && !busy && !working && messages.filter(message => message.role === "user").length === 0 && <div className="resume-conversation-starters" aria-label="不知道怎么开始时"><span>从最像你的情况开始</span>{["我还是学生，没什么经历", "我已经工作，想换个机会", "我有旧简历，想一起改改"].map(value => <button type="button" key={value} onClick={() => fillPrompt(value)}>{value}</button>)}</div>}
                     <ChatComposer ui={ui} supportedExtensions={info?.file_workspace.supported_extensions} environment={info?.sandbox} key={conversationId ?? "draft"} text={text} onText={editText} composer={composer} fileInput={fileInput} onSubmit={event => void send(event)} onUpload={items => void upload(items)} onUploadProject={items => void upload(items)} onOpenWorkspace={() => void openWorkspace()} pendingAttachments={pendingAttachments} attachmentPreviews={attachmentPreviews} onRemoveAttachment={id => { setPendingAttachments(values => values.filter(file => file.id !== id)); setAttachmentPreviews(values => { const url = values[id]; if (url) URL.revokeObjectURL(url); const next = { ...values }; delete next[id]; return next; }); }} onCancel={() => { if (run) void agentApi.cancel(run.id).catch(error => setNotice(error.message)); }} onModelSettings={ui.model_connections ? openModelSettings : undefined} busy={busy} working={working || Boolean(conversationId && !snapshot)} fileBusy={fileBusy} waiting={run?.status === "waiting_input"} archived={Boolean(snapshot?.conversation.archived)} profiles={profiles} selected={selected} onSelect={value => { setSelected(value); remember(value); }} permission={ui.host_permissions ? permission : "default"} onPermission={setPermission} effort={effort} onEffort={setEffort} />
@@ -1138,14 +1287,15 @@ function Workspace({
                 </section>
 
                 {(resumePreviewOpen || preview || executionRun || jobDetailId) && <button className="workspace-detail-backdrop" type="button" aria-label={resumePreviewOpen ? "收起简历预览" : jobDetailId ? "收起岗位详情" : preview ? "收起文件预览" : "收起执行记录"} onClick={closeDetail} />}
-                {resumePreviewOpen ? <ResumePreviewPanel onPrompt={fillPrompt} onEdit={async (request, instruction) => { await runResumeTask("请只修改简历中框选的部分：" + instruction, request); }} onCancelPending={async () => { await resumeWorkspace.apply({ type: "task.cancel" }); }} editDisabled={fileBusy || Boolean(snapshot?.conversation.archived)} state={resumeWorkspace.state} liveDraft={liveResumeDraft} error={resumeWorkspace.error} busy={busy || working} saving={resumeWorkspace.saving} onClose={closeDetail} onOpenStudio={() => { setResumeOpen(true); setCareerTab("files"); setWorkbenchStatus("open"); }} /> : jobDetailId ? <JobDetailPanel id={jobDetailId} state={careerState} saving={careerWorkspace.saving} disabled={cardDisabled} onSave={saveJob} onClose={closeDetail} onPrompt={fillPrompt} /> : preview ? <FilePreviewPanel file={preview} files={files} local={ui.local_file_actions} busy={fileBusy} onSelect={previewFile} onClose={closeDetail} onDownload={file => void exportFile(file)} onOpen={(file, action) => void openLocalFile(file, action)} /> : executionRun ? <ExecutionPanel run={executionRun} runs={snapshot?.runs ?? []} messages={snapshot?.messages ?? []} records={records} events={view?.events ?? []} selectedKey={execution?.recordKey} selectionId={execution?.selectionId} files={files} onSelect={showExecution} onClose={closeDetail} onPreview={previewFile} /> : <aside className="agent-inspector" id="career-context" aria-label="穗奈陪伴与资料">
+                {resumePreviewOpen ? <ResumePreviewPanel onPrompt={fillPrompt} onEdit={async (request, instruction) => { await runResumeTask("请只修改简历中框选的部分：" + instruction, request); }} onCancelPending={async () => { await resumeWorkspace.apply({ type: "task.cancel" }); }} editDisabled={fileBusy || Boolean(snapshot?.conversation.archived)} state={resumeWorkspace.state} liveDraft={liveResumeDraft} error={resumeWorkspace.error} busy={busy || working} saving={resumeWorkspace.saving} onClose={closeDetail} onOpenStudio={() => { setResumeOpen(true); setCareerTab("files"); setWorkbenchStatus("open"); }} /> : jobDetailId ? <JobDetailPanel id={jobDetailId} state={careerState} saving={careerWorkspace.saving} disabled={cardDisabled} onSave={saveJob} onClose={closeDetail} onPrompt={fillPrompt} /> : preview ? <FilePreviewPanel file={preview} files={files} local={ui.local_file_actions} busy={fileBusy} onSelect={previewFile} onClose={closeDetail} onDownload={file => void exportFile(file)} onOpen={(file, action) => void openLocalFile(file, action)} /> : executionRun ? <ExecutionPanel run={executionRun} runs={snapshot?.runs ?? []} messages={snapshot?.messages ?? []} records={records} events={view?.events ?? []} selectedKey={execution?.recordKey} selectionId={execution?.selectionId} files={files} onSelect={showExecution} onClose={closeDetail} onPreview={previewFile} /> : <aside className="agent-inspector companion-panel" id="career-context" aria-label="穗奈陪伴与资料" aria-hidden={!inspectorOpen} inert={!inspectorOpen}>
                     <section className="agent-companion-card">
                         <div className="career-companion-heading"><h2><CareerIcon name="heart" size={20} />穗奈的小窗</h2><span className="career-presence" data-connected="true"><i />{busy ? "陪你处理中" : "待机中"}</span><button className="agent-icon-button" type="button" title={motion ? "暂停动画" : "播放动画"} aria-label={motion ? "暂停动画" : "播放动画"} onClick={toggleMotion}><AgentIcon name={motion ? "pause" : "play"} size={15} /></button><ComposerMenu className="companion-settings" panelClassName="companion-settings-panel" label="陪伴互动设置" title="陪伴互动设置" trigger={<AgentIcon name="more" size={16} />} disabled={false} align="end">{() => <><strong>穗奈的陪伴方式</strong><label><input type="checkbox" checked={smartSuggestions} onChange={event => setCompanionPreference("smartSuggestions", event.target.checked)} />意图建议与会话小结</label><p>基于已发送消息，回复结束后最多额外调用一次所选模型，可能产生少量用量；猜测不自动启动任务，不发送输入框草稿。</p><label><input type="checkbox" checked={idleChat} onChange={event => setCompanionPreference("idleChat", event.target.checked)} />闲置时轻轻打个招呼</label><p>页面可见且约两分钟未操作时提醒；输入、执行中不打扰，十分钟内不重复，每次打开页面最多两次。不额外调用模型，不写入聊天记录。</p></>}</ComposerMenu></div>
                         <div className="agent-character">
                             <SuinaiMotionCharacter
                                 action={action}
+                                actionNonce={lastPreparationAnswer?.run_id}
                                 view="full"
-                                playing={motion && inspectorOpen}
+                                playing={motion && inspectorOpen && interviewStatus !== "open"}
                                 autoBlink
                                 eyeOpen={1}
                                 blinkNonce={0}
@@ -1167,27 +1317,24 @@ function Workspace({
                         </strong>
                     </section>
 
-                    <GrowthSummary state={careerState} loading={careerWorkspace.loading} error={careerWorkspace.error} onOpen={() => { setResumeOpen(false); setCareerTab("profile"); setWorkbenchStatus("open"); }} onPrompt={fillPrompt}>
-                        <AnimatedDisclosure className="growth-conversation-memory" summary="这段对话的小结"><ConversationMemory plan={snapshot?.plan} obligations={snapshot?.obligations} onContinue={continueObligation} onAbandon={abandonObligation} guidance={guidance} analyzing={insights.analyzing} error={insights.error} enabled={smartSuggestions} canRefresh={insightReady && !busy && !working && ["completed", "waiting_input"].includes(run?.status ?? "") && Boolean(snapshot?.messages.some(message => message.role === "user"))} onRefresh={insights.refresh} /></AnimatedDisclosure>
-                    </GrowthSummary>
-                    {careerState?.actions.find(action => action.status !== "done") && <NextActionRow action={careerState.actions.find(action => action.status !== "done")!} disabled={cardDisabled} onPrompt={fillPrompt} />}
-
-                    <FileDirectory files={files} />
+                    <CompanionContext key={conversationId ?? "draft"} onProfile={() => { setResumeOpen(false); setCareerTab("profile"); setWorkbenchStatus("open"); }} fileCount={latestFiles(files).length} files={<FileDirectory files={files} />} memory={<ConversationMemory plan={snapshot?.plan} obligations={snapshot?.obligations} onContinue={continueObligation} onAbandon={abandonObligation} guidance={guidance} analyzing={insights.analyzing} error={insights.error} enabled={smartSuggestions} canRefresh={insightReady && !busy && !working && ["completed", "waiting_input"].includes(run?.status ?? "") && Boolean(snapshot?.messages.some(message => message.role === "user"))} onRefresh={insights.refresh} />} />
                 </aside>}
             </div>
             <footer className="agent-footer career-desktop-taskbar" aria-label="桌面任务栏">
                 <div className="career-desktop-taskbar__apps">
-                    <button type="button" className="career-taskbar-app" aria-pressed={workbenchStatus !== "open" && memoryStatus !== "open"} onClick={() => { if (memoryStatus === "open") minimizeMemory(); if (workbenchStatus === "open") minimizeWorkbench(); else composer.current?.focus({ preventScroll: true }); }}><img src={SUINAI_AVATAR_URL} alt="" width={22} height={22} /><span>穗奈对话</span></button>
-                    {workbenchStatus !== "closed" && <button type="button" className="career-taskbar-app" aria-pressed={workbenchStatus === "open"} aria-label={workbenchStatus === "open" ? "最小化职业工作台" : "恢复职业工作台"} onClick={() => workbenchStatus === "open" ? minimizeWorkbench() : setWorkbenchStatus("open")}><CareerIcon name="folder" size={22} /><span>{resumeOpen ? "简历与经历" : "职业工作台"}</span>{pendingCareerCount > 0 && <small>{pendingCareerCount}</small>}</button>}
-                    <button data-onboarding="memory" type="button" className="career-taskbar-app" aria-pressed={memoryStatus === "open"} aria-label={memoryStatus === "open" ? "最小化穗奈·忆迹场" : "打开穗奈·忆迹场"} onClick={() => memoryStatus === "open" ? minimizeMemory() : openMemory()}><CareerIcon name="memory" size={22} /><span>穗奈·忆迹场</span>{memoryView && memoryView.recalls[0]?.items.length ? <small>{memoryView.recalls[0].items.length}</small> : null}</button>
+                    <button type="button" className="career-taskbar-app" aria-pressed={workbenchStatus !== "open" && memoryStatus !== "open" && interviewStatus !== "open"} onClick={() => { if (interviewStatus === "open") setInterviewStatus("minimized"); if (memoryStatus === "open") minimizeMemory(); if (workbenchStatus === "open") minimizeWorkbench(); else composer.current?.focus({ preventScroll: true }); }}><img src={SUINAI_AVATAR_URL} alt="" width={22} height={22} /><span>穗奈对话</span></button>
+                    {(interviewSession || interviewLaunch) && <button type="button" className="career-taskbar-app" aria-controls="suinai-interview-window" aria-pressed={interviewStatus === "open"} aria-label={interviewStatus === "open" ? "最小化模拟面试" : "打开模拟面试"} onClick={() => setInterviewStatus(status => status === "open" ? "minimized" : "open")}><AgentIcon name="phone" size={20}/><span>模拟面试</span></button>}
+                    {workbenchStatus !== "closed" && <button type="button" className="career-taskbar-app" aria-controls="career-workbench-window" aria-pressed={workbenchStatus === "open"} aria-label={workbenchStatus === "open" ? "最小化职业工作台" : "恢复职业工作台"} onClick={() => workbenchStatus === "open" ? minimizeWorkbench() : setWorkbenchStatus("open")}><CareerIcon name="folder" size={22} /><span>{resumeOpen ? "简历与经历" : "职业工作台"}</span>{pendingCareerCount > 0 && <small>{pendingCareerCount}</small>}</button>}
+                    <button data-onboarding="memory" type="button" className="career-taskbar-app" aria-controls="suinai-memory-window" aria-pressed={memoryStatus === "open"} aria-label={memoryStatus === "open" ? "最小化穗奈·忆迹场" : "打开穗奈·忆迹场"} onClick={() => memoryStatus === "open" ? minimizeMemory() : openMemory()}><CareerIcon name="memory" size={22} /><span>穗奈·忆迹场</span>{memoryView && memoryView.recalls[0]?.items.length ? <small>{memoryView.recalls[0].items.length}</small> : null}</button>
                 </div>
                 <span className="career-taskbar-status">{busy ? "穗奈正在处理任务…" : "青穗集 · 你的成长桌面"}</span>
             </footer>
             <DesktopWindow open={workbenchStatus === "open"} onClose={closeWorkbench} onMinimize={minimizeWorkbench} title={resumeOpen ? "简历与经历" : "职业工作台"}>
-                <CareerWorkbench workspace={careerWorkspace} learning={learningWorkspace} onJob={id => { minimizeWorkbench(); openJob(id); }} tab={careerTab} onTab={setCareerTab} files={files} hidden={workbenchStatus !== "open"} resumeOpen={resumeOpen} onResumeOpen={setResumeOpen} resume={{ workspace: resumeWorkspace, busy: busy || working || fileBusy || Boolean(snapshot?.conversation.archived), onChat: message => { void openResumeChat(message); }, onContinue: continueResumeConversation, onExport: exportResume }} onPrompt={fillPrompt} onImport={() => { minimizeWorkbench(); fileInput.current?.click(); }} onPending={setPendingCareerCount} uploadDisabled={busy || working || fileBusy || Boolean(snapshot?.conversation.archived)} />
+                <CareerWorkbench workspace={careerWorkspace} learning={learningWorkspace} preparation={preparationWorkspace} onPreparationPrompt={value => void preparationPrompt(value)} onConversation={id => { chooseConversation(id); minimizeWorkbench(); if (preparationWorkspace.state?.sessions.find(session => session.conversation_id === id)?.mode === "interview") setInterviewStatus("open"); }} onJob={id => { minimizeWorkbench(); openJob(id); }} tab={careerTab} onTab={setCareerTab} files={files} hidden={false} resumeOpen={resumeOpen} onResumeOpen={setResumeOpen} resume={{ workspace: resumeWorkspace, busy: busy || working || fileBusy || Boolean(snapshot?.conversation.archived), onChat: message => { void openResumeChat(message); }, onContinue: continueResumeConversation, onExport: exportResume }} onPrompt={fillPrompt} onImport={() => { minimizeWorkbench(); fileInput.current?.click(); }} onPending={setPendingCareerCount} uploadDisabled={busy || working || fileBusy || Boolean(snapshot?.conversation.archived)} />
             </DesktopWindow>
+            {(interviewSession || interviewLaunch) && <InterviewWindow key={conversationId ?? "interview-lobby"} open={interviewStatus === "open"} session={interviewLaunch ? undefined : interviewSession} launchPrompt={interviewLaunch} busy={busy || working} disabled={fileBusy || Boolean(snapshot?.conversation.archived)} motion={motion} action={interviewLaunch && busy ? "A14" : action} error={preparationWorkspace.error || notice} recovery={run?.can_retry && !busy && !working ? { message: failureMessage(run), retry: () => void retryReply() } : undefined} onSubmit={sendInterviewMessage} onFinish={() => changeInterviewStatus("completed")} onRestart={restartInterview} onPause={() => changeInterviewStatus("paused")} onResume={() => changeInterviewStatus("active")} onClose={() => void closeInterview()} onMinimize={() => setInterviewStatus("minimized")} />}
             <DesktopWindow id="suinai-memory-window" open={memoryStatus === "open"} onClose={closeMemory} onMinimize={minimizeMemory} title="穗奈·忆迹场" status="记忆 · 证据 · 当前召回">
-                {memoryStatus !== "closed" && <Suspense fallback={<div className="memory-loading" role="status">正在打开忆迹场…</div>}><MemorySea active={memoryStatus === "open"} activity={insights.analyzing ? "consolidating" : busy ? "working" : "idle"} view={memoryView} loading={memoryLoading} error={memoryError} onRefresh={loadMemory} onChange={async (id, change) => { await agentApi.changeMemory(id, change); await loadMemory(); }} onRetry={async () => { await agentApi.retryMemory(); await loadMemory(); }} onSettings={async value => { await agentApi.memorySettings(value); await loadMemory(); }} onExport={agentApi.exportMemory} onConfirmDelete={node => confirm({ title: "让穗奈忘记这段记忆？", confirmLabel: "永久删除记忆", description: <><p>{node.text}</p><p>忆迹场中的记录、来源索引和旧召回引用会删除；原始对话、正式画像和简历仍会保留。之后不会自动从这段来源重新记起。</p></> })} /></Suspense>}
+                {visible => (visible || memoryStatus !== "closed") && <Suspense fallback={<div className="memory-loading" role="status">正在打开忆迹场…</div>}><MemorySea active={memoryStatus === "open"} activity={insights.analyzing ? "consolidating" : busy ? "working" : "idle"} view={memoryView} loading={memoryLoading} error={memoryError} onRefresh={loadMemory} onChange={async (id, change) => { await agentApi.changeMemory(id, change); await loadMemory(); }} onRetry={async () => { await agentApi.retryMemory(); await loadMemory(); }} onSettings={async value => { await agentApi.memorySettings(value); await loadMemory(); }} onExport={agentApi.exportMemory} onConfirmDelete={node => confirm({ title: "让穗奈忘记这段记忆？", confirmLabel: "永久删除记忆", description: <><p>{node.text}</p><p>忆迹场中的记录、来源索引和旧召回引用会删除；原始对话、正式画像和简历仍会保留。之后不会自动从这段来源重新记起。</p></> })} /></Suspense>}
             </DesktopWindow>
             <RemoteConnections cloud={cloud} open={remoteOpen} onClose={() => setRemoteOpen(false)} user={user} onLogin={() => { setRemoteOpen(false); void logout(); }} />
             {settings && ui.model_connections ? (

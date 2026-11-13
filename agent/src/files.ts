@@ -198,7 +198,7 @@ export class Workspace {
       invariant(edit.conversation_id === conversationId && /^[a-f0-9-]{36}$/i.test(edit.id), 409, "项目修改记录归属异常，已停止删除。");
       targets.push(join(base, "project-edits", edit.id));
     }
-    const checked: string[] = [];
+    const checked: { path: string; parent: string; canonicalParent: string }[] = [];
     const inspect = async (target: string): Promise<void> => {
       const stat = await lstat(target);
       invariant(!stat.isSymbolicLink(), 409, "资料中存在符号链接或目录联接，已停止删除。请先移除链接后重试。");
@@ -212,13 +212,22 @@ export class Workspace {
       try {
         const parent = resolve(target, "..");
         const parentStat = await lstat(parent);
-        invariant(parentStat.isDirectory() && !parentStat.isSymbolicLink() && pathKey(await realpath(parent)) === pathKey(parent), 409, "资料目录发生重定向，已停止删除。");
-        await inspect(target);
-        checked.push(resolve(target));
+        invariant(parentStat.isDirectory() && !parentStat.isSymbolicLink(), 409, "资料目录中存在链接或目录联接，已停止删除。");
+        // Windows 打包应用会虚拟化 AppData：非链接的管理目录也可能拥有不同的实际路径。
+        // 仅信任已核实的直接管理目录，以其实际位置为边界，再核实整个子树。
+        const canonicalParent = await realpath(parent);
+        const canonicalTarget = join(canonicalParent, basename(target));
+        invariant(pathKey(await realpath(target)) === pathKey(canonicalTarget), 409, "资料位置发生重定向，已停止删除。");
+        await inspect(canonicalTarget);
+        checked.push({ path: canonicalTarget, parent, canonicalParent });
       } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
     }
     try {
-      for (const target of checked) await rm(target, { recursive: true, force: true, maxRetries: 2, retryDelay: 100 });
+      for (const target of checked) {
+        const parentStat = await lstat(target.parent);
+        invariant(!parentStat.isSymbolicLink() && pathKey(await realpath(target.parent)) === pathKey(target.canonicalParent), 409, "资料位置已变化，已停止删除。");
+        await rm(target.path, { recursive: true, force: true, maxRetries: 2, retryDelay: 100 });
+      }
     } catch {
       throw new AppError(409, "文件清理尚未完成，对话条目暂时保留。部分文件可能已清理；请关闭占用文件的应用后重新删除。");
     }

@@ -75,6 +75,8 @@
 .workbench-job-empty > span { font-size: 10px; }
 .workbench-job > .workbench-secondary { margin-top: 12px; }
 .workbench-job > p, .workbench-proposal-body > p { font-size: 12px; color: #887194; line-height: 1.9; overflow-wrap: anywhere; }
+.learning-coach { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 19px; padding-top: 15px; border-top: 1px solid #eee5f3; }
+.learning-coach > button { flex: 0 1 auto; min-height: 38px; }
 .workbench-analysis-label { margin: 17px 0 10px; color: #a085b3; font-size: 10px; }
 .workbench-checks { display: grid; gap: 9px; }
 .workbench-check { padding: 12px 14px; border: 1px solid #e7ddef; border-radius: 7px; background: #fcfaff; }
@@ -188,6 +190,8 @@
   .workbench-footer { padding: 8px 12px; font-size: 8px; }
   .workbench-footer > span:last-child { display: none; }
   .workbench-job, .workbench-action { padding: 15px; }
+  .learning-coach { align-items: stretch; gap: 9px; margin-top: 16px; padding-top: 13px; }
+  .learning-coach > button { flex: 1 1 210px; }
   .workbench-proposals { padding: 10px 10px 4px; }
   .workbench-proposals > header { flex-wrap: wrap; }
   .workbench-item-heading { gap: 7px; }
@@ -195,4 +199,63 @@
   .workbench-file-start { flex-wrap: wrap; gap: 12px; padding: 18px 14px; }
   .workbench-file-start h3 { font-size: 14px; }
   .workbench-profile-review > div { grid-template-columns: 1fr; gap: 5px; }
+}
+/* 工作台切换：保留各页组件状态，只为当前页播放轻量入场动效。 */
+.career-workbench { --workbench-motion: cubic-bezier(.2, 0, 0, 1); }
+.workbench-navigation > button { position: relative; border-bottom-color: transparent; transition: color 200ms ease, background-color 200ms ease; }
+.workbench-navigation > button[aria-selected="true"] { border-bottom-color: transparent; background: #eee7fa; border-radius: 7px 7px 0 0; }
+.workbench-navigation > button::after { content: ""; position: absolute; bottom: 0; left: 12px; right: 12px; height: 3px; background: #9678bf; transform: scaleX(0); transform-origin: center; transition: transform 300ms var(--workbench-motion); }
+.workbench-navigation > button[aria-selected="true"]::after { transform: scaleX(1); }
+.workbench-navigation > button .career-pixel-icon { transition: transform 250ms var(--workbench-motion); }
+.workbench-navigation > button:hover .career-pixel-icon, .workbench-navigation > button[aria-selected="true"] .career-pixel-icon { transform: translateY(-2px); }
+.workbench-scroll > [role="tabpanel"]:not([hidden]) { animation: workbench-panel-enter 320ms var(--workbench-motion) both; }
+.workbench-scroll > [role="tabpanel"]:not([hidden]) > * { animation: workbench-content-enter 380ms var(--workbench-motion) both; }
+.workbench-scroll > [role="tabpanel"]:not([hidden]) > :nth-child(2) { animation-delay: 35ms; }
+.workbench-scroll > [role="tabpanel"]:not([hidden]) > :nth-child(3) { animation-delay: 65ms; }
+@keyframes workbench-panel-enter { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes workbench-content-enter { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.career-workbench :is(button, summary) { transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease, box-shadow 200ms ease; }
+@media (prefers-reduced-motion: reduce) {
+  .career-workbench *, .career-workbench *::before, .career-workbench *::after { animation-duration: .01ms !important; animation-delay: 0ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
+
+/* 工作台折叠项：展开内容、状态箭头和收起过程保持同一节奏。 */
+.career-workbench details > summary {
+  position: relative;
+  list-style: none;
+  transition: color 180ms ease, background-color 220ms ease, border-color 220ms ease;
+}
+.career-workbench details > summary::-webkit-details-marker { display: none; }
+.career-workbench details > summary::after {
+  content: "";
+  width: 7px;
+  height: 7px;
+  margin-left: auto;
+  flex: none;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg) translateY(-2px);
+  transition: transform 260ms var(--workbench-motion), opacity 180ms ease;
+  opacity: .7;
+}
+.career-workbench details[open] > summary::after { transform: rotate(225deg) translate(-1px, -1px); opacity: 1; }
+.career-workbench .workbench-add-form > summary::after {
+  width: auto;
+  height: auto;
+  border: 0;
+  content: "＋";
+  transform: none;
+  font-size: 17px;
+  opacity: .75;
+}
+.career-workbench .workbench-add-form[open] > summary::after { content: "－"; transform: none; }
+/* 内容高度统一使用全站折叠过渡，避免与工作台局部动画叠加。 */
+@media (prefers-reduced-motion: reduce) {
+  .career-workbench details,
+  .career-workbench details > summary,
+  .career-workbench details > summary::after,
+  .career-workbench details > :not(summary) {
+    animation: none !important;
+    transition: none !important;
+  }
 }

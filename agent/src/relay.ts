@@ -19,6 +19,7 @@ const routeCapabilities = [
   "direction_explore",
   "compare_decide",
   "action_plan",
+  "career_prepare",
   "resume_build",
   "artifact_delivery",
 ] as const;

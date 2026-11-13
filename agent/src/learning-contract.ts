@@ -33,11 +33,18 @@ export const learningChangeInput = z.object({
 }).strict();
 export interface LearningResource {
   id: string; bvid: string; title: string; author: string; duration: string;
+  cover?: string; views?: number; description?: string;
   url: string; query: string; fetched_at: string;
 }
 export interface LearningSearchResult {
   query: string; status: "available" | "unavailable" | "empty";
   resources: LearningResource[]; search_url: string; message: string;
+}
+export interface LearningCaption { start: number; end: number; text: string }
+export interface LearningSubtitleTrack { language: string; label: string; captions: LearningCaption[] }
+export interface LearningSubtitleResult {
+  status: "available" | "login_required" | "no_subtitles" | "unavailable";
+  tracks: LearningSubtitleTrack[]; message: string;
 }
 export type LearningNodeInput = z.infer<typeof learningNodeInput>;
 export type LearningPathInput = z.infer<typeof learningPathInput>;

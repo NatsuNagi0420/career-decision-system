@@ -21,6 +21,7 @@ import { Runtime } from "./runtime.js";
 import { toolRegistry } from "./tools.js";
 import { careerChangeInput } from "./career.js";
 import { learningChangeInput, learningSearchInput } from "./learning-contract.js";
+import { preparationChangeInput } from "./preparation-contract.js";
 import { resumeChangeInput, resumeEditInput } from "./resume.js";
 import { taskChangeInput } from "./guidance.js";
 import { memoryChangeInput, memorySettingsInput } from "./core/long-term-memory.js";
@@ -279,6 +280,20 @@ export function createApp(options: AppOptions) {
     const query = z.record(z.string(), z.string()).parse(request.query);
     return runtime.career.catalogue.listCareerDirections({ ...query, ...(query.limit !== undefined ? { limit: Number(query.limit) } : {}) });
   });
+  app.get("/api/v1/agent/career/preparation", async request => {
+    const user = await authenticate(request.headers.authorization);
+    return runtime.career.preparation.view(user.id);
+  });
+  app.get("/api/v1/agent/career/preparation/questions", async request => {
+    await authenticate(request.headers.authorization);
+    const { searchQuestionBank } = await import("./question-bank.js");
+    const { query } = z.object({ query: z.string().max(160).optional() }).strict().parse(request.query);
+    return { questions: searchQuestionBank(query), notice: "参考官方文档的原创整理题，不是企业真题。" };
+  });
+  app.post("/api/v1/agent/career/preparation/changes", async request => {
+    const user = await authenticate(request.headers.authorization);
+    return runtime.career.preparation.change(user.id, preparationChangeInput.parse(request.body));
+  });
   app.get("/api/v1/agent/career/learning", async request => {
     const user = await authenticate(request.headers.authorization);
     return runtime.career.learning.view(user.id);
@@ -291,6 +306,12 @@ export function createApp(options: AppOptions) {
     const user = await authenticate(request.headers.authorization);
     rate("learning-search:" + user.id, 20);
     return runtime.career.learning.search(user.id, learningSearchInput.parse(request.query));
+  });
+  app.get("/api/v1/agent/career/learning/videos/:bvid/subtitles", async request => {
+    const user = await authenticate(request.headers.authorization);
+    rate("learning-subtitles:" + user.id, 20);
+    const { bvid } = z.object({ bvid: z.string().regex(/^BV[0-9A-Za-z]{10}$/) }).parse(request.params);
+    return runtime.career.learning.subtitles(user.id, bvid);
   });
   app.get("/api/v1/agent/career/catalogue/jobs", async request => {
     (await authenticate(request.headers.authorization));

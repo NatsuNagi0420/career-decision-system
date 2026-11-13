@@ -4,13 +4,13 @@ import { MessageContent } from "./MessageContent";
 import { useUiMotion } from "./uiMotion";
 import { batchEndsAt, createReveal, receiveReveal, settleReveal } from "./stream-reveal";
 import type { AgentFile } from "./types";
-export function StreamingContent({ content, streaming, files, runId }: { content: string; streaming: boolean; files: AgentFile[]; runId?: string | null }) {
+export function StreamingContent({ content, streaming, files, runId, animateEntrance = false }: { content: string; streaming: boolean; files: AgentFile[]; runId?: string | null; animateEntrance?: boolean }) {
   const { playing } = useUiMotion();
-  const [visible, setVisible] = useState(() => document.visibilityState === "visible");
-  const [sawStream, setSawStream] = useState(streaming);
+  const [visible, setVisible] = useState(() => typeof document !== "undefined" && document.visibilityState === "visible");
+  const [sawStream, setSawStream] = useState(streaming || animateEntrance);
   const enabled = playing && visible && (streaming || sawStream);
   const [timeline, setTimeline] = useState(() => createReveal(content, performance.now(), enabled));
-  if (streaming && !sawStream) setSawStream(true);
+  if ((streaming || animateEntrance) && !sawStream) setSawStream(true);
   // 同一次提交中准备占位，避免先闪现正文、下一帧才变乱码。不会逐帧 setState。
   let current = timeline;
   if (timeline.content !== content || timeline.enabled !== enabled) {

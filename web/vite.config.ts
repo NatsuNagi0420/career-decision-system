@@ -11,7 +11,8 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: "127.0.0.1",
-    port: 5173,
+    port: 5188,
+    strictPort: true,
     // 仅额外开放纯排版模块，预览与后端交付共用一份模板；不暴露后端配置目录。
     fs: { allow: [fileURLToPath(new URL(".", import.meta.url)), fileURLToPath(new URL("../agent/src/resume-render.ts", import.meta.url)), fileURLToPath(new URL("../agent/src/resume-contract.ts", import.meta.url)), fileURLToPath(new URL("../agent/src/resume-fields.ts", import.meta.url)), fileURLToPath(new URL("../agent/src/memory-contract.ts", import.meta.url)), fileURLToPath(new URL("../agent/src/ui-contract.ts", import.meta.url)), fileURLToPath(new URL("../agent/src/onboarding-contract.ts", import.meta.url)), fileURLToPath(new URL("../agent/src/core/memory-ranking.ts", import.meta.url))] },
     proxy: {

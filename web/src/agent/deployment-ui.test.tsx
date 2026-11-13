@@ -29,7 +29,7 @@ describe("同一前端的部署能力", () => {
   it("云端未就绪也不把用户带到模型配置页面", () => {
     const html = renderToStaticMarkup(<CareerWelcome connected={false} canConfigure={false} onPrompt={noop} onConnect={noop} />);
     expect(html).not.toContain("连接模型，和穗奈聊聊");
-    expect(html).toContain("你好，我是穗奈");
+    expect(html).toContain('aria-label="从认识自己开始"');
   });
   it("云端设备窗口管理自己的电脑，不出现连接此电脑和二维码配对", () => {
     const html = renderToStaticMarkup(<RemoteConnections cloud open onClose={noop} user={{ id: 1, username: "fixture", external_ai_consent: true, identity: "official" }} onLogin={noop} />);

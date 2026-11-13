@@ -1,17 +1,19 @@
-/** 青穗集 · 内容尺寸过渡：测量自然高度，平滑承接异步内容和表单增减，不缩放文字或复制输入框。 */
+/** 青穗集 · 内容尺寸过渡：测量自然高度，承接折叠、异步内容和表单增减，保留子树与输入状态。 */
 import { useLayoutEffect, useRef, type ReactNode } from "react";
 import "./layout-motion.css";
 
-export function AutoHeight({ children, className = "", contentClassName = "", changeKey, motion = true }: {
-  children: ReactNode; className?: string; contentClassName?: string; changeKey?: string; motion?: boolean;
+export function AutoHeight({ children, className = "", contentClassName = "", changeKey, motion = true, open = true }: {
+  children: ReactNode; className?: string; contentClassName?: string; changeKey?: string; motion?: boolean; open?: boolean;
 }) {
   const outer = useRef<HTMLDivElement>(null), inner = useRef<HTMLDivElement>(null);
+  const expanded = useRef(open);
+  expanded.current = open;
   const previousKey = useRef(changeKey), entrance = useRef<Animation | null>(null);
   useLayoutEffect(() => {
     const host = outer.current, content = inner.current;
     if (!host || !content) return;
     const measure = () => {
-      const height = content.offsetHeight + "px";
+      const height = (expanded.current ? content.offsetHeight : 0) + "px";
       if (host.style.height !== height) host.style.height = height;
     };
     measure();
@@ -24,7 +26,7 @@ export function AutoHeight({ children, className = "", contentClassName = "", ch
   useLayoutEffect(() => {
     const host = outer.current, content = inner.current;
     if (!host || !content) return;
-    host.style.height = content.offsetHeight + "px";
+    host.style.height = (open ? content.offsetHeight : 0) + "px";
     if (previousKey.current !== changeKey) {
       previousKey.current = changeKey;
       entrance.current?.cancel();
@@ -35,5 +37,5 @@ export function AutoHeight({ children, className = "", contentClassName = "", ch
     if (!motion) entrance.current?.cancel();
   });
   useLayoutEffect(() => () => entrance.current?.cancel(), []);
-  return <div ref={outer} className={"auto-height " + className} data-motion={motion ? "on" : "off"}><div ref={inner} className={"auto-height__content " + contentClassName}>{children}</div></div>;
+  return <div ref={outer} className={"auto-height " + className} data-motion={motion ? "on" : "off"} data-open={open} aria-hidden={!open || undefined} inert={!open}><div ref={inner} className={"auto-height__content " + contentClassName}>{children}</div></div>;
 }

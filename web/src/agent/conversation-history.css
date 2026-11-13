@@ -42,3 +42,17 @@
 .conversation-rename button:disabled { opacity:.5; cursor:wait; }
 @media(hover:none) { .conversation-actions--compact { opacity:1; } }
 @media(max-height:800px) { .career-workspace .career-sidebar-scene { display:none; } }
+
+/* 选中态只淡入底色；不逐行重播，也不挤动标题和操作入口。 */
+.career-workspace .agent-history-open { translate:none; scale:none; }
+.career-workspace[data-ui-motion="on"] .agent-history-row { transition:border-color 180ms ease, background-color 180ms ease; }
+.career-workspace[data-ui-motion="on"] .agent-history-row::before,
+.career-workspace[data-ui-motion="on"] .conversation-actions--compact { transition:opacity 180ms ease; }
+.career-workspace[data-ui-motion="on"] .conversation-history-list { animation:history-list-arrive 200ms cubic-bezier(.2,0,0,1) both; }
+@keyframes history-list-arrive { from { opacity:.55; transform:translateY(3px); } to { opacity:1; transform:none; } }
+@media(prefers-reduced-motion:reduce) {
+  .career-workspace[data-ui-motion] .agent-history-row,
+  .career-workspace[data-ui-motion] .agent-history-row::before,
+  .career-workspace[data-ui-motion] .conversation-actions--compact { transition:none; }
+  .career-workspace[data-ui-motion] .conversation-history-list { animation:none; }
+}

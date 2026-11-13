@@ -1,5 +1,5 @@
 /** 青穗集 · 会话历史与管理：标题搜索、重命名、归档恢复和永久删除，所有入口复用同一菜单。 */
-import { useEffect, useId, useRef, useState, type FormEvent } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { AgentIcon } from "./AgentIcon";
 import { CareerIcon } from "./CareerVisuals";
@@ -30,21 +30,34 @@ export function ConversationActions({ conversation, disabled, active = false, on
     </>}
   </ComposerMenu>;
 }
-export function ConversationHistory({ conversations, selectedId, disabled, activeId, archived, onArchived, onChoose, ...actions }: Actions & {
+export function ConversationHistory({ conversations, selectedId, disabled, activeId, archived, onArchived, onChoose, onPrefetch, ...actions }: Actions & {
   conversations: Conversation[]; selectedId: string | null; disabled: boolean; activeId: string | null;
   archived: boolean; onArchived: (value: boolean) => void; onChoose: (id: string) => void;
+  onPrefetch?: (id: string) => void;
 }) {
   const [query, setQuery] = useState("");
-  const items = filterConversations(conversations, archived, query);
+  const items = useMemo(() => filterConversations(conversations, archived, query), [conversations, archived, query]);
+  const prefetchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  function cancelPrefetch() { if (prefetchTimer.current !== null) clearTimeout(prefetchTimer.current); prefetchTimer.current = null; }
+  function prefetch(id: string, delay = 0) {
+    cancelPrefetch();
+    if (disabled || id === selectedId || !onPrefetch) return;
+    if (delay) prefetchTimer.current = setTimeout(() => onPrefetch(id), delay);
+    else onPrefetch(id);
+  }
+  useEffect(() => cancelPrefetch, []);
   return <section className="conversation-history" aria-label="对话记录">
     <div className="agent-history-tabs" aria-label="对话分类">
       <button type="button" aria-pressed={!archived} data-active={!archived} onClick={() => onArchived(false)}>最近对话 <small>{conversations.filter(item => !item.archived).length}</small></button>
       <button type="button" aria-pressed={archived} data-active={archived} onClick={() => onArchived(true)}>已归档 <small>{conversations.filter(item => item.archived).length}</small></button>
     </div>
     <div className="conversation-search"><AgentIcon name="search" size={15} /><input aria-label="搜索对话标题" type="search" placeholder="搜索对话…" value={query} onChange={event => setQuery(event.target.value)} />{query && <button type="button" title="清空搜索" aria-label="清空搜索" onClick={() => setQuery("")}><AgentIcon name="close" size={13} /></button>}</div>
-    <nav className="conversation-history-list" aria-label={archived ? "已归档对话" : "历史对话"}>
+    <nav key={archived ? "archived" : "recent"} className="conversation-history-list" aria-label={archived ? "已归档对话" : "历史对话"}>
       {items.map(conversation => <div className="agent-history-row" key={conversation.id} data-selected={selectedId === conversation.id}>
-        <button className="agent-history-open" type="button" disabled={disabled} aria-current={selectedId === conversation.id ? "page" : undefined} title={conversation.title} onClick={() => onChoose(conversation.id)}><CareerIcon name="history" size={21} /><span>{conversation.title}<small>{new Date(conversation.updated_at).toLocaleDateString("zh-CN", { month: "numeric", day: "numeric" })}</small></span></button>
+        <button className="agent-history-open" type="button" disabled={disabled} aria-current={selectedId === conversation.id ? "page" : undefined} title={conversation.title}
+          onPointerEnter={event => { if (event.pointerType !== "touch") prefetch(conversation.id, 90); }} onPointerLeave={cancelPrefetch}
+          onFocus={() => prefetch(conversation.id)} onBlur={cancelPrefetch} onPointerDown={() => prefetch(conversation.id)}
+          onClick={() => { cancelPrefetch(); onChoose(conversation.id); }}><CareerIcon name="history" size={21} /><span>{conversation.title}<small>{new Date(conversation.updated_at).toLocaleDateString("zh-CN", { month: "numeric", day: "numeric" })}</small></span></button>
         <ConversationActions {...actions} compact conversation={conversation} disabled={disabled} active={conversation.id === activeId} />
       </div>)}
       {!items.length && <p className="agent-muted conversation-history-empty">{query.trim() ? "这里没有找到这个标题，试试其他关键词或另一个分类。" : archived ? "还没有归档的对话。归档只收起记录，不会删除资料。" : "聊过的事会留在这里。每段对话的 ··· 里可以重命名、归档或删除。"}</p>}

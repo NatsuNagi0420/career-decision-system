@@ -4,7 +4,7 @@ import { Store, id, now } from "./store.js";
 import { invariant } from "./errors.js";
 import type { CareerState } from "./career.js";
 import { learningChangeInput, learningProposalInput, learningSearchInput, type LearningState, type LearningPathInput, type LearningResource, type LearningNode } from "./learning-contract.js";
-import { searchBilibili } from "./learning-resources.js";
+import { readBilibiliSubtitles, searchBilibili } from "./learning-resources.js";
 
 export class LearningWorkspace {
   constructor(readonly store: Store, private readonly career: (userId: number) => CareerState) {
@@ -126,6 +126,13 @@ export class LearningWorkspace {
       if (result.status !== "unavailable") this.store.db.prepare("INSERT INTO learning_searches VALUES(?,?,?,?) ON CONFLICT(user_id,query) DO UPDATE SET data=excluded.data,updated_at=excluded.updated_at").run(userId, query, JSON.stringify(result), Date.now());
     });
     return result;
+  }
+  async subtitles(userId: number, bvid: string, signal?: AbortSignal) {
+    this.store.getUser(userId);
+    const resourceId = createHash("sha256").update(bvid).digest("hex").slice(0, 32);
+    const row = this.store.db.prepare("SELECT data FROM learning_resources WHERE user_id=? AND id=?").get(userId, resourceId);
+    invariant(row && (JSON.parse(String(row.data)) as LearningResource).bvid === bvid, 404, "请先从本账号的视频搜索结果中选择视频。");
+    return readBilibiliSubtitles(bvid, signal);
   }
   context(userId: number) {
     const state = this.view(userId);

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { DesktopWindow } from "./DesktopWindow";
 import { AgentIcon } from "./AgentIcon";
+import { AnimatedInput } from "./AnimatedInput";
 import { agentApi } from "./api";
 import type { AgentUser } from "./types";
 import "./remote.css";
@@ -50,7 +51,7 @@ export function RemoteConnections({ cloud = false, open, onClose, user, onLogin 
           {state && !state.devices.some(item => item.status !== "revoked") && <p>还没有连接的电脑。在电脑端登录后，用小程序扫码连接。</p>}
         </> : user.identity !== "official" ? <button onClick={onLogin}>登录官方账号</button> : !state?.configured ? <p>云端同步地址尚未配置。</p> : <>
           <div className="remote-heading"><AgentIcon name="computer" size={24} /><strong>{device?.name || "连接这台电脑"}</strong>{device && <span className="remote-dot" data-online={device.online} title={device.online ? "在线" : "离线"} />}</div>
-          {!device || device.status === "revoked" ? <label>电脑名称<input maxLength={80} value={name} onChange={e => setName(e.target.value)} /></label> : null}
+          {!device || device.status === "revoked" ? <label>电脑名称<AnimatedInput maxLength={80} value={name} onChange={e => setName(e.target.value)} /></label> : null}
           {device?.status === "pending" && <div className="remote-pairing">
             <strong>用小程序扫码连接</strong>
             <div className="remote-qr" aria-label={expired ? "二维码已过期" : "电脑绑定二维码"}>

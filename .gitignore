@@ -81,6 +81,7 @@ assets/穗奈_小程序端原型与透明图标_全量包.zip
 # Cloud Hub local credentials/configuration; example files remain tracked.
 .env.hub
 .env.cloud
+development-test-account.json
 
 # Local reference checkouts, production recordings and original asset bundles.
 vendor/

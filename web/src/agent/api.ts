@@ -2,7 +2,8 @@
 import type { OfficialCredits } from "../../../agent/src/credits-contract";
 import { tokenStore } from "../api/client";
 import type { CareerChange, CareerState } from "./career";
-import type { LearningState, LearningChange, LearningSearchResult } from "../../../agent/src/learning-contract";
+import type { LearningState, LearningChange, LearningSearchResult, LearningSubtitleResult } from "../../../agent/src/learning-contract";
+import type { PreparationState, PreparationChange } from "../../../agent/src/preparation-contract";
 import type { ResumeChange, ResumeState } from "../../../agent/src/resume-contract";
 import type { GuidanceView, TaskKind } from "../../../agent/src/guidance-contract";
 import type { MemoryChange, MemorySeaView } from "../../../agent/src/memory-contract";
@@ -76,8 +77,12 @@ export const agentApi = {
   resolveCareerFact: (id: string, action: "confirm" | "dismiss") => request<CareerState>(BASE + "/career/facts/" + encodeURIComponent(id), { method: "POST", body: JSON.stringify({ action }) }),
   career: (signal?: AbortSignal, conversationId?: string | null) => request<CareerState>(BASE + "/career" + (conversationId ? "?conversation_id=" + encodeURIComponent(conversationId) : ""), { signal }),
   learning: (signal?: AbortSignal) => request<LearningState>(BASE + "/career/learning", { signal }),
+  preparation: (signal?: AbortSignal) => request<PreparationState>(BASE + "/career/preparation", { signal }),
+  changePreparation: (revision: number, change: PreparationChange) => request<PreparationState>(BASE + "/career/preparation/changes", { method: "POST", body: JSON.stringify({ revision, change }) }),
+  preparationQuestions: (query = "", signal?: AbortSignal) => request<{ questions: import("../../../agent/src/preparation-contract").PublicQuestion[] }>(BASE + "/career/preparation/questions?query=" + encodeURIComponent(query), { signal }),
   changeLearning: (revision: number, change: LearningChange) => request<LearningState>(BASE + "/career/learning/changes", { method: "POST", body: JSON.stringify({ revision, change }) }),
   learningVideos: (query: string, signal?: AbortSignal) => request<LearningSearchResult>(BASE + "/career/learning/videos?query=" + encodeURIComponent(query), { signal }),
+  learningSubtitles: (bvid: string, signal?: AbortSignal) => request<LearningSubtitleResult>(BASE + "/career/learning/videos/" + encodeURIComponent(bvid) + "/subtitles", { signal }),
   memory: (conversationId?: string | null, search = "", signal?: AbortSignal) => { const params = new URLSearchParams(); if (conversationId) params.set("conversation_id", conversationId); if (search) params.set("search", search); return request<MemorySeaView>(BASE + "/memory" + (params.size ? "?" + params.toString() : ""), { signal }); },
   changeMemory: (id: string, change: MemoryChange) => request<MemorySeaView>(BASE + "/memory/" + encodeURIComponent(id), { method: "POST", body: JSON.stringify(change) }),
   retryMemory: () => request(BASE + "/memory/retry", { method: "POST", body: "{}" }),
@@ -140,7 +145,7 @@ export const agentApi = {
   obligations: (conversationId?: string) => request<AgentObligation[]>(BASE + "/obligations" + (conversationId ? "?conversation_id=" + encodeURIComponent(conversationId) : "")),
   claimObligation: (id: string) => request<AgentObligation>(BASE + "/obligations/" + id + "/claim", { method: "POST" }),
   abandonObligation: (id: string) => request<AgentObligation>(BASE + "/obligations/" + id + "/abandon", { method: "POST" }),
-  snapshot: (id: string) => request<Snapshot>(BASE + "/conversations/" + id),
+  snapshot: (id: string, signal?: AbortSignal) => request<Snapshot>(BASE + "/conversations/" + id, { signal }),
   send: (id: string, profile_id: string, input: string, request_id: string, options?: RunOptions) =>
     request<AgentRun>(BASE + "/conversations/" + id + "/runs", {
       method: "POST",

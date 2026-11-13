@@ -11,7 +11,7 @@
 npm run setup
 ```
 
-开发模式（前端 `5173`，Agent `8110`）：
+开发模式（前端 `5188`，Agent `8110`）：
 
 ```powershell
 npm run dev
@@ -24,7 +24,7 @@ npm run build
 npm start
 ```
 
-浏览器平时打开 `http://127.0.0.1:5173/`。8110 是本机 Agent API；使用已部署的官方服务时直接访问 `api.suinai.me`，不需要再在电脑启动 8120。运营方本地调试中转时才启动 8120。
+浏览器平时打开 `http://127.0.0.1:5188/`。前端固定使用 5188；端口占用时会明确报错，不会自动切到其他端口。8110 是本机 Agent API；使用已部署的官方服务时直接访问 `api.suinai.me`，不需要再在电脑启动 8120。运营方本地调试中转时才启动 8120。
 
 模型配置和沙箱边界见 [Agent 使用说明](agent/README.md)。上游官方密钥只放在中转服务端，不放入前端或 `VITE_*` 配置。
 
@@ -78,7 +78,7 @@ python scripts/catalogue/test-merge-job-catalogue.py
 
 ## 官方服务
 
-本地端运行在 8110，浏览器开发界面运行在 5173；官方模型中转运行在 8120。用户自配模型只调用自己的 OpenAI 兼容接口，官方模式只显示 `Suinai Flash`，能力路由、真实模型和上游 Key 留在 8120。
+本地端运行在 8110，浏览器开发界面运行在 5188；官方模型中转运行在 8120。用户自配模型只调用自己的 OpenAI 兼容接口，官方模式只显示 `Suinai Flash`，能力路由、真实模型和上游 Key 留在 8120。
 
 8120 本地默认使用 SQLite；生产可用 `RELAY_DATABASE_URL` 切换 PostgreSQL，并通过 `npm --prefix agent run relay:migrate -- <SQLite源库路径>` 迁移。账号、令牌撤销/轮换、用量事件、脱敏日志、账号级并发租约、健康告警、备份和异步生图回收已经具备。阿里云 Linux ECS 的 HTTPS、Nginx、systemd 和本机回连步骤见 [8120 官方中转部署](deploy/relay/README.md)。公网运营仍需补充密码找回/邮箱验证和真实支付回调。
 

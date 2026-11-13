@@ -15,3 +15,14 @@ export function nextLearningNode(path: LearningPath) {
 export function learningPlayerUrl(resource: LearningResource) {
   return /^BV[0-9A-Za-z]{10}$/.test(resource.bvid) ? "https://player.bilibili.com/player.html?bvid=" + resource.bvid + "&page=1&autoplay=0&danmaku=0" : null;
 }
+export function learningCoverUrl(resource: LearningResource) {
+  if (!resource.cover) return null;
+  try {
+    const url = new URL(resource.cover);
+    return url.protocol === "https:" && url.hostname.endsWith(".hdslb.com") ? url.href : null;
+  } catch { return null; }
+}
+export function learningCaptionTime(seconds: number) {
+  const value = Math.max(0, Math.floor(seconds));
+  return Math.floor(value / 60) + ":" + String(value % 60).padStart(2, "0");
+}

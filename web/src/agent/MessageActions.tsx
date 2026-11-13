@@ -1,6 +1,7 @@
 /** 青穗集 · 消息操作与原位编辑：悬浮复制、编辑重发，明确后续对话分支与已保存资料的边界。 */
 import { useEffect, useRef, useState } from "react";
 import { AgentIcon } from "./AgentIcon";
+import { AnimatedTextarea } from "./AnimatedTextarea";
 export function MessageActions({ content, onEdit, disabled, onError }: { content: string; onEdit?: () => void; disabled: boolean; onError: (message: string) => void }) {
   const [copied, setCopied] = useState(false), reset = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   useEffect(() => () => clearTimeout(reset.current), []);
@@ -18,7 +19,7 @@ export function MessageEditor({ content, disabled, onCancel, onSend }: { content
   const [value, setValue] = useState(content), input = useRef<HTMLTextAreaElement>(null);
   useEffect(() => { input.current?.focus({ preventScroll: true }); input.current?.setSelectionRange(content.length, content.length); }, [content]);
   return <form className="message-editor" onSubmit={event => { event.preventDefault(); if (value.trim() && !disabled) onSend(value.trim()); }}>
-    <textarea ref={input} aria-label="编辑这条消息" value={value} maxLength={20000} disabled={disabled} onChange={event => setValue(event.target.value)} onKeyDown={event => { if (event.key === "Escape" && !disabled) { event.preventDefault(); onCancel(); } }} />
+    <AnimatedTextarea ref={input} aria-label="编辑这条消息" value={value} maxLength={20000} disabled={disabled} onChange={event => setValue(event.target.value)} onKeyDown={event => { if (event.key === "Escape" && !disabled) { event.preventDefault(); onCancel(); } }} />
     <div className="message-editor__footer"><small>从此处重新回复，已保存的文件和资料保留。</small><div><button type="button" disabled={disabled} onClick={onCancel}>取消</button><button className="message-editor__send" type="submit" disabled={disabled || !value.trim()}><AgentIcon name="send" size={13} />重新发送</button></div></div>
   </form>;
 }

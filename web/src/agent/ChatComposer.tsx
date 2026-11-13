@@ -4,6 +4,7 @@ import { AgentIcon } from "./AgentIcon";
 import { CareerIcon } from "./CareerVisuals";
 import { ComposerMenu } from "./ComposerMenu";
 import { ReasoningSlider } from "./ReasoningSlider";
+import { AnimatedTextarea } from "./AnimatedTextarea";
 import { usePixelConfirm } from "../components/PixelConfirmDialog";
 import type { AgentFile, AgentInfo, ModelProfile, PermissionMode, ReasoningEffort } from "./types";
 const EFFORT_LABEL = { auto: "自动", low: "轻量", medium: "标准", high: "深入" };
@@ -39,7 +40,7 @@ export function ChatComposer({ ui, supportedExtensions, text, onText, composer, 
   }, []);
   return <><form className="agent-composer" onSubmit={onSubmit}>
     <label className="sr-only" htmlFor="agent-message">告诉穗奈你想完成什么</label>
-    <textarea ref={composer} data-onboarding="chat" id="agent-message" rows={3} maxLength={20000} disabled={archived}
+    <AnimatedTextarea ref={composer} data-onboarding="chat" id="agent-message" rows={3} maxLength={20000} disabled={archived}
       placeholder={archived ? "这是已归档的对话，恢复后可以继续。" : waiting ? "补充刚才缺少的信息，我们接着来…" : "聊聊你的经历、方向，或交给穗奈一件事…"}
       value={text} onChange={event => onText(event.target.value)}
       onPaste={event => {

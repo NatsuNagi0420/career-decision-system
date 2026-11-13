@@ -51,20 +51,16 @@ describe("对话工具栏", () => {
     expect(html).not.toContain("不假装生效");
     expect(html).toContain(`data-high="${effort === "high"}"`);
     expect(html).toContain('step="0.001"');
-    expect(html).toContain('class="agent-effort-meter" aria-hidden="true"');
+    expect(html).toContain('class="agent-effort-current"');
   });
-  it("锁定时禁用滑条和全部档位，ASCII 装饰不进入读屏播报", () => {
+  it("锁定时禁用滑条和全部档位，像素材质不进入读屏播报", () => {
     const html = renderToStaticMarkup(<ReasoningSlider effort="high" disabled onChange={noop} />);
     expect(html.match(/disabled=""/g)).toHaveLength(5);
-    expect(html).toContain('class="agent-effort-rail" aria-hidden="true"');
-    expect(html).toContain('data-ascii="effort-high"');
+    expect(html).toContain('class="agent-effort-visual" aria-hidden="true"');
+    expect(html).toContain('class="agent-effort-pixel"');
     expect(html).toContain('class="agent-effort-track"');
-    expect(html).toContain('class="agent-effort-scan"');
-    expect(html).toContain('agent-effort-ascii--reverse');
-    expect(html).toContain('agent-effort-scan--echo');
     expect(html).toContain('data-level="3"');
-    expect(html).toContain('lang="ja"');
-    expect(html).toContain('ミライ');
+    expect(html).not.toContain('agent-effort-word-stream');
     expect(html).not.toContain('/::/');
     expect(html).not.toContain('[&gt;###&lt;]');
     expect(html).toContain('data-motion="still"');

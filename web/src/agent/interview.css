@@ -1,0 +1,58 @@
+/* 青穗集 · 文字面试通话：角色画面与答题桌面并列，统一像素主题、尺寸动效及减少动态偏好。 */
+#suinai-interview-window { z-index:90; width:min(1200px,calc(100vw - 100px)); height:min(850px,calc(100dvh - 110px)); }
+#suinai-interview-window .career-desktop-window__body { padding:8px; background:#f5effb; }
+.interview-call { display:grid; grid-template-columns:minmax(280px,.95fr) minmax(320px,1.05fr); gap:8px; min-width:0; min-height:0; flex:1; color:#544268; }
+.interview-call button { font:inherit; cursor:pointer; }
+.interview-call button:disabled { opacity:.45; cursor:default; }
+.interview-call button:focus-visible { outline:2px solid #9e80ce; outline-offset:3px; }
+.interview-call__stage { position:relative; overflow:hidden; isolation:isolate; border:1px solid #b7a2d1; border-radius:10px; background:linear-gradient(180deg,#39305b30,#32264150),url('/api/assets/brand/career-pixel/night-room.webp') center / cover; }
+.interview-call__identity { position:absolute; inset:0 0 auto; z-index:3; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:20px; color:#fff; background:linear-gradient(#2a20475c,transparent); font-size:11px; }
+.interview-call__identity > div { display:flex; align-items:center; gap:8px; }
+.interview-call__identity strong { font-size:16px; font-weight:400; }
+.interview-call__identity > div > span:last-child { opacity:.7; }
+.interview-call__live { width:6px; height:6px; background:#b7f4d2; border-radius:1px; box-shadow:0 0 9px #92ffd887; }
+.interview-call__progress { padding:6px 10px; background:#ffffff15; border:1px solid #ffffff30; border-radius:5px; font-variant-numeric:tabular-nums; }
+.interview-call__portrait { position:absolute; inset:10% -18% -8%; }
+.interview-call__portrait canvas { object-position:center bottom; filter:drop-shadow(0 10px 18px #211c382a); }
+.interview-call__caption { position:absolute; inset:auto 16px 20px; z-index:3; display:flex; align-items:center; justify-content:center; gap:10px; min-height:40px; padding:10px 15px; border:1px solid #ffffff35; border-radius:8px; background:#30263e70; backdrop-filter:blur(12px); color:#fff; font-size:12px; }
+.interview-call__signal { display:flex; align-items:center; gap:3px; height:18px; }
+.interview-call__signal i { width:3px; height:5px; background:#d7c8ef; border-radius:1px; }
+.interview-call__signal i:nth-child(2),.interview-call__signal i:nth-child(4) { height:10px; }
+.interview-call__signal i:nth-child(3) { height:16px; }
+.interview-call[data-motion="true"] .interview-call__stage[data-state="thinking"] .interview-call__signal i { animation:interview-signal 1s ease-in-out infinite alternate; }
+.interview-call__signal i:nth-child(2) { animation-delay:-.2s!important; }.interview-call__signal i:nth-child(3) { animation-delay:-.4s!important; }.interview-call__signal i:nth-child(4) { animation-delay:-.6s!important; }
+.interview-call__ambient { position:absolute; inset:0; pointer-events:none; }
+.interview-call__ambient i { position:absolute; width:3px; height:3px; background:#ffefd1; box-shadow:0 0 14px #ffe3c0; opacity:.6; left:12%; top:23%; }
+.interview-call__ambient i:nth-child(2) { left:84%; top:36%; }.interview-call__ambient i:nth-child(3) { left:72%; top:18%; }
+.interview-call[data-motion="true"] .interview-call__ambient i { animation:interview-glimmer 4s ease-in-out infinite alternate; }.interview-call__ambient i:nth-child(2) { animation-delay:-2s; }
+.interview-call__paused { position:absolute; inset:0; z-index:4; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; color:#fff; background:#30263c60; backdrop-filter:blur(5px); font-size:13px; }
+.interview-call__desk { display:flex; flex-direction:column; min-width:0; min-height:0; border:1px solid #e8ddf1; border-radius:10px; background:#fffcff; overflow:hidden; }
+.interview-call__job { flex:none; display:flex; align-items:center; gap:12px; padding:20px 24px; border-bottom:1px solid #eee6f6; }
+.interview-call__job h2 { flex:1; min-width:0; font-size:15px; line-height:1.6; font-weight:400; margin:0; overflow-wrap:anywhere; }
+.interview-call__job button { display:grid; place-items:center; width:32px; height:32px; flex:none; color:#8f73ab; border:1px solid #e7ddef; border-radius:6px; background:#f9f4fd; }
+.interview-call__context { padding:12px 24px; background:#f6f0fb; border-bottom:1px solid #e9ddf2; max-height:180px; overflow:auto; scrollbar-gutter:stable; }
+.interview-call__context p { margin:0 0 12px; font-size:11px; line-height:1.9; }
+.interview-call__context > div { display:flex; flex-wrap:wrap; gap:6px; }.interview-call__context span { padding:4px 7px; font-size:10px; border:1px solid #e4d6ee; border-radius:4px; background:#fcf9ff; }
+.interview-call__questions { flex:1; min-height:0; padding:24px; overflow:auto; scrollbar-gutter:stable; scrollbar-width:thin; scrollbar-color:#d8c7e9 transparent; }
+.interview-call[data-motion="true"] .interview-call__questions { animation:interview-question-in .4s cubic-bezier(.2,0,0,1) both; }
+.interview-call__eyebrow { display:inline-block; color:#9b7db9; font-size:11px; letter-spacing:.08em; }
+.interview-call__question-heading { display:flex; flex-direction:column; gap:8px; margin-bottom:20px; }.interview-call__question-heading > span:last-child { color:#76578f; font-size:13px; }
+.interview-call__questions .career-message-content { font-size:clamp(13px,1.05vw,16px); line-height:2; overflow-wrap:anywhere; }
+.interview-call__questions .career-message-content p { margin:0 0 16px; }
+.interview-call__lobby { padding:clamp(10px,4vh,40px) 0; }.interview-call__lobby h3,.interview-call__review h3 { font-weight:400; line-height:1.7; font-size:21px; margin:14px 0; }
+.interview-call__lobby p { max-width:28em; color:#95829f; font-size:12px; line-height:2; margin:0 0 28px; }
+.interview-call__start,.interview-call__resume { display:flex; align-items:center; justify-content:center; gap:9px; padding:12px 22px; border:1px solid #a58bc8; border-radius:7px; background:#8a6ab4; color:#fff; font-size:13px!important; box-shadow:0 4px 0 #715796; }
+.interview-call__bottom { flex:none; padding:16px 20px; border-top:1px solid #eee6f6; background:#faf6fe; }.interview-call__resume { margin:0 auto 18px; }
+.interview-call__answer { padding:12px 14px 8px; background:#fff; border:1px solid #dfd0ed; border-radius:9px; transition:border-color .2s,box-shadow .2s; }.interview-call__answer:focus-within { border-color:#ae8fcb; box-shadow:0 0 0 3px #baa2db14; }
+.interview-call__answer .animated-textarea { display:block; width:100%; }.interview-call__answer textarea { display:block; width:100%; box-sizing:border-box; min-height:78px; max-height:160px; resize:vertical; padding:0; border:0; outline:0; color:#5a466c; background:transparent; font:inherit; font-size:13px; line-height:1.8; }.interview-call__answer textarea::placeholder { color:#b4a2c4; }
+.interview-call__answer footer { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:8px; }.interview-call__answer footer > span { color:#b09bc2; font-size:9px; }.interview-call__answer footer > button { display:grid; place-items:center; width:32px; height:32px; border:0; border-radius:6px; background:#eee4f8; color:#805da6; }
+.interview-call__controls { display:flex; align-items:center; justify-content:center; gap:14px; padding-top:16px; }.interview-call__controls > button:not(.interview-call__hangup) { display:flex; align-items:center; justify-content:center; min-width:36px; height:36px; padding:8px 12px; border:1px solid #e2d5ee; border-radius:7px; background:#f6effc; color:#8b73a4; }
+.interview-call__mode { display:flex; align-items:center; gap:6px; margin-right:auto; color:#ad96bd; font-size:10px; }
+.interview-call__hangup { display:flex; align-items:center; justify-content:center; gap:8px; padding:10px 13px; color:#fff; background:#c27a8b; border:1px solid #b46d7e; border-radius:7px; box-shadow:0 3px 0 #a66174; font-size:11px!important; }.interview-call__hangup:hover { background:#b96b7f; }
+.interview-call__error { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:8px 20px; padding:10px 12px; color:#9d6171; background:#fbf0f3; border-radius:7px; font-size:12px; }.interview-call__error button { border:0; color:#81569a; background:transparent; text-decoration:underline; }
+.interview-call__review p,.interview-call__questions li { font-size:12px; line-height:1.9; }.interview-call__review blockquote { margin:12px 0; padding:10px 14px; background:#f4edf9; border-left:2px solid #c8b0df; font-size:12px; line-height:1.8; }
+@keyframes interview-signal { to { transform:scaleY(.4); opacity:.6; } }@keyframes interview-glimmer { to { transform:translateY(-14px); opacity:.2; } }@keyframes interview-question-in { from { opacity:0; transform:translateY(8px); }to { opacity:1; transform:translateY(0); } }
+@media (min-width:2000px) { #suinai-interview-window { width:min(1600px,calc(100vw - 220px)); height:min(1100px,calc(100dvh - 180px)); }.interview-call__job h2 { font-size:20px; }.interview-call__questions { padding:34px; }.interview-call__questions .career-message-content { font-size:19px; }.interview-call__answer textarea { font-size:17px; }.interview-call__portrait { inset:5% -12% -5%; } }
+@media (max-width:760px) { #suinai-interview-window { inset:5px 5px 52px; width:auto; height:auto; }.interview-call { grid-template-columns:minmax(0,1fr); grid-template-rows:minmax(140px,32%) minmax(0,1fr); }.interview-call__portrait { inset:-10% 10% -38%; }.interview-call__identity { padding:12px; }.interview-call__caption { inset:auto 10px 10px; min-height:25px; padding:5px 10px; font-size:10px; width:max-content; }.interview-call__job { padding:10px 14px; }.interview-call__job h2 { font-size:12px; }.interview-call__questions { padding:14px; }.interview-call__question-heading { margin-bottom:10px; }.interview-call__bottom { padding:10px; }.interview-call__answer textarea { min-height:52px; }.interview-call__controls { padding-top:10px; }.interview-call__lobby { padding:0; }.interview-call__lobby h3 { font-size:17px; margin:8px 0; }.interview-call__lobby p { margin-bottom:14px; } }
+@media (prefers-reduced-motion:reduce) { .interview-call *, .interview-call *::after { animation:none!important; transition:none!important; } }
+.interview-call[data-motion="false"] * { animation:none!important; transition:none!important; }

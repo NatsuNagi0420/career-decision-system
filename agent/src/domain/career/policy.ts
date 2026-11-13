@@ -3,6 +3,7 @@ import type { TaskKind } from "../../guidance-contract.js";
 import type { ResumeState } from "../../resume-contract.js";
 export function guidedToolAllowed(kind: TaskKind | undefined, name: string, state?: ResumeState) {
   if (!kind) return true;
+  if (["read_career_preparation", "propose_job_decision", "start_career_preparation", "review_career_answer"].includes(name)) return kind === "learning" || kind === "career";
   if (["read_learning_context", "search_learning_videos", "propose_learning_path"].includes(name)) return kind === "learning" || kind === "career";
   if (["list_files", "read_file", "list_project_files", "inspect_project", "read_project_file", "search_project_files", "search_files", "plan_tasks", "ask_user", "list_career_directions", "search_job_samples", "read_job_sample", "assess_career_options"].includes(name)) return true;
   if (kind === "resume") {

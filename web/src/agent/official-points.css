@@ -1,16 +1,16 @@
-/* 青穗集 · 积分视图：轻量账号入口、清晰余额与可滚动的用量明细。 */
+/* 青穗集 · 积分视图：稳定滚动占位、平滑规则折叠与可滚动的用量明细。 */
 .official-points__entry{display:flex;align-items:center;gap:9px;width:100%;padding:9px 12px;border:0;background:transparent;color:inherit;cursor:pointer;text-align:left;border-radius:8px;font:inherit;font-size:13px;transition:background .18s,transform .18s}
 .official-points__entry:hover{background:#a68bc630;transform:translateY(-1px)}
 .official-points__entry>svg:last-child{margin-left:auto;opacity:.5}
 #official-points-window{width:min(620px,calc(100vw - 32px));height:min(730px,calc(100dvh - 68px));min-width:0;z-index:95}
-.official-points{width:100%;min-width:0;padding:14px clamp(16px,4vw,30px) 24px;color:#604779;height:100%;overflow:auto;box-sizing:border-box}
+.official-points{width:100%;min-width:0;padding:14px clamp(16px,4vw,30px) 24px;color:#604779;height:100%;overflow:auto;box-sizing:border-box;scrollbar-gutter:stable;scrollbar-width:thin;scrollbar-color:#d9c8e8 transparent;overflow-anchor:none}
 .official-points__tools{display:flex;justify-content:flex-end}
 .official-points__balance{display:flex;align-items:center;flex-direction:column;gap:10px;padding:8px 0 25px}
 .official-points__balance>strong{font-size:clamp(40px,8vw,58px);font-weight:600;letter-spacing:-1.8px;line-height:1.15;font-variant-numeric:tabular-nums;color:#7a5a9d}
 .official-points__balance>span:last-child{font-size:12px;color:#9786a6}
 .official-points__hold,.official-points__error{padding:12px;border-radius:7px;background:#ede5c866;font-size:13px;line-height:1.7}
 .official-points__error{background:#f4dfdb;color:#864735;display:flex;justify-content:space-between;gap:12px}.official-points__error button{border:0;background:none;color:inherit;text-decoration:underline;cursor:pointer}
-.official-points__pricing{border-top:1px solid #af93c52b;border-bottom:1px solid #af93c52b;padding:14px 0;font-size:12px;color:#857192;line-height:1.8}.official-points__pricing summary{cursor:pointer}.official-points__pricing p{margin:8px 0 0}
+.official-points__pricing{border-top:1px solid #af93c52b;border-bottom:1px solid #af93c52b;padding:14px 0;font-size:12px;color:#857192;line-height:1.8}.official-points__pricing>.animated-disclosure__trigger{padding:0;line-height:inherit}.official-points__pricing .animated-disclosure__content{padding-top:0}.official-points__pricing p{margin:8px 0 0}
 .official-points__history h3{font-size:15px;font-weight:600;margin:25px 0 12px}.official-points__history ul{padding:0;margin:0;list-style:none}.official-points__history li{display:grid;grid-template-columns:minmax(80px,1fr) minmax(90px,1.5fr) minmax(50px,auto);gap:12px;align-items:center;padding:16px 0;border-bottom:1px solid #af93c51c;font-size:13px}.official-points__history li>div{display:flex;flex-direction:column;gap:6px}.official-points__history strong{font-weight:500}.official-points__history time,.official-points__history small{font-size:11px;color:#a08caf}.official-points__usage{color:#897197;font-size:12px}.official-points__charge{text-align:right;font-variant-numeric:tabular-nums}.official-points__charge[data-state=reserved]{color:#a17b35}.official-points__empty{padding:26px 0;text-align:center;color:#a08caf;font-size:13px}.official-points__more{display:block;padding:10px 20px;margin:20px auto 0;border:1px solid #b8a0cd8c;border-radius:6px;background:#f2e9fa;color:inherit;font:inherit;font-size:12px;cursor:pointer}.official-points__more:disabled{opacity:.5;cursor:wait}
 @media(max-width:480px){.official-points__history li{grid-template-columns:1fr auto}.official-points__usage{grid-column:1;grid-row:2}.official-points__history .official-points__charge{grid-column:2;grid-row:1 / 3}}
 

@@ -51,6 +51,9 @@
 .career-taskbar-status { overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#a08caf;font-size:9px; }
 .career-desktop-window { position:fixed;z-index:80;left:50%;top:50%;width:min(1140px,calc(100vw - 300px));height:min(800px,calc(100dvh - 122px));min-width:min(560px,calc(100vw - 16px));min-height:min(390px,calc(100dvh - 90px));transform:translate(-50%,-50%);display:flex;flex-direction:column;overflow:hidden;background:#fdfbff;border:1px solid #cbb9df;border-radius:9px;box-shadow:0 22px 80px #36224944,0 3px 12px #4a326226; }
 .career-desktop-window[hidden] { display:none; }
+.career-desktop-window { transform-origin:0 0; }
+.career-desktop-window:is([data-window-state="opening"], [data-window-state="closing"], [data-window-state="resizing"]) { will-change:transform,opacity; }
+.career-desktop-window[data-window-state="closing"] { pointer-events:none; }
 .career-desktop-window[data-positioned="true"] { transform:none; }
 .career-desktop-window[data-maximized="true"] { inset:9px 12px 54px;left:12px;top:9px;width:auto;height:auto;min-width:0;min-height:0;transform:none;border-radius:7px; }
 .career-desktop-window__titlebar { flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:41px;padding:4px 7px 4px 13px;color:#684b83;background:linear-gradient(90deg,#eee6f6,#f8f4fc 70%,#eee8f6);border-bottom:1px solid #dfd3eb;user-select:none;touch-action:none;cursor:grab; }
@@ -122,11 +125,8 @@
   .career-desktop-shell .agent-messages { padding:14px 11px 8px; }
   .career-desktop-shell .career-welcome { padding:10px 2px; }
   .career-desktop-shell .career-welcome__portrait { width:53px;height:53px;margin:7px auto; }
-  .career-desktop-shell .career-welcome h1 { font-size:21px; }
+  .career-desktop-shell .career-welcome h2 { font-size:23px; }
   .career-desktop-shell .career-welcome__description { font-size:9px; }
-  .career-desktop-shell .career-step-cards { gap:6px;margin-top:12px; }
-  .career-desktop-shell .career-step-card { min-height:0;padding:9px; }
-  .career-desktop-shell .career-step-card > .career-pixel-icon { width:29px;height:29px; }
   .career-desktop-shell .agent-message--assistant { grid-template-columns:29px minmax(0,1fr);gap:0 8px; }
   .career-desktop-shell .agent-message--assistant .agent-message-avatar { width:29px;height:29px; }
   .career-desktop-shell .agent-composer { margin:7px 8px 9px;padding:9px 9px 5px; }

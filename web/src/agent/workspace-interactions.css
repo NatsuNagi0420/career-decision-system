@@ -6,9 +6,8 @@
 .animated-disclosure__trigger:hover { color:#72518f; }
 .animated-disclosure__trigger:focus-visible { outline:2px solid #bda0d8; outline-offset:3px; border-radius:3px; }
 .animated-disclosure__trigger > span { min-width:0; overflow-wrap:anywhere; }
-.animated-disclosure__body { display:grid; grid-template-rows:0fr; opacity:0; transition:grid-template-rows 280ms cubic-bezier(.22,1,.36,1),opacity 180ms ease; }
-.animated-disclosure[data-open="true"] > .animated-disclosure__body { grid-template-rows:1fr; opacity:1; }
-.animated-disclosure__body > div { overflow:hidden; min-height:0; }
+.animated-disclosure__body { opacity:0; transition:height var(--ui-layout-duration, 320ms) var(--ui-layout-easing, cubic-bezier(.2,0,0,1)),opacity 180ms ease; }
+.animated-disclosure[data-open="true"] > .animated-disclosure__body { opacity:1; }
 .animated-disclosure__content { padding-top:6px; }
 .career-workspace .growth-conversation-memory > .animated-disclosure__trigger { color:#8b7898; font-size:.84em; }
 .conversation-memory__detail > .animated-disclosure__trigger { font-size:12px; line-height:1.9; color:#7e6a91; align-items:flex-start; }

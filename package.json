@@ -14,6 +14,7 @@
     "check": "npm --prefix agent run check && npm --prefix agent run check:tests && npm --prefix web run typecheck",
     "test": "npm --prefix agent test && npm --prefix web test -- --maxWorkers=1",
     "catalogue:import": "npm --prefix agent run build && python scripts/catalogue/import-job-catalogue.py",
-    "release:windows": "node scripts/release/build-windows.mjs"
+    "release:windows": "node scripts/release/build-windows.mjs",
+    "test:account": "npm --prefix agent run test:account"
   }
 }

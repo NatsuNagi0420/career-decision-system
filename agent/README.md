@@ -13,7 +13,7 @@ npm run build
 npm start
 ~~~
 
-访问 http://127.0.0.1:8110 。首次使用注册本地账号（密码至少 8 位），打开「模型设置」。开发时使用 npm run dev，同时启动 8110 服务和 5173 Vite；若已启动正式服务，请先在它的终端 Ctrl+C，避免占用同一端口。
+访问 http://127.0.0.1:8110 。首次使用注册本地账号（密码至少 8 位），打开「模型设置」。开发时使用 npm run dev，同时启动 8110 服务和 5188 Vite；前端端口占用时会报错，不会自动换端口。若已启动正式服务，请先在它的终端 Ctrl+C，避免占用同一端口。
 
 - 当前只维护用户状态目录中的唯一 agent.sqlite；岗位与账号、会话共库。Windows 默认目录是 `%LOCALAPPDATA%/Qingsuiji/agent/`，Linux/macOS 默认是 `$XDG_STATE_HOME/Qingsuiji/agent/`（未设置时为 `~/.local/state/Qingsuiji/agent/`），也可以用 `AGENT_DATA_DIR` 显式覆盖。旧版数据库不属于当前运行链路；主库中的历史归档已删除，不合并成当前账号。本机备份不会自动合并到当前账号，只有明确恢复时才会读取。新版没有内置公共账号或默认密码。
 - 状态目录包含 `agent.sqlite`、`workspaces/`、`artifacts/`、`local-open/` 和临时运行文件。备份时先停服务，并备份整个状态目录；密钥使用 DPAPI 时依赖原 Windows 用户，复制数据库到其他用户不会自动解密。仓库内遗留的 `agent/var/` 与 `agent/relay-var/` 不属于当前运行链路。
@@ -155,7 +155,7 @@ npm --prefix agent run relay:token -- issue my-test-install
 npm --prefix agent run relay
 ~~~
 
-再重启现有 Agent 后端（8110），刷新页面 → 模型设置 → 选择 **Suinai Flash** → 连接测试。开发前端可以继续访问 5173。如果当前整个项目由 `npm run dev` 启动，则先在原终端 Ctrl+C，再重新执行 `npm run dev`；不要在旧服务未停止时重复启动。
+再重启现有 Agent 后端（8110），刷新页面 → 模型设置 → 选择 **Suinai Flash** → 连接测试。开发前端可以继续访问 5188。如果当前整个项目由 `npm run dev` 启动，则先在原终端 Ctrl+C，再重新执行 `npm run dev`；不要在旧服务未停止时重复启动。
 
 **仅修改 `.env` 不会让已运行的进程自动重载配置。** 修改 `RELAY_*` 后重启中转；修改 `OFFICIAL_*` 后重启 Agent。构建后使用 `npm start`；开发时使用 `npm run dev`。需要先在当前代码下执行一次 `npm run build`。
 

@@ -1,6 +1,7 @@
-/** 青穗集 · 轻量回复状态与真实操作：穗奈微动效、就地命令，完整执行记录仅从标题栏进入。 */
+/** 青穗集 · 回复进度与真实操作：平滑承接执行列表展开和更新，完整记录从标题栏进入。 */
 import { useEffect, useState } from "react";
 import { AgentIcon } from "./AgentIcon";
+import { AutoHeight } from "../components/AutoHeight";
 import { SUINAI_AVATAR_URL } from "../assets";
 import { useUiMotion } from "./uiMotion";
 import { executionLabel, executionSummary, executionTarget, formatDuration, runDuration, type ExecutionRecord } from "./execution";
@@ -51,13 +52,13 @@ export function RunActivity({ run, records, submitting = false, drafting = false
       {run && elapsedMs >= 3_000 && <small className="run-activity__elapsed" aria-label={"已用时 " + elapsed}>{elapsed}</small>}
       {errors > 0 && <span className="run-activity__errors">{errors} 次失败记录</span>}
     </header>
-    {visible.length > 0 && <ol className="run-activity__operations">{visible.map(record => <li key={record.key}><button type="button" onClick={() => onOpen(record.runId, record.key)} title="查看参数、输出与执行结果" aria-label={executionLabel(record) + "：" + executionTarget(record)}>
+    <AutoHeight motion={playing}>{visible.length > 0 && <ol className="run-activity__operations">{visible.map(record => <li key={record.key}><button type="button" onClick={() => onOpen(record.runId, record.key)} title="查看参数、输出与执行结果" aria-label={executionLabel(record) + "：" + executionTarget(record)}>
       <span className="execution-state" data-status={record.status}><AgentIcon name={record.status === "completed" ? "check" : record.status === "failed" ? "warning" : record.status === "running" ? "activity" : "clock"} size={13} /></span>
       <span className="run-activity__label">{executionLabel(record)}</span>
       <code>{executionTarget(record)}</code>
       <small data-status={record.status}>{executionSummary(record)}{record.durationMs !== undefined && " · " + formatDuration(record.durationMs)}</small>
       <AgentIcon name="chevron" size={12} />
-    </button></li>)}</ol>}
+    </button></li>)}</ol>}</AutoHeight>
     {records.length > 3 && <button className="run-activity__more" type="button" aria-expanded={expanded} onClick={() => setExpanded(value => !value)}><AgentIcon name="down" size={12} />{expanded ? "收起操作" : "查看前 " + (records.length - 3) + " 项操作"}</button>}
   </section>;
 }

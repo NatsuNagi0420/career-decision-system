@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import { resumeFields, type ResumeEditRequest } from "../../../agent/src/resume-fields";
 import type { ResumeState } from "../../../agent/src/resume-contract";
 import { AgentIcon } from "./AgentIcon";
+import { AnimatedTextarea } from "./AnimatedTextarea";
 import { fieldsInRegion, regionRect, type RegionRect } from "./resume-region";
 import "./resume-region.css";
 interface HitField { id: string; text: string; label: string; rects: RegionRect[] }
@@ -75,7 +76,7 @@ export function ResumeRegionEditor({ frame, panel, scale, state, disabled, onClo
     {rubber && <span className="resume-region-rubber" style={{ left: rubber.x, top: rubber.y, width: rubber.width, height: rubber.height }} />}
   </div>{selected.length > 0 && panel.current && createPortal(<form ref={prompt} className="resume-region-prompt" aria-label="修改选中内容" style={anchor} onSubmit={event => { event.preventDefault(); void submit(); }} onKeyDown={event => { if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); void submit(); } }}>
     <div className="resume-region-quote"><blockquote>{fields.filter(field => selected.includes(field.id)).map(field => field.text).join("\n")}</blockquote><button type="button" className="agent-icon-button" aria-label="取消选区" title="取消 · Esc" onClick={() => { setSelected([]); overlay.current?.focus(); }}><AgentIcon name="close" size={14} /></button></div>
-    <textarea ref={input} aria-label="局部修改要求" placeholder="想怎么修改这里？" rows={3} value={instruction} maxLength={2000} disabled={sending || disabled} onChange={event => setInstruction(event.target.value)} />
+    <AnimatedTextarea ref={input} aria-label="局部修改要求" placeholder="想怎么修改这里？" rows={3} value={instruction} maxLength={2000} disabled={sending || disabled} onChange={event => setInstruction(event.target.value)} />
     <div className="resume-region-actions">{error && <span role="alert">{error}</span>}<button type="submit" className="resume-region-send" title="让穗奈修改 · Enter" aria-label="让穗奈修改选中内容" disabled={sending || disabled || !instruction.trim()}><AgentIcon name={sending ? "clock" : "send"} size={17} /></button></div>
   </form>, panel.current)}{error && !selected.length && <span className="resume-region-error" role="alert">{error}</span>}</>;
 }

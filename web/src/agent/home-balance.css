@@ -1,0 +1,152 @@
+/** 青穗集 · 主页面层级：缩短桌面外框，话题轻量呈现，资料和设置按需展开。 */
+.career-desktop-shell.career-workspace { grid-template-rows:56px minmax(0,1fr) 42px; }
+.career-desktop-shell.career-workspace .career-masthead { padding:8px 18px; background:#fcfaffc7; }
+.career-desktop-shell .career-masthead::before { opacity:.18; }
+.career-desktop-shell .career-masthead h1 { font-size:16px; }
+.career-desktop-shell .career-masthead__identity { gap:9px; }
+.career-desktop-shell .career-masthead__actions { background:none; gap:8px; padding:0; }
+.career-desktop-shell .career-brand { min-height:66px; gap:10px; padding:0 10px 12px; }
+.career-desktop-shell .career-brand strong { font-size:23px; }
+.career-desktop-shell .career-brand__spark { top:10px; opacity:.65; }
+.career-desktop-shell .career-desktop-apps { margin:2px 0 10px; padding:4px 0 12px; }
+.career-desktop-shell .career-desktop-apps > button { min-height:44px; padding:9px 11px; background:transparent; border-color:transparent; box-shadow:none; border-radius:8px; }
+.career-desktop-shell .career-desktop-apps > button:hover,
+.career-desktop-shell .career-desktop-apps > button[aria-expanded="true"] { background:#e9dff4a1; border-color:#dfd1ec; transform:none; box-shadow:none; }
+.career-desktop-shell .career-sidebar-scene { height:56px; opacity:.6; margin-bottom:9px; }
+.career-desktop-shell .career-sidebar-scene::before { opacity:.55; }
+.career-desktop-shell .career-sidebar-bottom { padding-top:8px; }
+.career-desktop-shell .career-account { background:#f8f4fc99; border-color:#e4dbee; }
+.career-desktop-shell .career-chat-titlebar { background:#fdfbff; }
+.career-desktop-shell .career-companion-heading { padding:8px 8px 9px; }
+.career-desktop-shell .agent-companion-card { background:#fbf8fe; border-color:#e4d9ef; box-shadow:none; }
+.career-desktop-shell .agent-companion-card > .career-companion-quote { color:#a18aad; font-size:10px; }
+.career-desktop-shell .agent-composer { box-shadow:0 3px 15px #a18ab409; }
+.career-desktop-shell .guided-task__label { display:none; }
+.career-desktop-shell .guided-task__choices { gap:4px; }
+.career-desktop-shell .guided-task__choices > button:not([aria-pressed="true"]) { color:#8e7b9f; }
+
+/* 话题入口只负责帮用户开口，固定工作流由输入框上方的模式选择承担。 */
+.career-welcome__starters { display:flex; justify-content:center; flex-wrap:wrap; gap:10px; margin:22px auto 0; }
+.career-welcome__starters > button { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:10px 15px; min-height:42px; background:#faf7fd; border:1px solid #e7def0; border-radius:10px; color:#806694; font:inherit; font-size:12px; cursor:pointer; }
+.career-welcome__starters > button:hover { background:#f0e8f8; border-color:#d9c8e9; transform:translateY(-2px); box-shadow:0 4px 12px #9a7bb314; }
+.career-welcome__starters > button:active { transform:translateY(0); }
+
+/* 档案直达原窗口；小结与文件共用一块展开区域，不重复堆卡片。 */
+.companion-context { flex:none; min-width:0; margin:0 1px; }
+.companion-context__tools { display:flex; align-items:center; justify-content:space-between; gap:4px; padding:6px 1px; }
+.companion-context__tools > button { display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:36px; padding:7px 9px; flex:1; color:#8c749d; background:transparent; border:1px solid transparent; border-radius:8px; font:inherit; font-size:11px; cursor:pointer; }
+.companion-context__tools > button:hover { background:#e9dff3b3; color:#72518b; }
+.companion-context__tools > button[aria-expanded="true"] { color:#73538e; border-color:#dfd0ed; background:#eee5f7; }
+.companion-context__tools small { font-size:10px; color:#9478a7; }
+.companion-context__body > .auto-height__content { border-radius:10px; background:#fbf8fe; }
+.companion-context__body .conversation-memory { margin:0; padding:14px; }
+.companion-context__body .file-directory { margin:0; padding:14px; border:0; background:transparent; }
+
+/* 设置保留浮层的外部点击关闭与键盘行为。 */
+.career-workspace .desktop-settings > .agent-menu-trigger { display:grid; place-items:center; width:34px; height:34px; padding:5px; border:0; background:transparent; border-radius:8px; }
+.career-workspace .desktop-settings > .agent-menu-trigger:hover { background:#ece3f7; }
+.desktop-settings-panel { width:min(264px,calc(100vw - 24px)); }
+.desktop-settings-panel > button { display:flex; align-items:center; gap:11px; width:100%; min-height:40px; padding:9px 10px; text-align:left; color:#755c89; background:transparent; border:0; border-radius:7px; font:inherit; font-size:12px; cursor:pointer; }
+.desktop-settings-panel > button:hover:not(:disabled) { background:#f0e7f7; }
+.desktop-settings-panel > button:disabled { opacity:.45; cursor:default; }
+.desktop-settings-panel__motion { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:5px 10px; color:#755c89; font-size:12px; }
+.desktop-settings-panel > p { margin:10px 10px 4px; padding-top:12px; border-top:1px solid #e8deef; color:#9a87a8; font-size:10px; line-height:1.8; }
+
+@media(min-width:1800px) {
+  .career-desktop-shell.career-workspace { grid-template-rows:64px minmax(0,1fr) 48px; }
+  .career-desktop-shell .career-masthead h1 { font-size:19px; }
+  .career-desktop-shell .career-brand { min-height:78px; }
+  .career-desktop-shell .career-brand strong { font-size:26px; }
+  .career-desktop-shell .career-desktop-apps > button { min-height:50px; font-size:14px; }
+  .career-welcome__starters > button { min-height:46px; padding:12px 18px; font-size:14px; }
+  .companion-context__tools > button { font-size:13px; min-height:42px; }
+}
+@media(max-width:1180px) {
+  .career-desktop-shell.career-workspace,
+  .career-desktop-shell.career-workspace[data-inspector-open="false"],
+  .career-desktop-shell.career-workspace[data-inspector-open="true"] { grid-template-rows:56px minmax(0,1fr) 42px; }
+  .career-desktop-shell.career-workspace .agent-inspector { top:76px; }
+}
+@media(max-width:760px) {
+  .career-desktop-shell.career-workspace .career-masthead { padding:6px 10px; }
+  .career-desktop-shell .career-masthead h1 { font-size:14px; }
+  .career-desktop-shell .career-masthead__title { gap:6px; }
+  .career-desktop-shell .career-masthead__identity > .career-pixel-icon { width:24px; height:24px; }
+  .career-desktop-shell .career-masthead__actions { gap:2px; }
+  .career-welcome__starters { gap:7px; margin-top:18px; }
+  .career-welcome__starters > button { padding:8px 10px; gap:5px; min-height:38px; font-size:11px; }
+  .career-welcome__starters .career-pixel-icon { width:20px; height:20px; }
+}
+@media(max-height:760px) and (min-width:761px) {
+  .career-desktop-shell .career-sidebar-scene { display:none; }
+}
+[data-ui-motion="off"] .career-welcome__starters > button { transition:none; }
+[data-ui-motion="off"] .career-welcome__starters > button:hover { transform:none; }
+@media(prefers-reduced-motion:reduce) {
+  .career-welcome__starters > button { transition:none; }
+  .career-welcome__starters > button:hover { transform:none; }
+}
+
+/* 小窗保留固定内容宽度，只过渡占用的网格列与裁切，避免角色和文字在收起时挤压。 */
+.career-desktop-shell.career-workspace {
+  --companion-width:294px;
+  --companion-sidebar-width:238px;
+  --companion-gap:12px;
+}
+.career-desktop-shell.career-workspace[data-detail-open="false"][data-inspector-open] {
+  grid-template-columns:var(--companion-sidebar-width) minmax(0,1fr) var(--companion-width);
+  transition:grid-template-columns var(--ui-layout-duration,320ms) var(--ui-layout-easing,cubic-bezier(.2,0,0,1));
+}
+.career-desktop-shell.career-workspace[data-detail-open="false"][data-inspector-open="false"] {
+  grid-template-columns:var(--companion-sidebar-width) minmax(0,1fr) 0px;
+}
+.career-desktop-shell.career-workspace .agent-chat {
+  transition:margin-right var(--ui-layout-duration,320ms) var(--ui-layout-easing,cubic-bezier(.2,0,0,1));
+}
+.career-desktop-shell.career-workspace[data-detail-open="false"][data-inspector-open="false"] .agent-chat {
+  margin-right:calc(-1 * var(--companion-gap));
+}
+.career-desktop-shell.career-workspace[data-inspector-open] .agent-inspector.companion-panel {
+  display:flex;
+  width:var(--companion-width);
+  justify-self:end;
+  opacity:1;
+  visibility:visible;
+  clip-path:inset(0);
+  transition:clip-path var(--ui-layout-duration,320ms) var(--ui-layout-easing,cubic-bezier(.2,0,0,1)),
+    opacity var(--ui-layout-duration,320ms) var(--ui-layout-easing,cubic-bezier(.2,0,0,1)),
+    transform var(--ui-layout-duration,320ms) var(--ui-layout-easing,cubic-bezier(.2,0,0,1)),
+    visibility 0s;
+}
+.career-desktop-shell.career-workspace[data-inspector-open="false"] .agent-inspector.companion-panel {
+  opacity:0;
+  visibility:hidden;
+  clip-path:inset(0 0 0 100%);
+  pointer-events:none;
+  transition-delay:0s,0s,0s,var(--ui-layout-duration,320ms);
+}
+@media(min-width:2000px) {
+  .career-desktop-shell.career-workspace { --companion-width:360px; --companion-sidebar-width:260px; --companion-gap:17px; }
+}
+@media(max-width:1440px) and (min-width:1181px) {
+  .career-desktop-shell.career-workspace { --companion-width:270px; --companion-sidebar-width:205px; --companion-gap:10px; }
+}
+@media(max-width:1180px) {
+  .career-desktop-shell.career-workspace[data-detail-open="false"][data-inspector-open] { grid-template-columns:204px minmax(0,1fr); }
+  .career-desktop-shell.career-workspace[data-detail-open="false"][data-inspector-open="false"] .agent-chat { margin-right:0; }
+  .career-desktop-shell.career-workspace[data-inspector-open] .agent-inspector.companion-panel {
+    width:305px;
+    clip-path:none;
+    transform:translateX(0);
+  }
+  .career-desktop-shell.career-workspace[data-inspector-open="false"] .agent-inspector.companion-panel { transform:translateX(22px); }
+}
+@media(max-width:760px) {
+  .career-desktop-shell.career-workspace[data-detail-open="false"][data-inspector-open] { grid-template-columns:minmax(0,1fr); }
+}
+.career-desktop-shell.career-workspace[data-ui-motion="off"][data-inspector-open],
+.career-desktop-shell.career-workspace[data-ui-motion="off"] :is(.agent-chat,.agent-inspector.companion-panel) { transition:none; }
+@media(prefers-reduced-motion:reduce) {
+  .career-desktop-shell.career-workspace,
+  .career-desktop-shell.career-workspace :is(.agent-chat,.agent-inspector.companion-panel) { transition:none!important; }
+}

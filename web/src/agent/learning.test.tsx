@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { LearningPath, LearningResource, LearningState } from "../../../agent/src/learning-contract";
 import { LearningProgress, LearningWorkspace } from "./LearningWorkspace";
-import { learningPlayerUrl, learningProgress, nextLearningNode, nodeReady } from "./learning";
+import { learningCaptionTime, learningCoverUrl, learningPlayerUrl, learningProgress, nextLearningNode, nodeReady } from "./learning";
 const path: LearningPath = { id: "path", job_id: "job", title: "前端学习", summary: "结合岗位练习", created_at: "", updated_at: "", nodes: [
   { key: "types", title: "类型", requirement: "TypeScript", objective: "理解类型", estimated_minutes: 30, prerequisites: [], search_query: "TypeScript", exercise: "写函数", deliverable: "函数代码", status: "done", notes: "", result: "完成", resources: [], updated_at: null },
   { key: "components", title: "组件", requirement: "组件开发", objective: "实现组件", estimated_minutes: 60, prerequisites: ["types"], search_query: "组件", exercise: "做组件", deliverable: "组件代码", status: "todo", notes: "", result: "", resources: [], updated_at: null },
@@ -20,6 +20,15 @@ describe("学习路线", () => {
   it("播放地址只能由合法BV号生成，禁止任意iframe来源", () => {
     expect(learningPlayerUrl({ bvid: "BV14Z4y1u7pi" } as LearningResource)).toMatch(/^https:\/\/player\.bilibili\.com\/player.html\?/);
     expect(learningPlayerUrl({ bvid: "//evil.invalid" } as LearningResource)).toBeNull();
+  });
+  it("视频封面只接受 HTTPS 的B站图片域名", () => {
+    expect(learningCoverUrl({ cover: "https://i2.hdslb.com/bfs/archive/cover.jpg" } as LearningResource)).toBe("https://i2.hdslb.com/bfs/archive/cover.jpg");
+    expect(learningCoverUrl({ cover: "https://evil.invalid/cover.jpg" } as LearningResource)).toBeNull();
+    expect(learningCoverUrl({ cover: "javascript:alert(1)" } as LearningResource)).toBeNull();
+  });
+  it("字幕时间戳清晰且不随播放器格式变化", () => {
+    expect(learningCaptionTime(65.8)).toBe("1:05");
+    expect(learningCaptionTime(-1)).toBe("0:00");
   });
   it("无路线时从真实岗位开始，有路线时显示章节和练习，不自动播放外站视频", () => {
     const state: LearningState = { revision: 0, active_path_id: null, paths: [], proposal: null, updated_at: null };

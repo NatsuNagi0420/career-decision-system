@@ -200,6 +200,8 @@ test("官方登录自动同步聊天和记忆，不依赖扫码；云端改名�
   const token = await pc.accounts!.officialKey(login.user), headers = { authorization: "Bearer " + token };
   const cloudUser = await hub.accounts!.user(headers.authorization);
   const bridge = installPcBridge(pc, pc.profiles.config);
+  const devices = await waitFor(async () => (await hub.app.inject({ url: "/api/v1/hub/devices", headers })).json(), rows => rows.length > 0);
+  hub.store.db.prepare("UPDATE hub_devices SET expires=0 WHERE id=?").run(devices[0].id);
   const sessions = await waitFor(async () => (await hub.app.inject({ url: "/api/v1/hub/sessions", headers })).json<{ id: string; local_id: string }[]>(), rows => rows.some(row => row.local_id === conversation.id));
   const synced = sessions.find(row => row.local_id === conversation.id)!;
   const device = (await hub.app.inject({ url: "/api/v1/hub/devices", headers })).json()[0];
@@ -213,7 +215,6 @@ test("官方登录自动同步聊天和记忆，不依赖扫码；云端改名�
   assert.equal((await hub.app.inject({ url: `/api/v1/hub/sessions/${synced.id}`, headers: { authorization: "Bearer " + second.token } })).statusCode, 404);
   assert.equal((await hub.app.inject({ url: "/api/v1/hub/sessions", headers: { authorization: "Bearer " + second.token } })).json().length, 0);
   // 配对二维码过期也不影响已有账号的资料同步。
-  hub.store.db.prepare("UPDATE hub_devices SET expires=0 WHERE id=?").run(device.id);
   const renamed = await hub.app.inject({ method: "PATCH", url: `/api/v1/hub/sessions/${synced.id}`, headers, payload: { title: "云端改名", archived: true } }); assert.equal(renamed.statusCode, 200, renamed.body);
   await waitFor(async () => pc.store.conversation(login.user.id, conversation.id), c => c.title === "云端改名" && c.archived === true);
   await hub.app.inject({ method: "DELETE", url: `/api/v1/hub/sessions/${synced.id}`, headers });

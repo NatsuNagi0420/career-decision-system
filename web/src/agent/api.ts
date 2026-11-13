@@ -61,6 +61,10 @@ export const agentApi = {
     return { configured: true, logged_in: true, device: null, devices, sessions, pairing: null, limits: { workspace_ids: [], allow_project_write: false }, error: null };
   },
   connectRemote: (name: string) => request(BASE + "/remote/connect", { method: "POST", body: JSON.stringify({ name }) }),
+  remoteConversations: (cloud = false) => request<import("./RemoteConnections").RemoteState["sessions"]>(cloud ? "/api/v1/hub/sessions" : BASE + "/remote/sessions"),
+  updateRemoteConversation: (id: string, patch: { title?: string; archived?: boolean }, cloud = false) => request<import("./RemoteConnections").RemoteState["sessions"][number]>((cloud ? "/api/v1/hub/sessions/" : BASE + "/remote/sessions/") + id, { method: "PATCH", body: JSON.stringify(patch) }),
+  deleteRemoteConversation: (id: string, cloud = false) => request((cloud ? "/api/v1/hub/sessions/" : BASE + "/remote/sessions/") + id, { method: "DELETE" }),
+  sendRemoteTask: (id: string, input: string, cloud = false) => request((cloud ? "/api/v1/hub/sessions/" : BASE + "/remote/sessions/") + id + "/tasks", { method: "POST", body: JSON.stringify({ input, request_id: crypto.randomUUID() }) }),
   refreshRemotePairing: () => request(BASE + "/remote/pairing", { method: "POST", body: "{}" }),
   disconnectRemote: () => request(BASE + "/remote/disconnect", { method: "POST", body: "{}" }),
   remoteSnapshot: <T,>(id: string, cloud = false) => request<T>((cloud ? "/api/v1/hub/sessions/" : BASE + "/remote/sessions/") + id),

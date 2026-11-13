@@ -17,7 +17,7 @@ export class PcBridge {
   private executor: TaskExecutor;
   private memorySync: MemorySync;
   private memorySyncedAt = new Map<number, number>();
-  private memoryCapability: { enabled: boolean; expires: number } | null = null;
+  private memoryCapability: { enabled: boolean; account: boolean; expires: number } | null = null;
   private stopped = false;
   private timer?: ReturnType<typeof setTimeout>;
   private job?: Promise<void>;
@@ -29,6 +29,7 @@ export class PcBridge {
     ctx.store.db.exec(`CREATE TABLE IF NOT EXISTS remote_connections(user_id INTEGER PRIMARY KEY,device_id TEXT NOT NULL,hub_url TEXT NOT NULL,secret TEXT,limits TEXT NOT NULL,pair_code TEXT,expires_at TEXT,error TEXT);
       CREATE TABLE IF NOT EXISTS remote_mirrors(user_id INTEGER NOT NULL,device_id TEXT NOT NULL,local_id TEXT NOT NULL,session_id TEXT NOT NULL,digest TEXT NOT NULL,PRIMARY KEY(device_id,local_id));
       CREATE TABLE IF NOT EXISTS remote_synced_files(device_id TEXT NOT NULL,artifact_id TEXT NOT NULL,PRIMARY KEY(device_id,artifact_id));`);
+    ctx.store.db.exec("CREATE TABLE IF NOT EXISTS remote_sync_preferences(user_id INTEGER PRIMARY KEY,enabled INTEGER NOT NULL)");
     this.executor = new TaskExecutor(ctx);
     this.memorySync = new MemorySync(ctx.runtime.memory);
   }
@@ -72,6 +73,7 @@ export class PcBridge {
     this.ctx.secrets.protect(value.key); this.ctx.secrets.protect(value.pairing_token);
     this.ctx.store.db.prepare("INSERT INTO remote_connections VALUES(?,?,?,?,?,?,?,NULL) ON CONFLICT(user_id) DO UPDATE SET device_id=excluded.device_id,hub_url=excluded.hub_url,secret=excluded.secret,limits=excluded.limits,pair_code=excluded.pair_code,expires_at=excluded.expires_at,error=NULL").run(user.id, value.device.id, this.config.cloudAgentUrl, encrypted, JSON.stringify(limits), value.pairing_token, value.expires_at);
     this.deviceCache.set(user.id, value.device);
+    this.ctx.store.db.prepare("INSERT INTO remote_sync_preferences VALUES(?,1) ON CONFLICT(user_id) DO UPDATE SET enabled=1").run(user.id);
     return { device: value.device, pairing: { payload: pairingPayload(this.config.cloudAgentUrl, value.pairing_token), expires_at: value.expires_at } };
   }
   async refreshPairing(user: User) {
@@ -87,6 +89,7 @@ export class PcBridge {
     let revoked = false;
     if (row) { try { await this.request(user, "/devices/" + row.device_id, "DELETE"); revoked = true; } catch { /* 先关闭本机接收；云端离线设备仍可在手机移除。 */ } this.ctx.secrets.forget("device:" + row.device_id); }
     this.ctx.store.db.prepare("DELETE FROM remote_connections WHERE user_id=?").run(user.id); this.deviceCache.delete(user.id);
+    this.ctx.store.db.prepare("INSERT INTO remote_sync_preferences VALUES(?,0) ON CONFLICT(user_id) DO UPDATE SET enabled=0").run(user.id);
     return { ok: true, revoked };
   }
   async status(user: User) {
@@ -110,20 +113,37 @@ export class PcBridge {
     this.ctx.store.db.prepare("UPDATE remote_connections SET error=NULL,pair_code=CASE WHEN ?='active' THEN NULL ELSE pair_code END WHERE user_id=?").run(device.status, user.id);
     return { device, limits, catalogue };
   }
-  private async mirror(user: User, row: Connection, device: HubDevice) {
-    if (!device.settings.sync_chats || this.stopped) return;
+  private async syncMemory(user: User, row: Connection | undefined) {
+    if (!this.memoryCapability || this.memoryCapability.expires < Date.now()) {
+      const capability = await this.request<{ memory_sync?: number; account_sync?: number }>(user, "/config");
+      this.memoryCapability = { enabled: capability.memory_sync === 1, account: capability.account_sync === 1, expires: Date.now() + 60000 };
+    }
     if (this.ctx.runtime.memory.settings(user.id).sync_enabled !== false && Date.now() - (this.memorySyncedAt.get(user.id) ?? 0) >= 15000) {
       this.memorySyncedAt.set(user.id, Date.now());
-      if (!this.memoryCapability || this.memoryCapability.expires < Date.now()) {
-        const capability = await this.request<{ memory_sync?: number }>(user, "/config");
-        this.memoryCapability = { enabled: capability.memory_sync === 1, expires: Date.now() + 60000 };
-      }
       if (this.memoryCapability.enabled) {
         const peer = this.config.cloudAgentUrl;
         const sent = this.memorySync.pending(user.id, peer);
-        const result = memoryExchangeResult.parse(await this.request(user, "/worker/" + row.device_id + "/memory", "POST", sent, row));
-        if (!this.stopped && this.row(user.id)?.device_id === row.device_id && this.ctx.runtime.memory.settings(user.id).sync_enabled !== false) this.memorySync.accept(user.id, peer, sent, result);
+        if (!this.memoryCapability.account && (!row || this.deviceCache.get(user.id)?.status !== "active")) return;
+        const result = memoryExchangeResult.parse(await this.request(user, this.memoryCapability.account ? "/account/memory" : "/worker/" + row!.device_id + "/memory", "POST", sent, this.memoryCapability.account ? undefined : row));
+        if (!this.stopped && await this.ctx.accounts?.officialKey(user) && this.ctx.runtime.memory.settings(user.id).sync_enabled !== false) this.memorySync.accept(user.id, peer, sent, result);
         if (result.more) this.memorySyncedAt.delete(user.id);
+      }
+    }
+  }
+  private async mirror(user: User, row: Connection, device: HubDevice) {
+    await this.syncMemory(user, row);
+    if (!device.settings.sync_chats || this.stopped) return;
+    if (this.memoryCapability?.account) {
+      const states = await this.request<{ local_id: string; title: string; archived: boolean; deleted: boolean; source_title?: string; source_archived: boolean }[]>(user, "/worker/" + row.device_id + "/mirrors", "GET", undefined, row);
+      for (const state of states) {
+        const local = this.ctx.store.conversations(user.id).find(c => c.id === state.local_id);
+        // 云端只改变元数据和删除状态；绝不把执行记录导入另一台 Runtime。
+        if (!local || this.ctx.store.activeRun(local.id)) continue;
+        if (state.deleted) { await this.ctx.runtime.deleteConversation(user, local.id); continue; }
+        let changed = false;
+        if (state.source_title && local.title === state.source_title && local.title !== state.title) { local.title = state.title; local.title_manual = true; changed = true; }
+        if (Boolean(local.archived) === state.source_archived && Boolean(local.archived) !== state.archived) { local.archived = state.archived; changed = true; }
+        if (changed) this.ctx.store.updateConversation(local);
       }
     }
     let sent = 0;
@@ -154,6 +174,13 @@ export class PcBridge {
     }
   }
   private async poll() {
+    // 官方登录即可同步；手机配对仍然是认领远程任务的前置条件。
+    if (this.config.cloudAgentUrl) for (const user of this.ctx.accounts?.linkedUsers() ?? []) {
+      if (this.stopped) break;
+      if (!await this.ctx.accounts?.officialKey(user) || this.row(user.id) || this.ctx.store.db.prepare("SELECT 1 FROM remote_sync_preferences WHERE user_id=? AND enabled=0").get(user.id)) continue;
+      try { await this.connect(user, hostname()); }
+      catch { this.failures++; }
+    }
     const rows = this.ctx.store.db.prepare("SELECT * FROM remote_connections").all() as Connection[];
     for (const row of rows) {
       if (this.stopped) break;
@@ -161,6 +188,9 @@ export class PcBridge {
       if (!user || !await this.ctx.accounts?.officialKey(user)) { this.executor.stop(String(row.user_id)); continue; }
       try {
         const { device, limits, catalogue } = await this.heartbeat(user, row);
+        if (!this.syncing.has(user.id)) {
+          const job = this.mirror(user, row, device).catch(error => this.setError(user.id, error)).finally(() => this.syncing.delete(user.id)); this.syncing.set(user.id, job);
+        }
         if (device.status !== "active") continue;
         const base = "/worker/" + row.device_id, request = <T>(path: string, method = "POST", body?: unknown) => this.request<T>(user, base + path, method, body, row);
         const client: WorkerClient = {
@@ -172,9 +202,6 @@ export class PcBridge {
           upload: (task, artifact, bytes) => request("/tasks/" + task.id + "/files", "POST", { lease: task.lease, source_id: artifact.id, name: artifact.name, base64: bytes.toString("base64") }),
         };
         await this.executor.tick(String(user.id), user, client, { limits, catalogue });
-        if (!this.syncing.has(user.id)) {
-          const job = this.mirror(user, row, device).catch(error => this.setError(user.id, error)).finally(() => this.syncing.delete(user.id)); this.syncing.set(user.id, job);
-        }
         this.failures = 0;
       } catch (error) {
         this.setError(user.id, error); this.failures++;
@@ -194,6 +221,10 @@ export function installPcBridge(ctx: AgentContext, config: Config, start = true)
   const bridge = new PcBridge(ctx, config), { app } = ctx;
   const user = (header?: string) => ctx.accounts!.user(header);
   app.get("/api/v1/agent/remote", async r => bridge.status(await user(r.headers.authorization)));
+  app.get("/api/v1/agent/remote/sessions", async r => bridge.proxy(await user(r.headers.authorization), "/sessions"));
+  app.patch<{ Params: { id: string } }>("/api/v1/agent/remote/sessions/:id", async r => bridge.proxy(await user(r.headers.authorization), "/sessions/" + uuid.parse(r.params.id), "PATCH", z.object({ title: z.string().trim().min(1).max(80).optional(), archived: z.boolean().optional() }).strict().parse(r.body)));
+  app.delete<{ Params: { id: string } }>("/api/v1/agent/remote/sessions/:id", async r => bridge.proxy(await user(r.headers.authorization), "/sessions/" + uuid.parse(r.params.id), "DELETE"));
+  app.post<{ Params: { id: string } }>("/api/v1/agent/remote/sessions/:id/tasks", async r => bridge.proxy(await user(r.headers.authorization), "/sessions/" + uuid.parse(r.params.id) + "/tasks", "POST", z.object({ input: z.string().trim().min(1).max(20000), request_id: uuid }).strict().parse(r.body)));
   app.post("/api/v1/agent/remote/connect", async r => { const b = z.object({ name: z.string().trim().min(1).max(80).default(hostname()) }).strict().parse(r.body); return bridge.connect(await user(r.headers.authorization), b.name); });
   app.post("/api/v1/agent/remote/pairing", async r => bridge.refreshPairing(await user(r.headers.authorization)));
   app.post("/api/v1/agent/remote/disconnect", async r => bridge.disconnect(await user(r.headers.authorization)));

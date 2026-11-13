@@ -29,7 +29,7 @@ export interface HubDevice {
 }
 export type TaskStatus = "queued" | "waiting_pc" | "running" | "awaiting_approval" | "waiting_input" | "completed" | "failed" | "cancelled" | "interrupted" | "paused";
 export const ACTIVE_TASK = ["queued", "waiting_pc", "running", "awaiting_approval"] as const;
-export interface HubSession { workspace_id: string | null; workspace_name: string | null; workspace_access: "read-only" | "workspace-write"; id: string; title: string; target: "pc" | "cloud"; device_id: string | null; archived: boolean; created_at: string; updated_at: string; }
+export interface HubSession { local_id?: string | null; workspace_id: string | null; workspace_name: string | null; workspace_access: "read-only" | "workspace-write"; id: string; title: string; target: "pc" | "cloud"; device_id: string | null; archived: boolean; created_at: string; updated_at: string; }
 export interface HubTask {
   id: string; session_id: string; target: "pc" | "cloud"; device_id: string | null;
   status: TaskStatus; input: string; settings: DeviceSettings; created_at: string; updated_at: string;

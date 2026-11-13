@@ -89,13 +89,13 @@ export class HubRepository {
   private presentSession(row: SessionRow): HubSession {
     const context = this.sessionContext(row);
     const device = row.device_id ? this.device(row.user_id, row.device_id) : null;
-    return { id: row.id, title: row.title, target: row.target, device_id: row.device_id, archived: !!row.archived, workspace_id: context.workspace_id, workspace_access: context.workspace_access, workspace_name: device?.catalogue.workspaces.find(w => w.id === context.workspace_id)?.name ?? null, created_at: row.created_at, updated_at: row.updated_at };
+    return { id: row.id, local_id: row.local_id, title: row.title, target: row.target, device_id: row.device_id, archived: !!row.archived, workspace_id: context.workspace_id, workspace_access: context.workspace_access, workspace_name: device?.catalogue.workspaces.find(w => w.id === context.workspace_id)?.name ?? null, created_at: row.created_at, updated_at: row.updated_at };
   }
   session(userId: number, id: string) { return this.presentSession(this.sessionRow(userId, id)); }
   sessions(userId: number) { return (this.store.db.prepare("SELECT * FROM hub_sessions WHERE user_id=? AND deleted=0 ORDER BY updated_at DESC").all(userId) as SessionRow[]).map(r => this.presentSession(r)); }
-  createSession(userId: number, target: "pc" | "cloud", deviceId: string | null, title = "新的对话", localId: string | null = null, workspaceId?: string | null) {
+  createSession(userId: number, target: "pc" | "cloud", deviceId: string | null, title = "新的对话", localId: string | null = null, workspaceId?: string | null, mirror = false) {
     invariant(this.sessions(userId).length < 1000, 409, "请先整理旧对话。");
-    if (target === "pc") { invariant(deviceId, 400, "请选择电脑。"); invariant(this.device(userId, deviceId).status === "active", 409, "电脑尚未配对。"); }
+    if (target === "pc") { invariant(deviceId, 400, "请选择电脑。"); const status = this.device(userId, deviceId).status; invariant(status === "active" || (mirror && status === "pending" && localId), 409, "电脑尚未配对。"); }
     else invariant(!deviceId, 400, "云端会话不能绑定电脑。");
     const device = deviceId ? this.device(userId, deviceId) : null;
     const selected = workspaceId === undefined ? device?.settings.workspace_id ?? null : workspaceId;
@@ -229,11 +229,21 @@ export class HubRepository {
     }
     const existing = this.store.db.prepare("SELECT * FROM hub_sessions WHERE user_id=? AND device_id=? AND local_id=?").get(userId, deviceId, localId) as SessionRow | undefined;
     if (existing?.deleted) return { id: existing.id, deleted: true };
-    const session = existing ? this.presentSession(existing) : this.createSession(userId, "pc", deviceId, title, localId);
+    const session = existing ? this.presentSession(existing) : this.createSession(userId, "pc", deviceId, title, localId, undefined, true);
     const previousSource = existing?.snapshot ? JSON.parse(existing.snapshot).conversation?.source_title : null;
     if (existing && (!previousSource || previousSource === existing.title)) this.store.db.prepare("UPDATE hub_sessions SET title=? WHERE id=?").run(title, session.id);
+    const previousArchived = existing?.snapshot ? Boolean(JSON.parse(existing.snapshot).conversation?.source_archived) : false;
+    if (!existing || Boolean(existing.archived) === previousArchived) this.store.db.prepare("UPDATE hub_sessions SET archived=? WHERE id=?").run(Number(Boolean(snapshot.conversation.archived)), session.id);
+    snapshot = { ...snapshot, conversation: { ...snapshot.conversation, source_archived: Boolean(snapshot.conversation.archived) } };
     this.saveSnapshot(userId, session.id, snapshot);
     return { id: session.id, deleted: false };
+  }
+  mirrorStates(userId: number, deviceId: string) {
+    this.device(userId, deviceId);
+    return this.store.db.prepare("SELECT local_id,title,archived,deleted,snapshot FROM hub_sessions WHERE user_id=? AND device_id=? AND local_id IS NOT NULL").all(userId, deviceId).map(row => {
+      const source = row.snapshot ? JSON.parse(String(row.snapshot)).conversation : {};
+      return { local_id: String(row.local_id), title: String(row.title), archived: Boolean(row.archived), deleted: Boolean(row.deleted), source_title: source?.source_title as string | undefined, source_archived: Boolean(source?.source_archived) };
+    });
   }
   files(userId: number, sessionId: string) {
     this.sessionRow(userId, sessionId);

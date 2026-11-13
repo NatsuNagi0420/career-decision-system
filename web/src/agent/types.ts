@@ -79,6 +79,7 @@ export interface LocalWorkspace {
 export type ReasoningEffort = "auto" | "low" | "medium" | "high";
 export interface RunOptions { resume_edit?: import("../../../agent/src/resume-fields").ResumeEditRequest; replaces_message_id?: string; permission_mode: PermissionMode; reasoning_effort: ReasoningEffort; full_access_confirmed: boolean; obligation_id?: string; attachment_ids?: string[]; }
 export interface Conversation {
+  sync_origin?: { session_id: string; target: "pc" | "cloud"; device_id: string | null };
   guidance?: import("../../../agent/src/guidance-contract").GuidanceState;
   /** 仅用于兼容旧版专用对话；新对话在同一主线内使用职业与简历工具。 */
   mode?: "resume";

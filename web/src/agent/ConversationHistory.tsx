@@ -57,7 +57,7 @@ export function ConversationHistory({ conversations, selectedId, disabled, activ
         <button className="agent-history-open" type="button" disabled={disabled} aria-current={selectedId === conversation.id ? "page" : undefined} title={conversation.title}
           onPointerEnter={event => { if (event.pointerType !== "touch") prefetch(conversation.id, 90); }} onPointerLeave={cancelPrefetch}
           onFocus={() => prefetch(conversation.id)} onBlur={cancelPrefetch} onPointerDown={() => prefetch(conversation.id)}
-          onClick={() => { cancelPrefetch(); onChoose(conversation.id); }}><CareerIcon name="history" size={21} /><span>{conversation.title}<small>{new Date(conversation.updated_at).toLocaleDateString("zh-CN", { month: "numeric", day: "numeric" })}</small></span></button>
+          onClick={() => { cancelPrefetch(); onChoose(conversation.id); }}>{conversation.sync_origin ? <AgentIcon name={conversation.sync_origin.target === "pc" ? "computer" : "cloud"} size={21} /> : <CareerIcon name="history" size={21} />}<span>{conversation.title}<small>{new Date(conversation.updated_at).toLocaleDateString("zh-CN", { month: "numeric", day: "numeric" })}</small></span></button>
         <ConversationActions {...actions} compact conversation={conversation} disabled={disabled} active={conversation.id === activeId} />
       </div>)}
       {!items.length && <p className="agent-muted conversation-history-empty">{query.trim() ? "这里没有找到这个标题，试试其他关键词或另一个分类。" : archived ? "还没有归档的对话。归档只收起记录，不会删除资料。" : "聊过的事会留在这里。每段对话的 ··· 里可以重命名、归档或删除。"}</p>}

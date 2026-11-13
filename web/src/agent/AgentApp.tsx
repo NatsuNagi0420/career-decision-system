@@ -266,6 +266,8 @@ function Workspace({
         [notice, setNotice] = useState(""),
         [settings, setSettings] = useState(false),
         [remoteOpen, setRemoteOpen] = useState(false),
+        [remoteSelected, setRemoteSelected] = useState<string | null>(null),
+        [remoteConversations, setRemoteConversations] = useState<import("./RemoteConnections").RemoteState["sessions"]>([]),
         [inspectorOpen, setInspectorOpen] = useState(() => window.innerWidth > 1180),
         [workbenchStatus, setWorkbenchStatus] = useState<"closed" | "open" | "minimized">("closed"),
         [memoryStatus, setMemoryStatus] = useState<"closed" | "open" | "minimized">("closed"),
@@ -302,6 +304,11 @@ function Workspace({
         );
     const ui = resolveDeploymentUi(info, deploymentMode);
     const cloud = deploymentMode === "server";
+    const historyConversations = [...conversations, ...remoteConversations.filter(item => !conversations.some(local => item.local_id === local.id)).map(item => ({
+        id: item.id, title: item.title, archived: item.archived, profile_id: null,
+        created_at: item.created_at ?? "", updated_at: item.updated_at ?? "",
+        sync_origin: { session_id: item.id, target: item.target, device_id: item.device_id },
+    }))];
     const account = accountDisplay(user, deploymentMode, officialSession);
     function openModelSettings() {
         if (ui.model_connections) setSettings(true);
@@ -372,10 +379,12 @@ function Workspace({
     }, [view, conversationCache]);
     useEffect(() => () => conversationCache.clear(), [conversationCache]);
     function prefetchConversation(id: string) {
+        if (historyConversations.find(item => item.id === id)?.sync_origin) return;
         if (!deletedConversations.current.has(id)) void conversationCache.load(id).catch(() => {});
     }
     function clearAttachmentPreviews() { setAttachmentPreviews(values => { Object.values(values).forEach(url => URL.revokeObjectURL(url)); return {}; }); }
     function chooseConversation(id: string | null) {
+        if (id && historyConversations.find(item => item.id === id)?.sync_origin) { setRemoteSelected(id); setRemoteOpen(true); return; }
         if (id !== null && currentConversation.current === id) return;
         const previous = activeView.current, viewport = messageFlow.current?.parentElement;
         if (previous && previous.snapshot.conversation.id === currentConversation.current && !deletedConversations.current.has(previous.snapshot.conversation.id)) {
@@ -452,6 +461,16 @@ function Workspace({
     useEffect(() => {
         void load().catch((error) => setNotice(error.message));
     }, [load]);
+    useEffect(() => {
+        if (user.identity !== "official") { setRemoteConversations([]); return; }
+        let disposed = false; let timer: ReturnType<typeof setTimeout>;
+        const refresh = async () => {
+            try { const items = await agentApi.remoteConversations(cloud); if (!disposed) setRemoteConversations(items); }
+            catch { /* 云端暂不可用不应影响本机对话。 */ }
+            finally { if (!disposed) timer = setTimeout(() => void refresh(), 10000); }
+        };
+        void refresh(); return () => { disposed = true; clearTimeout(timer); };
+    }, [user.id, user.identity, cloud]);
     useEffect(() => {
         if (!conversationId) {
             setView(null);
@@ -874,6 +893,10 @@ function Workspace({
         if (historyBusy || working || fileBusy) return;
         setHistoryBusy(true);
         try {
+            if (conversation.sync_origin) {
+                const next = await agentApi.updateRemoteConversation(conversation.id, { archived: !conversation.archived }, cloud);
+                setRemoteConversations(items => items.map(item => item.id === next.id ? next : item)); return;
+            }
             const value = await agentApi.archiveConversation(conversation.id, !conversation.archived);
             conversationCache.updateConversation(value);
             setConversations(values => values.map(item => item.id === value.id ? value : item));
@@ -889,6 +912,10 @@ function Workspace({
         if (historyBusy) throw new Error("正在更新对话，请稍后再试。");
         setHistoryBusy(true);
         try {
+            if (conversation.sync_origin) {
+                const next = await agentApi.updateRemoteConversation(conversation.id, { title }, cloud);
+                setRemoteConversations(items => items.map(item => item.id === next.id ? next : item)); return;
+            }
             const value = await agentApi.renameConversation(conversation.id, title);
             conversationCache.updateConversation(value);
             setConversations(items => items.map(item => item.id === value.id ? value : item));
@@ -901,6 +928,11 @@ function Workspace({
         if (!accepted || historyBusy || working || fileBusy) return;
         setHistoryBusy(true); deletingConversation.current = conversation.id;
         try {
+            if (conversation.sync_origin) {
+                await agentApi.deleteRemoteConversation(conversation.id, cloud);
+                setRemoteConversations(items => items.filter(item => item.id !== conversation.id));
+                if (remoteSelected === conversation.id) { setRemoteOpen(false); setRemoteSelected(null); } return;
+            }
             await agentApi.deleteConversation(conversation.id);
             void preparationWorkspace.refresh();
             deletedConversations.current.add(conversation.id);
@@ -1130,7 +1162,7 @@ function Workspace({
                     <div className="career-brand"><CareerIcon name="sprout" size={40} /><strong>青穗集</strong><span className="career-brand__spark" aria-hidden="true">✧</span></div>
                     <nav className="career-desktop-apps" aria-label="桌面应用"><button data-onboarding="workbench" id="career-workbench-launcher" type="button" aria-label="打开职业工作台" aria-expanded={workbenchStatus === "open"} aria-controls="career-workbench-window" onClick={() => { setResumePreviewOpen(false); setResumeOpen(false); setWorkbenchStatus("open"); }}><CareerIcon name="folder" size={25} /><span className="career-desktop-app__title">职业工作台</span>{pendingCareerCount > 0 && <span className="career-app-badge" aria-label={pendingCareerCount + "份待确认建议"}>{pendingCareerCount}</span>}</button><button data-onboarding="memory" type="button" className="career-memory-launcher" aria-label="打开穗奈·忆迹场" aria-expanded={memoryStatus === "open"} aria-controls="suinai-memory-window" onClick={openMemory}><CareerIcon name="memory" size={25} className="career-memory-launcher__icon" /><span className="career-desktop-app__title">穗奈·忆迹场</span></button></nav>
                     <button className="btn btn--primary agent-new" disabled={working || fileBusy || historyBusy} type="button" onClick={newConversation}><CareerIcon name="newChat" size={23} /><span>新建对话</span><span className="career-new-plus" aria-hidden="true">＋</span></button>
-                    <ConversationHistory conversations={conversations} selectedId={conversationId} disabled={working || fileBusy || historyBusy} activeId={busy ? conversationId : null} archived={showArchived} onArchived={setShowArchived} onChoose={chooseConversation} onPrefetch={prefetchConversation} onRename={setRenaming} onArchive={conversation => void archiveConversation(conversation)} onDelete={conversation => void deleteConversation(conversation)} />
+                    <ConversationHistory conversations={historyConversations} selectedId={remoteOpen ? remoteSelected : conversationId} disabled={working || fileBusy || historyBusy} activeId={busy ? conversationId : null} archived={showArchived} onArchived={setShowArchived} onChoose={chooseConversation} onPrefetch={prefetchConversation} onRename={setRenaming} onArchive={conversation => void archiveConversation(conversation)} onDelete={conversation => void deleteConversation(conversation)} />
                     <div className="career-sidebar-bottom">
                         <div className="career-sidebar-scene" aria-hidden="true"><AsciiArt variant="cat" className="ascii-sidebar-cat" /></div>
                         <div className="career-account"><span className="career-account__mark"><CareerIcon name="seedling" size={25} /></span><div><strong>{account.name}</strong>{account.official && <small>官方账号</small>}</div><button className="agent-icon-button" type="button" aria-label="切换登录方式" title="切换登录方式" onClick={() => void logout()}><AgentIcon name="exit" size={17} /></button></div>
@@ -1150,7 +1182,7 @@ function Workspace({
                     </div>
                     <div className="agent-conversation-strip career-mobile-conversations">
                         <select className="agent-mobile-history" disabled={working || fileBusy || historyBusy} aria-label="选择历史对话" value={conversationId ?? ""} onChange={event => chooseConversation(event.target.value || null)}>
-                            <option value="">＋ 新的对话</option>{conversations.map(item => <option key={item.id} value={item.id}>{item.archived ? "[归档] " : ""}{item.title}</option>)}
+                            <option value="">＋ 新的对话</option>{historyConversations.map(item => <option key={item.id} value={item.id}>{item.archived ? "[归档] " : ""}{item.title}</option>)}
                         </select>
                     </div>
                     {resumeActive && !resumeBarDismissed && <ResumeConversationBar state={resumeWorkspace.state} busy={busy || working} onPreview={openResumePreview} onHide={() => setResumeBarDismissed(true)} />}
@@ -1336,7 +1368,7 @@ function Workspace({
             <DesktopWindow id="suinai-memory-window" open={memoryStatus === "open"} onClose={closeMemory} onMinimize={minimizeMemory} title="穗奈·忆迹场" status="记忆 · 证据 · 当前召回">
                 {visible => (visible || memoryStatus !== "closed") && <Suspense fallback={<div className="memory-loading" role="status">正在打开忆迹场…</div>}><MemorySea active={memoryStatus === "open"} activity={insights.analyzing ? "consolidating" : busy ? "working" : "idle"} view={memoryView} loading={memoryLoading} error={memoryError} onRefresh={loadMemory} onChange={async (id, change) => { await agentApi.changeMemory(id, change); await loadMemory(); }} onRetry={async () => { await agentApi.retryMemory(); await loadMemory(); }} onSettings={async value => { await agentApi.memorySettings(value); await loadMemory(); }} onExport={agentApi.exportMemory} onConfirmDelete={node => confirm({ title: "让穗奈忘记这段记忆？", confirmLabel: "永久删除记忆", description: <><p>{node.text}</p><p>忆迹场中的记录、来源索引和旧召回引用会删除；原始对话、正式画像和简历仍会保留。之后不会自动从这段来源重新记起。</p></> })} /></Suspense>}
             </DesktopWindow>
-            <RemoteConnections cloud={cloud} open={remoteOpen} onClose={() => setRemoteOpen(false)} user={user} onLogin={() => { setRemoteOpen(false); void logout(); }} />
+            <RemoteConnections cloud={cloud} open={remoteOpen} initialSession={remoteSelected} onClose={() => { setRemoteOpen(false); setRemoteSelected(null); }} user={user} onLogin={() => { setRemoteOpen(false); void logout(); }} />
             {settings && ui.model_connections ? (
                 <ModelSettings
                     profiles={profiles}

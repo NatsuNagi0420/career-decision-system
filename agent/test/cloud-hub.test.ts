@@ -187,6 +187,55 @@ test("记忆同步 HTTP 必须有同账号的有效设备凭据，关闭同步�
   repo.revoke(login.user.id,device.id); assert.equal((await hub.app.inject({method:"POST",url:path,headers,payload})).statusCode,403);
 });
 
+test("官方登录自动同步聊天和记忆，不依赖扫码；云端改名与删除回传且不扩大执行权限", async t => {
+  const relay = await relayFixture(t);
+  const hub = createHubApp({ config: loadConfig({ AGENT_DEPLOYMENT_MODE: "server", AGENT_DATA_DIR: await temporary("account-sync-hub"), OFFICIAL_GATEWAY_URL: relay.url, OFFICIAL_MODEL: "Suinai Flash", AGENT_MEMORY_BACKGROUND: "false" }), sandbox: noSandbox }, true);
+  await hub.app.listen({ host: "127.0.0.1", port: 0 }); t.after(() => hub.app.close());
+  const hubUrl = `http://127.0.0.1:${(hub.app.server.address() as { port: number }).port}`;
+  const pc = createApp({ config: loadConfig({ AGENT_DATA_DIR: await temporary("account-sync-pc"), AGENT_CLOUD_URL: hubUrl, OFFICIAL_GATEWAY_URL: relay.url, OFFICIAL_MODEL: "Suinai Flash", AGENT_MEMORY_BACKGROUND: "false" }), unifiedIdentity: true, sandbox: noSandbox }); t.after(() => pc.app.close());
+  const login = await pc.accounts!.login("account_one", "fixture", true);
+  const conversation = pc.store.createConversation(login.user.id, null, "本机真实经历");
+  const message = pc.store.message(conversation.id, null, "user", "我做过校园交易平台，负责前端页面。");
+  pc.runtime.memory.observe(login.user.id, conversation.id, [{ kind: "experience", text: message.content, evidence: [{ source_id: "message." + message.id, quote: message.content }] }]);
+  const token = await pc.accounts!.officialKey(login.user), headers = { authorization: "Bearer " + token };
+  const cloudUser = await hub.accounts!.user(headers.authorization);
+  const bridge = installPcBridge(pc, pc.profiles.config);
+  const sessions = await waitFor(async () => (await hub.app.inject({ url: "/api/v1/hub/sessions", headers })).json<{ id: string; local_id: string }[]>(), rows => rows.some(row => row.local_id === conversation.id));
+  const synced = sessions.find(row => row.local_id === conversation.id)!;
+  const device = (await hub.app.inject({ url: "/api/v1/hub/devices", headers })).json()[0];
+  assert.equal(device.status, "pending", "自动同步不能自动开启远程执行");
+  const remoteTask = await hub.app.inject({ method: "POST", url: `/api/v1/hub/sessions/${synced.id}/tasks`, headers, payload: { input: "未经扫码不能执行", request_id: randomUUID() } });
+  assert.equal(remoteTask.statusCode, 403);
+  const snapshot = (await hub.app.inject({ url: `/api/v1/hub/sessions/${synced.id}`, headers })).json();
+  assert.equal(snapshot.messages[0].content, message.content);
+  assert.equal(hub.runtime.memory.view(cloudUser.id).nodes.length, 1);
+  const second = await hub.accounts!.login("account_two", "fixture", true);
+  assert.equal((await hub.app.inject({ url: `/api/v1/hub/sessions/${synced.id}`, headers: { authorization: "Bearer " + second.token } })).statusCode, 404);
+  assert.equal((await hub.app.inject({ url: "/api/v1/hub/sessions", headers: { authorization: "Bearer " + second.token } })).json().length, 0);
+  // 配对二维码过期也不影响已有账号的资料同步。
+  hub.store.db.prepare("UPDATE hub_devices SET expires=0 WHERE id=?").run(device.id);
+  const renamed = await hub.app.inject({ method: "PATCH", url: `/api/v1/hub/sessions/${synced.id}`, headers, payload: { title: "云端改名", archived: true } }); assert.equal(renamed.statusCode, 200, renamed.body);
+  await waitFor(async () => pc.store.conversation(login.user.id, conversation.id), c => c.title === "云端改名" && c.archived === true);
+  await hub.app.inject({ method: "DELETE", url: `/api/v1/hub/sessions/${synced.id}`, headers });
+  await waitFor(async () => pc.store.conversations(login.user.id), rows => rows.length === 0);
+  await bridge.close();
+});
+
+test("账号记忆交换无需设备，遵守记忆开关，云端原生会话在本机同步列表可见", async t => {
+  const relay = await relayFixture(t), hub = createHubApp({ config: loadConfig({ AGENT_DEPLOYMENT_MODE: "server", AGENT_DATA_DIR: await temporary("account-memory"), OFFICIAL_GATEWAY_URL: relay.url, OFFICIAL_MODEL: "Suinai Flash", AGENT_MEMORY_BACKGROUND: "false" }), sandbox: noSandbox }, true); t.after(() => hub.app.close());
+  const login = await hub.accounts!.login("account_one", "fixture", true), headers = { authorization: "Bearer " + login.token }, payload = { cursor: 0, changes: [] };
+  assert.equal((await hub.app.inject({ method: "POST", url: "/api/v1/hub/account/memory", payload })).statusCode, 401);
+  assert.equal((await hub.app.inject({ method: "POST", url: "/api/v1/hub/account/memory", headers, payload })).statusCode, 200);
+  hub.runtime.memory.configure(login.user.id, { sync_enabled: false });
+  assert.equal((await hub.app.inject({ method: "POST", url: "/api/v1/hub/account/memory", headers, payload })).json().paused, true);
+  const c = hub.store.createConversation(login.user.id, null, "云端原生会话"); hub.store.message(c.id, null, "user", "云端内容");
+  const sessions = (await hub.app.inject({ url: "/api/v1/hub/sessions", headers })).json(); assert.equal(sessions[0].local_id, c.id);
+  const snapshot = (await hub.app.inject({ url: `/api/v1/hub/sessions/${c.id}`, headers })).json(); assert.equal(snapshot.messages[0].content, "云端内容");
+  const update = await hub.app.inject({ method: "PATCH", url: `/api/v1/hub/sessions/${c.id}`, headers, payload: { title: "同步改名" } }); assert.equal(update.statusCode, 200); assert.equal(hub.store.conversation(login.user.id,c.id).title, "同步改名");
+  assert.equal((await hub.app.inject({ method: "DELETE", url: `/api/v1/hub/sessions/${c.id}`, headers })).statusCode, 200);
+  assert.equal(hub.store.conversations(login.user.id).length, 0);
+});
+
 
 test("云端网页使用官方账号创建会话，纯中转模式仍拒绝直接执行", async t => {
   const relay = await relayFixture(t);

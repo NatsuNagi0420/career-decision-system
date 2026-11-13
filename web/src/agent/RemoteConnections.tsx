@@ -9,14 +9,17 @@ import type { AgentUser } from "./types";
 import "./remote.css";
 type Settings = { allow_remote: boolean; workspace_id: string | null; workspace_access: string; model_source: string; reasoning_effort: string; sync_chats: boolean };
 type Device = { id: string; name: string; status: string; online: boolean; settings: Settings; catalogue: { workspaces: { id: string; name: string }[] } };
-type Session = { id: string; title: string; target: "pc" | "cloud"; device_id: string | null; archived: boolean };
+type Session = { id: string; local_id?: string | null; title: string; target: "pc" | "cloud"; device_id: string | null; archived: boolean; created_at?: string; updated_at?: string };
 export type RemoteState = { configured: boolean; logged_in: boolean; device: Device | null; devices: Device[]; sessions: Session[]; pairing: { payload: string; expires_at: string } | null; limits: { workspace_ids: string[]; allow_project_write: boolean }; error: string | null };
 type Snapshot = { conversation: Session; messages: { id: string; role: string; content: string }[]; drafts: Record<string, string>; tasks: { id: string; input: string; status: string; error: string | null }[]; files: { id: string; name: string; bytes: number }[] };
 const statuses: Record<string, string> = { queued: "排队中", waiting_pc: "等待电脑上线", running: "正在执行", awaiting_approval: "等待确认", waiting_input: "等待补充", completed: "已完成", failed: "未完成", cancelled: "已停止", interrupted: "连接中断", paused: "已暂停" };
-export function RemoteConnections({ cloud = false, open, onClose, user, onLogin }: { cloud?: boolean; open: boolean; onClose: () => void; user: AgentUser; onLogin: () => void }) {
+export function RemoteConnections({ cloud = false, open, onClose, user, onLogin, initialSession }: { cloud?: boolean; open: boolean; onClose: () => void; user: AgentUser; onLogin: () => void; initialSession?: string | null }) {
   const [state, setState] = useState<RemoteState | null>(null), [error, setError] = useState(""), [busy, setBusy] = useState(false);
   const [name, setName] = useState("我的电脑"), [clock, setClock] = useState(Date.now());
   const [selected, setSelected] = useState<string | null>(null), [snapshot, setSnapshot] = useState<Snapshot | null>(null);
+  const [input, setInput] = useState("");
+  useEffect(() => { setSnapshot(null); setInput(""); setError(""); }, [selected]);
+  useEffect(() => { if (open) { setSelected(initialSession ?? null); setSnapshot(null); setError(""); setInput(""); } }, [open, initialSession]);
   useEffect(() => {
     if (!open) return;
     let disposed = false; let timer: ReturnType<typeof setTimeout>;
@@ -38,13 +41,16 @@ export function RemoteConnections({ cloud = false, open, onClose, user, onLogin 
   }, [open, state?.pairing?.expires_at]);
   async function action(fn: () => Promise<unknown>) { setBusy(true); setError(""); try { await fn(); setState(await agentApi.remote(cloud)); } catch (e) { setError((e as Error).message); } finally { setBusy(false); } }
   const device = state?.device;
+  const executionDevice = state?.devices.find(item => item.id === snapshot?.conversation.device_id);
+  const pairingRequired = snapshot?.conversation.target === "pc" && executionDevice?.status !== "active";
+  const taskActive = snapshot?.tasks.some(task => ["queued", "waiting_pc", "running", "awaiting_approval"].includes(task.status));
   const expired = !state?.pairing || Date.parse(state.pairing.expires_at) <= clock;
   async function download(id: string, name: string) {
     try { const blob = await agentApi.remoteDownload(id, cloud); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); } catch (e) { setError((e as Error).message); }
   }
   return <DesktopWindow id="remote-connections-window" open={open} onClose={onClose} onMinimize={onClose} title="设备与同步" status={device ? (device.online ? "这台电脑在线" : "等待连接") : "小程序 · 电脑 · 云端"}>
-    <div className="remote-layout">
-      <section className="remote-devices">
+    <div className={"remote-layout" + (selected ? " remote-layout--conversation" : "")}>
+      {!selected && <section className="remote-devices">
         {cloud ? <>
           <div className="remote-heading"><AgentIcon name="computer" size={24} /><strong>我的电脑</strong></div>
           {state?.devices.filter(item => item.status !== "revoked").map(item => <div key={item.id} className="remote-connected"><AgentIcon name="computer" size={24} /><strong>{item.name}</strong><span className="remote-dot" data-online={item.online} title={item.online ? "在线" : "离线"} /></div>)}
@@ -72,13 +78,18 @@ export function RemoteConnections({ cloud = false, open, onClose, user, onLogin 
           </>}
         </>}
         {(error || state?.error) && <p role="alert">{error || state?.error}</p>}
-      </section>
+      </section>}
       <section className="remote-sessions" aria-label="跨端对话">
         {selected && snapshot ? <>
           <header><button aria-label="返回对话列表" title="返回" onClick={() => { setSelected(null); setSnapshot(null); }}><AgentIcon name="restore" /></button><h3>{snapshot.conversation.title}</h3><span>{snapshot.conversation.target === "cloud" ? "云端" : "电脑"}</span></header>
-          <div className="remote-messages">{snapshot.messages.map(m => <article key={m.id} data-role={m.role}><strong>{m.role === "user" ? "我" : "穗奈"}</strong><p>{m.content}</p></article>)}{Object.entries(snapshot.drafts || {}).map(([id, text]) => <article key={id}><strong>穗奈</strong><p>{text}</p></article>)}</div>
+          <div className="remote-messages">{snapshot.messages.filter(m => ["user", "assistant"].includes(m.role) && m.content).map(m => <article key={m.id} data-role={m.role}><strong>{m.role === "user" ? "我" : "穗奈"}</strong><p>{m.content}</p></article>)}{Object.entries(snapshot.drafts || {}).map(([id, text]) => <article key={id}><strong>穗奈</strong><p>{text}</p></article>)}</div>
           {snapshot.tasks.slice(-1).map(t => <div className="remote-task" key={t.id}><span>{statuses[t.status] || t.status}</span>{["queued", "waiting_pc", "running", "awaiting_approval"].includes(t.status) && <button disabled={busy} onClick={() => void action(() => agentApi.cancelRemoteTask(t.id, cloud))}>停止</button>}{t.error && <p role="alert">{t.error}</p>}</div>)}
           {snapshot.files.map(f => <button className="remote-file" key={f.id} onClick={() => void download(f.id, f.name)}><AgentIcon name="download" size={16} />{f.name}</button>)}
+          <form className="remote-reply" onSubmit={event => { event.preventDefault(); if (!input.trim() || busy) return; void action(async () => { await agentApi.sendRemoteTask(snapshot.conversation.id, input.trim(), cloud); setInput(""); setSnapshot(await agentApi.remoteSnapshot<Snapshot>(snapshot.conversation.id, cloud)); }); }}>
+            <AnimatedInput value={input} maxLength={20000} aria-label="继续跨端对话" placeholder={pairingRequired ? "在电脑端扫码连接后可远程继续" : snapshot.conversation.archived ? "恢复对话后继续" : "继续这段对话…"} onChange={event => setInput(event.target.value)} disabled={busy || pairingRequired || snapshot.conversation.archived || taskActive} />
+            <button type="submit" disabled={busy || !input.trim() || pairingRequired || snapshot.conversation.archived || taskActive} aria-label="发送"><AgentIcon name="send" size={18} /></button>
+          </form>
+          {(error || state?.error) && <p role="alert">{error || state?.error}</p>}
         </> : <><h3>跨端对话</h3>{state?.sessions.length ? state.sessions.map(s => <button className="remote-session" key={s.id} onClick={() => setSelected(s.id)}><AgentIcon name={s.target === "cloud" ? "cloud" : "computer"} /><span>{s.title}</span><AgentIcon name="chevron" size={16} /></button>) : <div className="remote-empty"><AgentIcon name="cloud" size={40} /><p>{cloud ? "还没有跨端对话。" : "连接电脑，在小程序继续对话。"}</p></div>}</>}
       </section>
     </div>

@@ -18,7 +18,8 @@ import type { LongTermMemory } from "../../core/long-term-memory.js";
 
 const RESUME_MATERIAL_TOOLS = ["capture_resume_material", "prepare_resume_step", "propose_resume_update", "propose_resume_patch"];
 const LEGACY_RESUME_TOOLS = ["read_resume_context", "propose_resume_update", "plan_tasks", "ask_user"];
-const FILE_BYPASS_TOOLS = ["write_file", "publish_file", "run_command", "request_export", "apply_project_patch", "undo_project_edit"];
+const FILE_BYPASS_TOOLS = ["write_file", "publish_file", "run_command", "office_document", "request_export", "apply_project_patch", "undo_project_edit"];
+const COMMAND_TOOLS = ["run_command", "office_document"];
 const PREPARATION_TOOLS = ["read_career_context", "read_career_preparation", "start_career_preparation", "review_career_answer", "ask_user"];
 const preparationRequested = (input: string) => /做一轮(?:岗位练习|模拟试卷|模拟面试)/.test(input);
 const decisionRequested = (input: string) => /比较已保存的岗位/.test(input);
@@ -243,7 +244,7 @@ export class CareerAgentDomain implements AgentDomain {
       .filter(tool => !training && !starting || PREPARATION_TOOLS.includes(tool.name))
       .filter(tool => !comparing || ["read_career_context", "read_career_preparation", "propose_job_decision", "ask_user"].includes(tool.name))
       .filter(tool => tool.name !== "review_career_answer" || training)
-      .filter(tool => this.dependencies.config.deploymentMode !== "server" || this.dependencies.config.serverCommands || tool.name !== "run_command")
+      .filter(tool => this.dependencies.config.deploymentMode !== "server" || this.dependencies.config.serverCommands || !COMMAND_TOOLS.includes(tool.name))
       .filter(tool => tool.name !== "propose_resume_patch" && guidedToolAllowed(run.task_kind, tool.name, resume.get(context.user.id)))
       .map(tool => run.task_kind === "resume" && tool.name === "prepare_resume_step"
         ? {
@@ -259,6 +260,7 @@ export class CareerAgentDomain implements AgentDomain {
   validateTool(context: AgentDomainToolContext): void {
     const { resume, guidance, store } = this.dependencies;
     const { run, user, call } = context;
+    invariant(this.dependencies.config.deploymentMode !== "server" || this.dependencies.config.serverCommands || !COMMAND_TOOLS.includes(call.name), 403, "云端命令执行尚未启用。", "cloud_commands_disabled");
     invariant(!this.dependencies.career.preparation.isTrainingRun(run.id) || PREPARATION_TOOLS.includes(call.name), 403, "本轮为模拟作答，只记录训练结果；请先暂停或结束练习再修改个人档案。");
     if (run.resume_edit) {
       guidance.assertResumeAccess(user.id, run.conversation_id);

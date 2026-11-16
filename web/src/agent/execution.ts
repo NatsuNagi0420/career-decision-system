@@ -22,7 +22,7 @@ const LABELS: Record<string, string> = {
   read_career_preparation: "读取求职准备", propose_job_decision: "比较岗位选择", start_career_preparation: "准备本轮题目", review_career_answer: "回顾你的作答",
   read_learning_context: "读取学习进度", search_learning_videos: "搜索B站教学", propose_learning_path: "整理学习路线",
   list_files: "查看文件", read_file: "读取文件", write_file: "写入文件", publish_file: "保存文件版本",
-  search_files: "搜索文件", plan_tasks: "更新计划", ask_user: "补充信息", request_export: "申请下载", run_command: "执行命令",
+  search_files: "搜索文件", plan_tasks: "更新计划", ask_user: "补充信息", request_export: "申请下载", run_command: "执行命令", office_document: "处理 Office 文档",
   read_resume_context: "读取简历材料", propose_resume_update: "整理简历草稿", propose_resume_patch: "修改选中内容",
   list_career_directions: "查看职业方向", search_job_samples: "查找岗位样本", read_job_sample: "读取岗位原文",
   apply_project_patch: "修改项目文件", undo_project_edit: "撤销项目修改",
@@ -164,6 +164,7 @@ export function executionLabel(record: ExecutionRecord): string { return LABELS[
 export function executionTarget(record: ExecutionRecord): string {
   const { args, call } = record;
   if (call.name === "run_command") return typeof args.command === "string" ? args.command : "命令参数不可用";
+  if (call.name === "office_document") return typeof args.path === "string" ? args.path : "Office 文档语法";
   if (["read_file", "write_file", "publish_file"].includes(call.name)) return typeof args.path === "string" ? args.path : "文件路径不可用";
   if (call.name === "search_files") return typeof args.query === "string" ? args.query : "搜索内容不可用";
   if (call.name === "ask_user") return typeof args.question === "string" ? args.question : "等待补充信息";

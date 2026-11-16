@@ -14,5 +14,5 @@ export function guidedToolAllowed(kind: TaskKind | undefined, name: string, stat
       (name === "propose_resume_update" && Boolean(state?.pending)) ||
       (name === "prepare_resume_step" && Boolean(state?.source_text && !state.pending));
   }
-  return ["read_career_context", "propose_career_update", "write_file", "publish_file", "request_export", "apply_project_patch", "undo_project_edit"].includes(name);
+  return ["read_career_context", "propose_career_update", "write_file", "publish_file", "office_document", "request_export", "apply_project_patch", "undo_project_edit"].includes(name);
 }

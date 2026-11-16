@@ -8,6 +8,7 @@ onLaunch(() => {
 <style lang="scss">
 @import "./styles/base.scss";
 @import "./styles/motion.scss";
+@import "./styles/career.scss";
 page {
   color: $qingsui-ink;
   font-family: $qingsui-font;

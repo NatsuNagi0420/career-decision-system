@@ -34,6 +34,7 @@
         />
       </button>
     </AppHeader>
+    <view class="career-actions qs-motion-block"><CareerButton @click="openCareerTask">开始求职任务</CareerButton></view>
     <MotionTabs v-model="tab" :options="filters" label="任务状态" />
     <picker
       :range="sources.map((s) => s.name)"
@@ -174,12 +175,14 @@ import { openConversation } from "../../services/conversations";
 import { syncTabBarHighlight } from "../../services/tabbar";
 import { assetPaths } from "../../static/assets";
 import TaskStatus from "../../components/TaskStatus.vue";
+import CareerButton from "../../components/CareerButton.vue";
 import RemoteDevices from "../../components/RemoteDevices.vue";
 import AppHeader from "../../components/AppHeader.vue";
 import MotionTabs from "../../components/MotionTabs.vue";
 import LoadingSkeleton from "../../components/LoadingSkeleton.vue";
 import { consumeTaskTab } from "../../services/task-navigation";
 const pageMotionClass = usePageMotion();
+function openCareerTask() { uni.navigateTo({ url: "/pages/career-task/index" }); }
 const pageFrameReady = useTabPageFrame();
 const assets = assetPaths.prototype,
   tab = ref("active"),

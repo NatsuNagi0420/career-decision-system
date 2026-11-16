@@ -22,6 +22,7 @@ export interface AgentMessage {
 
 export interface Conversation {
   id: string;
+  local_id?: string | null;
   title: string;
   profile_id: string | null;
   target?: "pc" | "cloud";

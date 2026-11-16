@@ -65,6 +65,7 @@
         </picker>
       </template>
     </HomeCareerOverview>
+    <CareerJourney v-if="!historyMode && career" :career="career" :source="source" />
     <view v-if="!historyMode" class="home-conversation-bridge qs-motion-block qs-motion-step-3">
       <button :id="buttonRippleId(3)" :style="buttonRippleStyle(3)" @touchstart="startButtonRipple($event, 3, undefined, overview.busy && !overview.ready)" hover-class="button-hover" hover-stop-propagation :hover-start-time="0" :hover-stay-time="110" class="home-continue-button qs-tap-target" :disabled="overview.busy && !overview.ready" @click="startButtonRipple($event, 3, undefined, overview.busy && !overview.ready); continueConversation()">
         <view class="home-continue-icon qs-action-icon"><image :src="assets.navChat" /></view>
@@ -293,6 +294,7 @@ import { assetPaths } from "../../static/assets";
 import RemoteDevices from "../../components/RemoteDevices.vue";
 import AppHeader from "../../components/AppHeader.vue";
 import HomeCareerOverview from "../../components/HomeCareerOverview.vue";
+import CareerJourney from "../../components/CareerJourney.vue";
 import MotionTabs from "../../components/MotionTabs.vue";
 import LoadingSkeleton from "../../components/LoadingSkeleton.vue";
 import FileRow from "../../components/FileRow.vue";

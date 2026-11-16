@@ -15,11 +15,14 @@
 | `release/` | `build-windows.mjs` | 构建 Windows 本机安装包与便携包，不复制用户库和开发配置 |
 | `release/` | `verify-windows.mjs` | 隔离验证安装版启动、单实例、完全退出与资料保留 |
 | `verify/` | `verify-agent.ps1` | Windows 下执行 Agent、Web、测试和构建验证 |
+| `setup/` | `install-officecli.mjs` | 安装固定版本 OfficeCLI，核验 SHA256，保留独立本机命令 |
 
 常用命令：
 
 ```powershell
 npm run dev
+npm run office:setup
+npm run office:verify
 npm run catalogue:import -- --archive "docs/岗位库扩充/待导入/新批次.zip" --review "docs/岗位库扩充/对应批次清洗规则.json"
 python scripts/catalogue/test-merge-job-catalogue.py
 .\scripts\verify\verify-agent.ps1

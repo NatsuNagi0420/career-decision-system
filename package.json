@@ -15,6 +15,8 @@
     "test": "npm --prefix agent test && npm --prefix web test -- --maxWorkers=1",
     "catalogue:import": "npm --prefix agent run build && python scripts/catalogue/import-job-catalogue.py",
     "release:windows": "node scripts/release/build-windows.mjs",
-    "test:account": "npm --prefix agent run test:account"
+    "test:account": "npm --prefix agent run test:account",
+    "office:setup": "node scripts/setup/install-officecli.mjs",
+    "office:verify": "npm --prefix agent run office:verify"
   }
 }

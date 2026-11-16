@@ -117,6 +117,26 @@
       "style": {
         "navigationBarTitleText": "帮助与反馈"
       }
+    },
+    {
+      "path": "pages/learning/index",
+      "style": { "navigationBarTitleText": "学习路线", "enablePullDownRefresh": true }
+    },
+    {
+      "path": "pages/preparation/index",
+      "style": { "navigationBarTitleText": "练习与面试", "enablePullDownRefresh": true }
+    },
+    {
+      "path": "pages/compare/index",
+      "style": { "navigationBarTitleText": "岗位比较", "enablePullDownRefresh": true }
+    },
+    {
+      "path": "pages/career-task/index",
+      "style": { "navigationBarTitleText": "求职任务", "enablePullDownRefresh": true }
+    },
+    {
+      "path": "pages/weekly/index",
+      "style": { "navigationBarTitleText": "本周回顾", "enablePullDownRefresh": true }
     }
   ],
   "globalStyle": {

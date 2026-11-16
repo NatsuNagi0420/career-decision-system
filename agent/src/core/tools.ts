@@ -7,6 +7,7 @@ import type { Workspace } from "../files.js";
 import { isTextDocument } from "../document-text.js";
 import type { AgentToolResult } from "./contracts.js";
 import { ToolRegistry, type ToolEffect, type ToolSpec } from "./tool-registry.js";
+import { officeToolSpec } from "./office-tools.js";
 export interface CoreToolContext {
   run: Run;
   workspace: Workspace;
@@ -80,6 +81,7 @@ export const coreToolSpecs: ToolSpec<CoreToolContext>[] = Object.entries(schemas
   name, schema, description: descriptions[name as keyof typeof schemas], effect: effects[name as keyof typeof schemas],
   execute: (args, context) => executeCoreTool(name, args, context),
 }));
+coreToolSpecs.push(officeToolSpec);
 export const coreTools = new ToolRegistry(coreToolSpecs);
 async function executeCoreTool(name: string, args: Record<string, unknown>, { run, workspace, workspaceContext, sandbox, signal, onOutput }: CoreToolContext): Promise<AgentToolResult> {
   signal.throwIfAborted();

@@ -141,6 +141,21 @@ let career = {
     ],
     saved_jobs: [],
 };
+career.jobs.push({ id: randomUUID(), title: "用户研究实习生", company: "合成示例团队", url: "", description: "访谈执行、研究报告、需求归纳", created_at: now });
+const questionBank = ["如何区分用户需求与解决方案？", "怎样设计一次用户访谈？", "怎样判断一次功能迭代是否有效？"].map((prompt, index) => ({ id: "fixture-q" + index, prompt, topic: ["需求分析", "用户访谈", "效果验证"][index], requirement: career.jobs[0].description, origin: "curated", source_title: "本机合成题", source_url: null, rubric: ["有明确目标", "用具体例子说明"], reference_answer: "先说明目标和实际场景，再用真实过程和结果支持自己的判断。" }));
+let learning = { revision: 1, active_path_id: "fixture-path", paths: [{ id: "fixture-path", job_id: career.jobs[0].id, title: "产品岗位入门路线", summary: "把访谈与需求分析转成可展示的项目材料。", created_at: now, updated_at: now, nodes: ["梳理用户问题", "完成一份需求分析"].map((title, index) => ({ key: "node" + index, title, requirement: "需求整理、用户研究", objective: "说明问题、证据与解决思路", estimated_minutes: 45, prerequisites: index ? ["node0"] : [], search_query: title, exercise: "用课程项目整理一份分析", deliverable: "一页分析文档", status: index ? "todo" : "done", notes: "", result: index ? "" : "已整理课程项目材料", resources: [], updated_at: now })) }], proposal: null, updated_at: now };
+let preparation = { revision: 1, sessions: [], boards: [{ id: "fixture-board", title: "产品与研究方向的选择", conversation_id: "fixture-native", stale: false, options: career.jobs.map(job => ({ job_id: job.id, attraction: "能运用已有访谈整理经历", preparation_cost: "需要补一份完整研究报告", tradeoff: "产品侧重推动落地，研究侧重证据深度", unknowns: ["实际实习职责需要向招聘方核实"], evidence: [{ source_id: "job." + job.id, quote: job.description }, { source_id: "source-1", quote: career.sources[0].text }] })), next_question: "你更喜欢推动方案，还是深入理解用户？", primary_job_id: null, backup_job_ids: [], reason: "" }] };
+function publicPreparation() {
+    const value = structuredClone(preparation);
+    value.sessions.forEach(session => {
+        if (session.status !== "completed") session.questions = session.questions.slice(0, session.answers.length + 1);
+        if (session.mode === "exam" && session.status !== "completed") {
+            session.questions.forEach(question => { delete question.rubric; delete question.reference_answer; });
+            session.answers.forEach(answer => { delete answer.verdict; delete answer.strengths; delete answer.gaps; delete answer.next_exercise; });
+        }
+    });
+    return value;
+}
 const snapshots = new Map();
 for (const [index, title] of [
     "简历优化",
@@ -343,6 +358,38 @@ const server = createServer(async (req, res) => {
             ],
         });
     if (url.pathname === "/api/v1/agent/career") return send(career);
+    if (url.pathname === "/api/v1/agent/career/learning") return send(learning);
+    if (url.pathname === "/api/v1/agent/career/preparation") return send(publicPreparation());
+    if (url.pathname === "/api/v1/agent/career/preparation/questions") return send({ questions: questionBank });
+    if (url.pathname === "/api/v1/agent/career/learning/videos") return send({ status: "empty", resources: [], message: "本机合成预览不请求外部视频。", search_url: "https://search.bilibili.com/" });
+    if (url.pathname === "/api/v1/agent/career/learning/changes") {
+        if (data.revision !== learning.revision) return fail(409, "学习资料已更新，请刷新。");
+        const change = data.change;
+        if (change.type === "path.select") learning.active_path_id = change.id;
+        if (change.type === "node.update") {
+            const node = learning.paths.find(path => path.id === change.path_id)?.nodes.find(node => node.key === change.key);
+            if (!node) return fail(404, "章节不存在");
+            Object.assign(node, { status: change.status, notes: change.notes, result: change.result, updated_at: new Date().toISOString() });
+        }
+        learning.revision++;
+        return send(learning);
+    }
+    if (url.pathname === "/api/v1/agent/career/preparation/changes") {
+        if (data.revision !== preparation.revision) return fail(409, "训练资料已更新，请刷新。");
+        const change = data.change;
+        if (change.type === "decision.select") {
+            const board = preparation.boards.find(board => board.id === change.id);
+            if (!board) return fail(404, "比较记录不存在");
+            Object.assign(board, { primary_job_id: change.primary_job_id, backup_job_ids: change.backup_job_ids, reason: change.reason });
+        }
+        if (change.type === "session.status") {
+            const session = preparation.sessions.find(session => session.id === change.id);
+            if (!session) return fail(404, "训练不存在");
+            session.status = change.status; session.updated_at = new Date().toISOString();
+        }
+        preparation.revision++;
+        return send(publicPreparation());
+    }
     if (url.pathname === "/api/v1/agent/career/changes") {
         if (data.revision !== career.revision)
             return fail(409, "资料已更新，请刷新。");
@@ -503,6 +550,22 @@ const server = createServer(async (req, res) => {
                 (t) => t.request_id === data.request_id,
             );
             if (duplicate) return send(duplicate);
+            const nativeId = snapshot.conversation.local_id || snapshot.conversation.id;
+            if (data.input.includes("start_career_preparation")) {
+                const mode = data.input.includes("模拟试卷") ? "exam" : data.input.includes("文字模拟面试") ? "interview" : "practice";
+                const selected = career.jobs.find(job => data.input.includes(job.id)) || career.jobs[0];
+                const total = Number(data.input.match(/(?:现场出|共 )([358])/u)?.[1] || 3);
+                preparation.sessions.unshift({ id: randomUUID(), conversation_id: nativeId, job_id: selected.id, job_title: selected.title, mode, status: "active", focus: ["需求分析"], total, questions: Array.from({ length: total }, (_, index) => ({ ...questionBank[index % 3], id: randomUUID() })), answers: [], created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
+                preparation.revision++;
+            } else {
+                const session = preparation.sessions.find(session => session.conversation_id === nativeId && session.status === "active");
+                if (session && session.answers.length < session.total) {
+                    session.answers.push({ question_id: session.questions[session.answers.length].id, text: data.input, created_at: new Date().toISOString(), verdict: "partial", strengths: ["表达了自己的思路"], gaps: ["可以补充实际案例"], next_exercise: "用课程项目说明判断依据" });
+                    session.updated_at = new Date().toISOString();
+                    if (session.answers.length === session.total) session.status = "completed";
+                    preparation.revision++;
+                }
+            }
             const time = new Date().toISOString(),
                 rid = randomUUID(),
                 task = {

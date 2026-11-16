@@ -63,6 +63,7 @@
         </button>
       </view>
 
+      <CareerEntrypoints :source="source" />
       <view class="growth-trail qs-motion-block qs-motion-step-1" aria-label="职业成长资料入口">
         <button
           :id="buttonRippleId(4)"
@@ -338,6 +339,7 @@ import { growthSummary } from "../../services/growth-summary";
 import { syncTabBarHighlight } from "../../services/tabbar";
 import { assetPaths } from "../../static/assets";
 import CareerSource from "../../components/CareerSource.vue";
+import CareerEntrypoints from "../../components/CareerEntrypoints.vue";
 import AppHeader from "../../components/AppHeader.vue";
 import LoadingSkeleton from "../../components/LoadingSkeleton.vue";
 const pageMotionClass = usePageMotion();

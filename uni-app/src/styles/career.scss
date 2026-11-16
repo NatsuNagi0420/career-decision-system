@@ -1,0 +1,21 @@
+/* 青穗集 · 职业流程共用布局：继承原纸面配色和像素字体，组件内只用类选择器。 */
+.career-section { padding:26rpx; margin:22rpx 0; }
+.career-heading { display:flex; align-items:center; justify-content:space-between; gap:16rpx; margin-bottom:18rpx; }
+.career-title { display:block; font-size:30rpx; color:var(--qs-ink); line-height:1.6; }
+.career-body { display:block; font-size:26rpx; white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.8; }
+.career-muted { display:block; margin-top:12rpx; font-size:23rpx; color:var(--qs-muted); line-height:1.7; }
+.career-actions { display:flex; gap:14rpx; margin-top:22rpx; }
+.career-actions > view { flex:1; min-width:0; }
+.career-picker { padding:20rpx 22rpx; margin:18rpx 0; border:1rpx solid var(--qs-lilac); border-radius:$qs-radius-control; background:var(--qs-paper); font-size:27rpx; }
+.career-input { display:block; box-sizing:border-box; width:100%; min-height:150rpx; padding:20rpx; margin:16rpx 0; border:1rpx solid var(--qs-lilac); border-radius:$qs-radius-control; background:var(--qs-paper-soft); color:var(--qs-ink); font-size:26rpx; line-height:1.7; }
+.career-chip-list { display:flex; flex-wrap:wrap; gap:12rpx; margin:16rpx 0; }
+.career-chip { margin:0; padding:13rpx 20rpx; border:1rpx solid var(--qs-lilac); border-radius:$qs-radius-control; color:var(--qs-muted); background:var(--qs-paper); font-size:24rpx; line-height:1.5; }
+.career-chip--active { color:$qingsui-primary; border-color:$qingsui-primary; background:var(--qs-primary-soft); }
+.career-rule { margin-top:22rpx; padding-top:22rpx; border-top:1rpx solid var(--qs-lilac); }
+.career-quote { display:block; padding:18rpx 22rpx; margin:16rpx 0; border-left:4rpx solid var(--qs-lilac); background:var(--qs-paper-soft); font-size:24rpx; line-height:1.8; white-space:pre-wrap; overflow-wrap:anywhere; }
+.career-error { margin:18rpx 0; }
+.career-empty-art { width:180rpx; height:180rpx; margin:12rpx auto; }
+.career-progress { height:10rpx; overflow:hidden; border-radius:12rpx; background:var(--qs-lilac); margin:18rpx 0; }
+.career-progress-fill { height:100%; background:$qingsui-primary; transition:width .3s ease; }
+.career-scroll { scrollbar-gutter:stable; }
+@media (prefers-reduced-motion:reduce) { .career-progress-fill { transition:none; } }

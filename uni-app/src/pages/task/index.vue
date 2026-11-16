@@ -14,6 +14,7 @@
           {{ sourceLabel(task.conversation, devices) }}
         </text>
       </view>
+      <view v-if="task.input" class="qs-card career-section qs-motion-block"><text class="career-title">任务要求</text><text class="career-body">{{ task.input }}</text></view>
       <view class="task-facts">
         <view>
           <text>创建时间</text>
@@ -87,7 +88,7 @@
           执行记录
           <text>{{ expanded ? "⌃" : "⌄" }}</text>
         </button>
-        <view v-if="expanded">
+        <SizeReveal :open="expanded" :change-key="events.length">
           <text
             v-for="(event, index) in events"
             :key="index"
@@ -95,7 +96,7 @@
           >
             {{ eventLabel(event) }}
           </text>
-        </view>
+        </SizeReveal>
       </view>
       <text v-if="files.length" class="qs-section-title">相关文件</text>
       <FileRow v-for="file in files" :key="file.id" :file="file" />
@@ -196,6 +197,7 @@ import {
 import { openConversation } from "../../services/conversations";
 import TaskStatus from "../../components/TaskStatus.vue";
 import FileRow from "../../components/FileRow.vue";
+import SizeReveal from "../../components/SizeReveal.vue";
 const pageMotionClass = usePageMotion();
 const snapshot = ref<AgentSnapshot | null>(null),
   task = ref<TaskItem | null>(null),

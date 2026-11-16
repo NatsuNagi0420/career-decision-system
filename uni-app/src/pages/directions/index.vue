@@ -2,6 +2,7 @@
 <template>
   <view :class="pageMotionClass" class="qs-page">
     <CareerSource @change="changeSource" />
+    <view class="career-actions"><CareerButton @click="openCompare">比较已关注的岗位</CareerButton></view>
     <view class="direction-search qs-motion-block">
       <input
         v-model="query"
@@ -89,6 +90,7 @@ import {
 import { errorText } from "../../services/workspace";
 import { assetPaths } from "../../static/assets";
 import CareerSource from "../../components/CareerSource.vue";
+import CareerButton from "../../components/CareerButton.vue";
 import LoadingSkeleton from "../../components/LoadingSkeleton.vue";
 const pageMotionClass = usePageMotion();
 const assets = assetPaths.prototype,
@@ -146,6 +148,7 @@ function planJob(job: CareerJob) {
     source.value,
   );
 }
+function openCompare() { uni.navigateTo({ url: "/pages/compare/index" }); }
 </script>
 <style lang="scss">
 .direction-search {

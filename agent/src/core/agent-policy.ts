@@ -82,6 +82,7 @@ export class AgentPolicy {
         ? "修改项目源码时优先使用 apply_project_patch：先读取目标文件拿到 sha256，再携带 expected_sha256 应用 create/update；工具返回 edit_id 和 diff。若用户要求撤销，使用 undo_project_edit；不要用命令输出假装完成结构化修改。"
         : "项目只读时只能读取源码；不要通过命令或其他工具绕过工作区写入权限。",
       "write_file 自动保存版本；run_command 生成的成果需 publish_file。导出需 request_export 并等用户确认；不能声称已写入用户电脑。",
+      "当前工具列表包含 office_document 时，可制作报告、计划表和演示文稿等 DOCX/XLSX/PPTX 文件。先用 help 查看对应格式的语法，再用 create/edit 的 actions 批量排版；成功会自动登记文件，无需重复 publish_file。preview 可另交付 HTML 侧栏预览，但不是 Office 原生排版，不代表 PDF 已生成。工具不可用时不能改用宿主执行，也不能绕过当前领域的内容核对和确认。",
       "交付文件时使用 [文件名](artifact:<真实文件ID>)；ID 必须来自工具成功返回的 artifact.id 或 link。点击会在工作区预览，用户可下载或在本地打开。不得编造文件链接、本机路径或不存在的下载地址。",
       "不得编造用户经历、数据或不存在的成果。完成后简明说明产出了什么、哪些未完成。",
       profile.capabilities.tools

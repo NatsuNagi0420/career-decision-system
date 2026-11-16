@@ -33,7 +33,7 @@ export function ExecutionPanel({ run, runs, messages, records, events, selectedK
   const runEvents = events.filter(event => event.run_id === run.id);
   const plan = executionPlan(current, runEvents);
   const input = (id: string) => messages.find(message => message.role === "user" && message.run_id === id)?.content ?? "这轮对话";
-  const preferred = selectedKey ?? [...current].reverse().find(record => record.call.name === "run_command")?.key ?? current.at(-1)?.key;
+  const preferred = selectedKey ?? [...current].reverse().find(record => ["run_command", "office_document"].includes(record.call.name))?.key ?? current.at(-1)?.key;
   const failed = current.filter(record => record.status === "failed").length;
   const notices = [...new Set(runEvents.filter(event => event.kind === "model.notice").map(event => String(event.data.message ?? "")))].filter(Boolean);
   return <aside ref={panel} tabIndex={-1} className="agent-inspector workspace-detail-panel execution-panel" id="career-context" aria-label="执行记录侧栏" onKeyDown={event => { if (event.key === "Escape" && !document.querySelector(":popover-open")) { event.stopPropagation(); onClose(); } }}>
@@ -56,14 +56,14 @@ function ExecutionEntry({ record, index, selected, selectionId, files, onPreview
   const ref = useRef<HTMLDetailsElement>(null);
   const [open, setOpen] = useState(selected || ["running", "waiting"].includes(record.status));
   useEffect(() => { if (selected) { setOpen(true); ref.current?.scrollIntoView({ block: "nearest", behavior: "instant" }); } }, [selected, selectionId]);
-  const value = object(record.result), command = record.call.name === "run_command";
+  const value = object(record.result), command = ["run_command", "office_document"].includes(record.call.name);
   const liveOutput = record.result === undefined ? record.liveOutput : undefined;
   const artifactId = object(value.artifact).id ?? value.artifact_id ?? record.args.artifact_id;
   const file = typeof artifactId === "string" ? files.find(item => item.id === artifactId) : undefined;
   return <details ref={ref} className="execution-entry" data-status={record.status} data-selected={selected} open={open} onToggle={event => setOpen(event.currentTarget.open)}>
     <summary><span className="execution-entry__number">{String(index + 1).padStart(2, "0")}</span><div><span className="execution-entry__title"><AgentIcon name={command ? "terminal" : record.call.name.includes("file") ? "file" : "activity"} size={14} />{executionLabel(record)}<small data-status={record.status}>{EXECUTION_STATUS[record.status]}</small></span><code className="execution-entry__target">{executionTarget(record)}</code><span className="execution-entry__meta">{new Date(record.startedAt ?? record.requestedAt).toLocaleTimeString([], { hour12: false })}{record.durationMs !== undefined && " · " + formatDuration(record.durationMs)}{record.exitCode !== undefined && " · 退出码 " + record.exitCode}</span></div><AgentIcon name="down" size={13} /></summary>
     {open && <div className="execution-entry__body">
-      {command && <LogBlock title="实际命令" text={typeof record.args.command === "string" ? record.args.command : record.call.arguments} command />}
+      {command && <LogBlock title={record.call.name === "office_document" ? "文档操作" : "实际命令"} text={typeof record.args.command === "string" ? record.args.command : record.call.arguments} command={record.call.name === "run_command"} />}
       {!command && <div className="execution-entry__tool"><span>工具</span><code>{record.call.name}</code></div>}
        {record.status === "running" && <p className="execution-entry__waiting">正在执行{command ? "；实时输出会在命令运行中逐段出现。" : "，等待工具返回。"}</p>}
       {record.status === "waiting" && <p className="execution-entry__waiting">等待你确认后才会继续，不会自动批准。</p>}

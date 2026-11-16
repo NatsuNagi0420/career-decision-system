@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="374" viewBox="0 0 1600 374" role="img" aria-labelledby="title desc">
+  <title id="title">青穗集职业成长路线</title>
+  <desc id="desc">通过对话整理证据，核对画像，比较岗位，规划学习，训练求职技能并交付简历。新的实践继续补充事实与记忆。</desc>
+  <defs>
+    <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#f8f5ff"/><stop offset="1" stop-color="#edf6f3"/></linearGradient>
+    <linearGradient id="rail"><stop stop-color="#a38ad0"/><stop offset="1" stop-color="#79ada1"/></linearGradient>
+    <marker id="arrow" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0 0 6 3.5 0 7" fill="none" stroke="#8b7ba7" stroke-width="1.5"/></marker>
+  </defs>
+  <rect x="1" y="1" width="1598" height="372" rx="24" fill="url(#bg)" stroke="#e1dbea"/>
+  <g font-family="Segoe UI,Microsoft YaHei,PingFang SC,sans-serif">
+    <text x="54" y="58" fill="#76628f" font-size="16" letter-spacing="3">QINGSUIJI / CAREER JOURNEY</text>
+    <text x="54" y="100" fill="#342c44" font-size="27" font-weight="600">从一句「我还没想清楚」，开始下一步。</text>
+    <path d="M168 196H1434" stroke="url(#rail)" stroke-width="3"/>
+    <g fill="#fff" stroke="#d8cee6">
+      <rect x="54" y="146" width="220" height="106" rx="16"/><rect x="306" y="146" width="220" height="106" rx="16"/>
+      <rect x="558" y="146" width="220" height="106" rx="16"/><rect x="810" y="146" width="220" height="106" rx="16"/>
+      <rect x="1062" y="146" width="220" height="106" rx="16"/><rect x="1314" y="146" width="232" height="106" rx="16"/>
+    </g>
+    <g fill="#9583b2" font-size="14" font-weight="600">
+      <text x="74" y="175">01 / TALK</text><text x="326" y="175">02 / EVIDENCE</text><text x="578" y="175">03 / DECIDE</text>
+      <text x="830" y="175">04 / LEARN</text><text x="1082" y="175">05 / PRACTISE</text><text x="1334" y="175">06 / DELIVER</text>
+    </g>
+    <g fill="#40344f" font-size="25" font-weight="600">
+      <text x="74" y="212">对话探索</text><text x="326" y="212">证据画像</text><text x="578" y="212">岗位取舍</text>
+      <text x="830" y="212">学习行动</text><text x="1082" y="212">求职训练</text><text x="1334" y="212">简历交付</text>
+    </g>
+    <g fill="#746981" font-size="15">
+      <text x="74" y="235">经历 · 偏好 · 困惑</text><text x="326" y="235">保留原话，核对事实</text><text x="578" y="235">要求 · 差距 · 准备成本</text>
+      <text x="830" y="235">章节 · 资源 · 实践</text><text x="1082" y="235">练习 · 试卷 · 面试</text><text x="1334" y="235">预览 · 局部修改 · 文件</text>
+    </g>
+    <path d="M1430 267V301H416V268" fill="none" stroke="#afa0c1" stroke-width="1.7" stroke-dasharray="5 6" marker-end="url(#arrow)"/>
+    <rect x="661" y="285" width="514" height="33" rx="16" fill="#f3f4f9"/>
+    <text x="918" y="307" fill="#736283" text-anchor="middle" font-size="16">新的实践，成为下一轮画像与记忆的依据</text>
+    <text x="54" y="345" fill="#8b8197" font-size="14">按需要进入不同环节，不要求用户从头填写固定表单。</text>
+  </g>
+</svg>

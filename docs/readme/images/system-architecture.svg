@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="860" viewBox="0 0 1600 860" role="img" aria-labelledby="title desc">
+  <title id="title">青穗集本机与云端协作架构</title>
+  <desc id="desc">本机 React 界面连接 TypeScript Agent。电脑主动连接 Cloud Hub；小程序经 Hub 下发任务。模型可走官方 Relay 或用户自配服务。电脑资料与项目工作区保留在本机，云端执行是可选模式。</desc>
+  <defs>
+    <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#faf8ff"/><stop offset="1" stop-color="#f1f7f5"/></linearGradient>
+    <marker id="a" markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto"><path d="M1 1L7 4 1 7" fill="none" stroke="#9a88b4" stroke-width="1.5"/></marker>
+    <marker id="b" markerWidth="8" markerHeight="8" refX="1.5" refY="4" orient="auto"><path d="M7 1L1 4 7 7" fill="none" stroke="#9a88b4" stroke-width="1.5"/></marker>
+  </defs>
+  <rect x="1" y="1" width="1598" height="858" rx="24" fill="url(#bg)" stroke="#e1dbea"/>
+  <g font-family="Segoe UI,Microsoft YaHei,PingFang SC,sans-serif">
+    <text x="54" y="58" font-size="16" letter-spacing="3" fill="#79658f">QINGSUIJI / SYSTEM ARCHITECTURE</text>
+    <text x="54" y="101" font-size="29" font-weight="600" fill="#342c44">本机执行，按需连接官方服务。</text>
+    <rect x="44" y="130" width="724" height="504" rx="22" fill="#f0ebf8"/><rect x="832" y="130" width="724" height="504" rx="22" fill="#eaf3ef"/>
+    <g font-size="17" fill="#7d6d90" font-weight="600"><text x="72" y="167">电脑 / LOCAL</text><text x="860" y="167">官方服务 / CLOUD</text></g>
+    <g stroke-width="1.2">
+      <rect x="72" y="190" width="668" height="80" rx="13" fill="white" stroke="#d5c9e6"/>
+      <rect x="72" y="314" width="668" height="170" rx="13" fill="#fbf9ff" stroke="#ac94ca"/>
+      <rect x="72" y="532" width="318" height="78" rx="13" fill="white" stroke="#d5c9e6"/><rect x="422" y="532" width="318" height="78" rx="13" fill="white" stroke="#d5c9e6"/>
+      <rect x="860" y="190" width="668" height="80" rx="13" fill="white" stroke="#c2d9d1"/>
+      <rect x="860" y="314" width="668" height="100" rx="13" fill="#f8fcfa" stroke="#9fbdaf"/>
+      <rect x="860" y="466" width="312" height="144" rx="13" fill="white" stroke="#c2d9d1"/><rect x="1216" y="466" width="312" height="144" rx="13" fill="white" stroke="#c2d9d1"/>
+      <rect x="72" y="702" width="668" height="82" rx="13" fill="white" stroke="#d5c9e6"/><rect x="860" y="702" width="668" height="82" rx="13" fill="white" stroke="#c2d9d1"/>
+    </g>
+    <g font-size="23" font-weight="600" fill="#40344f">
+      <text x="96" y="225">React WebUI</text><text x="96" y="352">TypeScript Agent Runtime</text>
+      <text x="96" y="565">SQLite + FTS5</text><text x="446" y="565">本机项目与成果</text>
+      <text x="884" y="225">Uni-app 小程序 / 移动协作</text><text x="884" y="352">Cloud Hub</text>
+      <text x="884" y="504">Cloud Executor</text><text x="1240" y="504">官方 Relay</text>
+      <text x="96" y="738">用户自配模型服务</text><text x="884" y="738">官方上游模型服务</text>
+    </g>
+    <g font-size="17" fill="#796d84">
+      <text x="96" y="250">对话 · 桌面窗口 · 职业工作台 · 文件预览</text>
+      <text x="96" y="385">通用内核：规划 / 工具 / 事件 / 上下文 / 检查点</text><text x="96" y="415">职业领域：画像 / 岗位 / 学习 / 训练 / 简历</text>
+      <text x="96" y="459">电脑主动连接 Hub；模型来源由本机设置决定</text>
+      <text x="96" y="590">会话 · 职业记录 · 长期记忆</text><text x="446" y="590">明确绑定的工作区与文件版本</text>
+      <text x="884" y="250">会话 · 任务 · 授权 · 进度与成果</text><text x="884" y="383">账号身份 / 设备绑定 / 任务队列 / 资料同步</text>
+      <text x="884" y="536">可选云端执行位置</text><text x="884" y="565">云端任务与 PC 任务区分</text>
+      <text x="1240" y="536">官方凭证 / 积分 / 路由</text><text x="1240" y="565">上游密钥保留在服务端</text>
+      <text x="96" y="764">OpenAI 兼容接口；Key 留在本机，不进入同步目录</text><text x="884" y="764">由 Relay 接入；客户端只使用官方公开服务名</text>
+    </g>
+    <g fill="none" stroke="#9a88b4" stroke-width="2" marker-end="url(#a)">
+      <path d="M406 270V312"/><path d="M1194 270V312"/>
+      <path d="M231 484V530"/><path d="M581 484V530"/>
+      <path d="M742 364H858" marker-start="url(#b)"/>
+      <path d="M1016 414V464"/><path d="M1172 539H1214"/>
+      <path d="M1372 610V700"/>
+      <path d="M72 420H28V743H70"/>
+      <path d="M740 446H799V660H1372V612"/>
+    </g>
+    <text x="1156" y="648" font-size="15" fill="#857391">本机选择官方模型时</text>
+    <text x="54" y="827" fill="#857b90" font-size="16">PC 任务等待对应电脑上线；不会静默转为云端执行。图中省略反向代理、鉴权和内部存储等部署细节。</text>
+  </g>
+</svg>
